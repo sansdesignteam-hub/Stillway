@@ -51,3 +51,37 @@ Kualitas nantinya dapat diperiksa lewat cakupan pertanyaan pembeli, walkthrough 
 ## Aset yang berpotensi dibutuhkan
 
 Belum dibuat/dibeli/diunduh: ring render dengan bentuk konsisten untuk tiap finish, detail material/sensor, ring saat dikenakan untuk memperlihatkan skala, charger/sizing kit sesuai paket yang disetujui, fotografi keseharian, serta cuplikan aplikasi berdata simulasi. Jangan memakai logo, foto produk, atau screenshot aplikasi kompetitor sebagai aset brand konsep. Rincian jumlah dan format menyusul lingkup final.
+
+## Telaah visual tampilan aktual
+
+Ditinjau Visual Director pada 17 November 2026 melalui browser bawaan Orca. Metode: tangkapan layar viewport desktop 1440×900 sepanjang halaman dan hero mobile 390×844. Animasi scroll diamati sebagai rangkaian still, bukan rekaman. Hover, form, dan checkout tidak diuji. Ini pengamatan visual, bukan audit performa atau aksesibilitas.
+
+### Sensiq — https://sensiq.co/
+
+- Komposisi: hero tangan berlatar abu hangat dengan kartu data gelap transparan; disusul section yang di-pin dengan render ring berputar 360° saat scroll sementara headline berganti tiga kali, mengikuti urutan sinyal → pola → keputusan. Indikator progres tipis berada di atas.
+- Gaya: putih/greige, sans grotesk rapat bertitik tebal, aksen kuning-lime, kartu bersudut membulat, potret close-up dengan kartu data, properti batu/kayu pada penutup, wordmark raksasa di footer.
+- Catatan: situs memuat badge “Honors” dan kredit agensi (Visux); konteksnya kuat sebagai showcase agensi. Testimoni dan angka adalah milik sumber.
+- Mobile: susunan menumpuk; ring berputar dan kartu data tetap muncul.
+- Pelajaran: satu mekanisme scroll yang konsisten untuk menjelaskan logika produk. Hindari: turntable ring di latar putih, kartu data kaca di atas potret, aksen lime, serta testimoni.
+
+### Oura — https://ouraring.com/ dan https://ouraring.com/store/rings/oura-ring-5
+
+- Home: krem/pasir hangat, display serif condensed ringan dengan body sans, fotografi tangan bercahaya hangat, carousel kartu foto per kategori manfaat, deretan layar aplikasi gelap, kartu testimoni, blok pers, dan footer gelap. CTA berbentuk pil biru.
+- URL produk saat ditinjau menampilkan landing Oura Ring 5: render makro sinematik berlatar gelap, ring dipotong besar sebagai busur, serta angka besar yang berubah bersama morph ring.
+- Mobile: banner promo dan banner cookie menutupi sebagian besar hero pada kunjungan pertama.
+- Pelajaran: kesinambungan foto lifestyle hangat menuju produk. Hindari: serif condensed di latar krem sebagai tanda pengenal, kipas layar aplikasi, angka survei, dan blok pers.
+
+### Happy Ring — https://happyring.fiftyseven.co/
+
+- Temuan penting: domain ini adalah **arsip portofolio agensi FIFTYSEVEN**. Modal pembuka menyatakan bahwa situs bukan website live Happy Ring dan tidak dioperasikan Happy Health. Pola ini relevan sebagai contoh cara jujur menampilkan karya konsep/arsip dalam portofolio.
+- Komposisi: hero putih minimal dengan render makro sisi dalam ring (LED hijau), section hitam, kamera scroll “masuk” ke dalam ring sehingga lingkar ring menjadi bingkai bagi daftar biomarker, sensor, dan sertifikasi. Terdapat angka besar (jam/hari), tabel spesifikasi di footer gelap, dan CTA Request a Demo berwarna lime.
+- Gaya: grotesk sangat tebal, abu muda/putih/hitam, aksen lime, ikon dalam lingkaran lime.
+- Pelajaran: objek produk sebagai panggung dan bingkai cerita. Hindari: konteks klinis, sertifikasi, angka baterai, daftar sensor, dan estetika lab.
+
+### Pola umum kategori yang sebaiknya tidak diulang Stillway
+
+Turntable ring di latar putih, kartu data kaca, aksen neon/lime, kipas layar aplikasi, testimoni/pers sebagai bukti, serta daftar metrik/sensor. Semua referensi memakai scroll yang berpusat pada ring. Tidak satu pun menyusun halaman berdasarkan waktu dalam sehari atau perubahan cahaya.
+
+### Batas pengamatan
+
+Bagian tengah Sensiq dan bagian bawah Oura sebagian tertutup oleh transisi dan banner cookie. Mobile hanya diperiksa pada hero dan satu posisi scroll. Situs dapat berubah setelah tanggal tinjauan.
