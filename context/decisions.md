@@ -69,7 +69,7 @@ Sumber: pesan pengguna kepada Visual Director, 17 November 2026: “arah visual 
 2. Spesifikasi teknis rinci, kompatibilitas, rentang ukuran, serta aturan sizing kit, pengiriman, dan retur. Konsep, audiens asumsi, dan paket utama sudah disetujui.
 3. Rumusan tantangan rinci dan cara mengevaluasi kualitas; arahnya adalah pemahaman nilai produk dan kejelasan pemilihan ukuran/finish sebelum membeli.
 4. Urutan section, CTA utama dan tujuan CTA Home; alur pembelian lintas halaman berada di luar fase ini.
-5. Cakupan visual Figma: halaman/frame, desktop/mobile, tingkat interaktivitas, waktu, dan batas pekerjaan. Mockup/prototype rinci serta website demo belum disetujui.
+5. Cakupan visual Figma untuk kedua versi: halaman/frame, desktop/mobile, tingkat interaktivitas, waktu, dan batas pekerjaan. Mockup/prototype rinci serta website demo belum disetujui.
 6. Referensi dan kebutuhan aset berikut sumber, hak pakai, serta atribusinya.
 7. Narasi studi kasus, peran, bukti proses, dan keterbatasan.
 

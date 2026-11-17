@@ -1,6 +1,6 @@
 # Stillway — struktur pesan Home
 
-Status: USULAN STRUKTUR KONTEN, belum disetujui. Semua copy baru adalah draf ilustratif, bukan fakta produk nyata. Nama dan paket utama telah disetujui; sumber keputusan ada di `decisions.md`.
+Status: USULAN STRUKTUR KONTEN, belum disetujui (penyesuaian Versi 1 ada di bagian khusus). Semua copy baru adalah draf ilustratif, bukan fakta produk nyata. Nama dan paket utama telah disetujui; sumber keputusan ada di `decisions.md`.
 
 ## Peran halaman
 
@@ -31,6 +31,41 @@ Ini adalah arsitektur pesan, bukan perintah layout atau jumlah section visual. V
 - Informasi paket: **$299 · Charger and sizing kit included · No required subscription**
 
 Supporting copy dan CTA belum disetujui. Headline emosional diimbangi penjelasan langsung tentang kategori dan fungsi produk. Copy section lengkap akan dikembangkan setelah tujuan CTA disepakati.
+
+## Penyesuaian untuk Versi 1 (Arah A, D-022)
+
+Status: USULAN, belum disetujui. Sumber: `visual-directions.md` (worktree Visual Director). Urutan pesan di atas tetap menjadi acuan; hanya urutan visualnya mengikuti waktu dalam sehari. Versi 2 belum memiliki arah, sehingga bagian ini tidak berlaku untuknya.
+
+### Pemetaan bab waktu ke pesan
+
+| Waktu | Bab | Pesan |
+| --- | --- | --- |
+| 06:40 | Hero | Headline, supporting copy, baris paket, CTA. |
+| 08:00–13:00 | Konteks keseharian | Mengapa memahami pola itu relevan bagi rutinitas. |
+| Pagi / siang / sore | Tiga pilar | Tidur sebagai ringkasan pagi, aktivitas–istirahat pada siang, insight harian pada sore. |
+| 18:30 | Ring + aplikasi | Peran ring dan aplikasi; contoh data berlabel simulasi. |
+| 19:30 | Produk dan paket | USD 299, tiga finish, isi paket, tanpa langganan wajib. |
+| 21:00 | FAQ | Biaya berulang, isi paket, pilihan finish. |
+| 23:00 | Penutup | CTA utama dan catatan concept project. |
+
+Syarat pemetaan pilar: tidur → pagi, aktivitas–istirahat → siang, insight → sore tidak boleh mengubah pesan. Copy tidur berupa ringkasan, bukan diagnosis; copy insight tidak menjanjikan hasil. Tiga pilar harus tetap terbaca sebagai tiga hal yang berdiri sendiri.
+
+### Microcopy usulan (bahasa Inggris, ilustratif)
+
+- Penanda waktu: `06:40 · Morning`, `12:30 · Midday`, `16:30 · Afternoon`, `18:30 · Evening`, `19:30 · Evening`, `21:00 · Night`, `23:00 · Night`. Jam dan label hanyalah titik awal; jam pilar mengikuti adegan Visual Director.
+- Label UI aplikasi: `Simulated data`. Wajib pada setiap potongan UI aplikasi; berlaku lebih tinggi daripada aturan anti-slop tanpa caption.
+- Toggle cahaya di bab produk: `Daylight` / `Lamp light`. Toggle finish: `Silver` / `Black` / `Gold`.
+- Pilar: `Sleep` · `Activity & rest` · `Daily insight`. Judul pilar dan copy isi menyusul setelah struktur disetujui.
+
+### Catatan concept project (bentuk belum disepakati)
+
+- Opsi usulan: keterangan kecil permanen di footer, `Stillway is a concept project — a design exploration, not a real product.`, ditambah satu baris serupa dekat CTA di bab 23:00. Hero tidak diberi banner.
+- Alasan: D-002 mewajibkan proyek dinyatakan sebagai design exploration. Catatan harus jujur namun ringan agar tidak mengganggu pengalaman.
+
+### Catatan koordinasi
+
+- Aturan anti-slop Visual Director menghindari caption penjelas pada gambar. Copy konteks dan pilar diletakkan pada blok teks di samping atau di bawah foto, bukan di atas foto.
+- Perubahan microcopy yang memengaruhi frame dikoordinasikan ke Visual Director melalui pengguna; jangan mengubah copy secara sepihak di Figma.
 
 ## Batas copy
 
