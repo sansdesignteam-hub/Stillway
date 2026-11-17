@@ -46,6 +46,7 @@ Sumber: pesan pengguna pada pembahasan lingkup, 17 November 2026.
 | D-018 | Fase ini hanya berfokus pada Home/landing page. | Pengguna mempersempit lingkup; usulan Product, Cart, dan sizing overlay terpisah tidak diambil untuk fase ini. Desktop/mobile dan prototype belum dipilih. |
 | D-019 | Strategy Director membantu strategi konten dan copywriting website. | Pengguna menetapkan tambahan tanggung jawab agent strategi. |
 | D-020 | Visual Director mengarahkan visual, storytelling, konsep/style, dan image generation. | Pembagian peran dinyatakan pengguna untuk worktree visual. Konsep brand yang disetujui tetap menjadi dasar; usulan perubahan perlu dicatat. |
+| D-021 | Seluruh output website dan mockup website berbahasa Inggris, termasuk navigasi, headline, body copy, CTA, FAQ, label, dan microcopy. Diskusi serta dokumen strategi internal boleh berbahasa Indonesia. | Pengguna menegaskan bahwa website ditujukan untuk pasar internasional dan meminta output web berbahasa Inggris. Memperjelas baseline D-014. |
 
 Persetujuan membuat rincian tersebut menjadi dasar konsep, bukan fakta produk nyata atau bukti riset pengguna. Ringkasan operasional handoff: `figma-handoff.md`. Catatan kompetitor beserta sumber dan keterbatasan: `references.md`.
 

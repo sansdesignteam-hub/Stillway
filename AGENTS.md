@@ -3,6 +3,7 @@
 - Baca `context/decisions.md`, lalu `context/brief.md` sebelum bekerja. Untuk visual/Figma, lanjutkan ke `context/figma-handoff.md` dan `context/references.md`.
 - Sumber keputusan bersama untuk Codex dan Claude Code adalah `context/decisions.md`. Brief merangkum keputusan tersebut; jika bertentangan, klarifikasi kepada pengguna.
 - Proyek ini adalah design exploration Smart Ring e-commerce untuk portofolio Sans Brothers, bukan produk atau klien nyata.
+- Seluruh output yang tampil pada website atau mockup website wajib berbahasa Inggris untuk audiens internasional, termasuk navigasi, headline, body copy, CTA, FAQ, label, dan microcopy. Diskusi serta dokumen strategi internal boleh berbahasa Indonesia.
 - Ajukan pertanyaan penting secara bertahap. Catat keputusan yang disetujui beserta alasan, sumber persetujuan, dan hal yang masih terbuka. Jangan menganggap rekomendasi atau diamnya pengguna sebagai persetujuan.
 - Semua nama, fitur, spesifikasi, harga, persona, dan konten rekaan harus diberi label ilustratif serta status belum disetujui sampai pengguna menyetujuinya.
 - Jangan mengarang hasil bisnis, testimoni nyata, riset, pengujian pengguna, atau klaim kesehatan. Bedakan asumsi, referensi, evaluasi internal, dan bukti yang benar-benar tersedia.

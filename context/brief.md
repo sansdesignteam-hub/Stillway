@@ -25,6 +25,7 @@ Disetujui pada 17 November 2026 (D-011, D-012, D-014, D-015):
 
 - Konsep: smart ring untuk memahami ritme tubuh sehari-hari melalui tidur, aktivitas, dan istirahat.
 - Pasar internasional; posisi premium yang masih masuk akal; baseline konten bahasa Inggris dan USD. Negara penjualan spesifik belum ditetapkan.
+- Ketentuan bahasa (D-021): seluruh teks yang tampil pada website dan mockup wajib berbahasa Inggris, termasuk navigasi, CTA, FAQ, label, dan microcopy. Dokumen strategi internal serta diskusi boleh berbahasa Indonesia.
 - Audiens asumsi: profesional dan pelaku kreatif sekitar 28–45 tahun dengan rutinitas padat, tertarik pada wellness, serta menghargai desain dan kesederhanaan.
 - Karakter brand: tenang, peka, dan jelas. Copy kerja ilustratif: “Understand your rhythm.” Nama brand: Stillway (D-017); ketersediaan nama/copy belum diperiksa.
 - Pilar fitur konseptual: ringkasan pola tidur, keseimbangan aktivitas–istirahat, serta insight harian sederhana melalui aplikasi pendamping. Aplikasi penuh tidak otomatis masuk deliverable.
