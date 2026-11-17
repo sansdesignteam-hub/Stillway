@@ -1,6 +1,6 @@
 # Brief konsep Smart Ring e-commerce
 
-Status: konsep, paket, nama Stillway, dan fokus fase Home/landing page disetujui; struktur section, CTA, perangkat, serta interaksi masih terbuka. Baca `figma-handoff.md` untuk melanjutkan dengan AI agent lain.
+Status: konsep, paket, nama Stillway, dan fokus fase Home/landing page disetujui; struktur section, CTA, dan perangkat masih terbuka. Implementasi Home berbentuk kode (Astro, lokal) disetujui dan menunggu handoff Visual Director (D-022 sampai D-025). Baca `figma-handoff.md` untuk melanjutkan dengan AI agent lain.
 Sumber keputusan: `decisions.md`.
 
 ## Konteks yang disepakati
@@ -46,7 +46,7 @@ Fase ini hanya Home/landing page (D-018). Struktur section dan CTA belum disetuj
 
 ## 5. Ruang lingkup hasil akhir
 
-Strategy Director menangani strategi pesan, struktur konten, dan copywriting website (D-019). Visual Director mengarahkan visual, storytelling visual, konsep/style, dan image generation (D-020), dengan media visual Figma sesuai D-016. Fokus fase ini Home/landing page saja. Perangkat, jumlah frame, prototype, jadwal, dan kriteria selesai masih perlu ditentukan. Website demo, transaksi, backend, serta aplikasi penuh tidak masuk lingkup yang disetujui. Lihat `figma-handoff.md`.
+Strategy Director menangani strategi pesan, struktur konten, dan copywriting website (D-019). Visual Director mengarahkan visual, storytelling visual, konsep/style, dan image generation (D-020), dengan media visual Figma sesuai D-016. Fokus fase ini Home/landing page saja. Perangkat, jumlah frame, prototype, jadwal, dan kriteria selesai masih perlu ditentukan. Developer mengimplementasikan Home sebagai kode dengan Astro, berjalan lokal, dengan interaksi I-1 sampai I-5 dari `dev-proposal.md`. Pekerjaan dimulai setelah handoff frame dan token dari Visual Director; Vercel akan dihubungkan pengguna nanti (D-022 sampai D-025). Transaksi, backend, halaman lain, dan aplikasi penuh tidak masuk lingkup yang disetujui. Lihat `figma-handoff.md`.
 
 ## 6. Referensi dan aset
 
@@ -59,7 +59,7 @@ Daftar persiapan di bawah adalah usulan awal, belum disetujui dan belum dikumpul
 - Identitas dan UI: logo, tipografi, ikon, palet, serta copy ilustratif.
 - Untuk setiap aset: sumber, status dibuat/dilisensikan/dihasilkan AI, izin penggunaan, atribusi, dan kegunaan. Jangan menganggap aset dari situs referensi boleh dipakai ulang.
 
-Referensi dari pengguna telah dibaca melalui konten web: Sensiq, Oura, dan Happy Ring pada domain Fiftyseven. Catatan sumber serta batas tinjauan ada di `references.md`. Layout visual, motion, responsivitas, dan checkout lengkap belum diperiksa karena browser visual tidak tersedia. Kebutuhan aset rinci menunggu konsep serta lingkup disetujui.
+Referensi dari pengguna telah dibaca melalui konten web, lalu tampilan aktualnya ditinjau pada 17 November 2026 (desktop dan hero mobile; checkout tidak diperiksa). Catatan sumber, temuan visual, dan batas tinjauan ada di `references.md`. Arah visual: Home dikembangkan dalam dua versi. Versi 1 memakai Arah A “One Day, in Light” (`visual-directions.md`); Versi 2 memakai arah dari teman pengguna; versi final dipilih kemudian (D-022, D-023). Visual Director saat ini hanya mengerjakan Versi 1 untuk desktop 1440 dan mobile 390, dalam 4–6 frame, dengan satu gambar bayangan ring (D-024 sampai D-027). Kebutuhan aset rinci menunggu konsep serta lingkup disetujui.
 
 ## 7. Struktur studi kasus
 

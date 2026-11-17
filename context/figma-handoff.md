@@ -22,7 +22,7 @@ Brand yang disetujui adalah **Stillway**. Fokus fase ini **Home/landing page saj
 
 **Pembagian peran:** Strategy Director menangani strategi pesan, struktur konten, dan copywriting website. Visual Director menangani arahan visual, storytelling visual, konsep/style, dan image generation. Storytelling visual menerjemahkan pesan ke urutan adegan, fokus gambar, dan ritme halaman; perubahan pesan atau klaim produk perlu dikoordinasikan melalui catatan keputusan.
 
-Media visual berikutnya tetap Figma. Perangkat, jumlah frame, tingkat prototype, jadwal, dan kriteria selesai masih terbuka. Baca `home-copy.md` untuk usulan struktur section; copy belum final. Jangan menetapkan draft sebagai keputusan tanpa persetujuan pengguna.
+Home dikembangkan dalam dua versi visual (D-022). Versi 1 memakai Arah A “One Day, in Light” dari `visual-directions.md`; Versi 2 memakai arah dari teman pengguna. Jangan mencampur sistem visual kedua versi. Media visual berikutnya tetap Figma. Perangkat, jumlah frame, tingkat prototype, jadwal, dan kriteria selesai masih terbuka. Baca `home-copy.md` untuk usulan struktur section; copy belum final. Jangan menetapkan draft sebagai keputusan tanpa persetujuan pengguna.
 
 ## Dasar konsep yang disetujui — tetap ilustratif
 
@@ -48,7 +48,7 @@ Font, palet, bentuk ring rinci, dimensi, bahan teknis, ketahanan air, masa bater
 - Oura — https://ouraring.com/: pelajari kaitan pesan lifestyle, kategori manfaat, penjelasan aplikasi, dan pemilihan produk/finish. Halaman produk yang dibaca: https://ouraring.com/store/rings/oura-ring-5.
 - Happy Ring — https://happyring.fiftyseven.co/: pelajari struktur penjelasan teknologi. Halaman ini berfokus pada clinical care/trials dan Request a Demo, berbeda dari e-commerce konsumen.
 
-Ini telaah konten web pada 17 November 2026. Browser visual tidak tersedia saat riset awal: layout, animasi, perilaku scroll, responsivitas, dan checkout lengkap belum diverifikasi. Agent visual perlu meninjau tampilan aktual sebelum menyimpulkan gaya ketiga situs. Jangan menyebut art direction usulan sebagai hasil audit visual kompetitor. Situs dan harga dapat berubah.
+Telaah konten web dilakukan pada 17 November 2026. Tampilan aktual desktop dan hero mobile kemudian ditinjau Visual Director pada tanggal yang sama; lihat bagian “Telaah visual tampilan aktual” di `references.md`. Checkout dan interaksi hover belum diverifikasi. Jangan menyebut art direction usulan sebagai hasil audit visual kompetitor. Situs dan harga dapat berubah.
 
 Gunakan referensi untuk prinsip, bukan menyalin identitas, layout, copy, atau aset. Klaim, testimoni, angka statistik, dan sertifikasi kompetitor tidak berlaku bagi produk konsep ini.
 
