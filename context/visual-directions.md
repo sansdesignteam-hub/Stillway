@@ -1,6 +1,6 @@
 # Stillway — usulan arah visual Home
 
-Status: **Arah A disetujui sebagai dasar Versi 1 Home (D-022).** Arah B dan C tidak dipakai, kecuali satu gambar bayangan ring dari B (D-026). Spesifikasi kerja Versi 1 ada di bagian “Versi 1 — spesifikasi kerja”. Versi 2 memakai arah dari teman pengguna, dan versi final dipilih kemudian (D-023). Rincian di bawah, seperti warna, font, komposisi, dan daftar aset, masih berupa usulan kerja. Disusun pada 17 November 2026 setelah meninjau tampilan aktual referensi (lihat “Telaah visual tampilan aktual” di `references.md`). Seluruh nilai warna, font, dan komposisi masih berupa titik awal. Teks berbahasa Inggris di bawah merupakan contoh microcopy, bukan copy final; copy tetap menjadi wewenang Strategy Director.
+Status: **Arah A disetujui sebagai dasar Versi 1 Home (D-026).** Arah B dan C tidak dipakai, kecuali satu gambar bayangan ring dari B (D-030). Spesifikasi kerja Versi 1 ada di bagian “Versi 1 — spesifikasi kerja”. Versi 2 memakai arah dari teman pengguna, dan versi final dipilih kemudian (D-027). Rincian di bawah, seperti warna, font, komposisi, dan daftar aset, masih berupa usulan kerja. Disusun pada 17 November 2026 setelah meninjau tampilan aktual referensi (lihat “Telaah visual tampilan aktual” di `references.md`). Seluruh nilai warna, font, dan komposisi masih berupa titik awal. Teks berbahasa Inggris di bawah merupakan contoh microcopy, bukan copy final; copy tetap menjadi wewenang Strategy Director.
 
 Dasar yang dipegang: konsep ritme tubuh harian (tidur, aktivitas, istirahat), karakter tenang–peka–jelas, fotografi bercahaya alami, detail material, visualisasi data secukupnya, serta paket USD 299 dengan tiga finish dan tanpa langganan wajib.
 
@@ -171,7 +171,7 @@ Kompromi yang diterima: produksi aset paling berat. Mitigasi:
 
 ## Versi 1 — spesifikasi kerja
 
-Status: arah, gambar bayangan, perangkat, dan jumlah frame disetujui (D-022, D-025, D-026, D-027). Konsep motion dan aturan di bawah adalah **usulan Visual Director**; tingkat interaksi belum diputuskan.
+Status: arah, gambar bayangan, perangkat, dan jumlah frame disetujui (D-026, D-029, D-030, D-031). Konsep motion dan aturan di bawah adalah **usulan Visual Director**; tingkat interaksi belum diputuskan.
 
 ### Frame (D-027)
 
@@ -265,8 +265,8 @@ Disusun dari telaah referensi dan prinsip skill `design-taste-frontend` (leonxln
 
 ## Pertanyaan yang belum dijawab (diajukan bertahap)
 
-1. ~~Pemilihan arah~~ — terjawab pada D-022 dan D-026: Versi 1 = A ditambah 1 gambar bayangan ring.
-2. ~~Cakupan perangkat~~ — terjawab pada D-025: desktop 1440 + mobile 390.
-3. ~~Jumlah frame~~ — terjawab pada D-027: 4–6 frame.
+1. ~~Pemilihan arah~~ — terjawab pada D-026 dan D-030: Versi 1 = A ditambah 1 gambar bayangan ring.
+2. ~~Cakupan perangkat~~ — terjawab pada D-029: desktop 1440 + mobile 390.
+3. ~~Jumlah frame~~ — terjawab pada D-031: 4–6 frame.
 4. Tingkat interaksi: frame statis, prototype Figma untuk interaksi kunci, atau build oleh Developer.
 5. Metode aset: AI penuh, atau ring master 3D/AI ditambah plate lifestyle AI.

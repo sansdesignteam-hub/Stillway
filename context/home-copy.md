@@ -32,7 +32,7 @@ Ini adalah arsitektur pesan, bukan perintah layout atau jumlah section visual. V
 
 Supporting copy dan CTA belum disetujui. Headline emosional diimbangi penjelasan langsung tentang kategori dan fungsi produk. Copy section lengkap akan dikembangkan setelah tujuan CTA disepakati.
 
-## Penyesuaian untuk Versi 1 (Arah A, D-022)
+## Penyesuaian untuk Versi 1 (Arah A, D-026)
 
 Status: USULAN, belum disetujui. Sumber: `visual-directions.md` (worktree Visual Director). Urutan pesan di atas tetap menjadi acuan; hanya urutan visualnya mengikuti waktu dalam sehari. Versi 2 belum memiliki arah, sehingga bagian ini tidak berlaku untuknya.
 

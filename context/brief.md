@@ -59,7 +59,7 @@ Daftar persiapan di bawah adalah usulan awal, belum disetujui dan belum dikumpul
 - Identitas dan UI: logo, tipografi, ikon, palet, serta copy ilustratif.
 - Untuk setiap aset: sumber, status dibuat/dilisensikan/dihasilkan AI, izin penggunaan, atribusi, dan kegunaan. Jangan menganggap aset dari situs referensi boleh dipakai ulang.
 
-Referensi dari pengguna telah dibaca melalui konten web, lalu tampilan aktualnya ditinjau pada 17 November 2026 (desktop dan hero mobile; checkout tidak diperiksa). Catatan sumber, temuan visual, dan batas tinjauan ada di `references.md`. Arah visual: Home dikembangkan dalam dua versi. Versi 1 memakai Arah A “One Day, in Light” (`visual-directions.md`); Versi 2 memakai arah dari teman pengguna; versi final dipilih kemudian (D-022, D-023). Visual Director saat ini hanya mengerjakan Versi 1 untuk desktop 1440 dan mobile 390, dalam 4–6 frame, dengan satu gambar bayangan ring (D-024 sampai D-027). Kebutuhan aset rinci menunggu konsep serta lingkup disetujui.
+Referensi dari pengguna telah dibaca melalui konten web, lalu tampilan aktualnya ditinjau pada 17 November 2026 (desktop dan hero mobile; checkout tidak diperiksa). Catatan sumber, temuan visual, dan batas tinjauan ada di `references.md`. Arah visual: Home dikembangkan dalam dua versi. Versi 1 memakai Arah A “One Day, in Light” (`visual-directions.md`); Versi 2 memakai arah dari teman pengguna; versi final dipilih kemudian (D-026, D-027). Visual Director saat ini hanya mengerjakan Versi 1 untuk desktop 1440 dan mobile 390, dalam 4–6 frame, dengan satu gambar bayangan ring (D-028 sampai D-031). Kebutuhan aset rinci menunggu konsep serta lingkup disetujui.
 
 ## 7. Struktur studi kasus
 

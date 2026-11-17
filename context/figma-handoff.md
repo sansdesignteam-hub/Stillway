@@ -22,7 +22,7 @@ Brand yang disetujui adalah **Stillway**. Fokus fase ini **Home/landing page saj
 
 **Pembagian peran:** Strategy Director menangani strategi pesan, struktur konten, dan copywriting website. Visual Director menangani arahan visual, storytelling visual, konsep/style, dan image generation. Storytelling visual menerjemahkan pesan ke urutan adegan, fokus gambar, dan ritme halaman; perubahan pesan atau klaim produk perlu dikoordinasikan melalui catatan keputusan.
 
-Home dikembangkan dalam dua versi visual (D-022). Versi 1 memakai Arah A “One Day, in Light” dari `visual-directions.md`; Versi 2 memakai arah dari teman pengguna. Jangan mencampur sistem visual kedua versi. Media visual berikutnya tetap Figma. Perangkat, jumlah frame, tingkat prototype, jadwal, dan kriteria selesai masih terbuka. Baca `home-copy.md` untuk usulan struktur section; copy belum final. Jangan menetapkan draft sebagai keputusan tanpa persetujuan pengguna.
+Home dikembangkan dalam dua versi visual (D-026). Versi 1 memakai Arah A “One Day, in Light” dari `visual-directions.md`; Versi 2 memakai arah dari teman pengguna. Jangan mencampur sistem visual kedua versi. Media visual berikutnya tetap Figma. Perangkat, jumlah frame, tingkat prototype, jadwal, dan kriteria selesai masih terbuka. Baca `home-copy.md` untuk usulan struktur section; copy belum final. Jangan menetapkan draft sebagai keputusan tanpa persetujuan pengguna.
 
 ## Dasar konsep yang disetujui — tetap ilustratif
 
