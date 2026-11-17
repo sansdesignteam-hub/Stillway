@@ -4,7 +4,7 @@ Diperbarui: 17 November 2026.
 
 ## Status
 
-Brand Stillway dan fokus fase ini pada Home/landing page telah disetujui. Strategy Director menangani strategi pesan, struktur konten, dan copywriting website. Visual Director menangani arahan visual, storytelling visual, konsep/style, dan image generation. Perangkat, jumlah frame, interaksi, serta CTA Home masih terbuka.
+Brand Stillway dan fokus fase ini pada Home/landing page telah disetujui. Strategy Director menangani strategi pesan, struktur konten, dan copywriting website. Visual Director menangani arahan visual, storytelling visual, konsep/style, dan image generation. Developer mengimplementasikan Home sebagai kode (Astro, lokal); pekerjaan dimulai setelah handoff Visual Director (D-022 sampai D-025). Perangkat, jumlah frame, serta CTA Home masih terbuka.
 
 ## Keputusan yang telah disetujui
 
@@ -48,6 +48,17 @@ Sumber: pesan pengguna pada pembahasan lingkup, 17 November 2026.
 | D-020 | Visual Director mengarahkan visual, storytelling, konsep/style, dan image generation. | Pembagian peran dinyatakan pengguna untuk worktree visual. Konsep brand yang disetujui tetap menjadi dasar; usulan perubahan perlu dicatat. |
 | D-021 | Seluruh output website dan mockup website berbahasa Inggris, termasuk navigasi, headline, body copy, CTA, FAQ, label, dan microcopy. Diskusi serta dokumen strategi internal boleh berbahasa Indonesia. | Pengguna menegaskan bahwa website ditujukan untuk pasar internasional dan meminta output web berbahasa Inggris. Memperjelas baseline D-014. |
 
+## Persetujuan peran Developer dan implementasi Home
+
+Sumber: pesan pengguna pada 17 November 2026 yang menjawab pertanyaan bagian 12 di `dev-proposal.md`: “1. Iya, peran developer boleh dicatat di decision.md”, “2. Stack Astro karena nanti copy bakal ada penyesuaian lagi.”, “3. Waktu mulai nunggu dari Visual Director”, dan “4. Hosting cukup lokal dulu, nanti akan saya sambungkan dengan Vercel.”
+
+| ID | Keputusan | Alasan / dasar |
+| --- | --- | --- |
+| D-022 | Peran Developer adalah mengimplementasikan Home/landing page sebagai kode yang bisa dibuka di browser. Interaksi yang masuk lingkup adalah I-1 sampai I-5 di `dev-proposal.md`: pemilih finish Silver/Black/Gold tanpa add-to-cart, FAQ accordion, CTA anchor ke section produk, navigasi anchor dengan header sticky, dan label concept project. Product, Cart, checkout, pembayaran, akun, backend, form pengumpulan data, dan aplikasi penuh tetap di luar lingkup. | Jawaban “Iya” pada pertanyaan nomor 1, yang menanyakan Home berbentuk kode dengan I-1 sampai I-5 sekaligus pencatatan peran Developer. Melengkapi D-018 (Home saja). I-6 (cuplikan aplikasi bersimulasi) dan I-7 (motion) belum disetujui. Teks, tujuan CTA, dan struktur section tetap mengikuti keputusan Strategy Director/Visual Director yang belum ditetapkan. |
+| D-023 | Stack implementasi adalah Astro dengan output statis. | Pengguna memilih Astro karena copy akan disesuaikan lagi; copy dapat dipisah ke file konten. Versi Astro dipilih saat scaffolding. |
+| D-024 | Implementasi dimulai setelah handoff dari Visual Director (frame dan token Figma), bukan memakai wireframe netral lebih dulu. | Jawaban pengguna nomor 3. Belum ada file Figma atau token saat keputusan ini dicatat. |
+| D-025 | Hosting cukup lokal untuk saat ini. Pengguna sendiri yang nanti akan menghubungkan ke Vercel. | Jawaban pengguna nomor 4. Belum ada publikasi publik; waktu dan pengaturan Vercel (misalnya `noindex`) diputuskan kemudian. |
+
 Persetujuan membuat rincian tersebut menjadi dasar konsep, bukan fakta produk nyata atau bukti riset pengguna. Ringkasan operasional handoff: `figma-handoff.md`. Catatan kompetitor beserta sumber dan keterbatasan: `references.md`.
 
 ## Hal yang masih terbuka
@@ -56,7 +67,8 @@ Persetujuan membuat rincian tersebut menjadi dasar konsep, bukan fakta produk ny
 2. Spesifikasi teknis rinci, kompatibilitas, rentang ukuran, serta aturan sizing kit, pengiriman, dan retur. Konsep, audiens asumsi, dan paket utama sudah disetujui.
 3. Rumusan tantangan rinci dan cara mengevaluasi kualitas; arahnya adalah pemahaman nilai produk dan kejelasan pemilihan ukuran/finish sebelum membeli.
 4. Urutan section, CTA utama dan tujuan CTA Home; alur pembelian lintas halaman berada di luar fase ini.
-5. Cakupan visual Figma: halaman/frame, desktop/mobile, tingkat interaktivitas, waktu, dan batas pekerjaan. Mockup/prototype rinci serta website demo belum disetujui.
+5. Cakupan visual Figma: halaman/frame, desktop/mobile, tingkat interaktivitas, waktu, dan batas pekerjaan. Mockup/prototype rinci belum disetujui. Home berbentuk kode disetujui untuk dijalankan secara lokal (D-022, D-025); breakpoint mengikuti frame Figma.
+8. Implementasi: I-6 (cuplikan aplikasi bersimulasi) dan I-7 (motion); waktu dan pengaturan publikasi di Vercel; apakah demo ditautkan dari studi kasus.
 6. Referensi dan kebutuhan aset berikut sumber, hak pakai, serta atribusinya.
 7. Narasi studi kasus, peran, bukti proses, dan keterbatasan.
 
