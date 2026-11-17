@@ -1,6 +1,6 @@
 # Catatan keputusan proyek
 
-Diperbarui: 17 November 2026 (termasuk D-022 sampai D-031).
+Diperbarui: 17 November 2026 (termasuk D-022 sampai D-035).
 
 ## Status
 
@@ -75,6 +75,13 @@ Sumber: pesan pengguna kepada Visual Director, 17 November 2026: “arah visual 
 | D-029 | Perangkat Versi 1: desktop 1440 dan mobile 390. | Jawaban pengguna nomor 2, 17 November 2026, menyetujui rekomendasi Visual Director. Rekomendasi ini didasarkan pada calon klien e-commerce yang lazim menilai versi mobile dan rail waktu Arah A yang berubah bentuk di mobile. Jumlah frame dan tingkat interaksi masih terbuka. |
 | D-030 | Versi 1 memakai satu gambar diam bayangan ring (elemen dari Arah B) di bab material. Gambar ini tidak memakai model 3D, video, atau urutan gambar, dan harus lolos kriteria anti-slop. | Jawaban pengguna, 17 November 2026: “Elemen bayangan pakai 1 gambar saja gpp, pastikan tidak slop”. Pengguna juga meminta konsep animasi memakai prinsip skill design taste dan GSAP. Brief gambar dan kriteria tolak ada di `visual-directions.md`. |
 | D-031 | Versi 1 terdiri atas 4–6 frame: 1 Home penuh desktop 1440, 1 Home penuh mobile 390, dan 2–4 frame state interaksi. | Jawaban pengguna “Saya setuju” atas usulan Visual Director, 17 November 2026. State yang dipilih dan tingkat interaksi masih terbuka. |
+| D-028 | Versi 1 langsung dibangun oleh Developer di worktree 03-developer, dan iterasi interaksi dilakukan di sana. Prototype Figma tidak dibuat. Visual Director menyiapkan wireframe dalam bentuk gambar melalui `gpt-image-bridge` sebagai acuan layout. | Jawaban pengguna nomor 1, 17 November 2026. Konsep motion GSAP di `visual-directions.md` menjadi bahan awal Developer, bukan spesifikasi final. |
+| D-029 | Metode pembuatan aset (AI penuh atau ring 3D + AI) dibahas pada sesi terpisah. | Jawaban pengguna nomor 2, 17 November 2026. Belum ada aset final yang dibuat. |
+| D-030 | Gambar bayangan ring memakai finish Silver. | Jawaban pengguna nomor 3 (“Setuju”) atas usulan Visual Director, 17 November 2026. |
+| D-032 | Aset gambar Versi 1 memakai set **nature** (batu, lumut, kayu lapuk, rumput kering) dengan tone hangat, menggantikan interior apartemen. Semua adegan berupa still life ring **tanpa tangan**. Urutan waktu 06:40 → 23:00 Arah A dipertahankan melalui arah dan warna cahaya. | Pengguna menilai draf pertama (interior + tangan) kurang realistis dan memberikan 5 referensi nature, 17 November 2026. Opsi “Semua, tanpa tangan” dipilih atas rekomendasi Visual Director. Menggantikan rencana satu interior + tangan di `visual-directions.md`. Draf pertama diarsipkan. |
+| D-033 | Aturan anti-slop diubah: properti alam diperbolehkan, tetapi dibatasi pada satu material utama per adegan. Ring tidak boleh melayang, tanpa tumpukan batu atau batang berlumut ala Oura, dan pembeda Stillway tetap pada cahaya matahari dan waktu. | Pilihan pengguna “Ubah aturan, tetap beda”, 17 November 2026. Gambar referensi 1 dan 3 diduga berasal dari kampanye Oura sehingga hanya prinsipnya yang dipakai. |
+| D-034 | Regenerasi diawali 3 sampel uji (hero pagi, produk Silver Daylight, gambar bayangan). Sisa aset dibuat setelah tone sampel disetujui. | Pilihan pengguna “Uji 3 dulu”, 17 November 2026. |
+| D-035 | Set dasar semua aset Versi 1 adalah **N2-02 “moss rock studio”** (`design/assets/v1/nature-test/N2-02-moss-rock-studio.png`): batu granit pucat di atas hamparan lumut, pakis blur di latar depan, dinding plaster krem hangat dengan bayangan daun dari sinar matahari. Waktu 06:40 → 23:00 ditunjukkan melalui sudut dan warna bayangan daun, lalu ditutup dengan cahaya biru malam. Revisi D-033: hamparan lumut dan pakis blur di tepi latar depan diperbolehkan; ring melayang, gradasi latar, batang berlumut sebagai panggung, dan tumpukan batu tetap dilarang. Sampel batu kering (`N-*`) dan `N2-01` tidak dipakai. | Pengguna: “Saya suka N2-02-moss-rock-studio”, 17 November 2026, setelah membandingkan dua sampel lumut dengan rekomendasi Visual Director untuk N2-02. |
 
 ## Hal yang masih terbuka
 

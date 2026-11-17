@@ -56,6 +56,8 @@ Tidak ada warna aksen UI selain warna material ketiga finish. Kontras setiap kea
 
 Ruang gunakan satu interior yang sama. Fokus pada tangan dan objek, bukan wajah.
 
+Daftar aset rinci Versi 1 beserta prompt Google Flow (usulan, belum disetujui): `design/asset-prompts-v1.md`.
+
 **Hubungan dengan referensi.** Dari Oura: kesinambungan foto tangan bercahaya hangat menuju produk. Dari Sensiq: setiap pernyataan disertai satu potongan data kecil. Dari Happy Ring: satu mekanisme scroll signature yang konsisten. Pembeda Stillway: waktu sebagai struktur, cahaya sebagai bahasa, tanpa aksen neon, tanpa testimoni.
 
 **Risiko/kompromi.**
@@ -171,7 +173,7 @@ Kompromi yang diterima: produksi aset paling berat. Mitigasi:
 
 ## Versi 1 — spesifikasi kerja
 
-Status: arah, gambar bayangan, perangkat, dan jumlah frame disetujui (D-026, D-029, D-030, D-031). Konsep motion dan aturan di bawah adalah **usulan Visual Director**; tingkat interaksi belum diputuskan.
+Status: arah, gambar bayangan, perangkat, dan jumlah frame disetujui (D-026, D-029, D-030, D-031). Konsep motion dan aturan di bawah adalah **usulan Visual Director** yang menjadi bahan awal Developer; iterasi interaksi dilakukan di build (D-028).
 
 ### Frame (D-027)
 
@@ -187,7 +189,7 @@ Status: arah, gambar bayangan, perangkat, dan jumlah frame disetujui (D-026, D-0
 
 **Brief gambar (usulan).**
 
-- **Objek:** ring Stillway dari gambar acuan, finish **Silver**. Silver dipilih karena paling netral dalam membaca bentuk bayangan; perlu persetujuan.
+- **Objek:** ring Stillway dari gambar acuan, finish **Silver** (disetujui, D-030).
 - **Penempatan:** ring berbaring datar di permukaan, bukan berdiri. Posisi ini masuk akal secara fisik dan menghasilkan bayangan elips panjang.
 - **Permukaan:** batu kapur honed atau plaster tanpa glasir, dengan tekstur mikro nyata. Tanpa urat marmer.
 - **Cahaya:** satu sumber matahari keras dari sudut rendah (±10–15°), sekitar 4500K.
@@ -247,7 +249,7 @@ Prinsip: gerak hanya dipakai untuk menjelaskan sesuatu. Dalam satu halaman ada *
 - Panggil `ScrollTrigger.refresh()` setelah font dan gambar dimuat.
 - Buat ScrollTrigger berurutan dari atas ke bawah.
 
-**Handoff Figma.** Frame Figma bersifat statis. Motion didokumentasikan lewat anotasi pada frame dan tabel ini. Jika prototype dipilih, gunakan Smart Animate untuk state finish/cahaya dan FAQ.
+**Handoff.** Tidak ada prototype Figma (D-028). Motion diserahkan melalui tabel ini dan wireframe gambar di `design/wireframes/v1/`, lalu diiterasi langsung di build Developer.
 
 ### Aturan anti-slop Versi 1
 
@@ -262,11 +264,12 @@ Disusun dari telaah referensi dan prinsip skill `design-taste-frontend` (leonxln
 7. Gambar tanpa caption penjelas. **Pengecualian proyek:** label “Simulated data” pada UI aplikasi tetap wajib karena aturan kejujuran proyek lebih tinggi daripada aturan skill.
 8. Tanpa ungu/lavender, neon, gradasi dekoratif, atau glassmorphism.
 9. Foto AI didokumentasikan sebagai AI-generated. Skill menyarankan foto stock nyata, tetapi proyek ini memakai image generation sesuai peran Visual Director.
+10. **Set nature (D-032, D-033, direvisi D-035):** satu set tetap, yaitu batu granit pucat, hamparan lumut, pakis blur di tepi latar depan, dan dinding plaster krem dengan bayangan daun. Ring selalu bertumpu dengan bayangan kontak dan hanya memantulkan dinding, lumut, serta cahaya, bukan lanskap. Tanpa tumpukan batu, batang berlumut sebagai panggung, atau latar bergradasi. Tanpa tangan. Daftar tolak gambar bayangan tentang daun, bunga kering, dan batu bertekstur digantikan aturan ini, sedangkan larangan marmer, tetesan air, dan ring melayang tetap berlaku.
 
 ## Pertanyaan yang belum dijawab (diajukan bertahap)
 
 1. ~~Pemilihan arah~~ — terjawab pada D-026 dan D-030: Versi 1 = A ditambah 1 gambar bayangan ring.
 2. ~~Cakupan perangkat~~ — terjawab pada D-029: desktop 1440 + mobile 390.
 3. ~~Jumlah frame~~ — terjawab pada D-031: 4–6 frame.
-4. Tingkat interaksi: frame statis, prototype Figma untuk interaksi kunci, atau build oleh Developer.
-5. Metode aset: AI penuh, atau ring master 3D/AI ditambah plate lifestyle AI.
+4. ~~Tingkat interaksi~~ — terjawab pada D-028: dibangun langsung oleh Developer; wireframe berupa gambar.
+5. Metode aset — ditunda ke sesi terpisah (D-029).
