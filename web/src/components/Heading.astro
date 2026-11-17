@@ -1,0 +1,17 @@
+---
+/** A heading whose authored lines rise from behind their own baseline on reveal. */
+interface Props {
+  lines: string[];
+  level?: 2 | 3;
+  id?: string;
+  class?: string;
+}
+const { lines, level = 2, id, class: className = 'display' } = Astro.props;
+const Tag = `h${level}` as 'h2' | 'h3';
+---
+
+<Tag class={className} id={id} aria-label={lines.join(' ')} data-split>
+  {lines.map((line) => (
+    <span class="line" aria-hidden="true"><span class="line__inner">{line}</span></span>
+  ))}
+</Tag>

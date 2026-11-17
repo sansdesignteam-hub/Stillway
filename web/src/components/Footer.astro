@@ -1,0 +1,38 @@
+---
+/** Footer (layout after trionn.com): credits and contact on top, the wordmark drawn in lines below. */
+import { footer, nav } from '../content/home';
+---
+
+<footer class="site-footer" data-footer data-theme="dark">
+  <div class="footer__top frame">
+    <div class="footer__about">
+      <p class="footer__sig">{footer.signature}</p>
+      <p class="footer__credit">{footer.credit}</p>
+      <p class="footer__disclaimer">{footer.disclaimer}</p>
+      <p class="footer__hint" aria-hidden="true">
+        <svg viewBox="0 0 20 12" width="20" height="12"><path d="M1 3h18M1 6h14M1 9h18" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" /></svg>
+        {footer.hint}
+      </p>
+    </div>
+
+    <div class="footer__col">
+      <p class="footer__label">{footer.enquiryLabel}</p>
+      <p class="footer__email"><span class="footer__muted">E.</span> <a class="link" href={`mailto:${footer.email}`}>{footer.email}</a></p>
+    </div>
+
+    <nav class="footer__col" aria-label="Footer">
+      <p class="footer__label">{footer.menuLabel}</p>
+      <ul class="footer__menu">
+        {nav.links.map((l) => (
+          <li><a class="link" href={l.href}>{l.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+
+  <div class="footer__mark frame" data-footer-lines>
+    <canvas aria-hidden="true"></canvas>
+    <p class="footer__mark-text" aria-hidden="true">{footer.wordmark}</p>
+  </div>
+  <p class="visually-hidden">Stillway</p>
+</footer>

@@ -37,3 +37,15 @@ Status: **AI-generated, draf 2, belum di-retouch, belum disetujui.** Set dasar s
 | P-02–P-06 | Silver Lamp; Black dan Gold × Daylight/Lamp | — | **Belum dibuat.** |
 
 Catatan umum: permukaan ring masih memantulkan sedikit warna hijau dari lumut, dan itu wajar secara fisik. Perubahan waktu terlihat dari sudut dan warna bayangan daun, tetapi pada beberapa gambar perbedaannya halus; color grading per bab (Dawn, Day, Dusk, Night) sebaiknya dilakukan saat retouch.
+
+## Dari pengguna (`home/user/`)
+
+Diberikan pengguna pada 17 November 2026 untuk hero build Home. Sumber, alat, dan status AI belum dicatat; perlu dikonfirmasi pengguna.
+
+| File | Isi | Catatan |
+| --- | --- | --- |
+| `H-01-hero-bg.png` | Batu granit di atas lumut, dinding plaster dengan bayangan daun, tanpa cincin (2556×1448). | Latar hero. |
+| `H-02-ring-cutout.png` | Cutout cincin Silver bertransparansi, di-crop Developer dari kanvas 2556×1448 menjadi 496×458. | Dipakai di hero (mendarat di batu) dan penutup. Resolusinya kecil, sehingga terlihat lembut di layar retina; versi resolusi lebih tinggi disarankan. |
+| `H-03-ring-top-cutout.png` | Cutout cincin tampak atas, transparan (1352×1352). | Latar section “One line a day”. |
+| `H-04-night-bg.png` | Batu berlumut di malam hari, tanpa cincin (2508×1412). | Latar CTA penutup. |
+| `H-05-ring-night-cutout.png` | Layer cincin transparan di kanvas yang sama dengan H-04; `-crop` adalah potongan Developer (604×614). | CTA penutup. |

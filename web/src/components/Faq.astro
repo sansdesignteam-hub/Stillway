@@ -1,0 +1,21 @@
+---
+/** 21:00 — FAQ as an open list (after ayocin.com): question left, answer right, rules between rows. */
+import { faq } from '../content/home';
+---
+
+<section class="chapter faq" id="faq" data-chapter data-time="21:00" data-theme="light" data-field="#F6F1E8" aria-labelledby="faq-title">
+  <div class="faq__head frame">
+    <h2 class="faq__title" id="faq-title" data-split aria-label="FAQ">
+      <span class="line" aria-hidden="true"><span class="line__inner">FAQ</span></span>
+    </h2>
+    <p class="faq__sub" data-reveal>{faq.heading.join(' ')}</p>
+  </div>
+  <dl class="faq__list">
+    {faq.items.map((it) => (
+      <div class="faq__row frame" data-reveal>
+        <dt class="faq__q">{it.q}</dt>
+        <dd class="faq__a">{it.a}</dd>
+      </div>
+    ))}
+  </dl>
+</section>

@@ -1,0 +1,94 @@
+---
+import { getImage } from 'astro:assets';
+import Button from './Button.astro';
+import { hero } from '../content/home';
+import bg from '../../../design/assets/v1/home/user/H-01-hero-bg.png';
+import ring from '../../../design/assets/v1/home/user/H-02-ring-cutout.png';
+
+const set = async (src: ImageMetadata, widths: number[], format: 'avif' | 'webp') =>
+  (await Promise.all(widths.map((width) => getImage({ src, width, format, quality: 78 }))))
+    .map((i, k) => `${i.src} ${widths[k]}w`)
+    .join(', ');
+const bgW = [1280, 1920, 2556];
+const bgAvif = await set(bg, bgW, 'avif');
+const bgWebp = await set(bg, bgW, 'webp');
+const bgJpg = await getImage({ src: bg, width: 1920, format: 'jpg', quality: 80 });
+const ringWebp = await getImage({ src: ring, width: 496, format: 'webp', quality: 90 });
+const ringPng = await getImage({ src: ring, width: 496, format: 'png' });
+
+const icons = [
+  // sleep: crescent
+  'M11.5 9.6A4.6 4.6 0 0 1 6.4 4.5a4.6 4.6 0 1 0 5.1 5.1Z',
+  // activity and rest: two bars
+  'M5 12V6M9 12V3M13 12V8',
+  // insight: a line of text under a dot
+  'M3 10h10M3 13h6M8 3.5a1.5 1.5 0 1 1 0 .01',
+];
+---
+
+<section class="chapter hero" id="top" data-chapter data-time="06:40" data-theme="photo" aria-labelledby="hero-title">
+  <div class="hero__track" data-hero>
+    <div class="hero__pin">
+      <div class="hero__stage" aria-hidden="true">
+        <picture class="hero__bg">
+          <source type="image/avif" srcset={bgAvif} sizes="max(100vw, 177svh)" />
+          <source type="image/webp" srcset={bgWebp} sizes="max(100vw, 177svh)" />
+          <img src={bgJpg.src} width="2556" height="1448" alt="" fetchpriority="high" decoding="async" data-hero-bg />
+        </picture>
+        <div class="hero__dim" data-hero-dim></div>
+      </div>
+
+
+      <div class="hero__top">
+        <h1 class="hero__word" id="hero-title" data-hero-word>
+          <span class="visually-hidden">Stillway. {hero.tagline}</span>
+          <span class="hero__word-inner" aria-hidden="true">
+            {hero.wordmark.split('').map((ch) => <span class="hero__char">{ch}</span>)}
+          </span>
+        </h1>
+        <div class="hero__meta frame" data-hero-meta>
+          <p class="hero__tag"><i class="dot" aria-hidden="true"></i>{hero.tagline}</p>
+          <ul class="hero__features">
+            {hero.features.map((f, i) => (
+              <li>
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d={icons[i]} fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                {f}
+              </li>
+            ))}
+          </ul>
+          <p class="hero__price">{hero.price}</p>
+        </div>
+      </div>
+
+      <div class="hero__stage hero__stage--front">
+        <div class="hero__contact" data-hero-contact aria-hidden="true"></div>
+        <picture class="hero__ring" data-hero-ring>
+          <source type="image/webp" srcset={ringWebp.src} />
+          <img src={ringPng.src} width="496" height="458" alt={hero.alt} decoding="async" />
+        </picture>
+      </div>
+
+
+      <div class="hero__bottom frame">
+        <div class="hero__copy">
+          <p class="hero__statement" data-hero-fade>{hero.statement}</p>
+          <div class="hero__offer-block" data-hero-offer>
+            <Button href={hero.cta.href} label={hero.cta.label} variant="paper" />
+            <p class="hero__offer">
+              {hero.offer.map((o, i) => (
+                <>
+                  {i > 0 && <span class="sep" aria-hidden="true">·</span>}
+                  <span>{o}</span>
+                </>
+              ))}
+            </p>
+          </div>
+        </div>
+        <div class="hero__foot" data-hero-fade>
+          <span>{hero.scroll}</span>
+          <span><i class="dot" aria-hidden="true"></i>Stillway</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,62 @@
+---
+/**
+ * 17:30 — One line a day. A large ring fills the field; the day's insight
+ * sits over it as one dark glass instrument card (after sensiq.co).
+ */
+import { Image } from 'astro:assets';
+import { insight } from '../content/home';
+import ring from '../../../design/assets/v1/home/user/H-03-ring-top-cutout.png';
+const p = insight.phone;
+
+// the day as a half dial: 00:00 on the left, 24:00 on the right, filled to 17:30
+const [hh, mm] = p.time.split(':').map(Number);
+const share = (hh * 60 + mm) / (24 * 60);
+const R = 92;
+const C = Math.PI * R; // half circumference
+---
+
+<section class="chapter insight" id="insight" data-chapter data-time={insight.time} data-theme="light" data-field="#E9E7E2" aria-labelledby="insight-title">
+  <div class="insight__lines" aria-hidden="true"></div>
+
+  <div class="insight__head frame">
+    <h2 class="display display--m insight__title" id="insight-title" data-split aria-label={insight.heading.join(' ')}>
+      {insight.heading.map((l) => <span class="line" aria-hidden="true"><span class="line__inner">{l}</span></span>)}
+    </h2>
+    <p class="insight__body" data-reveal>{insight.body}</p>
+  </div>
+
+  <div class="insight__stage">
+    <div class="insight__ring" data-insight-ring>
+      <Image src={ring} alt="The Stillway ring seen from above, its dark inner surface and sensor window facing up." widths={[700, 1000, 1352]} sizes="min(1440px, 170vw)" format="webp" quality={82} loading="lazy" />
+    </div>
+
+    <figure class="glass" data-ui data-insight-card aria-label="Simulated daily insight from the companion app">
+      <div class="glass__top" data-glass-part>
+        <p class="glass__label">
+          {p.label}
+          <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M3 10h10M3 13h6M8 3.5a1.5 1.5 0 1 1 0 .01" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" /></svg>
+        </p>
+        <p class="glass__pill">Simulated data</p>
+      </div>
+
+      <div class="glass__gauge" data-glass-part>
+        <svg viewBox="0 0 220 124" aria-hidden="true">
+          <path class="glass__track" d={`M18 112 A${R} ${R} 0 0 1 202 112`} />
+          <path class="glass__fill" d={`M18 112 A${R} ${R} 0 0 1 202 112`} stroke-dasharray={`${(C * share).toFixed(1)} ${C.toFixed(1)}`} data-gauge-fill style={`--len:${(C * share).toFixed(1)}`} />
+        </svg>
+        <p class="glass__value">{p.time}</p>
+        <p class="glass__sub">{p.gauge.sub} · {p.day}</p>
+        <span class="glass__end" data-end="from">{p.gauge.from}</span>
+        <span class="glass__end" data-end="to">{p.gauge.to}</span>
+      </div>
+
+      <p class="glass__sentence" data-glass-part>{p.sentence}</p>
+
+      <dl class="glass__stats" data-glass-part>
+        {p.rows.map((r) => (
+          <div><dt>{r.label}</dt><dd>{r.value}</dd></div>
+        ))}
+      </dl>
+    </figure>
+  </div>
+</section>

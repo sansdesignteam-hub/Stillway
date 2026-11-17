@@ -1,0 +1,44 @@
+---
+import '@fontsource-variable/geist/index.css';
+import 'lenis/dist/lenis.css';
+import '../styles/global.css';
+import { meta } from '../content/home';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+const { title = meta.title, description = meta.description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <!-- Concept project, local only (D-025): keep it out of search indexes. -->
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#F2EDE4" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline>
+      // Hide animated content only when motion will run, and never for long:
+      // if the motion module fails to start, everything is shown after 2.5s.
+      (function () {
+        var d = document.documentElement;
+        d.classList.add('js');
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          d.classList.add('motion-ready');
+          setTimeout(function () {
+            if (!window.__stillwayMotion) d.classList.remove('motion-ready');
+          }, 2500);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <slot />
+  </body>
+</html>

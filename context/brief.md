@@ -86,4 +86,4 @@ Jangan mengganti hasil bisnis dengan angka fiktif. Jika belum ada pengujian peng
 - [ ] Kebutuhan referensi, aset, dan narasi studi kasus ditinjau.
 - [ ] Pengguna menyetujui brief serta memberi arahan untuk masuk tahap desain.
 
-Tujuan portofolio, arah konsep, dan paket produk telah disepakati. Pengguna akan melanjutkan visual melalui agent Figma lain; fokus fase ini Home/landing page; lingkup produksi rinci masih terbuka. Belum ada visual atau website yang dibuat dalam sesi ini.
+Tujuan portofolio, arah konsep, dan paket produk telah disepakati. Pengguna akan melanjutkan visual melalui agent Figma lain; fokus fase ini Home/landing page; lingkup produksi rinci masih terbuka. Build Home Versi 1 (Astro, lokal) sudah dimulai di `web/` sesuai D-036; copy dan token tambahan di dalamnya masih draf.

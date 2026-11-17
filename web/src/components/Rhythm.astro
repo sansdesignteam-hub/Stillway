@@ -1,0 +1,42 @@
+---
+/**
+ * 07:00 → 08:30. Sleep and "Patterns, not scores" in one section (after altina.co):
+ * the copy on the left stays put while the photographs on the right scroll past;
+ * whichever photograph holds the centre decides which copy is shown (crossfade).
+ */
+import Img from './Img.astro';
+import { sleep, context } from '../content/home';
+import sleepImg from '../../../design/assets/v1/home/A-02-sleep.png';
+import patternImg from '../../../design/assets/v1/home/P-01-silver-daylight.png';
+
+const steps = [
+  { time: sleep.time, heading: sleep.heading, body: sleep.body, img: sleepImg, alt: sleep.alt },
+  { time: context.time, heading: context.slogan, body: context.body, img: patternImg, alt: context.alt },
+];
+---
+
+<section class="chapter rhythm field-dawn" id="sleep" data-chapter data-time={sleep.time} data-theme="light" data-field="#F2EDE4" aria-label="Sleep and daily rhythm">
+  <div class="rhythm__grid frame">
+    <div class="rhythm__copy">
+      <div class="rhythm__sticky">
+        {steps.map((s, i) => (
+          <article class:list={['rhythm__step', i === 0 && 'is-active']} data-rhythm-step={i} id={i === 1 ? 'rhythm' : undefined}>
+            <h2 class="display display--m rhythm__title">
+              {s.heading.map((l) => <span class="rhythm__line">{l}</span>)}
+            </h2>
+            <p class="lede">{s.body}</p>
+
+          </article>
+        ))}
+      </div>
+    </div>
+
+    <div class="rhythm__media">
+      {steps.map((s, i) => (
+        <figure class="rhythm__shot" data-rhythm-shot={i} data-time={i === 1 ? s.time : undefined}>
+          <Img src={s.img} alt={s.alt} sizes="(max-width: 760px) 100vw, 46vw" data-parallax />
+        </figure>
+      ))}
+    </div>
+  </div>
+</section>

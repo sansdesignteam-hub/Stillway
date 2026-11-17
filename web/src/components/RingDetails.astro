@@ -1,0 +1,49 @@
+---
+/**
+ * 18:30 — Made to be forgotten (layout after ayocin.com): a modest heading on the left,
+ * then three columns: the point, its photograph, its longer explanation.
+ * Pinned; each point replaces the last as you scroll.
+ */
+import Img from './Img.astro';
+import { ring } from '../content/home';
+import a08 from '../../../design/assets/v1/home/A-08-macro-outer.png';
+import a03 from '../../../design/assets/v1/home/A-03-context-1000.png';
+import a09 from '../../../design/assets/v1/home/A-09-macro-inner.png';
+const srcs = { a08, a03, a09 } as const;
+---
+
+<section class="chapter ring-story field-lamp" id="ring" data-chapter data-time={ring.time} data-theme="dark" data-field="#2A2520" aria-labelledby="ring-title">
+  <div class="ring-story__track" data-ring-story>
+    <div class="ring-story__stage">
+      <div class="rs__head frame">
+        <h2 class="rs__title" id="ring-title" data-split aria-label={ring.heading}>
+          <span class="line" aria-hidden="true"><span class="line__inner">{ring.heading}</span></span>
+        </h2>
+      </div>
+
+      <div class="rs__row frame">
+        <div class="rs__points">
+          {ring.steps.map((s, i) => (
+            <h3 class:list={['rs__point', i === 0 && 'is-active']} data-step={i}>{s.title}</h3>
+          ))}
+        </div>
+
+        <div class="ring-story__media">
+          {ring.steps.map((s, i) => (
+            <div class="ring-story__plate" data-ring-plate={i}>
+              <Img src={srcs[s.img as keyof typeof srcs]} alt={s.alt} sizes="(max-width: 760px) 100vw, 40vw" />
+            </div>
+          ))}
+        </div>
+
+        <div class="rs__bodies">
+          {ring.steps.map((s, i) => (
+            <div class:list={['rs__body', i === 0 && 'is-active']} data-step-body={i}>
+              {s.body.map((para) => <p>{para}</p>)}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

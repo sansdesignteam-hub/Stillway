@@ -1,0 +1,53 @@
+---
+import Img from './Img.astro';
+import { daylight as d } from '../content/home';
+import a01m from '../../../design/assets/v1/home/A-01-hero-mobile.png';
+import a06 from '../../../design/assets/v1/home/A-06a-set-0900.png';
+import p01 from '../../../design/assets/v1/home/P-01-silver-daylight.png';
+import a05 from '../../../design/assets/v1/home/A-05-context-1230.png';
+import a01d from '../../../design/assets/v1/home/A-01-hero-desktop.png';
+
+const srcs = { a01m, a06, p01, a05, a01d } as const;
+const first = d.frames[0];
+---
+
+<section class="chapter activity field-umber" id="day" data-chapter data-theme="dark" data-field="#1E1915" aria-labelledby="day-title">
+  <div class="activity__track" data-activity style={`--frames: ${d.frames.length}`}>
+    <span class="time-marker time-marker--start" data-time={d.timeFrom} aria-hidden="true"></span>
+    <span class="time-marker time-marker--end" data-time={d.timeTo} aria-hidden="true"></span>
+
+    <div class="activity__stage">
+      <div class="activity__head frame">
+        <h2 class="activity__title" id="day-title" data-split aria-label={d.heading.join(' ')}>
+          <span class="line" aria-hidden="true"><span class="line__inner activity__muted">{d.heading[0]}</span></span>
+          <span class="line" aria-hidden="true"><span class="line__inner">{d.heading[1]}</span></span>
+        </h2>
+        <p class="activity__body" data-reveal>{d.body}</p>
+      </div>
+
+      <div class="activity__frame" aria-hidden="true"></div>
+
+      <ol class="activity__items" data-activity-items>
+        {d.frames.map((f, i) => (
+          <li class="activity__item" data-activity-item={i} >
+            <Img src={srcs[f.key as keyof typeof srcs]} alt={f.alt} sizes="(max-width: 760px) 72vw, 32vw" widths={[480, 768, 1080]} />
+            <span class="visually-hidden">{f.time}, {f.state}, {f.detail} (simulated).</span>
+          </li>
+        ))}
+      </ol>
+
+      <div class="activity__now frame" aria-hidden="true" data-reveal>
+        <p class="activity__time" data-activity-time>{first.time}</p>
+        <p class="activity__state"><i class="key" data-activity-key data-state={first.state} /><span data-activity-state>{first.state}</span></p>
+        <p class="activity__detail" data-activity-detail>{first.detail}</p>
+        <p class="activity__sim">{d.sim}</p>
+      </div>
+
+      <div class="activity__progress frame" aria-hidden="true">
+        {d.frames.map((f, i) => (
+          <span class="activity__tick" data-activity-tick={i}>{f.time}</span>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>

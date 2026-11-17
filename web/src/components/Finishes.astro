@@ -1,0 +1,74 @@
+---
+/**
+ * 19:00 → 19:30. The evening photograph is the field; the product sits over it
+ * as one light card (after ayocin.com's order card): finish picture left, details right.
+ */
+import Img from './Img.astro';
+import { finishes as f } from '../content/home';
+import silver from '../../../design/ring-master/04-three-quarter-outer.png';
+import black from '../../../design/assets/v1/masters/R-black.png';
+import gold from '../../../design/assets/v1/masters/R-gold.png';
+import evening from '../../../design/assets/v1/home/A-10-ring-shadow.png';
+const imgs = { silver, black, gold } as const;
+---
+
+<section class="chapter finishes" id="finishes" data-chapter data-time="19:00" data-theme="light" data-field="#F6F5F1" aria-labelledby="finishes-title">
+  <div class="finishes__bg" aria-hidden="true" data-finishes-bg>
+    <Img src={evening} alt="" sizes="100vw" />
+  </div>
+
+  <div class="frame finishes__wrap">
+    <div class="order-card" data-order-card>
+      <div class="finish-stage" data-finish-stage data-light="day" data-finish="silver">
+        {f.options.map((o) => (
+          <div class="finish-stage__ring" data-finish-img={o.id}>
+            <Img src={imgs[o.id as keyof typeof imgs]} alt={f.finishAlt.replace('{finish}', o.label)} sizes="(max-width: 760px) 90vw, 40vw" widths={[480, 676, 1024]} />
+          </div>
+        ))}
+        <p class="finish-stage__label" aria-hidden="true"><span data-finish-name>Silver</span> · <span data-light-name>Daylight</span></p>
+      </div>
+
+      <div class="order-card__body">
+        <span class="order-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" width="44" height="44"><ellipse cx="24" cy="20" rx="13" ry="5.5" fill="none" stroke="currentColor" stroke-width="1.4" /><path d="M11 20v8c0 3 5.8 5.5 13 5.5s13-2.5 13-5.5v-8" fill="none" stroke="currentColor" stroke-width="1.4" /><ellipse cx="24" cy="20" rx="10" ry="3.6" fill="none" stroke="currentColor" stroke-width="1" /></svg>
+        </span>
+
+        <h2 class="order-card__title" id="finishes-title">{f.heading.join(' ')}</h2>
+        <p class="order-card__lede">{f.body}</p>
+
+        <p class="order-card__row order-card__price">
+          <span>{f.priceLabel}: <strong>{f.price}</strong></span>
+          <span class="order-card__muted">{f.priceNote}</span>
+        </p>
+
+        <form class="order-card__form" data-picker onsubmit="return false">
+          <fieldset class="order-card__row choice">
+            <legend class="visually-hidden">{f.finishLegend}</legend>
+            {f.options.map((o, i) => (
+              <label class:list={['choice__item', `choice--${o.id}`]}>
+                <input type="radio" name="finish" value={o.id} checked={i === 0} />
+                <span class="choice__dot" aria-hidden="true"></span>
+                <span class="choice__label">{o.label}</span>
+              </label>
+            ))}
+          </fieldset>
+
+          <fieldset class="order-card__row choice choice--light">
+            <legend class="choice__legend">{f.lightLegend}</legend>
+            {f.lights.map((l, i) => (
+              <label class="choice__item">
+                <input type="radio" name="light" value={l.id} checked={i === 0} />
+                <span class="choice__dot choice__dot--plain" aria-hidden="true"></span>
+                <span class="choice__label">{l.label}</span>
+              </label>
+            ))}
+          </fieldset>
+          <p class="visually-hidden" aria-live="polite" data-picker-status></p>
+        </form>
+
+        <p class="order-card__box"><strong>{f.boxHeading}.</strong> {f.box}</p>
+        <p class="order-card__note">{f.conceptNote}</p>
+      </div>
+    </div>
+  </div>
+</section>
