@@ -1,10 +1,10 @@
 # Catatan keputusan proyek
 
-Diperbarui: 17 November 2026.
+Diperbarui: 17 November 2026 (termasuk D-022 sampai D-027).
 
 ## Status
 
-Brand Stillway dan fokus fase ini pada Home/landing page telah disetujui. Strategy Director menangani strategi pesan, struktur konten, dan copywriting website. Visual Director menangani arahan visual, storytelling visual, konsep/style, dan image generation. Perangkat, jumlah frame, interaksi, serta CTA Home masih terbuka.
+Brand Stillway dan fokus fase ini pada Home/landing page telah disetujui. Strategy Director menangani strategi pesan, struktur konten, dan copywriting website. Visual Director menangani arahan visual, storytelling visual, konsep/style, dan image generation. Versi 1 Home memakai Arah A; Versi 2 memakai arah dari teman pengguna, dan versi final dipilih kemudian (D-022, D-023). Perangkat, jumlah frame, interaksi, serta CTA Home masih terbuka.
 
 ## Keputusan yang telah disetujui
 
@@ -49,6 +49,19 @@ Sumber: pesan pengguna pada pembahasan lingkup, 17 November 2026.
 | D-021 | Seluruh output website dan mockup website berbahasa Inggris, termasuk navigasi, headline, body copy, CTA, FAQ, label, dan microcopy. Diskusi serta dokumen strategi internal boleh berbahasa Indonesia. | Pengguna menegaskan bahwa website ditujukan untuk pasar internasional dan meminta output web berbahasa Inggris. Memperjelas baseline D-014. |
 
 Persetujuan membuat rincian tersebut menjadi dasar konsep, bukan fakta produk nyata atau bukti riset pengguna. Ringkasan operasional handoff: `figma-handoff.md`. Catatan kompetitor beserta sumber dan keterbatasan: `references.md`.
+
+## Persetujuan arah visual
+
+Sumber: pesan pengguna kepada Visual Director, 17 November 2026: “arah visual pertama saya menggunakan Arah A, dan arah visual kedua akan saya gunakan dari arah visual dari teman saya sendiri … Nanti akan saya diskusikan dengan teman saya Visual mana yang cocok.”
+
+| ID | Keputusan | Alasan / dasar |
+| --- | --- | --- |
+| D-022 | Home dikembangkan dalam dua versi visual terpisah. Versi 1 memakai Arah A “One Day, in Light” dari `visual-directions.md`. Versi 2 memakai arah visual dari teman pengguna. | Pengguna ingin membandingkan dua pendekatan sebelum memilih. Rekomendasi A dari Visual Director diterima untuk Versi 1. Peminjaman elemen bayangan ring dari Arah B belum disetujui. |
+| D-023 | Versi final belum dipilih. Pengguna akan menentukannya bersama temannya setelah kedua versi tersedia. | Pernyataan pengguna. Kriteria pembanding, peran Visual Director pada Versi 2, dan batas waktu belum ditentukan. |
+| D-024 | Visual Director hanya mengerjakan Versi 1 (Arah A) untuk saat ini. Pengguna akan memberi tahu jika arah Versi 2 dari temannya sudah tersedia di Figma. | Jawaban pengguna nomor 1, 17 November 2026. |
+| D-025 | Perangkat Versi 1: desktop 1440 dan mobile 390. | Jawaban pengguna nomor 2, 17 November 2026, menyetujui rekomendasi Visual Director. Rekomendasi ini didasarkan pada calon klien e-commerce yang lazim menilai versi mobile dan rail waktu Arah A yang berubah bentuk di mobile. Jumlah frame dan tingkat interaksi masih terbuka. |
+| D-026 | Versi 1 memakai satu gambar diam bayangan ring (elemen dari Arah B) di bab material. Gambar ini tidak memakai model 3D, video, atau urutan gambar, dan harus lolos kriteria anti-slop. | Jawaban pengguna, 17 November 2026: “Elemen bayangan pakai 1 gambar saja gpp, pastikan tidak slop”. Pengguna juga meminta konsep animasi memakai prinsip skill design taste dan GSAP. Brief gambar dan kriteria tolak ada di `visual-directions.md`. |
+| D-027 | Versi 1 terdiri atas 4–6 frame: 1 Home penuh desktop 1440, 1 Home penuh mobile 390, dan 2–4 frame state interaksi. | Jawaban pengguna “Saya setuju” atas usulan Visual Director, 17 November 2026. State yang dipilih dan tingkat interaksi masih terbuka. |
 
 ## Hal yang masih terbuka
 
