@@ -49,7 +49,7 @@ export const sleep = {
   body:
     'Wake up to a short summary of your night: when you settled, how long you rested, and how often it was broken. A picture of the night, not a verdict on it.',
 
-  alt: 'The ring lying in moss at the foot of a granite stone, soft early light.',
+  alt: 'A woman just waking on linen sheets in warm dawn light, her left hand open on the blanket with the ring on her index finger.',
 };
 
 export const context = {
@@ -59,7 +59,7 @@ export const context = {
   word: 'Daily',
   body:
     'Stillway keeps the shape of your days: when you sleep, when you move, when you stop. No streaks to protect and no score to chase. Over a few weeks the rhythm starts to show.',
-  alt: 'Close view of the silver ring on a moss-covered stone in daylight.',
+  alt: 'A woman sitting cross-legged on a sofa by a window, holding a cup of tea in both hands and looking outside, the ring on her left index finger.',
 };
 
 export const daylight = {
@@ -71,11 +71,11 @@ export const daylight = {
     'Through the day the ring keeps two quiet tallies: the time you spend moving and the moments you stop. Seen together they show the rhythm of a day.',
   // one frame per moment of the day — states and minutes are simulated
   frames: [
-    { key: 'a01m', time: '07:40', state: 'Moving', detail: '25 min walk', alt: 'The ring above a granite stone in early sun.' },
-    { key: 'a06', time: '09:00', state: 'Resting', detail: '40 min focus', alt: 'The ring standing on a flat stone, low morning light across moss.' },
-    { key: 'p01', time: '10:30', state: 'Moving', detail: '15 min stretch', alt: 'Close view of the silver ring on a moss-covered stone in daylight.' },
-    { key: 'a05', time: '12:30', state: 'Resting', detail: '30 min lunch', alt: 'The ring on a stone under dappled midday leaf shadows.' },
-    { key: 'a01d', time: '15:30', state: 'Moving', detail: '20 min stairs and errands', alt: 'The ring on a granite stone, the light turning warmer.' },
+    { key: 's0740', time: '07:40', state: 'Moving', detail: '25 min walk', alt: 'A woman walking along a tree-lined path in low morning light, her left hand swinging in front with the ring on her index finger.' },
+    { key: 's0900', time: '09:00', state: 'Resting', detail: '40 min focus', alt: 'A woman reading at a table by a window, her left hand resting on an open book, a cup of coffee beside it, the ring on her index finger.' },
+    { key: 's1030', time: '10:30', state: 'Moving', detail: '15 min stretch', alt: 'A woman with her eyes closed stretching both arms straight out in front of her, the ring on her left index finger.' },
+    { key: 's1230', time: '12:30', state: 'Resting', detail: '30 min lunch', alt: 'A woman eating a salad at an outdoor table under a tree, her left hand relaxed on the table with the ring in the foreground.' },
+    { key: 's1530', time: '15:30', state: 'Moving', detail: '20 min stairs and errands', alt: 'A woman on an outdoor staircase, her left hand gripping the railing with the ring on her index finger, a tote with vegetables and a baguette on her shoulder.' },
   ],
   sim: 'Simulated data',
 };

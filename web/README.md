@@ -38,7 +38,7 @@ The header clock follows the scroll: 06:40 at the hero, 23:00 at the close.
 | Time | Section | Interaction |
 | --- | --- | --- |
 | 06:40 | Hero (ayocin pattern) | Load: wordmark letters rise, ring fades in and hovers. Scroll (pinned): the ring lands on the stone, the light rises, the wordmark lifts away, the offer and CTA appear |
-| 07:00 → 07:20 | Rhythm: Last night + Patterns, not scores (A-02, P-01) | Copy sticky on the left, photographs scroll on the right; the copy crossfades to match the photograph in view. |
+| 07:00 → 07:20 | Rhythm: Last night + Patterns, not scores (S2p-01, S2p-02) | Copy sticky on the left, photographs scroll on the right; the copy crossfades to match the photograph in view. |
 | 07:40→15:30 | Activity and rest (oryzo pattern) | Pinned: a strip of five moments slides through a dashed centre frame; the centred moment grows, its time/state/minutes update on the left |
 | 17:30 | One line a day (ring-master/03 + glass card) | Ring settles as you scroll; the card rises and the day dial fills to 17:30 |
 | 18:30 | Made to be forgotten (A-08, A-03, A-09) | Pinned: each step wipes in its own plate from below |
@@ -53,9 +53,8 @@ Reduced motion: no Lenis, no pinning; the hero shows the landed ring with the of
 | File | Used in |
 | --- | --- |
 | user/H-01-hero-bg, user/H-02-ring-cutout | Hero; the cutout also closes the page (moonlight filter) |
-| A-02 sleep | Last night |
-| P-01 silver daylight | Context tile; activity strip |
-| A-01 hero desktop / mobile, A-06a, A-05 | Activity strip |
+| S2p-01, S2p-02 (character C-01) | Rhythm: Last night, Patterns not scores |
+| S3p-0740, -0900, -1030, -1230, -1530 (character C-01) | Activity strip, one per hour on its label |
 | A-08, A-03, A-09 | Made to be forgotten |
 | A-10 ring shadow | Evening plate (static image, per D-050) |
 | A-11 package flatlay | In the box |

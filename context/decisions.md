@@ -1,6 +1,6 @@
 # Catatan keputusan proyek
 
-Diperbarui: 18 November 2026 (termasuk D-022 sampai D-056).
+Diperbarui: 18 November 2026 (termasuk D-022 sampai D-057).
 
 ## Status
 
@@ -85,6 +85,7 @@ Sumber: pesan pengguna kepada Visual Director, 17 November 2026: “arah visual 
 | D-054 | Gambar section **Activity and rest** menampilkan **karakter yang memakai ring** dalam adegan sesuai jam dan aktivitasnya (07:40 jalan, 09:00 fokus, 10:30 peregangan, 12:30 makan siang, 15:30 tangga dan keperluan). Lokasi boleh interior atau luar ruang dan tidak harus memakai set batu; tone hangat tetap sama. Untuk section ini, D-035 (set batu, tanpa tangan) tidak berlaku. Wajah karakter **boleh terlihat** (pengguna, 18 November 2026: “Wajah boleh terlihat”), menggantikan usulan awal Visual Director untuk menyembunyikan wajah. Ring tetap harus menjadi fokus yang jelas. | Permintaan pengguna, 18 November 2026: “memberikan karakter yang menggunakan cincin, atau close up ketika cincin digunakan … tidak harus ada environment batunya, bisa di interior”. Dimulai dengan 5 sampel. Section lain belum diputuskan. |
 | D-055 | Karakter `design/assets/v1/masters/C-01-character.png` (perempuan awal 30-an, rambut cokelat gelap diikat longgar, kemeja linen oatmeal, ring di telunjuk kiri) disetujui sebagai karakter tetap seri gambar Stillway. | Pengguna, 18 November 2026: “Cocok, karena konsisten” dan “Karakternya setuju”. Penerapan karakter ke section selain Activity and rest masih perlu dikonfirmasi. |
 | D-056 | Karakter C-01 juga dipakai di section **Sleep / “Last night”** (slot “Last night, in one view.” dan “Patterns, not scores.”). Section **“Made to be forgotten”** tidak memakai karakter; gambar ring yang sudah ada di website tetap dipakai untuk menonjolkan bentuk ring. | Pengguna, 18 November 2026: “lanjut untuk generate image untuk section ‘Last night’, untuk section ‘Made to be forgotten’ lebih menonjolkan bentuk cincinnya aja, jadi bisa pakai yang existing di website”. |
+| D-057 | Developer memasang gambar karakter C-01 di website sesuai D-054–D-056: section Sleep/Rhythm memakai `S2p-01-last-night.png` (Last night, in one view.) dan `S2p-02-patterns.png` (Patterns, not scores.); strip Activity and rest memakai `S3p-0740`, `S3p-0900`, `S3p-1030`, `S3p-1230`, `S3p-1530` sesuai jam di label (07:40 walk, 09:00 focus, 10:30 stretch, 12:30 lunch, 15:30 stairs). Slot foto di Rhythm diubah ke rasio 4:5 agar sesuai gambar portrait. Gambar batu lama tidak dipakai lagi di dua section ini. | Permintaan pengguna, 18 November 2026: “Pakai S2p-01 dan S2p-02 di section Sleep, lalu S3p-0740 sampai S3p-1530 di Activity and rest, sesuai jam masing-masing.” |
 
 ## Persetujuan build Home Versi 1
 

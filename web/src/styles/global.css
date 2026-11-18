@@ -1999,7 +1999,9 @@ html:not(.motion-ready) .hero__statement {
   padding-block: 6svh 4svh;
 }
 .rhythm__shot {
-  height: min(86svh, 860px);
+  aspect-ratio: 4 / 5;
+  max-height: 88svh;
+  width: 100%;
   overflow: hidden;
 }
 .rhythm__shot picture,
@@ -2035,7 +2037,8 @@ html:not(.motion-ready) .hero__statement {
   .rhythm__step[data-rhythm-step='1'] { order: 3; }
   .rhythm__shot {
     height: auto;
-    aspect-ratio: 4 / 4.4;
+    max-height: none;
+    aspect-ratio: 4 / 5;
   }
 }
 @media (prefers-reduced-motion: reduce) {
