@@ -1,4 +1,4 @@
-# Handoff: ring 3D di hero (D-051)
+# Handoff: ring 3D di hero (D-051) dan CTA (D-052)
 
 Dari: 3D Designer · Untuk: Developer · 18 November 2026 · Status: **draf uji, menunggu tinjauan pengguna**
 
@@ -38,3 +38,17 @@ Jalankan uji: `cd design && python3 -m http.server 8765`, lalu buka `http://loca
 - Finish Black dan Gold belum dibuat (material bisa diganti di Three.js).
 - Arah bayangan (`SHADOW_DIR`) disetel kira-kira dari foto; perlu tinjauan mata.
 - Pantulan memakai foto hero itu sendiri sebagai pendekatan; belum ada HDRI asli.
+
+## CTA penutup (D-052)
+
+Uji: `http://localhost:8765/3d/cta-test/` (`?p=0..1` progres, `?cmp=1` tampilkan foto). Model GLB, loader, dan struktur `setPose` sama dengan hero; yang berbeda:
+
+- **Latar**: `H-04-night-bg.png` apa adanya (`cta-test/night-bg.jpg` + `env-night.jpg` untuk pantulan). Tidak perlu latar baru: ring melayang, tidak ada bayangan di batu.
+- **Posisi/ukuran**: dibaca dari `<div data-close-ring>` yang ada (cutout `H-05-...-crop.png` tetap sebagai poster dan cadangan), sama seperti hero.
+- **Pose**: `POSE = { theta: 118, phi: 45, psi: -35, scale: 0.76, roll: 45 }`; `roll` memiringkan ring di bidang layar agar condong seperti cutout.
+- **Cahaya malam**: exposure 1,7; `environmentIntensity` 2,2; `DirectionalLight` biru `#a9c0ff` 4,5 dari kanan atas; rim putih-biru `#dfe8ff` 3,0 dari kiri belakang; hemisphere `#6f86c8` 0,4. Silver `envMapIntensity` 3,2.
+- **LED sensor menyala**: material `LED_*` diberi `emissive #ff9a3c`, intensitas 2,6 ± 0,5 (napas pelan). Di hero LED tetap mati.
+- **Motion**: pakai window scrub yang sama dengan tween sekarang (`.close` dari `top 90%` ke `top top`): ring turun dari atas ±1,1 lebar ring dan berputar satu setengah putaran (−1,2π → 0) sambil miring −14° → 0, lalu melayang pelan (±6 px). Tilt mouse sama seperti hero (nonaktif di mobile).
+- Satu renderer WebGL dibagi pakai dengan hero, atau canvas CTA dibuat saat section mendekat, agar tidak ada dua konteks WebGL aktif.
+
+Status: **draf**. Dibanding cutout `H-05`, silver 3D masih lebih gelap/biru dan sensor lebih kecil; perlu setel mata sebelum disetujui.

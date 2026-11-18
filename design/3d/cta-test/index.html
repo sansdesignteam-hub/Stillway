@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stillway CTA 3D test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  /* Test page by 3D Designer (D-051). Mirrors web/src Close.astro geometry; not production code. */
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #0e1220; color: #f4efe6; font-family: Geist, system-ui, sans-serif; }
+  .before { height: 100svh; background: #efe9df; display: grid; place-items: center; color: #2b241b; }
+  .close { position: relative; height: max(100svh, 640px); overflow: hidden; background: #0e1220; }
+  .close__stage { position: absolute; left: 50%; top: 50%; width: max(100vw, max(100svh, 640px) * 1.776);
+    aspect-ratio: 2508 / 1412; transform: translate(-50%, -50%); }
+  .close__stage img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .close__stage--front { pointer-events: none; z-index: 3; }
+  .close__ring { position: absolute; left: 50.1%; top: 16.7%; width: 24.1%; transition: opacity .6s; }
+  .close__ring img { width: 100%; height: auto; display: block; }
+  canvas.ring3d { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; opacity: 0; transition: opacity .8s; }
+  .ready canvas.ring3d { opacity: 1; }
+  .ready .close__ring { opacity: 0; }
+  .close__text { position: absolute; left: 24px; top: 50%; transform: translateY(-50%); z-index: 5; width: min(560px, 44vw); }
+  .close__title { font-weight: 500; font-size: clamp(40px, 5vw, 76px); line-height: .95; letter-spacing: -.02em; margin-bottom: 22px; }
+  .close__body { opacity: .85; line-height: 1.5; }
+  .hud { position: fixed; left: 16px; bottom: 16px; z-index: 10; font-size: 12px; letter-spacing: .04em;
+    background: rgba(0,0,0,.55); padding: 8px 10px; border-radius: 6px; }
+  .hud label { margin-right: 10px; cursor: pointer; }
+</style>
+</head>
+<body>
+<section class="before"><p>Previous section</p></section>
+<section class="close" id="close">
+  <div class="close__stage"><img src="night-bg.jpg" alt="" /></div>
+  <div class="close__stage close__stage--front" id="front">
+    <div class="close__ring" id="landed"><img src="../../assets/v1/home/user/H-05-ring-night-cutout-crop.png" alt="Stillway smart ring" /></div>
+  </div>
+  <canvas class="ring3d" id="c"></canvas>
+  <div class="close__text">
+    <h2 class="close__title">Put the day<br>to rest.</h2>
+    <p class="close__body">Put the ring on its dock, let the day settle, and wake up to a clear view of your night.</p>
+  </div>
+</section>
+<div class="hud"><label><input type="checkbox" id="cmp" /> show photo cutout (compare)</label><span id="fps"></span></div>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+const q = new URLSearchParams(location.search);
+const forceP = q.has('p') ? parseFloat(q.get('p')) : null;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sec = document.getElementById('close'), landedEl = document.getElementById('landed'), canvas = document.getElementById('c');
+let renderer; try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); } catch (e) { renderer = null; }
+if (renderer && !reduced) start();
+
+function start() {
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.toneMapping = THREE.AgXToneMapping; renderer.toneMappingExposure = 1.7;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  const scene = new THREE.Scene();
+  let FOV = 30; const camera = new THREE.PerspectiveCamera(FOV, 1, 1, 20000);
+
+  // night environment: the night photograph itself (cool sky, dark stone) + moonlight
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  new THREE.TextureLoader().load('env-night.jpg', (tex) => {
+    tex.mapping = THREE.EquirectangularReflectionMapping; tex.colorSpace = THREE.SRGBColorSpace;
+    scene.environment = pmrem.fromEquirectangular(tex).texture;
+    scene.environmentRotation = new THREE.Euler(0, Math.PI * 0.6, 0); scene.environmentIntensity = 2.2;
+    tex.dispose();
+  });
+  const moon = new THREE.DirectionalLight(0xa9c0ff, 4.5); moon.position.set(500, 800, 400); scene.add(moon);
+  const rim = new THREE.DirectionalLight(0xdfe8ff, 3.0); rim.position.set(-500, 300, -200); scene.add(rim);  // faint warm rim
+  scene.add(new THREE.HemisphereLight(0x6f86c8, 0x151a10, 0.4));
+
+  const pivot = new THREE.Group(), pose = new THREE.Group(); pivot.add(pose); scene.add(pivot);
+  let ringSize = 1; const leds = [];
+  const POSE = { theta: 118, phi: 45, psi: -35, scale: 0.76, roll: 45 };   // roll: in-plane lean (deg) to match the H-05 cutout
+  function setPose({ theta, phi, psi, scale }) {
+    const d = THREE.MathUtils.degToRad;
+    const a = new THREE.Vector3(Math.sin(d(phi)) * Math.cos(d(theta)), Math.sin(d(phi)) * Math.sin(d(theta)), Math.cos(d(phi)));
+    const r = new THREE.Vector3(0, 0, -1).addScaledVector(a, Math.cos(d(phi))).normalize().applyAxisAngle(a, d(psi));
+    const xw = r.clone().negate(), zw = a, yw = zw.clone().cross(xw);
+    pose.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(xw, yw, zw));
+    pose.scale.setScalar(scale);
+  }
+  window.__ring = { pose, moon, rim, scene, setPose, setFov: (f) => { FOV = f; camera.fov = f; resize(); }, leds };
+
+  const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/');
+  new GLTFLoader().setDRACOLoader(draco).load('../ring/stillway-ring-silver_web.glb', (g) => {
+    const ring = g.scene;
+    const box = new THREE.Box3().setFromObject(ring);
+    ring.position.sub(box.getCenter(new THREE.Vector3()));
+    ringSize = box.getSize(new THREE.Vector3()).x;
+    ring.traverse((o) => {
+      if (!o.isMesh) return;
+      const m = o.material;
+      if (/Silver/i.test(m.name)) { m.envMapIntensity = 3.2; m.roughness = 0.07; }
+      if (/Liner/i.test(m.name)) m.envMapIntensity = 0.6;
+      if (/LED/i.test(m.name)) { m.emissive = new THREE.Color(0xff9a3c); m.emissiveIntensity = 3.0; m.toneMapped = false; leds.push(m); }  // sensors glow at night
+    });
+    pose.add(ring); setPose(POSE);
+    document.body.classList.add('ready'); document.documentElement.dataset.loaded = '1';
+    if (q.has('cmp')) document.body.classList.remove('ready');
+  });
+  document.getElementById('cmp').addEventListener('change', (e) => document.body.classList.toggle('ready', !e.target.checked));
+
+  let W = 0, H = 0, landed = { x: 0, y: 0, w: 0 };
+  function resize() {
+    W = sec.clientWidth; H = sec.clientHeight;
+    renderer.setSize(W, H, false); camera.aspect = W / H;
+    camera.position.set(0, 0, (H / 2) / Math.tan(THREE.MathUtils.degToRad(FOV / 2))); camera.updateProjectionMatrix();
+    const pr = sec.getBoundingClientRect(), r = landedEl.getBoundingClientRect();
+    landed = { x: r.left - pr.left + r.width / 2 - W / 2, y: -(r.top - pr.top + r.height / 2 - H / 2), w: r.width * 0.98 };
+  }
+  addEventListener('resize', resize); resize();
+
+  const mouse = { x: 0, y: 0 }, tilt = { x: 0, y: 0 };
+  const canTilt = () => matchMedia('(hover: hover) and (pointer: fine)').matches && innerWidth >= 720;
+  addEventListener('pointermove', (e) => { mouse.x = e.clientX / innerWidth * 2 - 1; mouse.y = e.clientY / innerHeight * 2 - 1; });
+  if (q.has('mx')) { mouse.x = +q.get('mx'); mouse.y = +q.get('my') || 0; }
+  const clamp01 = (v) => Math.min(1, Math.max(0, v));
+  const easeOut = (t) => 1 - Math.pow(1 - t, 2);
+  let pSm = 0, visible = true; const fpsEl = document.getElementById('fps'); let frames = 0, last = performance.now();
+  new IntersectionObserver(([e]) => (visible = e.isIntersecting), { rootMargin: '10% 0px' }).observe(sec);
+
+  renderer.setAnimationLoop((tms) => {
+    if (!visible) return;
+    const t = tms / 1000;
+    // same trigger window as the current CTA tween: section top at 90% of viewport -> top of viewport
+    const top = sec.getBoundingClientRect().top;
+    const raw = forceP ?? clamp01((innerHeight * 0.9 - top) / (innerHeight * 0.9));
+    pSm += (raw - pSm) * 0.09;
+    const k = easeOut(pSm), drop = 1 - k;
+    const scale = (landed.w / ringSize) * (1 + 0.12 * drop);
+    pivot.position.set(landed.x, landed.y + drop * landed.w * 1.1 * 0.7 / 0.7 * 0.9 + Math.sin(t * 1.1) * 6, 0);   // from above, then floats in place
+    pivot.scale.setScalar(scale);
+    const tk = canTilt() || q.has('mx') ? 1 : 0;
+    tilt.x += (mouse.y * 0.2 * tk - tilt.x) * 0.06; tilt.y += (mouse.x * 0.3 * tk - tilt.y) * 0.06;
+    pivot.rotation.set(tilt.x + Math.sin(t * 0.8) * 0.02, -drop * Math.PI * 1.2 + tilt.y, THREE.MathUtils.degToRad(-14 * drop + (window.__roll ?? POSE.roll)) + Math.sin(t * 0.7) * 0.02);
+    leds.forEach((m) => (m.emissiveIntensity = 2.6 + Math.sin(t * 1.6) * 0.5));   // slow breathing glow
+    renderer.render(scene, camera);
+    frames++; if (tms - last > 1000) { fpsEl.textContent = frames + ' fps'; frames = 0; last = tms; }
+  });
+}
+</script>
+</body>
+</html>
