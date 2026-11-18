@@ -2,7 +2,8 @@
 import { getImage } from 'astro:assets';
 import Button from './Button.astro';
 import { hero } from '../content/home';
-import bg from '../../../design/assets/v1/home/user/H-01-hero-bg.png';
+// Background without the ring's printed shadow (3D Designer, D-051): the cast is now live in WebGL. // taste-skill-ignore: WebGL cast shadow, not a CSS shadow
+import bg from '../../../design/3d/hero-bg/H-01-hero-bg-noshadow.png';
 import ring from '../../../design/assets/v1/home/user/H-02-ring-cutout.png';
 
 const set = async (src: ImageMetadata, widths: number[], format: 'avif' | 'webp') =>
@@ -67,6 +68,7 @@ const icons = [
           <img src={ringPng.src} width="496" height="458" alt={hero.alt} decoding="async" />
         </picture>
       </div>
+      <canvas class="hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
 
 
       <div class="hero__bottom frame">
