@@ -49,3 +49,45 @@ Diberikan pengguna pada 17 November 2026 untuk hero build Home. Sumber, alat, da
 | `H-03-ring-top-cutout.png` | Cutout cincin tampak atas, transparan (1352×1352). | Latar section “One line a day”. |
 | `H-04-night-bg.png` | Batu berlumut di malam hari, tanpa cincin (2508×1412). | Latar CTA penutup. |
 | `H-05-ring-night-cutout.png` | Layer cincin transparan di kanvas yang sama dengan H-04; `-crop` adalah potongan Developer (604×614). | CTA penutup. |
+
+## Aset per section build (18 November 2026)
+
+Dibuat untuk menggantikan gambar yang belum sesuai konteks di build https://stillway-one.vercel.app/ (permintaan pengguna, 18 November 2026). Prompt tercatat di `scripts/sections-v2.sh`. Semua gambar memakai set moss-rock dan tanpa tangan (D-032, D-035). Status: **AI-generated, belum di-retouch.**
+
+| Section / slot di build | File | Konsep |
+| --- | --- | --- |
+| Sleep · “Last night, in one view.” | `home/S2-01-last-night.png` (4:5) | Cahaya pertama: adegan masih biru malam, sinar hangat baru menyentuh bagian atas dinding; ring diam di atas lumut. |
+| Sleep · “Patterns, not scores.” | `home/S2-02-patterns.png` (4:5) | Tujuh kerikil dengan ukuran tak berurutan seperti hari dalam seminggu, ring di ujung barisan. Ukuran sengaja tidak urut agar tidak terbaca sebagai skor atau progres (versi pertama ditolak karena urut kecil ke besar). |
+| Activity and rest · 07:40 Moving, walk | `home/S3-0740-moving-walk.png` (5:7) | Ring berdiri di atas batu pijakan. |
+| Activity and rest · 09:00 Resting, focus | `home/S3-0900-resting-focus.png` (5:7) | Ring berbaring diam di atas batu, cahaya pagi tenang. |
+| Activity and rest · 10:30 Moving, stretch | `home/S3-1030-moving-stretch.png` (5:7) | Ring berdiri, pakis menjulur diagonal. |
+| Activity and rest · 12:30 Resting, lunch | `home/S3-1230-resting-lunch.png` (5:7) | Ring berbaring di bawah bayangan daun belang-belang tengah hari, dilihat dari atas (versi pertama ditolak karena tidak terbedakan dari 09:00). |
+| Activity and rest · 15:30 Moving, stairs and errands | `home/S3-1530-moving-stairs.png` (5:7) | Ring berdiri di anak tangga batu, cahaya sore dari kanan. |
+| Made to be forgotten · One quiet band | `home/S4-01-quiet-band.png` (11:8) | Tali linen melintas di atas permukaan luar ring yang polos tanpa tersangkut. |
+| Made to be forgotten · Softened edges | `home/S4-02-softened-edges.png` (11:8) | Profil samping yang memperlihatkan bentuk rendah dan dua tepi bevel. Bevel masih halus; bisa dipertegas saat retouch. |
+| Made to be forgotten · Sensors on the inside | `home/S4-03-sensors-inside.png` (11:8) | Sisi dalam terlihat; sensor dan pad rata dan tidak menyala, sisi luar polos. |
+
+Sistem visual Activity and rest: **Moving = ring berdiri**, **Resting = ring berbaring**, dan cahaya mengikuti jam di setiap slide.
+
+## Activity and rest dengan karakter — sampel (18 November 2026, D-054)
+
+Prompt tercatat di `scripts/s3-people.sh`. Karakter dikunci lewat `masters/C-01-character.png`: perempuan awal 30-an berkemeja linen oatmeal dengan ring di telunjuk kiri. Karakter ini **ilustratif dan belum disetujui**. Wajah boleh terlihat. Status: **AI-generated, sampel, belum di-retouch.** Set batu `S3-*` sebelumnya tetap disimpan sebagai alternatif.
+
+| Slot | File | Adegan | Catatan |
+| --- | --- | --- | --- |
+| 07:40 Moving, 25 min walk | `home/S3p-0740-moving-walk.png` | Berjalan di jalur bertepi pohon, cahaya pagi rendah | Wajah dari samping, tangan kiri berayun di depan. Ring terlihat tapi kecil. |
+| 09:00 Resting, 40 min focus | `home/S3p-0900-resting-focus.png` | Membaca di meja dekat jendela, tangan diam di atas buku, kopi | Halaman buku kosong. |
+| 10:30 Moving, 15 min stretch | `home/S3p-1030-moving-stretch.png` | Kedua lengan meregang lurus ke depan, telapak menghadap ke bawah, mata terpejam | Percobaan ke-4. Tangan kiri lengkap (ibu jari + 4 jari), ring di telunjuk; ibu jari tangan kanan tersembunyi secara wajar. Ditolak sebelumnya: jari bertaut aneh, tangan terangkat dengan 4 digit, tangan di kepala dengan hanya 3 jari terlihat. |
+| 12:30 Resting, 30 min lunch | `home/S3p-1230-resting-lunch.png` | Makan salad di meja luar di bawah pohon, tangan kiri rileks di meja | Ring jelas di latar depan. |
+| 15:30 Moving, stairs and errands | `home/S3p-1530-moving-stairs.png` | Setengah badan, tangan kiri menggenggam pegangan tangga, tote berisi sayur dan baguette di bahu kanan | Percobaan ke-2. Genggaman benar: ibu jari terlihat dan ring di telunjuk di latar depan. |
+
+## Sleep / “Last night” dengan karakter (18 November 2026, D-056)
+
+Prompt tercatat di `scripts/s2-people.sh`. Karakter C-01 (D-055). Status: **AI-generated, belum di-retouch.** Tangan sudah diperiksa dengan crop resolusi penuh. Versi set batu `S2-*` tetap disimpan sebagai alternatif.
+
+| Slot | File | Adegan | Catatan |
+| --- | --- | --- | --- |
+| “Last night, in one view.” | `home/S2p-01-last-night.png` (4:5) | Baru bangun di atas sprei linen, tangan kiri terbuka di atas selimut, cahaya fajar hangat dan bayangan daun di dinding | Telunjuk dengan ring, 3 jari lain, dan ujung ibu jari terlihat wajar. |
+| “Patterns, not scores.” | `home/S2p-02-patterns.png` (4:5) | Duduk bersila di sofa dekat jendela, memegang cangkir teh dengan dua tangan, memandang keluar; tanpa ponsel dan tanpa angka | Ring di telunjuk kiri; genggaman kedua tangan wajar. |
+
+**Made to be forgotten:** tetap memakai gambar ring yang sudah ada di website (D-056); tidak ada aset baru.
