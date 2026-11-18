@@ -45,10 +45,10 @@ Uji: `http://localhost:8765/3d/cta-test/` (`?p=0..1` progres, `?cmp=1` tampilkan
 
 - **Latar**: `H-04-night-bg.png` apa adanya (`cta-test/night-bg.jpg` + `env-night.jpg` untuk pantulan). Tidak perlu latar baru: ring melayang, tidak ada bayangan di batu.
 - **Posisi/ukuran**: dibaca dari `<div data-close-ring>` yang ada (cutout `H-05-...-crop.png` tetap sebagai poster dan cadangan), sama seperti hero.
-- **Pose**: `POSE = { theta: 118, phi: 45, psi: -35, scale: 0.76, roll: 45 }`; `roll` memiringkan ring di bidang layar agar condong seperti cutout.
-- **Cahaya malam**: exposure 1,7; `environmentIntensity` 2,2; `DirectionalLight` biru `#a9c0ff` 4,5 dari kanan atas; rim putih-biru `#dfe8ff` 3,0 dari kiri belakang; hemisphere `#6f86c8` 0,4. Silver `envMapIntensity` 3,2.
+- **Pose**: `POSE = { theta: 118, phi: 62, psi: -35, scale: 0.9, roll: 40 }`; `roll` memiringkan ring di bidang layar agar condong seperti cutout.
+- **Cahaya malam**: exposure 1,7; `environmentIntensity` 3,5; `DirectionalLight` hangat `#ffe6c4` 7 dari kanan atas; rim `#ffe6c4` 12 dari kiri belakang; hemisphere `#6f86c8` 0,4. Silver: warna `#ffe9cf`, `envMapIntensity` 4,5 (tint hangat meniru kilau silver di cutout; versi biru terlihat terlalu dingin).
 - **LED sensor menyala**: material `LED_*` diberi `emissive #ff9a3c`, intensitas 2,6 ± 0,5 (napas pelan). Di hero LED tetap mati.
 - **Motion**: pakai window scrub yang sama dengan tween sekarang (`.close` dari `top 90%` ke `top top`): ring turun dari atas ±1,1 lebar ring dan berputar satu setengah putaran (−1,2π → 0) sambil miring −14° → 0, lalu melayang pelan (±6 px). Tilt mouse sama seperti hero (nonaktif di mobile).
 - Satu renderer WebGL dibagi pakai dengan hero, atau canvas CTA dibuat saat section mendekat, agar tidak ada dua konteks WebGL aktif.
 
-Status: **draf**. Dibanding cutout `H-05`, silver 3D masih lebih gelap/biru dan sensor lebih kecil; perlu setel mata sebelum disetujui.
+Status: **draf, sudah mendekati cutout `H-05`** (silver hangat, sisi luar terlihat, kemiringan searah). Sisa selisih: sensor di model sedikit lebih kecil dan bukaan ring tidak selebar cutout. Perlu tinjauan pengguna.

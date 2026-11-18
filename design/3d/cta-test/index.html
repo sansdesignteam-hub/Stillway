@@ -70,16 +70,16 @@ function start() {
   new THREE.TextureLoader().load('env-night.jpg', (tex) => {
     tex.mapping = THREE.EquirectangularReflectionMapping; tex.colorSpace = THREE.SRGBColorSpace;
     scene.environment = pmrem.fromEquirectangular(tex).texture;
-    scene.environmentRotation = new THREE.Euler(0, Math.PI * 0.6, 0); scene.environmentIntensity = 2.2;
+    scene.environmentRotation = new THREE.Euler(0, Math.PI * 0.6, 0); scene.environmentIntensity = 3.5;
     tex.dispose();
   });
-  const moon = new THREE.DirectionalLight(0xa9c0ff, 4.5); moon.position.set(500, 800, 400); scene.add(moon);
-  const rim = new THREE.DirectionalLight(0xdfe8ff, 3.0); rim.position.set(-500, 300, -200); scene.add(rim);  // faint warm rim
+  const moon = new THREE.DirectionalLight(0xffe6c4, 7); moon.position.set(500, 800, 400); scene.add(moon);
+  const rim = new THREE.DirectionalLight(0xffe6c4, 12); rim.position.set(-500, 300, -200); scene.add(rim);  // faint warm rim
   scene.add(new THREE.HemisphereLight(0x6f86c8, 0x151a10, 0.4));
 
   const pivot = new THREE.Group(), pose = new THREE.Group(); pivot.add(pose); scene.add(pivot);
   let ringSize = 1; const leds = [];
-  const POSE = { theta: 118, phi: 45, psi: -35, scale: 0.76, roll: 45 };   // roll: in-plane lean (deg) to match the H-05 cutout
+  const POSE = { theta: 118, phi: 62, psi: -35, scale: 0.9, roll: 40 };   // roll: in-plane lean (deg) to match the H-05 cutout
   function setPose({ theta, phi, psi, scale }) {
     const d = THREE.MathUtils.degToRad;
     const a = new THREE.Vector3(Math.sin(d(phi)) * Math.cos(d(theta)), Math.sin(d(phi)) * Math.sin(d(theta)), Math.cos(d(phi)));
@@ -99,7 +99,7 @@ function start() {
     ring.traverse((o) => {
       if (!o.isMesh) return;
       const m = o.material;
-      if (/Silver/i.test(m.name)) { m.envMapIntensity = 3.2; m.roughness = 0.07; }
+      if (/Silver/i.test(m.name)) { m.envMapIntensity = 4.5; m.roughness = 0.07; m.color.set('#ffe9cf'); }
       if (/Liner/i.test(m.name)) m.envMapIntensity = 0.6;
       if (/LED/i.test(m.name)) { m.emissive = new THREE.Color(0xff9a3c); m.emissiveIntensity = 3.0; m.toneMapped = false; leds.push(m); }  // sensors glow at night
     });
