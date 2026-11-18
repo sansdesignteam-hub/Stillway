@@ -71,6 +71,8 @@ Sistem visual Activity and rest: **Moving = ring berdiri**, **Resting = ring ber
 
 ## Activity and rest dengan karakter — sampel (18 November 2026, D-054)
 
+> **Digantikan D-058 (karakter laki-laki C-02).** File C-01 di bagian ini sudah dipindah ke `_archive/character-female-c01/`; nama file yang sama di `home/` kini berisi versi C-02.
+
 Prompt tercatat di `scripts/s3-people.sh`. Karakter dikunci lewat `masters/C-01-character.png`: perempuan awal 30-an berkemeja linen oatmeal dengan ring di telunjuk kiri. Karakter ini **ilustratif dan belum disetujui**. Wajah boleh terlihat. Status: **AI-generated, sampel, belum di-retouch.** Set batu `S3-*` sebelumnya tetap disimpan sebagai alternatif.
 
 | Slot | File | Adegan | Catatan |
@@ -83,6 +85,8 @@ Prompt tercatat di `scripts/s3-people.sh`. Karakter dikunci lewat `masters/C-01-
 
 ## Sleep / “Last night” dengan karakter (18 November 2026, D-056)
 
+> **Digantikan D-058 (karakter laki-laki C-02).** File C-01 di bagian ini sudah dipindah ke `_archive/character-female-c01/`; nama file yang sama di `home/` kini berisi versi C-02.
+
 Prompt tercatat di `scripts/s2-people.sh`. Karakter C-01 (D-055). Status: **AI-generated, belum di-retouch.** Tangan sudah diperiksa dengan crop resolusi penuh. Versi set batu `S2-*` tetap disimpan sebagai alternatif.
 
 | Slot | File | Adegan | Catatan |
@@ -91,3 +95,18 @@ Prompt tercatat di `scripts/s2-people.sh`. Karakter C-01 (D-055). Status: **AI-g
 | “Patterns, not scores.” | `home/S2p-02-patterns.png` (4:5) | Duduk bersila di sofa dekat jendela, memegang cangkir teh dengan dua tangan, memandang keluar; tanpa ponsel dan tanpa angka | Ring di telunjuk kiri; genggaman kedua tangan wajar. |
 
 **Made to be forgotten:** tetap memakai gambar ring yang sudah ada di website (D-056); tidak ada aset baru.
+
+## Karakter laki-laki C-02 (18 November 2026, D-058)
+
+Menggantikan C-01. Prompt tercatat di `scripts/people-c02.sh`; script C-01 lama hanya disimpan sebagai riwayat. Nama file sama dengan sebelumnya, sehingga impor di `web/src/components/Rhythm.astro` dan `Daylight.astro` tidak perlu diubah. Status: **AI-generated, belum di-retouch.** Setiap tangan sudah diperiksa dengan crop resolusi penuh.
+
+| Slot | File | Adegan | Pemeriksaan tangan |
+| --- | --- | --- | --- |
+| Karakter | `masters/C-02-character.png` | Laki-laki awal–pertengahan 30-an, rambut cokelat gelap, janggut pendek, kemeja linen oatmeal | Ring di telunjuk kiri. |
+| Last night, in one view. | `home/S2p-01-last-night.png` | Baru bangun, tangan kiri di atas selimut | 5 digit, ring di telunjuk. |
+| Patterns, not scores. | `home/S2p-02-patterns.png` | Duduk di sofa dekat jendela memegang cangkir teh | Genggaman dua tangan wajar. |
+| 07:40 Moving, walk | `home/S3p-0740-moving-walk.png` | Jalan pagi di jalur berpohon | 5 digit. |
+| 09:00 Resting, focus | `home/S3p-0900-resting-focus.png` | Membaca, tangan kiri di atas buku | 5 digit. |
+| 10:30 Moving, stretch | `home/S3p-1030-moving-stretch.png` | Kedua lengan meregang ke depan | Tangan kiri 5 digit; jari kelingking kanan terpotong tepi frame (wajar). |
+| 12:30 Resting, lunch | `home/S3p-1230-resting-lunch.png` | Makan salad di bawah pohon | Ibu jari kiri tersembunyi di bawah tangan (wajar). |
+| 15:30 Moving, stairs | `home/S3p-1530-moving-stairs.png` | Naik tangga, tangan kiri menggenggam pegangan, tote di bahu | Ibu jari terlihat melingkari pegangan. |

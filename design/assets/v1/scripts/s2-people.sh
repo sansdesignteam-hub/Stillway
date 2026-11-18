@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SUPERSEDED by people-c02.sh (male character C-02, D-058). Kept as history; outputs live in _archive/character-female-c01/.
 # Sleep section ("Last night") with character C-01 (D-056).
 G="$(cd "$(dirname "$0")" && pwd)/genref.sh"
 cd "$(dirname "$0")/../../../.."

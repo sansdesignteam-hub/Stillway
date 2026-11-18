@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
+# SUPERSEDED by people-c02.sh (male character C-02, D-058). Kept as history; outputs live in _archive/character-female-c01/.
 # Activity and rest — 5 samples with a person wearing the ring (D-054, faces allowed).
 G="$(cd "$(dirname "$0")" && pwd)/genref.sh"
 cd "$(dirname "$0")/../../../.."
 RM=design/ring-master; H=design/assets/v1/home; HAND=design/assets/v1/_archive/interior-draft1/masters/E-02-hand.png
-R4=$RM/04-three-quarter-outer.png; CHAR=design/assets/v1/masters/C-01-character.png
+R4=$RM/04-three-quarter-outer.png; CHAR=design/assets/v1/_archive/character-female-c01/masters/C-01-character.png
 run(){ [[ -f "$2" ]] && { echo "SKIP $2"; return; }; "$G" "$@" || echo "FAIL $2"; }
 STYLE="Real editorial lifestyle photograph, not a 3D render, shot on a full-frame camera with a 50 mm or 85 mm lens, natural light only, true-to-life skin texture with natural pores, warm natural grade matching a warm cream and sage palette (cream plaster, oak, linen, soft green leaves, warm sunlight with leaf shadows), soft film-like tonality, fine grain. Calm, quiet, candid, not posed. The person is the SAME individual as in the attached character reference: same face, hair, skin tone and oatmeal linen shirt. The face may be visible but natural and candid, never looking into the camera; the ring stays the clear focal point."
 RING="The person wears the smart ring from the attached ring reference on the INDEX finger of the LEFT hand, sitting between the knuckles, clearly visible: a slim smooth domed polished silver band about 7 mm wide with thin bright chamfered edges, realistic small scale on the finger, not thick or bulbous. The thumb and other fingers are bare."

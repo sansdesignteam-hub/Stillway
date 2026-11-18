@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SUPERSEDED by people-c02.sh (male character C-02, D-058). Kept as history; outputs live in _archive/character-female-c01/.
 # 10:30 stretch — two pose variants after anatomy rejects (interlaced fingers; 4-digit hand).
 G="$(cd "$(dirname "$0")" && pwd)/genref.sh"
 cd "$(dirname "$0")/../../../.."
