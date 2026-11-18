@@ -108,6 +108,7 @@ Sumber: pesan pengguna, 18 November 2026: agent baru di worktree "3D designer" d
 | --- | --- | --- |
 | D-046 | Peran 3D Designer (worktree dan branch `3D-Designer`) adalah membuat objek 3D untuk proyek ini. Pekerjaan disimpan di `design/3d/`, dan hasilnya diserahkan ke Developer (aset web) serta Visual Director (render referensi). 3D Designer tidak mengubah `web/` secara langsung. | Pernyataan peran dari pengguna. Pembagian folder dan jalur handoff berasal dari prompt peran yang disusun Claude Code dan dikonfirmasi dengan jawaban "Iya". Alat/pipeline dan daftar deliverable belum ditentukan. |
 | D-047 | Objek 3D kembali diizinkan di Home web. Ini menggantikan poin (3) D-037, yang menghapus model 3D Three.js. Perancangan 3D (objek apa, bentuk, finish, section, interaksi/motion, format, dan batas performa) dibahas pengguna bersama 3D Designer dan **belum ditetapkan**. | Instruksi langsung pengguna. Layout berbasis foto dari D-037 tetap berlaku sampai rancangan 3D disetujui. D-030 (gambar bayangan ring tanpa model 3D) tidak diubah oleh keputusan ini. Implementasi di `web/` tetap dikerjakan Developer setelah handoff. |
+| D-051 | Hero Home Versi 1 memakai ring 3D real-time (Three.js, model GLB dari 3D Designer) di atas foto latar, menggantikan cutout `H-02-ring-cutout.png` sebagai tampilan utama. Foto cutout tetap dipakai sebagai cadangan (poster saat loading, perangkat lemah, dan *reduced motion*). Ring miring mengikuti mouse, dan saat di-scroll ke bawah berputar pelan sambil turun ke batu seperti animasi hero yang sekarang. | Jawaban pengguna, 18 November 2026: “Pendekatan saya setuju A” dan “Gerakan di ring mengikuti mouse dan ketika di scroll kebawah akan berputar pelan seperti web saat ini”, atas rekomendasi 3D Designer (opsi A: Three.js + fallback foto). Finish dan anggaran performa masih usulan sampai uji di `design/3d/` ditinjau. Tambahan pengguna, 18 November 2026: pose awal harus sama dengan foto referensi (sensor terlihat); di mobile tetap 3D **tanpa tilt mouse** (“Untuk mobile saya setuju 3D tapi tanpa tilt mouse”); bayangan ring yang tercetak di foto latar dihapus dan diganti bayangan real-time (`design/3d/hero-bg/H-01-hero-bg-noshadow.png`, hasil edit AI gpt-image dari `H-01-hero-bg.png` pada area bayangan saja, lalu ditempel kembali ke foto asli). Implementasi di `web/` dikerjakan Developer setelah handoff (D-046). |
 
 ## Hal yang masih terbuka
 
@@ -119,7 +120,7 @@ Sumber: pesan pengguna, 18 November 2026: agent baru di worktree "3D designer" d
 6. Referensi dan kebutuhan aset berikut sumber, hak pakai, serta atribusinya.
 7. Narasi studi kasus, peran, bukti proses, dan keterbatasan.
 8. Implementasi: I-6 (cuplikan aplikasi bersimulasi) dan I-7 (motion); waktu dan pengaturan publikasi di Vercel; apakah demo ditautkan dari studi kasus.
-9. Rancangan objek 3D di web (D-047): objek, section, interaksi, alat/pipeline, format, dan anggaran performa; dibahas pengguna bersama 3D Designer. Metode aset gambar (D-029) juga masih terbuka.
+9. Objek 3D di web (D-047): hero sudah ditetapkan (D-051); finish selain Silver, anggaran performa, perilaku mobile, dan section lain masih dibahas pengguna bersama 3D Designer. Metode aset gambar (D-029) juga masih terbuka.
 
 ## Antrean pembahasan
 
