@@ -55,6 +55,62 @@ export function initMotion() {
     gsap.ticker.lagSmoothing(0);
   }
 
+  /* ---------------- mobile menu panel ---------------- */
+  const menu = document.querySelector<HTMLElement>('[data-menu]');
+  const openers = [...document.querySelectorAll<HTMLButtonElement>('[data-menu-open]')];
+  if (menu && openers.length) {
+    const panel = menu.querySelector<HTMLElement>('.menu__panel')!;
+    const closeBtn = menu.querySelector<HTMLButtonElement>('.menu__close')!;
+    let lastFocus: HTMLElement | null = null;
+    const setOpen = (open: boolean) => {
+      menu.classList.toggle('is-open', open);
+      menu.toggleAttribute('hidden', false);
+      document.documentElement.classList.toggle('menu-open', open);
+      openers.forEach((b) => b.setAttribute('aria-expanded', String(open)));
+      if (open) {
+        lenis?.stop();
+        lastFocus = document.activeElement as HTMLElement;
+        window.setTimeout(() => closeBtn.focus(), 60);
+      } else {
+        lenis?.start();
+        lastFocus?.focus?.();
+      }
+    };
+    openers.forEach((b) => b.addEventListener('click', () => setOpen(true)));
+    menu.querySelectorAll('[data-menu-close]').forEach((el) => el.addEventListener('click', () => setOpen(false)));
+    // a link closes the panel first, then Lenis scrolls to the section
+    menu.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) =>
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const id = a.getAttribute('href')!;
+        setOpen(false);
+        window.setTimeout(() => {
+          const target = id === '#top' ? 0 : (document.querySelector(id) as HTMLElement | null);
+          if (lenis) lenis.scrollTo(target as never, { offset: -4 });
+          else if (target === 0) window.scrollTo({ top: 0 });
+          else (target as HTMLElement)?.scrollIntoView();
+        }, 80);
+      }),
+    );
+    document.addEventListener('keydown', (e) => {
+      if (!menu.classList.contains('is-open')) return;
+      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Tab') {
+        const f = [...panel.querySelectorAll<HTMLElement>('a, button')];
+        const first = f[0];
+        const last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    });
+    window.matchMedia('(min-width: 761px)').addEventListener('change', (e) => e.matches && menu.classList.contains('is-open') && setOpen(false));
+  }
+
   /* ---------------- scroll clock + header theme ---------------- */
   const clockTimes = document.querySelectorAll<HTMLElement>('[data-clock-time]');
   const clockPart = document.querySelector<HTMLElement>('[data-clock-part]');
@@ -147,7 +203,7 @@ export function initMotion() {
       const lcy = ring.offsetTop + lh / 2;
       const targetW = isPhone() ? window.innerWidth * 0.66 : Math.min(window.innerWidth * 0.3, pinH * 0.62);
       const fcx = W / 2;
-      const fcy = H / 2 + pinH * (isPhone() ? 0.0 : 0.03);
+      const fcy = H / 2 + pinH * (isPhone() ? -0.1 : 0.03); // phones: nearer the headline
       return { x: fcx - lcx, y: fcy - lcy, scale: targetW / lw };
     };
 
@@ -182,12 +238,19 @@ export function initMotion() {
         0,
       )
         .to('[data-hero-dim]', { opacity: 0.2, duration: 0.7 }, 0)
-        .fromTo('[data-hero-contact]', { opacity: 0, scaleX: 0.6 }, { opacity: 0.55, scaleX: 1, duration: 0.2, ease: 'power2.out' }, 0.56)
+        // thinner contact shade once the live WebGL shadow is doing the work (D-051) // taste-skill-ignore: WebGL cast shadow, not a CSS shadow
+        .fromTo('[data-hero-contact]', { opacity: 0, scaleX: 0.6 }, { opacity: () => (document.documentElement.classList.contains('hero-3d') ? 0.35 : 0.55), scaleX: 1, duration: 0.2, ease: 'power2.out' }, 0.56)
         .to('[data-hero-word]', { yPercent: -18, opacity: 0, duration: 0.45 }, 0.12)
         .to('[data-hero-meta]', { opacity: 0, duration: 0.3 }, 0.08)
         .to('.hero__statement', { opacity: 0, y: -16, duration: 0.2 }, 0.38)
         .fromTo('[data-hero-offer]', { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.22 }, 0.66)
         .to({}, { duration: 0.12 });
+
+      // the WebGL ring loads after first paint and takes over from the photographed cut-out
+      const load3d = () =>
+        import('./heroRing').then(({ initHeroRing }) => initHeroRing({ getProgress: () => heroP, onReady: () => ScrollTrigger.refresh() }));
+      if ('requestIdleCallback' in window) requestIdleCallback(() => load3d(), { timeout: 2000 });
+      else setTimeout(load3d, 800);
 
       return () => gsap.ticker.remove(heroBob);
     });

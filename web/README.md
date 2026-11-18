@@ -14,7 +14,7 @@ npm run preview
 ```
 
 Stack: Astro 7.4.5 (static), GSAP 3.15 + ScrollTrigger, Lenis 1.3.27, Geist (Fontsource 5.3.0).
-No three.js since the D-037 revision. Page JS ≈ 52 KB gzipped.
+Three.js is used only for the hero ring (D-051/D-052), loaded lazily after first paint (≈156 KB gzipped chunk + a 78 KB Draco GLB). Page JS before that ≈ 55 KB gzipped.
 
 ## Where things live
 
