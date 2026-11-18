@@ -20,6 +20,7 @@ import { Image } from 'astro:assets';
       <Image src={ring} alt={close.alt} width={604} format="webp" quality={90} loading="lazy" />
     </div>
   </div>
+  <canvas class="close__canvas" data-close-canvas aria-hidden="true"></canvas>
 
   <div class="close__text frame">
     <h2 class="close__title" id="close-title" data-split aria-label={close.heading.join(' ')}>

@@ -301,6 +301,20 @@ export function initMotion() {
       { yPercent: 0, rotation: 0, scale: 1, ease: 'power2.out', scrollTrigger: { trigger: '.close', start: 'top 90%', end: 'top top', scrub: 1 } },
     );
 
+    // the WebGL ring (D-052) takes over from the photographed cut-out shortly before the section arrives
+    const closeEl = document.querySelector('.close');
+    if (closeEl && 'IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        ([e]) => {
+          if (!e.isIntersecting) return;
+          io.disconnect();
+          import('./closeRing').then(({ initCloseRing }) => initCloseRing());
+        },
+        { rootMargin: '150% 0px' },
+      );
+      io.observe(closeEl);
+    }
+
   });
 
   /* ---------------- rhythm: sticky copy follows the photograph in view ---------------- */
