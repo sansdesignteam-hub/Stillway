@@ -146,7 +146,7 @@ Macro photograph of the Silver smart ring standing upright on the oak table edge
 Macro photograph looking into the inside of the Silver smart ring lying on its side on the oak table: black matte inner shell, two small dark sensor windows and two small contact pads, sensors not lit. Warm evening side light grazes the inner surface. 1:1, 100 mm macro look.
 ```
 
-### A-10 Gambar bayangan ring (brief D-030)
+### A-10 Gambar bayangan ring (brief D-050)
 Lampirkan `08-flat-45.png`.
 ```
 Still life: the Silver smart ring lies flat on a honed limestone surface with real micro texture and no veining. One hard sun source from a very low angle of about 10 to 15 degrees, around 4500K, casts a single long elliptical shadow: sharp at the contact point, softening with distance. A small reflected glint from the polished inner edge falls inside the shadow, consistent with the light direction. Camera about 65 degrees from above, 100 mm macro look, enough depth of field for the whole ring. Ring in the left third, the shadow flowing into open space on the right. Surface tone close to warm sand #E8DBC8, soft blacks, no vignette. 16:9.

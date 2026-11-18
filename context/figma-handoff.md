@@ -2,6 +2,8 @@
 
 Diperbarui: 17 November 2026. Dokumen ini merangkum konteks agar agent baru dapat melanjutkan tanpa riwayat chat. Tidak ada file Figma atau visual yang dibuat pada tahap penyusunan brief.
 
+> **Pembaruan 18 November 2026:** Dokumen ini ditulis sebelum build berjalan. Keputusan terbaru ada di `decisions.md`: tidak ada prototype Figma, Versi 1 dibangun langsung di `web/` oleh Developer (D-028, D-036); aset memakai set nature (D-032 sampai D-035); motion GSAP/Lenis diizinkan (D-036); objek 3D dibuka kembali (D-047) dengan 3D Designer (D-046). Jika bagian di bawah bertentangan, ikuti `decisions.md`.
+
 ## Urutan membaca
 
 1. `../AGENTS.md` — aturan kerja.

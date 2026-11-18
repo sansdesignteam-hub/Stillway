@@ -1,6 +1,8 @@
 # Stillway — usulan arah visual Home
 
-Status: **Arah A disetujui sebagai dasar Versi 1 Home (D-026).** Arah B dan C tidak dipakai, kecuali satu gambar bayangan ring dari B (D-030). Spesifikasi kerja Versi 1 ada di bagian “Versi 1 — spesifikasi kerja”. Versi 2 memakai arah dari teman pengguna, dan versi final dipilih kemudian (D-027). Rincian di bawah, seperti warna, font, komposisi, dan daftar aset, masih berupa usulan kerja. Disusun pada 17 November 2026 setelah meninjau tampilan aktual referensi (lihat “Telaah visual tampilan aktual” di `references.md`). Seluruh nilai warna, font, dan komposisi masih berupa titik awal. Teks berbahasa Inggris di bawah merupakan contoh microcopy, bukan copy final; copy tetap menjadi wewenang Strategy Director.
+Status: **Arah A disetujui sebagai dasar Versi 1 Home (D-026).** Arah B dan C tidak dipakai, kecuali satu gambar bayangan ring dari B (D-050). Spesifikasi kerja Versi 1 ada di bagian “Versi 1 — spesifikasi kerja”. Versi 2 memakai arah dari teman pengguna, dan versi final dipilih kemudian (D-027). Rincian di bawah, seperti warna, font, komposisi, dan daftar aset, masih berupa usulan kerja. Disusun pada 17 November 2026 setelah meninjau tampilan aktual referensi (lihat “Telaah visual tampilan aktual” di `references.md`). Seluruh nilai warna, font, dan komposisi masih berupa titik awal. Teks berbahasa Inggris di bawah merupakan contoh microcopy, bukan copy final; copy tetap menjadi wewenang Strategy Director.
+
+> **Pembaruan 18 November 2026 — keputusan berikut menggantikan isi dokumen ini bila bertentangan:** D-032 sampai D-035 (aset nature “moss rock studio”, tanpa tangan; menggantikan interior apartemen); D-036 (smooth scroll Lenis, ring berputar, Three.js, dan layout menyimpang dari wireframe diizinkan; menggantikan larangan di bagian “Yang tidak dipakai”); D-037 sampai D-045 (font Geist, layout mengikuti referensi pengguna); D-047 (objek 3D kembali diizinkan di web). Pernyataan “render 3D lebih aman” pada Arah A bukan keputusan dan tidak mengubah D-050. Sumber utama tetap `decisions.md`.
 
 Dasar yang dipegang: konsep ritme tubuh harian (tidur, aktivitas, istirahat), karakter tenang–peka–jelas, fotografi bercahaya alami, detail material, visualisasi data secukupnya, serta paket USD 299 dengan tiga finish dan tanpa langganan wajib.
 
@@ -173,7 +175,7 @@ Kompromi yang diterima: produksi aset paling berat. Mitigasi:
 
 ## Versi 1 — spesifikasi kerja
 
-Status: arah, gambar bayangan, perangkat, dan jumlah frame disetujui (D-026, D-029, D-030, D-031). Konsep motion dan aturan di bawah adalah **usulan Visual Director** yang menjadi bahan awal Developer; iterasi interaksi dilakukan di build (D-028).
+Status: arah, gambar bayangan, perangkat, dan jumlah frame disetujui (D-026, D-049, D-050, D-031). Konsep motion dan aturan di bawah adalah **usulan Visual Director** yang menjadi bahan awal Developer; iterasi interaksi dilakukan di build (D-028).
 
 ### Frame (D-027)
 
@@ -233,8 +235,8 @@ Prinsip: gerak hanya dipakai untuk menjelaskan sesuatu. Dalam satu halaman ada *
 
 - Fade-in di setiap section atau kartu.
 - Parallax pada teks.
-- Smooth-scroll yang membajak scroll.
-- Ring yang berputar (turntable).
+- ~~Smooth-scroll yang membajak scroll.~~ *(digantikan D-036: Lenis diizinkan)*
+- ~~Ring yang berputar (turntable).~~ *(digantikan D-036/D-047: diizinkan bila lolos tinjauan)*
 - Counter angka.
 - Carousel otomatis.
 - Easing bounce/elastic.
@@ -268,8 +270,8 @@ Disusun dari telaah referensi dan prinsip skill `design-taste-frontend` (leonxln
 
 ## Pertanyaan yang belum dijawab (diajukan bertahap)
 
-1. ~~Pemilihan arah~~ — terjawab pada D-026 dan D-030: Versi 1 = A ditambah 1 gambar bayangan ring.
-2. ~~Cakupan perangkat~~ — terjawab pada D-029: desktop 1440 + mobile 390.
+1. ~~Pemilihan arah~~ — terjawab pada D-026 dan D-050: Versi 1 = A ditambah 1 gambar bayangan ring.
+2. ~~Cakupan perangkat~~ — terjawab pada D-049: desktop 1440 + mobile 390.
 3. ~~Jumlah frame~~ — terjawab pada D-031: 4–6 frame.
 4. ~~Tingkat interaksi~~ — terjawab pada D-028: dibangun langsung oleh Developer; wireframe berupa gambar.
 5. Metode aset — ditunda ke sesi terpisah (D-029).

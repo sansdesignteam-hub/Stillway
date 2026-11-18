@@ -57,7 +57,7 @@ Reduced motion: no Lenis, no pinning; the hero shows the landed ring with the of
 | P-01 silver daylight | Context tile; activity strip |
 | A-01 hero desktop / mobile, A-06a, A-05 | Activity strip |
 | A-08, A-03, A-09 | Made to be forgotten |
-| A-10 ring shadow | Evening plate (static image, per D-030) |
+| A-10 ring shadow | Evening plate (static image, per D-050) |
 | A-11 package flatlay | In the box |
 | ring-master/04, masters/R-black, R-gold | Finish picker (same angle; R-kit not used) |
 

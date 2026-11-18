@@ -1,6 +1,6 @@
 # Brief konsep Smart Ring e-commerce
 
-Status: konsep, paket, nama Stillway, dan fokus fase Home/landing page disetujui; struktur section, CTA, dan perangkat masih terbuka. Implementasi Home berbentuk kode (Astro, lokal) disetujui dan menunggu handoff Visual Director (D-022 sampai D-025). Baca `figma-handoff.md` untuk melanjutkan dengan AI agent lain.
+Status: konsep, paket, nama Stillway, dan fokus fase Home/landing page disetujui; struktur section, CTA, dan perangkat masih terbuka. Implementasi Home berbentuk kode (Astro, lokal) disetujui dan sudah berjalan di `web/` (D-022 sampai D-025, D-036 sampai D-045). Baca `figma-handoff.md` untuk melanjutkan dengan AI agent lain.
 Sumber keputusan: `decisions.md`.
 
 ## Konteks yang disepakati
@@ -29,7 +29,7 @@ Disetujui pada 17 November 2026 (D-011, D-012, D-014, D-015):
 - Audiens asumsi: profesional dan pelaku kreatif sekitar 28–45 tahun dengan rutinitas padat, tertarik pada wellness, serta menghargai desain dan kesederhanaan.
 - Karakter brand: tenang, peka, dan jelas. Copy kerja ilustratif: “Understand your rhythm.” Nama brand: Stillway (D-017); ketersediaan nama/copy belum diperiksa.
 - Pilar fitur konseptual: ringkasan pola tidur, keseimbangan aktivitas–istirahat, serta insight harian sederhana melalui aplikasi pendamping. Aplikasi penuh tidak otomatis masuk deliverable.
-- Art direction: fotografi keseharian dengan cahaya alami, detail material ring, dan visualisasi data secukupnya. Palet, font, layout, serta motion belum ditentukan.
+- Art direction: fotografi keseharian dengan cahaya alami, detail material ring, dan visualisasi data secukupnya. Font Geist dan motion GSAP/Lenis dipakai pada build Versi 1 (D-036, D-037); palet dan layout final mengikuti tinjauan pengguna.
 - Paket ilustratif: satu model USD 299, tanpa langganan wajib; Silver, Black, Gold dengan harga sama; charger dan sizing kit termasuk.
 
 Semua rincian produk tetap fiktif meski disetujui sebagai dasar konsep. Audiens merupakan asumsi, bukan hasil riset pengguna. Harga belum divalidasi terhadap biaya produksi atau kelayakan bisnis. Tidak ada klaim manfaat klinis atau akurasi yang disetujui.
@@ -59,7 +59,7 @@ Daftar persiapan di bawah adalah usulan awal, belum disetujui dan belum dikumpul
 - Identitas dan UI: logo, tipografi, ikon, palet, serta copy ilustratif.
 - Untuk setiap aset: sumber, status dibuat/dilisensikan/dihasilkan AI, izin penggunaan, atribusi, dan kegunaan. Jangan menganggap aset dari situs referensi boleh dipakai ulang.
 
-Referensi dari pengguna telah dibaca melalui konten web, lalu tampilan aktualnya ditinjau pada 17 November 2026 (desktop dan hero mobile; checkout tidak diperiksa). Catatan sumber, temuan visual, dan batas tinjauan ada di `references.md`. Arah visual: Home dikembangkan dalam dua versi. Versi 1 memakai Arah A “One Day, in Light” (`visual-directions.md`); Versi 2 memakai arah dari teman pengguna; versi final dipilih kemudian (D-026, D-027). Visual Director saat ini hanya mengerjakan Versi 1 untuk desktop 1440 dan mobile 390, dalam 4–6 frame, dengan satu gambar bayangan ring (D-028 sampai D-031). Kebutuhan aset rinci menunggu konsep serta lingkup disetujui.
+Referensi dari pengguna telah dibaca melalui konten web, lalu tampilan aktualnya ditinjau pada 17 November 2026 (desktop dan hero mobile; checkout tidak diperiksa). Catatan sumber, temuan visual, dan batas tinjauan ada di `references.md`. Arah visual: Home dikembangkan dalam dua versi. Versi 1 memakai Arah A “One Day, in Light” (`visual-directions.md`); Versi 2 memakai arah dari teman pengguna; versi final dipilih kemudian (D-026, D-027). Visual Director saat ini hanya mengerjakan Versi 1 untuk desktop 1440 dan mobile 390, dalam 4–6 frame, dengan satu gambar bayangan ring (D-048, D-049, D-050, D-031). Aset Versi 1 memakai set nature “moss rock studio” (D-032 sampai D-035). Build dikerjakan langsung oleh Developer tanpa prototype Figma (D-028); motion GSAP, Lenis, dan layout menyimpang dari wireframe diizinkan (D-036); revisi layout mengikuti referensi pengguna (D-037 sampai D-045). Objek 3D kembali diizinkan di web (D-047), rancangannya bersama 3D Designer (D-046) belum ditetapkan.
 
 ## 7. Struktur studi kasus
 
