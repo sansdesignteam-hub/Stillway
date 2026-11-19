@@ -21,13 +21,13 @@ const icons = [
   class="scene scene--hero"
   data-scene="hero"
   aria-labelledby="hero-title"
-  style={`--v1-ratio:${heroBg.v1Ratio}; --d-ratio:${D.width / D.height}; --d-orig:${D.origW}; --m-ratio:${M.width / M.height}; --m-orig:${M.origW}`}
+  style={`--ph-d:url(${D.placeholder}); --ph-m:url(${M.placeholder}); --v1-ratio:${heroBg.v1Ratio}; --d-ratio:${D.width / D.height}; --d-orig:${D.origW}; --m-ratio:${M.width / M.height}; --m-orig:${M.origW}`}
 >
   <div class="scene__back">
     <div class="hero__photo" data-h-photo data-a>
       <picture>
         <source media={M.media} type="image/webp" srcset={M.srcset} sizes="max(85vw, 150lvh)" />
-        <img src={D.src} srcset={D.srcset} sizes="max(226vw, 400lvh)" width={D.width} height={D.height} alt="" fetchpriority="high" decoding="async" data-h-img />
+        <img src={D.src} srcset={D.srcset} sizes="max(226vw, 400lvh)" width={D.width} height={D.height} alt="" fetchpriority="low" decoding="async" data-h-img />
       </picture>
       <div class="hero__dim" style={`opacity:${heroBg.dim}`}></div>
     </div>
@@ -85,6 +85,7 @@ const icons = [
     translate: -50% -50%;
     transform-origin: 50% 50%;
     will-change: transform, opacity;
+    background: var(--ph-d) center / 100% 100% no-repeat; /* light first paint under the full image */
   }
   .hero__photo picture,
   .hero__photo img {
@@ -212,6 +213,7 @@ const icons = [
     .hero__photo {
       width: calc(var(--cover) / var(--m-orig));
       aspect-ratio: var(--m-ratio);
+      background-image: var(--ph-m);
     }
     .hero__word {
       top: calc(var(--header-h) + 18px);

@@ -4,7 +4,8 @@
  * V2 ring with the engraved "Stillway" text (D-061, D-071), stage 2 from the 3D Designer:
  * design/3d/v2/stillway-ring-v2-silver_web.glb + HANDOFF-v2-ring.md (branch 3D-Designer, feaa83d).
  * Silver brushed (KHR_materials_anisotropy + normal map) comes from the GLB as authored.
- * Black/Gold (finishes.json) are for S10 only and are not wired yet.
+ * Black/Gold (finishes.json) are for S10 only and are not wired yet. S01 uses finishes.json
+ * "silver_polished" on this GLB (stage.ts, pose.gloss) instead of the separate polished GLB.
  */
 export const RING_MODEL = {
   url: '/models/stillway-ring-v2-silver_web.glb',

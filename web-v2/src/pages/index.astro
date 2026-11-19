@@ -7,6 +7,7 @@ import Why from '../components/scenes/Why.astro';
 import Sleep from '../components/scenes/Sleep.astro';
 import Placeholder from '../components/scenes/Placeholder.astro';
 import { sections } from '../content/sections';
+import { heroBg } from '../content/heroBg';
 
 const built: Record<string, any> = { hero: Hero, why: Why, sleep: Sleep };
 const len = (i: number) => {
@@ -16,6 +17,11 @@ const len = (i: number) => {
 ---
 
 <Base>
+  <Fragment slot="head">
+    <!-- S01 photo: the light version paints first (LCP), the full one replaces it -->
+    <link rel="preload" as="image" type="image/webp" href={heroBg.desktop.placeholder} media="(min-width: 761px)" fetchpriority="high" />
+    <link rel="preload" as="image" type="image/webp" href={heroBg.mobile.placeholder} media="(max-width: 760px)" fetchpriority="high" />
+  </Fragment>
   <Header />
   <Stage>
     {

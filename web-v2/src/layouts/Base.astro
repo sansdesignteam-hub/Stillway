@@ -24,6 +24,7 @@ const { title = meta.title, description = meta.description } = Astro.props;
     <meta name="robots" content="noindex, nofollow" />
     <meta name="theme-color" content="#F7F5F0" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <slot name="head" />
     <script is:inline>
       // .js: scripts run. .reduced: the visitor asked for less motion, every state becomes a
       // ±300 ms fade. .motion-ready: motion will run; removed after 2.5 s if motion.ts never

@@ -128,6 +128,14 @@
   opacity: 0.7;
   min-width: 6.4em;
 }
+.site-header[data-theme='photo'] .clock__time {
+  /* ochre is unreadable on the warm photo: the live value goes white there (D-081 review) */
+  color: #fff;
+  font-weight: var(--w-medium);
+}
+.site-header[data-theme='photo'] .clock__part {
+  opacity: 0.85;
+}
 .site-header[data-theme='dark'] .nav-cta,
 .site-header[data-theme='photo'] .nav-cta {
   --btn-bg: var(--paper);

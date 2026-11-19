@@ -21,6 +21,8 @@ export const heroBg = {
     /** original photo width as a fraction of the canvas width */
     origW: 2556 / 5760,
     zoomTo: 0.55,
+    /** light first paint (sharp resize of the 3840, no AI): preloaded, shown under the full image */
+    placeholder: '/hero/hero-bg-v2-1920.webp',
   },
   mobile: {
     media: '(max-width: 760px)',
@@ -29,6 +31,7 @@ export const heroBg = {
     height: 3840,
     origW: 2556 / 2160,
     zoomTo: 0.5,
+    placeholder: '/hero/hero-bg-v2-mobile-1080x1920.webp',
   },
   /** warm dim over the photo, as in V1 (0..1) */
   dim: 0.3,

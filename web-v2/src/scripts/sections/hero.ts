@@ -12,7 +12,7 @@
  */
 import { gsap } from 'gsap';
 import { put, seg, lerp, type Ctx } from '../anim';
-import { along, pose, ANGLE, type Pose } from '../ring/poses';
+import { along, pose, type Pose } from '../ring/poses';
 import { heroBg } from '../../content/heroBg';
 import { why } from './why';
 import type { SectionMotion } from '../story';
@@ -22,7 +22,26 @@ const mouse = { x: 0, y: 0 };
 const tilt = { x: 0, y: 0 };
 const canTilt = () => matchMedia('(hover: hover) and (pointer: fine)').matches && window.innerWidth >= 720;
 
-/** V1 float pose: centred, a little low, min(30vw, 62vh) wide; phones higher and 66vw */
+/**
+ * V1 float pose (web/src/scripts/heroRing.ts + motion.ts), same place and angle as V1 (D-081):
+ * centred, a little low, min(30vw, 62vh) wide (phones higher, 66vw); orientation = V1 photo pose
+ * (theta 66°, phi 50°, psi 0) with the −9° float roll, converted to this stage's Euler (YXZ).
+ * With psi 0 (3D Designer, HANDOFF-v2-ring "S01 silver polished") the engraved side is on the
+ * near band and "Stillway" reads left → right, descending with the band (D-081; replaces the
+ * bottom → top reading of D-075 for S01). Polished V1 silver, V1 env and rig, and the
+ * live shadow on the stone (D-051/D-052).
+ */
+const V1 = { rx: -0.6977, ry: 0.5757, rz: -2.3613 };
+const LOGO_FRONT = 0; // psi 0
+/** the stone top in the V1 photo (fractions of the 2556 × 1448 photo), from V1's contact shade */
+const STONE = { x: 0.48, y: 0.745 };
+const stoneAt = (zoom = 1) => {
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  const coverW = Math.max(W, H * heroBg.v1Ratio);
+  const coverH = coverW / heroBg.v1Ratio;
+  return { shadowX: ((STONE.x - 0.5) * coverW * zoom) / W, shadowY: (-(STONE.y - 0.5) * coverH * zoom) / H };
+};
 const floatPose = (ctx: Ctx): Pose => {
   const W = window.innerWidth;
   const H = window.innerHeight;
@@ -30,9 +49,13 @@ const floatPose = (ctx: Ctx): Pose => {
     x: 0,
     y: ctx.mobile ? 0.1 : -0.03,
     w: ctx.mobile ? 0.66 : Math.min(0.3, (0.62 * H) / W),
-    ...ANGLE.threeQuarter,
-    rz: -0.16, // V1 float roll (−9°)
+    ...V1,
+    spin: LOGO_FRONT,
     photo: 1,
+    gloss: 1,
+    // phones float the ring far above the stone, where a sharp ring-shaped shadow reads wrong
+    shadow: ctx.mobile ? 0 : 1,
+    ...stoneAt(),
   });
 };
 
@@ -83,11 +106,11 @@ export const hero: SectionMotion = {
     const end = why.ring!(0, ctx); // = S02 state 1 (frame end = frame start)
     const p = along(u, [
       [0, floatPose(ctx)],
-      [0.9, pose({ ...floatPose(ctx), y: m ? 0.12 : 0.01, w: m ? 0.72 : 0.33, rx: -0.4, ry: -0.62, rz: -0.06, uncap: 1 })],
+      [0.9, pose({ ...floatPose(ctx), y: m ? 0.12 : 0.01, w: m ? 0.72 : 0.34, rx: -0.55, ry: 0.15, rz: -1.2, spin: 0.2, uncap: 1, shadow: 0 })],
       // close-up (s01-state3-zoom-in.png): opening toward the camera, the sensors and the green
       // light on the inner wall, the band running off the edge
-      [2, pose({ x: m ? 0.34 : 0.12, y: 0.02, w: m ? 1.9 : 0.95, rx: -0.3, ry: -0.42, rz: 0.1, spin: -0.3, photo: 1, uncap: 1, led: 0.6 })],
-      [2.4, pose({ x: m ? 0.1 : 0.07, y: 0.02, w: m ? 1.3 : 0.62, rx: -0.24, ry: -0.6, rz: 0.06, spin: -0.15, photo: 0.4, uncap: 1, led: 0.2 })],
+      [2, pose({ x: m ? 0.34 : 0.12, y: 0.02, w: m ? 1.9 : 0.95, rx: -0.3, ry: -0.42, rz: 0.1, spin: -0.3, photo: 1, uncap: 1, led: 0.6, gloss: 1 })],
+      [2.4, pose({ x: m ? 0.1 : 0.07, y: 0.02, w: m ? 1.3 : 0.62, rx: -0.24, ry: -0.6, rz: 0.06, spin: -0.15, photo: 0.4, uncap: 1, led: 0.2, gloss: 0.8 })],
       [3, end],
     ]);
     // mouse tilt in state 1 only (V1 heroRing: ±0.22 / ±0.32 rad, eased)
