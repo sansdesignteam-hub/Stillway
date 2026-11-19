@@ -14,6 +14,7 @@
  */
 import { put, seg, smooth, clamp01, type Ctx } from '../anim';
 import { pose, ANGLE, type Pose } from '../ring/poses';
+import { whyBg } from '../../content/whyBg';
 import type { SectionMotion } from '../story';
 
 let el: Record<string, HTMLElement | null> = {};
@@ -47,6 +48,7 @@ export const why: SectionMotion = {
     const q = (s: string) => root.querySelector<HTMLElement>(s);
     el = {
       word: q('[data-w-word]'),
+      bg: q('[data-w-bg]'),
       wide: q('[data-w-wide]'),
       wideL: q('[data-w-wide-l]'),
       wideR: q('[data-w-wide-r]'),
@@ -60,6 +62,14 @@ export const why: SectionMotion = {
   },
   update(u, ctx) {
     const out = 1 - seg(u, END, END + 0.3); // connection to S03, first 30%
+    // D-088 background: fades in from Paper while S01 hands over (the photo there has faded to
+    // Paper by u ≈ −0.6), drifts up slowly with the scroll (parallax), and leaves in the 30–70%
+    // middle of the connection to S03, together with Paper → Night.
+    if (el.bg) {
+      const inn = seg(u, -1.0, -0.2);
+      const leave = 1 - seg(u, END + 0.3, END + 0.7);
+      put(el.bg, { o: inn * leave, yv: whyBg.parallax * (0.5 - clamp01((u + 1) / (END + 1))) }, ctx);
+    }
     // "rhythm": shows while the ring zooms out of S01 (u ≈ −1.1 … −0.4), gone on the way to state 2
     put(el.word, { o: seg(u, -1.1, -0.4) * (1 - seg(u, 0.25, 0.8)) }, ctx);
 
