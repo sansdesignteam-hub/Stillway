@@ -157,3 +157,37 @@ Pose cadangan adalah pose acuan. Developer menyamakan pose 3D di setiap state de
 | `v2-ring-axis-vertical-10.png` | `Cam_AxisVertical10` | Permintaan VD no. 4, tafsiran B: sumbu ring vertikal (seperti di jari yang terangkat), kamera 10° dari atas. Di pose ini teks jadi **horizontal** |
 
 Pose akhir S06 memakai tafsiran B (`v2-ring-axis-vertical-10.png`, D-072). Render tahap 1 dibuat dengan env lama dan finish satin. Render tahap 2 (`v2-finish-*`, `fallback/`) memakai brushed dan env V2.
+
+## S06 Product details: gelinding dan ring masuk ke jari (persiapan, belum dibangun)
+
+Data lengkap: `s06-pose.json`. Implementasi acuan yang bisa dijalankan: `ring-test/s06.html` (`?p=0..1` progres section, `?proxy` menampilkan proxy jari merah). Foto: `A-1-hand-left-alpha.png` dari Visual Director (commit 7023283); salinan uji ada di `ring-test/hand/`.
+
+**Kamera:** sama dengan V1 hero, yaitu perspektif FOV 30° dengan jarak `(innerHeight/2)/tan(15°)`, sehingga 1 unit = 1 px CSS di z = 0. Posisi ring dan foto dihitung dari DOM, jadi tidak ada koordinat tetap.
+
+**Pose akhir di jari (D-072):** langkah rotasi dunia berurutan `x −90, y −90, x +10, z +2,9`:
+- sumbu ring mengikuti telunjuk, logo menghadap kamera, teks horizontal;
+- `x +10` = kamera ±10° dari atas, `z +2,9` = kemiringan telunjuk di foto;
+- tambahkan **koreksi pandang**: `x = atan2(ring.y, d)`, `y = atan2(−ring.x, d)`. Tangan ada di kanan layar, jadi tanpa koreksi ini logo terlihat dari samping. Hasil terukur: logo 0,5° dari arah kamera.
+- Ukuran: diameter luar ring = **122 px foto** × (lebar foto tampil / 579). Pusat band di dudukan **(343, 360)**.
+
+**Proxy jari:** `LatheGeometry` dari profil di JSON (radius per tinggi sepanjang sumbu, dalam px foto), diputar `z +2,9` saja, diletakkan di dudukan, `colorWrite: false`, dan dirender sebelum ring. Proxy dan jalur turun **tetap di bidang foto** (z = 0). Kemiringan 10° hanya ada di pose ring; kalau proxy ikut miring, parallax perspektif menggesernya keluar dari jari (sudah diuji).
+
+**Ukuran jari terukur:** lebar telunjuk di dudukan 96–100 px, bukan 85 px seperti di README Visual Director. Angka 85 px adalah bagian tersempit dekat ujung. Karena itu ring 122 px (Ø dalam ±19 mm) pas dengan jari. Ini juga cocok dengan A-1b.
+
+**Timeline (progres section):**
+
+| p | Isi |
+| --- | --- |
+| 0–0,25 | Gelinding di alas Sand. Sudut gulir = jarak / jari-jari (searah jarum jam saat ke kanan). Overshoot 6% R di 0,22, lalu kembali dan diam di 0,25 menghadap kamera dengan logo di atas |
+| 0,25–0,40 | Slerp ke `side` (band ke kamera) |
+| 0,50–0,67 | Slerp ke `edge45` (yaw 45° + miring 20°) |
+| 0,67–0,80 | Tangan fade in. Ring pindah ke 40 px foto di atas ujung jari, mengecil ke ukuran jari, slerp ke pose jari, koreksi pandang masuk |
+| 0,80–1,00 | Turun sepanjang sumbu telunjuk ke dudukan (power2.inOut). Proxy menutup bagian belakang ring |
+
+Jarak gelinding di halaman uji: dari −R sampai 40% lebar layar (±55% di desktop sesuai Storyboard; mobile 40%). Bayangan kontak di alas belum dibuat. Usulan: elips blur CSS di bawah ring, opasitasnya mengikuti jarak ke alas.
+
+**Bukti** (`renders/s06/`, layar 1440×900):
+- `s06-p1.00.png` dan `s06-p1.00-zoom.png`: overlay pose akhir di atas foto
+- `s06-p0.90.png` dan `s06-p0.90-zoom.png`: ring sedang turun, bagian belakang tertutup proxy
+- `s06-p0.90-proxy-debug.png`: proxy ditampilkan merah
+- `s06-p0.00` sampai `s06-p0.75`: jalur gelinding dan pose
