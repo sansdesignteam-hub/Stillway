@@ -7,6 +7,9 @@
  * Motion: scripts/sections/why.ts.
  */
 import { why } from '../../content/copy';
+import { whyBg } from '../../content/whyBg';
+const D = whyBg.desktop;
+const M = whyBg.mobile;
 const last = why.steps[why.steps.length - 1];
 const words = (t: string) => t.split(' ');
 const wide = words(why.wide); // ["keeps", "the", "pattern."]
@@ -15,6 +18,17 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
 
 <section class="scene scene--why" data-scene="why" aria-labelledby="why-title">
   <div class="scene__back">
+    {
+      /* D-088 slot: soft shadow-wall photo behind everything; empty (plain Paper) until the files arrive */
+      D && (
+        <div class="why__bg" data-w-bg data-a style={`--pos-d:${D.position}; --pos-m:${M?.position ?? D.position}; --overscan:${whyBg.overscan}`}>
+          <picture>
+            {M && <source media={M.media} srcset={M.srcset ?? M.src} sizes="100vw" />}
+            <img src={D.src} srcset={D.srcset} sizes="100vw" width={D.width} height={D.height} alt="" decoding="async" />
+          </picture>
+        </div>
+      )
+    }
     <p class="why__word giant" data-w-word data-a aria-hidden="true">{why.backWord}</p>
     <p class="why__wide giant" data-w-wide data-a aria-hidden="true">
       <span class="why__wide-l" data-w-wide-l>{wide.slice(0, split).join(' ')}</span>
@@ -57,6 +71,27 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
 </section>
 
 <style>
+  .why__bg {
+    position: absolute;
+    inset: 0;
+    scale: var(--overscan, 1.08);
+    will-change: transform, opacity;
+  }
+  .why__bg picture,
+  .why__bg img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .why__bg img {
+    object-fit: cover;
+    object-position: var(--pos-d, 50% 50%);
+  }
+  @media (max-width: 760px) {
+    .why__bg img {
+      object-position: var(--pos-m, 50% 50%);
+    }
+  }
   .why__word {
     position: absolute;
     inset: 0;
@@ -152,15 +187,17 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
     .why__fb {
       --rw: 70vw;
     }
+    /* D-089: on phones the two halves sit above and below the (smaller) ring instead of over it */
     .why__wide {
       flex-direction: column;
       align-items: center;
       white-space: nowrap;
-      font-size: 19vw;
+      font-size: 15vw;
       line-height: 0.9;
     }
     .why__wide-gap {
-      height: 0;
+      width: 0;
+      height: 60vw; /* ring at 52vw wide (≈ 56vw tall at this angle) + air */
     }
     .why__final {
       top: calc(var(--header-h) + 40px);

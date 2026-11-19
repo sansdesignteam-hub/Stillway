@@ -14,6 +14,7 @@
  */
 import { put, seg, smooth, clamp01, type Ctx } from '../anim';
 import { pose, ANGLE, type Pose } from '../ring/poses';
+import { whyBg } from '../../content/whyBg';
 import type { SectionMotion } from '../story';
 
 let el: Record<string, HTMLElement | null> = {};
@@ -47,6 +48,7 @@ export const why: SectionMotion = {
     const q = (s: string) => root.querySelector<HTMLElement>(s);
     el = {
       word: q('[data-w-word]'),
+      bg: q('[data-w-bg]'),
       wide: q('[data-w-wide]'),
       wideL: q('[data-w-wide-l]'),
       wideR: q('[data-w-wide-r]'),
@@ -60,6 +62,16 @@ export const why: SectionMotion = {
   },
   update(u, ctx) {
     const out = 1 - seg(u, END, END + 0.3); // connection to S03, first 30%
+    // D-088 background: fades in from Paper while S01 hands over (the photo there has faded to
+    // Paper by u ≈ −0.6), drifts up slowly with the scroll (parallax), and leaves in the 30–70%
+    // middle of the connection to S03, together with Paper → Night.
+    // VD README: 01 → 02 fades in over Paper with scale 1.03 → 1; 02 → 03 the photo goes first
+    // (30–55% of the connection), then Paper → Night (story.ts, 30–70%).
+    if (el.bg) {
+      const inn = seg(u, -1.0, -0.2);
+      const leave = 1 - seg(u, END + 0.3, END + 0.55);
+      put(el.bg, { o: inn * leave, s: 1.03 - 0.03 * inn, yv: whyBg.parallax * (0.5 - clamp01((u + 1) / (END + 1))) }, ctx);
+    }
     // "rhythm": shows while the ring zooms out of S01 (u ≈ −1.1 … −0.4), gone on the way to state 2
     put(el.word, { o: seg(u, -1.1, -0.4) * (1 - seg(u, 0.25, 0.8)) }, ctx);
 
@@ -96,15 +108,19 @@ export const why: SectionMotion = {
   ring(u, ctx: Ctx): Pose {
     const m = ctx.mobile;
     const tq = ANGLE.threeQuarter;
-    const w = m ? 0.7 : 0.36;
-    // one continuous tumble over the whole section (state 1 → 4), eased only at the ends:
-    // a full turn about the screen's horizontal axis while turning toward the camera
+    // D-089: the ring keeps turning with the scroll, but as a turntable (about the vertical axis),
+    // one full turn between the key moments and a slow drift while each sentence is lit and at the
+    // end. At every key moment it is back at the reference three-quarter pose, where the engraved
+    // "Stillway" reads correctly (bottom → top, never upside down or mirrored).
+    //   key A: statement 1 lit (u 0.55–1.25) · key B: statement 2 lit (1.85–2.35) · end (≥ 2.85)
+    const turns = seg(u, 0, 0.55) + seg(u, 1.25, 1.85) + seg(u, 2.35, 2.85);
+    const drift = 0.12 * clamp01(u / 3); // slow motion inside the key moments
     const t = smooth(clamp01(u / 3));
-    const start = { rx: -0.15, ry: tq.ry - 0.15 };
-    const endP = { rx: ANGLE.facing.rx, ry: -0.3 };
-    let rx = start.rx + (endP.rx - start.rx) * t + Math.PI * 2 * t;
-    if (u >= 3) rx -= Math.PI * 2; // same orientation; keeps the 02 → 03 connection from unwinding
-    const ry = start.ry + (endP.ry - start.ry) * t;
-    return pose({ x: 0, y: m ? 0 : -0.02 * t, w, rx, ry, rz: 0, spin: 0 });
+    const ryBase = tq.ry - 0.15 + (0.25 * t); // turns a little toward the camera by the end
+    let ry = ryBase + Math.PI * 2 * turns + drift;
+    if (u >= 2.85) ry -= Math.PI * 6; // same orientation; the 02 → 03 connection does not unwind
+    // phones: the ring gets smaller at the end so "keeps the" / "pattern." clear it above and below
+    const w = m ? 0.7 - 0.18 * seg(u, 2.35, 2.85) : 0.36;
+    return pose({ x: 0, y: m ? 0 : -0.02 * t, w, rx: -0.15, ry, rz: 0, spin: 0 });
   },
 };
