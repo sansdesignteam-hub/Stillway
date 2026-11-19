@@ -33,7 +33,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
 
 const q = new URLSearchParams(location.search);
-const BG = { paper: '#F7F5F0', night: '#17120F', dusk: '#3a2414', lamp: '#EFE6DB' };
+const BG = { paper: '#F7F5F0', night: '#17120F', dusk: '#3a2414', lamp: '#EFE6DB', paperPolished: '#F7F5F0', nightPolished: '#17120F' };
 const msg = (t) => (document.getElementById('msg').textContent = t);
 if (q.has('nohud')) document.getElementById('hud').style.display = 'none';
 
@@ -77,8 +77,11 @@ const led = ring.getObjectByName('led_main').material; led.toneMapped = false;
 function apply(m, p) {
   m.color.setRGB(...p.color, THREE.LinearSRGBColorSpace);
   m.metalness = p.metalness; m.roughness = p.roughness;
-  if ('anisotropy' in p) { m.anisotropy = p.anisotropy; m.anisotropyRotation = p.anisotropyRotation; }
+  if (m.userData.nmap === undefined) m.userData.nmap = m.normalMap;               // keep the brushed map for brushed finishes
+  m.normalMap = p.normalMap === null ? null : m.userData.nmap;                    // polished finishes: no brushed normal map
+  if ('anisotropy' in p) { m.anisotropy = p.anisotropy; m.anisotropyRotation = p.anisotropyRotation || 0; }
   if ('normalScale' in p && m.normalScale) m.normalScale.setScalar(p.normalScale);
+  m.envMapIntensity = p.envMapIntensity ?? 1;
   m.clearcoat = p.clearcoat || 0; m.clearcoatRoughness = p.clearcoatRoughness || 0;
   m.needsUpdate = true;
 }

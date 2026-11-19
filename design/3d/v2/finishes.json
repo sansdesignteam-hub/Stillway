@@ -1,82 +1,88 @@
 {
-  "_note": "Stillway V2 ring finishes for three.js MeshPhysicalMaterial. Colors are LINEAR RGB (use color.setRGB(r,g,b, THREE.LinearSRGBColorSpace)). Apply 'shell' to material 'Ring_Silver' and 'engrave' to 'Ring_Silver_Engrave'. The brushed normal map and UVs are shared and stay as loaded from the GLB. Values are 3D Designer proposals pending user review.",
+  "_note": "Stillway V2 ring finishes for three.js MeshPhysicalMaterial. Colors are LINEAR RGB (use color.setRGB(r,g,b, THREE.LinearSRGBColorSpace)). Apply 'shell' to material 'Ring_Silver' and 'engrave' to 'Ring_Silver_Engrave'. The brushed normal map and UVs are shared and stay as loaded from the GLB. Values are 3D Designer proposals pending user review. D-085: Silver everywhere = polished. Black and Gold stay brushed and need the brushed GLB (UV + normal map): if one GLB serves all finishes, load stillway-ring-v2-silver_web.glb and for Silver set normalMap = null and anisotropy = 0.",
   "silver": {
+    "_label": "Active Silver (D-085): polished, same as silver_polished. Env: paperPolished / nightPolished outside S01, heroV1 in S01.",
     "shell": {
       "color": [
         0.92,
-        0.9,
-        0.87
+        0.92,
+        0.93
       ],
       "metalness": 1,
-      "roughness": 0.18,
-      "anisotropy": 0.55,
-      "anisotropyRotation": 1.5708,
-      "normalScale": 0.5,
+      "roughness": 0.06,
+      "anisotropy": 0,
+      "normalMap": null,
+      "envMapIntensity": 1.5,
       "clearcoat": 0
     },
     "engrave": {
       "color": [
-        0.4,
-        0.39,
-        0.38
+        0.28,
+        0.28,
+        0.29
       ],
       "metalness": 1,
-      "roughness": 0.5,
+      "roughness": 0.38,
+      "envMapIntensity": 1.0,
       "clearcoat": 0
     },
-    "envPreset": "paper"
+    "glb": "stillway-ring-v2-silver-polished_web.glb",
+    "envPreset": "paperPolished"
   },
   "black": {
+    "_label": "Active Black (D-085) = black_polished",
     "shell": {
       "color": [
         0.035,
         0.035,
         0.04
       ],
+      "roughness": 0.07,
+      "clearcoat": 0.3,
+      "clearcoatRoughness": 0.03,
       "metalness": 1,
-      "roughness": 0.2,
-      "anisotropy": 0.5,
-      "anisotropyRotation": 1.5708,
-      "normalScale": 0.5,
-      "clearcoat": 0.25,
-      "clearcoatRoughness": 0.08
+      "anisotropy": 0,
+      "normalMap": null,
+      "envMapIntensity": 1.5
     },
     "engrave": {
       "color": [
-        0.055,
-        0.055,
-        0.06
+        0.24,
+        0.24,
+        0.25
       ],
+      "roughness": 0.5,
+      "clearcoat": 0,
       "metalness": 1,
-      "roughness": 0.55,
-      "clearcoat": 0.25,
-      "clearcoatRoughness": 0.08
+      "envMapIntensity": 1.0
     },
-    "envPreset": "paper"
+    "envPreset": "paperPolished"
   },
   "gold": {
+    "_label": "Active Gold (D-085) = gold_polished (colour = option B, D-079)",
     "shell": {
       "color": [
         1.0,
         0.8,
         0.34
       ],
+      "roughness": 0.06,
+      "clearcoat": 0,
       "metalness": 1,
-      "roughness": 0.11,
-      "anisotropy": 0.45,
-      "anisotropyRotation": 1.5708,
-      "normalScale": 0.35,
-      "clearcoat": 0
+      "anisotropy": 0,
+      "normalMap": null,
+      "envMapIntensity": 1.5
     },
     "engrave": {
       "color": [
-        0.62,
-        0.46,
-        0.18
+        0.4,
+        0.28,
+        0.1
       ],
+      "roughness": 0.38,
+      "clearcoat": 0,
       "metalness": 1,
-      "roughness": 0.5,
-      "clearcoat": 0
+      "envMapIntensity": 1.0
     },
     "envPreset": "lamp"
   },
@@ -131,6 +137,28 @@
         "S01"
       ],
       "use": "V1 moss-and-stone hero (D-081)"
+    },
+    "paperPolished": {
+      "file": "env/v2-env-paper-polished.exr",
+      "environmentIntensity": 1.0,
+      "exposure": 1.0,
+      "sections": [
+        "S02",
+        "S05-S06",
+        "S10 Silver"
+      ],
+      "use": "Studio for polished metal: warm floor-to-dark-ceiling gradient, several narrow softbox strips of different strength, dark flags between them, a warm card and one ochre panel, so the mirror band shows bands instead of flat grey"
+    },
+    "nightPolished": {
+      "file": "env/v2-env-night-polished.exr",
+      "environmentIntensity": 1.0,
+      "exposure": 1.0,
+      "sections": [
+        "S03",
+        "S08",
+        "S11"
+      ],
+      "use": "Near-black for polished metal: a broad soft cold rim with a thin hot core, a faint cold fill and warm floor, so the band reads as a form instead of empty black"
     }
   },
   "renderer": {
@@ -193,6 +221,89 @@
       },
       "envPreset": "paper",
       "_label": "Option C - champagne, closest to V1 R-gold"
+    },
+    "silver_brushed": {
+      "shell": {
+        "color": [
+          0.92,
+          0.9,
+          0.87
+        ],
+        "metalness": 1,
+        "roughness": 0.18,
+        "anisotropy": 0.55,
+        "anisotropyRotation": 1.5708,
+        "normalScale": 0.5,
+        "clearcoat": 0
+      },
+      "engrave": {
+        "color": [
+          0.4,
+          0.39,
+          0.38
+        ],
+        "metalness": 1,
+        "roughness": 0.5,
+        "clearcoat": 0
+      },
+      "envPreset": "paper",
+      "_note": "Brushed silver (D-071/D-078), archived by D-085. Uses the brushed GLB (UV + normal map)."
+    },
+    "black_brushed": {
+      "shell": {
+        "color": [
+          0.035,
+          0.035,
+          0.04
+        ],
+        "metalness": 1,
+        "roughness": 0.2,
+        "anisotropy": 0.5,
+        "anisotropyRotation": 1.5708,
+        "normalScale": 0.5,
+        "clearcoat": 0.25,
+        "clearcoatRoughness": 0.08
+      },
+      "engrave": {
+        "color": [
+          0.055,
+          0.055,
+          0.06
+        ],
+        "metalness": 1,
+        "roughness": 0.55,
+        "clearcoat": 0.25,
+        "clearcoatRoughness": 0.08
+      },
+      "envPreset": "paper",
+      "_note": "Brushed black, archived by D-085 (polished everywhere)."
+    },
+    "gold_brushed": {
+      "shell": {
+        "color": [
+          1.0,
+          0.8,
+          0.34
+        ],
+        "metalness": 1,
+        "roughness": 0.11,
+        "anisotropy": 0.45,
+        "anisotropyRotation": 1.5708,
+        "normalScale": 0.35,
+        "clearcoat": 0
+      },
+      "engrave": {
+        "color": [
+          0.62,
+          0.46,
+          0.18
+        ],
+        "metalness": 1,
+        "roughness": 0.5,
+        "clearcoat": 0
+      },
+      "envPreset": "lamp",
+      "_note": "Brushed Gold B (D-079), archived by D-085."
     }
   },
   "silver_polished": {
@@ -223,5 +334,62 @@
     },
     "glb": "stillway-ring-v2-silver-polished_web.glb",
     "envPreset": "heroV1"
+  },
+  "black_polished": {
+    "_label": "Black polished (D-085): glossy black metal with a thin clearcoat; engraving lighter and matte so it reads on the mirror black",
+    "shell": {
+      "color": [
+        0.035,
+        0.035,
+        0.04
+      ],
+      "roughness": 0.07,
+      "clearcoat": 0.3,
+      "clearcoatRoughness": 0.03,
+      "metalness": 1,
+      "anisotropy": 0,
+      "normalMap": null,
+      "envMapIntensity": 1.5
+    },
+    "engrave": {
+      "color": [
+        0.24,
+        0.24,
+        0.25
+      ],
+      "roughness": 0.5,
+      "clearcoat": 0,
+      "metalness": 1,
+      "envMapIntensity": 1.0
+    },
+    "envPreset": "paperPolished"
+  },
+  "gold_polished": {
+    "_label": "Gold polished (D-085): Gold option B colour, glossy; engraving darker and rougher",
+    "shell": {
+      "color": [
+        1.0,
+        0.8,
+        0.34
+      ],
+      "roughness": 0.06,
+      "clearcoat": 0,
+      "metalness": 1,
+      "anisotropy": 0,
+      "normalMap": null,
+      "envMapIntensity": 1.5
+    },
+    "engrave": {
+      "color": [
+        0.4,
+        0.28,
+        0.1
+      ],
+      "roughness": 0.38,
+      "clearcoat": 0,
+      "metalness": 1,
+      "envMapIntensity": 1.0
+    },
+    "envPreset": "lamp"
   }
 }
