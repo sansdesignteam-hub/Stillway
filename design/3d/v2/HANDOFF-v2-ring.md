@@ -121,9 +121,9 @@ PNG transparan 1024 px (master, ±0,5–0,8 MB) dan WebP q82 (12–36 KB, **tota
 
 | File | Pose | Env |
 | --- | --- | --- |
-| `fb-s01-34`, `fb-s01-front` | S01 3/4 dan menghadap kamera, LED hijau samar | paper |
-| `fb-s02-34` | S02 3/4 | paper |
-| `fb-s03-rim` | S03, hanya tepi kena cahaya dingin | night |
+| `fb-s01-34`, `fb-s01-front` | S01 3/4 dan menghadap kamera, LED hijau samar. `fb-s01-34` = pose web-v2 `ANGLE.threeQuarter` (rx −0,15, ry −0,85, spin 0; D-075) | paper |
+| `fb-s02-34` | S02 state 1 web-v2 (threeQuarter, ry −1,0) | paper |
+| `fb-s03-rim` | S03 state 1 web-v2 (threeQuarter, ry −0,95), hanya tepi kena cahaya dingin | night |
 | `fb-s05-macro` | S05 kamera di depan lubang ring, LED hijau samar | dusk |
 | `fb-s06-front`, `fb-s06-side`, `fb-s06-45` | S06 berdiri: menghadap kamera, samping (logo), 45° | paper |
 | `fb-s06-finger` | S06 pose akhir di jari (tafsiran B, D-072): sumbu vertikal, teks horizontal | paper |
@@ -191,3 +191,17 @@ Jarak gelinding di halaman uji: dari −R sampai 40% lebar layar (±55% di deskt
 - `s06-p0.90.png` dan `s06-p0.90-zoom.png`: ring sedang turun, bagian belakang tertutup proxy
 - `s06-p0.90-proxy-debug.png`: proxy ditampilkan merah
 - `s06-p0.00` sampai `s06-p0.75`: jalur gelinding dan pose
+
+## Opsi Gold (revisi setelah D-078, menunggu pilihan pengguna)
+
+Gold yang disetujui (`gold` di `finishes.json`) tampak kecokelatan, terutama karena env **Lamp**: di env itu semua opsi kembali cokelat-oranye. Opsi disimpan sebagai `gold_a`, `gold_b`, `gold_c`. Setelah pengguna memilih, `gold` diganti dan opsi lain dihapus.
+
+| Opsi | Warna linear | Roughness | Kesan |
+| --- | --- | --- | --- |
+| A | 1,00 / 0,74 / 0,24 | 0,12 | Emas kuning 18K pekat |
+| **B (rekomendasi)** | 1,00 / 0,80 / 0,34 | 0,11 | Emas kuning 18K cerah dan bersih, tidak oranye dan tidak lemon |
+| C | 1,00 / 0,85 / 0,52 | 0,12 | Champagne, paling dekat dengan Gold V1 (`R-gold.png`) |
+
+Render: `renders/gold-options/sheet-blender.png` (baris Paper / Lamp / Night × kolom sekarang, A, B, C) dan `renders/gold-options/sheet-web.png` (Three.js, Paper / Night); file per opsi ada di folder yang sama. Usulan: Gold memakai env **Paper**, atau env Lamp yang lebih netral, bukan env Lamp sekarang.
+
+Fallback S01–S03 dirender ulang dengan pose web-v2 (kamera `Cam_WebPose` di `.blend`, dihitung dari Euler three.js `YXZ` → kamera Blender, jarak sama dengan stage web).
