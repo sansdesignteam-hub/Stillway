@@ -200,3 +200,15 @@ Jarak gelinding di halaman uji: dari −R sampai 40% lebar layar (±55% di deskt
 - Di Blender, bagian gelap Gold sedikit lebih zaitun daripada di Three.js. Acuannya tampilan web.
 
 Fallback S01–S03 dirender ulang dengan pose web-v2 (kamera `Cam_WebPose` di `.blend`, dihitung dari Euler three.js `YXZ` → kamera Blender, jarak sama dengan stage web).
+
+## S01 silver polished (D-081)
+
+Pengguna memilih ring V1 yang glossy untuk S01: pantulan lumut dan bayangan di batu, posisi sama dengan V1, dan teks "Stillway" terbaca dari kiri ke kanan.
+
+- **GLB:** `stillway-ring-v2-silver-polished_web.glb`, 120 KB. Geometri V2 sama dengan logo terukir, tanpa UV dan tanpa tekstur. Nama material tetap `Ring_Silver` / `Ring_Silver_Engrave`, jadi kode yang mencari nama itu tetap jalan. GLB brushed tidak diubah.
+- **Material:** band sama dengan silver V1 (warna 0,92/0,92/0,93, metalness 1, roughness 0,06, tanpa anisotropi dan normal map, `envMapIntensity` 1,5 seperti `heroRing.ts`). Dasar huruf jauh lebih gelap dan kasar (0,28, roughness 0,38), sehingga logo tetap terbaca di atas pantulan. Nilainya ada di `finishes.json` → `silver_polished`.
+- **Env dan cahaya:** sama persis dengan V1 hero (`envPresets.heroV1`): `hero-env.jpg`, rotasi Y 0,6π, AgX exposure 1,15, matahari hangat, hemisphere, dan bayangan nyata di batu.
+- **Pose:** pakai `setPose` V1 tanpa perubahan, `{ theta: 66, phi: 50, psi: 0 }`. Dengan psi 0, sisi logo (+X model) berada di band depan yang dekat kamera, dan "Stillway" terbaca dari kiri ke kanan (menurun ke kanan mengikuti lengkung band). Satu putaran saat scroll juga berakhir di pose ini.
+- **Uji:** `ring-test/s01/index.html` (salinan hero-test V1 dengan GLB V2 polished). Jalankan `cd design && python3 -m http.server 8777`, lalu buka `/3d/v2/ring-test/s01/?p=0` (melayang) atau `?p=1` (mendarat). Parameter `?psi=` memutar logo di sekitar sumbu ring.
+- **Render:** `renders/s01-polished/s01-polished-float-p0.png` (bandingkan dengan `design/v2/references/s01-v1-ring-glossy.png`), `s01-polished-landed-p1.png`, dan `s01-polished-landed-zoom.png`.
+- Apakah finish glossy juga berlaku di section V2 lain belum diputuskan (D-081). Section lain tetap brushed.
