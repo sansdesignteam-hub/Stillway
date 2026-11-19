@@ -1,0 +1,224 @@
+{
+  "_note": "Stillway V2 S06 Product details: rolling path, poses, final ring-on-finger pose, and finger proxy. Units: 'img px' = pixels of A-1-hand-left-alpha.png (579x1198); scale them by (rendered image width / 579). Rotations are world-space steps applied in order (three.js: q = R_n * ... * R_1), degrees, for the GLB as loaded (ring axis +Z, logo at +X, sensor at -X). Camera: perspective FOV 30 deg, distance chosen so 1 world unit = 1 CSS px at z = 0 (same as V1 hero). Proposal by 3D Designer, pending user review (D-072).",
+  "image": {
+    "file": "design/assets/v2/A-1-hand-left-alpha.png",
+    "size": [
+      579,
+      1198
+    ],
+    "fingerTip": [
+      326,
+      23
+    ],
+    "ringSeat": [
+      343,
+      360
+    ],
+    "knuckle": [
+      346,
+      470
+    ],
+    "axisTiltDeg": 2.9,
+    "fingerWidthAtSeat": 96,
+    "_measured": "finger width measured from alpha along the axis; README value 85 px is the narrowest part, the seat is 96-100 px"
+  },
+  "ring": {
+    "glbOuterDiameterM": 0.02384,
+    "onFingerOuterDiameterImgPx": 122,
+    "_scale": "ring.scale = (122 * imgScale) / 0.02384, imgScale = renderedImageWidth / 579. Inner diameter ~19 mm = finger 96-100 px, so 1 mm ~ 5.1 img px"
+  },
+  "poses": {
+    "frontLogoTop": {
+      "steps": [
+        [
+          "z",
+          90
+        ]
+      ],
+      "use": "S06 rolling + 25% stop: opening faces camera, logo at top"
+    },
+    "side": {
+      "steps": [
+        [
+          "z",
+          90
+        ],
+        [
+          "y",
+          90
+        ]
+      ],
+      "use": "S06 33%: band side to camera, reflections sweep"
+    },
+    "edge45": {
+      "steps": [
+        [
+          "z",
+          90
+        ],
+        [
+          "y",
+          45
+        ],
+        [
+          "x",
+          20
+        ]
+      ],
+      "use": "S06 67%: seen from the edge at 45 deg (between front and side), tilted 20 deg so the opening shows as an ellipse and the reflection stretches along the side"
+    },
+    "onFinger": {
+      "steps": [
+        [
+          "x",
+          -90
+        ],
+        [
+          "y",
+          -90
+        ],
+        [
+          "x",
+          10
+        ],
+        [
+          "z",
+          2.9
+        ]
+      ],
+      "use": "S06 100% (D-072): axis along the index finger, logo faces camera, text horizontal; x 10 = camera ~10 deg above, z 2.9 = finger tilt",
+      "viewCorrection": "After the steps, add world x = atan2(ring.y, camZ - ring.z) and then y = atan2(-ring.x, camZ - ring.z) (degrees from radians), ring position relative to the screen centre in px. The hand sits off-centre, so without this the camera sees the ring from the side and the logo slides off-centre. Blend it in over 0.67-0.80.",
+      "environmentIntensity": 0.85
+    }
+  },
+  "rolling": {
+    "_rule": "Rolls on the Sand plinth: roll angle about the ring axis = distance / outerRadiusPx (clockwise when moving right). rotation = steps of frontLogoTop with the z angle = 90 - deg(dx / R), dx = x - xStop.",
+    "distanceVw": {
+      "desktop": 55,
+      "mobile": 40
+    },
+    "startX": "-0.5 * ringDiameterPx (half cut off at the left edge, as the end of S05)",
+    "ringDiameterVh": 26,
+    "keyframes": [
+      {
+        "p": 0.0,
+        "x": "start",
+        "note": "standing on the plinth, half cut off"
+      },
+      {
+        "p": 0.08,
+        "x": "lerp 0.40",
+        "note": "moving right, rolling clockwise, logo turns with it"
+      },
+      {
+        "p": 0.16,
+        "x": "lerp 0.85",
+        "note": "slowing down, title starts to appear"
+      },
+      {
+        "p": 0.22,
+        "x": "stop + 0.06 * R",
+        "note": "overshoot slightly past the stop"
+      },
+      {
+        "p": 0.25,
+        "x": "stop",
+        "note": "rocks back and rests facing camera, logo on top"
+      }
+    ],
+    "ease": "x(p) uses power2.out until 0.22, then sine.inOut back to stop"
+  },
+  "timeline": [
+    {
+      "from": 0.0,
+      "to": 0.25,
+      "what": "rolling (see rolling)"
+    },
+    {
+      "from": 0.25,
+      "to": 0.4,
+      "what": "slerp frontLogoTop -> side"
+    },
+    {
+      "from": 0.4,
+      "to": 0.5,
+      "what": "hold side"
+    },
+    {
+      "from": 0.5,
+      "to": 0.67,
+      "what": "slerp side -> edge45"
+    },
+    {
+      "from": 0.67,
+      "to": 0.8,
+      "what": "hand fades in; ring moves above the fingertip, scales to onFinger size, slerp edge45 -> onFinger"
+    },
+    {
+      "from": 0.8,
+      "to": 1.0,
+      "what": "ring slides down the finger axis from 40 img px above the tip to the seat (power2.inOut), proxy hides the back of the ring"
+    }
+  ],
+  "fingerProxy": {
+    "_how": "LatheGeometry around +Y, points [radius, y] in img px measured along the finger axis, y = 0 at the ring seat, up positive (radius ~4% under the photo width so the ring front never z-fights). Orientation: z 2.9 only, i.e. the proxy and the slide path stay in the photo plane (z = 0); the 10 deg camera tilt lives only in the ring pose, otherwise perspective parallax pushes the proxy off the finger. Position: ring seat. Material: depth only (colorWrite false), renderOrder below the ring.",
+    "profile": [
+      [
+        0,
+        337
+      ],
+      [
+        15,
+        334
+      ],
+      [
+        28,
+        320
+      ],
+      [
+        35,
+        300
+      ],
+      [
+        38,
+        280
+      ],
+      [
+        40,
+        260
+      ],
+      [
+        42,
+        220
+      ],
+      [
+        44.6,
+        160
+      ],
+      [
+        48,
+        120
+      ],
+      [
+        47,
+        60
+      ],
+      [
+        46,
+        0
+      ],
+      [
+        48,
+        -110
+      ],
+      [
+        0,
+        -110
+      ]
+    ],
+    "material": {
+      "colorWrite": false,
+      "depthWrite": true
+    }
+  }
+}
