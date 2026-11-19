@@ -212,3 +212,13 @@ Pengguna memilih ring V1 yang glossy untuk S01: pantulan lumut dan bayangan di b
 - **Uji:** `ring-test/s01/index.html` (salinan hero-test V1 dengan GLB V2 polished). Jalankan `cd design && python3 -m http.server 8777`, lalu buka `/3d/v2/ring-test/s01/?p=0` (melayang) atau `?p=1` (mendarat). Parameter `?psi=` memutar logo di sekitar sumbu ring.
 - **Render:** `renders/s01-polished/s01-polished-float-p0.png` (bandingkan dengan `design/v2/references/s01-v1-ring-glossy.png`), `s01-polished-landed-p1.png`, dan `s01-polished-landed-zoom.png`.
 - Apakah finish glossy juga berlaku di section V2 lain belum diputuskan (D-081). Section lain tetap brushed.
+
+## Silver polished di seluruh V2 (D-083, D-085)
+
+- **Poster S01** (`fallback/`): `fb-s01-polished.png/.webp` (1024 px, transparan) adalah ring polished dalam pose V1 (theta 66, phi 50, psi 0) dengan env `heroV1`, logo terbaca kiri→kanan. `fb-s01-polished-shadow.png/.webp` adalah layer bayangan terpisah pada bidang batu, di frame yang sama. Tumpuk tepat di atas satu sama lain: bayangan di bawah, ring di atas. Dalam frame: lebar ring 640 px, pusat ring (512, 442), tepi atas bidang bayangan y ±835. Dirender di Three.js lewat `ring-test/s01/poster.html` (`?layer=ring|shadow|both`), jadi materialnya sama persis dengan web. Bayangan hanya relevan untuk pose mendarat; saat melayang (load pertama) cukup layer ring.
+- **Still S02/S03 polished**: `fb-s02-polished` (env `paperPolished`) dan `fb-s03-polished` (env `nightPolished`), pose web-v2 sama dengan `fb-s02-34` / `fb-s03-rim`. Versi brushed lama tetap ada.
+- **Env khusus polished**: dengan env Paper/Night lama, permukaan cermin tampak abu-abu rata (Paper; satu softbox bahkan menutup separuh logo) atau hilang di hitam (Night). Karena itu dibuat:
+  - `env/v2-env-paper-polished.exr` (116 KB): gradasi lantai hangat ke langit-langit gelap, beberapa strip softbox sempit dengan kekuatan berbeda, flag gelap di antaranya, kartu hangat, dan satu panel ochre.
+  - `env/v2-env-night-polished.exr` (69 KB): rim dingin lebar dengan inti tipis yang terang, fill dingin samar, dan lantai hangat redup.
+  - Env lama tetap dipakai untuk Black/Gold brushed.
+- **`finishes.json`**: `silver` sekarang = polished (nilai sama dengan `silver_polished`, env `paperPolished`). Brushed diarsipkan di `_archive.silver_brushed`. Black dan Gold tetap brushed, jadi perlu GLB brushed (UV + normal map). Kalau satu GLB dipakai untuk semua finish, pakai `stillway-ring-v2-silver_web.glb`, lalu untuk Silver set `normalMap = null` dan `anisotropy = 0`. GLB polished (`-silver-polished_web.glb`) cukup bila hanya Silver yang dibutuhkan.

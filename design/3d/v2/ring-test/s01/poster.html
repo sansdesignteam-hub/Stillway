@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Stillway S01 poster render</title>
+<style>
+  /* Renders fb-s01-polished (D-083) by 3D Designer. ?layer=ring | shadow | both, ?bg=1 shows the hero photo for checking. */
+  html, body { margin: 0; background: transparent; }
+  canvas { display: block; width: 1024px; height: 1024px; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1024" height="1024"></canvas>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+const q = new URLSearchParams(location.search);
+const layer = q.get('layer') || 'both';
+const S = 1024;
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.setSize(S, S, false); renderer.setClearColor(0x000000, 0);
+renderer.toneMapping = THREE.AgXToneMapping; renderer.toneMappingExposure = 1.15; renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.VSMShadowMap;
+const scene = new THREE.Scene();
+const FOV = 30;
+const camera = new THREE.PerspectiveCamera(FOV, 1, 1, 20000);
+camera.position.set(0, 0, S / 2 / Math.tan(THREE.MathUtils.degToRad(FOV / 2)));   // 1 unit = 1 px, as the V1 hero
+
+// env + lights: V1 hero (envPresets.heroV1)
+const tex = await new THREE.TextureLoader().loadAsync('../../../hero-test/env.jpg?v=2');
+tex.mapping = THREE.EquirectangularReflectionMapping; tex.colorSpace = THREE.SRGBColorSpace;
+scene.environment = new THREE.PMREMGenerator(renderer).fromEquirectangular(tex).texture;
+scene.environmentRotation = new THREE.Euler(0, Math.PI * 0.6, 0);
+const sun = new THREE.DirectionalLight(0xffe2b8, 2.2); sun.position.set(-600, 700, 500); scene.add(sun);
+scene.add(new THREE.HemisphereLight(0xfff1dc, 0x3b3a1c, 0.35));
+const shadowSun = new THREE.DirectionalLight(0xffffff, 0);
+shadowSun.castShadow = true; shadowSun.shadow.mapSize.set(2048, 2048); shadowSun.shadow.radius = 14; shadowSun.shadow.blurSamples = 24; shadowSun.shadow.bias = -0.0005;
+scene.add(shadowSun, shadowSun.target);
+const catcherMat = new THREE.ShadowMaterial({ color: 0x1c140b, opacity: 0.5, transparent: true });
+const catcher = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), catcherMat);
+catcher.receiveShadow = true; catcherMat.depthWrite = false; catcher.renderOrder = -1; scene.add(catcher);
+const SHADOW_DIR = new THREE.Vector3(0.55, 1, 0.75).normalize();
+
+// ring in the V1 photo pose
+const pivot = new THREE.Group(), pose = new THREE.Group(); pivot.add(pose); scene.add(pivot);
+function setPose({ theta, phi, psi }) {
+  const d = THREE.MathUtils.degToRad;
+  const a = new THREE.Vector3(Math.sin(d(phi)) * Math.cos(d(theta)), Math.sin(d(phi)) * Math.sin(d(theta)), Math.cos(d(phi)));
+  const r = new THREE.Vector3(0, 0, -1).addScaledVector(a, Math.cos(d(phi))).normalize().applyAxisAngle(a, d(psi));
+  const xw = r.clone().negate(), zw = a, yw = zw.clone().cross(xw);
+  pose.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(xw, yw, zw));
+}
+const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/');
+const ring = (await new GLTFLoader().setDRACOLoader(draco).loadAsync('../../stillway-ring-v2-silver-polished_web.glb')).scene;
+const box0 = new THREE.Box3().setFromObject(ring); ring.position.sub(box0.getCenter(new THREE.Vector3()));
+const ringSize = box0.getSize(new THREE.Vector3()).x;
+ring.traverse((o) => {
+  if (!o.isMesh) return;
+  o.castShadow = true;
+  const m = o.material;
+  if (m.name === 'Ring_Silver') { m.envMapIntensity = 1.5; m.roughness = 0.06; }
+  if (m.name === 'Ring_Silver_Engrave') m.envMapIntensity = 1.0;
+  if (/Liner/i.test(m.name)) m.envMapIntensity = 0.5;
+  if (/Glass|Frame/i.test(m.name)) m.envMapIntensity = 0.9;
+  if (layer === 'shadow') { m.colorWrite = false; m.depthWrite = false; }   // still casts the shadow
+});
+pose.add(ring);
+setPose({ theta: 66, phi: 50, psi: 0 });
+
+// framing: ring width 640 px, centred a little high so the shadow fits below
+const W_RING = 640;
+pivot.scale.setScalar(W_RING / ringSize);
+pivot.position.set(0, 70, 0);
+pivot.updateMatrixWorld(true);
+const bottom = new THREE.Box3().setFromObject(pose).min.y;
+catcher.position.set(pivot.position.x, bottom + 0.5, 0);
+catcher.rotation.set(-Math.PI / 2 + 0.32, 0, 0);
+catcher.scale.set(W_RING * 3.2, W_RING * 2.2, 1);
+catcher.visible = layer !== 'ring';
+shadowSun.target.position.copy(catcher.position);
+shadowSun.position.copy(catcher.position).addScaledVector(SHADOW_DIR, W_RING * 4);
+const sc = shadowSun.shadow.camera; sc.left = sc.bottom = -W_RING * 1.5; sc.right = sc.top = W_RING * 1.5; sc.near = 1; sc.far = W_RING * 10; sc.updateProjectionMatrix();
+
+if (q.has('bg')) document.body.style.background = '#6b5a3e';
+renderer.render(scene, camera); renderer.render(scene, camera);
+const info = { ringWidthPx: W_RING, ringCentrePx: [S / 2 + pivot.position.x, S / 2 - pivot.position.y], shadowPlaneTopPx: S / 2 - (bottom + 0.5) };
+document.title += ' ' + JSON.stringify(info) + ' · ready';
+</script>
+</body>
+</html>
