@@ -57,22 +57,22 @@
   "gold": {
     "shell": {
       "color": [
-        0.95,
-        0.74,
-        0.36
+        1.0,
+        0.8,
+        0.34
       ],
       "metalness": 1,
-      "roughness": 0.17,
-      "anisotropy": 0.55,
+      "roughness": 0.11,
+      "anisotropy": 0.45,
       "anisotropyRotation": 1.5708,
-      "normalScale": 0.5,
+      "normalScale": 0.35,
       "clearcoat": 0
     },
     "engrave": {
       "color": [
-        0.52,
-        0.37,
-        0.17
+        0.62,
+        0.46,
+        0.18
       ],
       "metalness": 1,
       "roughness": 0.5,
@@ -128,86 +128,61 @@
     "outputColorSpace": "srgb",
     "envRotationY": 0
   },
-  "gold_a": {
-    "shell": {
-      "color": [
-        1.0,
-        0.74,
-        0.24
-      ],
-      "metalness": 1,
-      "roughness": 0.12,
-      "anisotropy": 0.45,
-      "anisotropyRotation": 1.5708,
-      "normalScale": 0.4,
-      "clearcoat": 0
+  "_archive": {
+    "_note": "Not active. Gold options A and C from the revision before D-079 (user picked B, now 'gold'). Kept for reference; renders in renders/gold-options/.",
+    "gold_a": {
+      "shell": {
+        "color": [
+          1.0,
+          0.74,
+          0.24
+        ],
+        "metalness": 1,
+        "roughness": 0.12,
+        "anisotropy": 0.45,
+        "anisotropyRotation": 1.5708,
+        "normalScale": 0.4,
+        "clearcoat": 0
+      },
+      "engrave": {
+        "color": [
+          0.58,
+          0.4,
+          0.12
+        ],
+        "metalness": 1,
+        "roughness": 0.5,
+        "clearcoat": 0
+      },
+      "envPreset": "paper",
+      "_label": "Option A - deep 18K yellow"
     },
-    "engrave": {
-      "color": [
-        0.58,
-        0.4,
-        0.12
-      ],
-      "metalness": 1,
-      "roughness": 0.5,
-      "clearcoat": 0
-    },
-    "envPreset": "paper",
-    "_label": "Option A - deep 18K yellow"
-  },
-  "gold_b": {
-    "shell": {
-      "color": [
-        1.0,
-        0.8,
-        0.34
-      ],
-      "metalness": 1,
-      "roughness": 0.11,
-      "anisotropy": 0.45,
-      "anisotropyRotation": 1.5708,
-      "normalScale": 0.35,
-      "clearcoat": 0
-    },
-    "engrave": {
-      "color": [
-        0.62,
-        0.46,
-        0.18
-      ],
-      "metalness": 1,
-      "roughness": 0.5,
-      "clearcoat": 0
-    },
-    "envPreset": "paper",
-    "_label": "Option B - bright 18K yellow (recommended)"
-  },
-  "gold_c": {
-    "shell": {
-      "color": [
-        1.0,
-        0.85,
-        0.52
-      ],
-      "metalness": 1,
-      "roughness": 0.12,
-      "anisotropy": 0.45,
-      "anisotropyRotation": 1.5708,
-      "normalScale": 0.4,
-      "clearcoat": 0
-    },
-    "engrave": {
-      "color": [
-        0.64,
-        0.52,
-        0.32
-      ],
-      "metalness": 1,
-      "roughness": 0.5,
-      "clearcoat": 0
-    },
-    "envPreset": "paper",
-    "_label": "Option C - champagne, closest to V1 R-gold"
-  },
-  "_goldOptions": "Gold revision options (user request after D-078). 'gold' stays the approved value until the user picks A, B or C; then 'gold' is replaced and gold_a/b/c are removed. Lamp env makes every option look brown, see renders/gold-options/."
+    "gold_c": {
+      "shell": {
+        "color": [
+          1.0,
+          0.85,
+          0.52
+        ],
+        "metalness": 1,
+        "roughness": 0.12,
+        "anisotropy": 0.45,
+        "anisotropyRotation": 1.5708,
+        "normalScale": 0.4,
+        "clearcoat": 0
+      },
+      "engrave": {
+        "color": [
+          0.64,
+          0.52,
+          0.32
+        ],
+        "metalness": 1,
+        "roughness": 0.5,
+        "clearcoat": 0
+      },
+      "envPreset": "paper",
+      "_label": "Option C - champagne, closest to V1 R-gold"
+    }
+  }
 }

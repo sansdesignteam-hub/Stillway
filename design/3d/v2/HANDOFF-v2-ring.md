@@ -98,7 +98,7 @@ apply(shellMat, F.gold.shell); apply(engraveMat, F.gold.engrave);   // shellMat 
 | --- | --- | --- |
 | Silver | Logam brushed, warna stainless hangat, roughness 0,18 | Seperti referensi |
 | Black | Logam hitam (seperti lapisan DLC), roughness 0,20, clearcoat tipis 0,25 | Kilau gelap berlapis, bukan plastik |
-| Gold | Emas kuning 18K (F0 ±0,95/0,74/0,36 linear), roughness 0,17 | Dipasangkan dengan env Lamp (D-069: Gold → Lamp light) |
+| Gold | **Opsi B (D-079):** emas kuning 18K cerah, linear 1,00/0,80/0,34, roughness 0,11, normalScale 0,35 | Dipasangkan dengan env Lamp netral (D-069: Gold → Lamp light) |
 
 Ukiran tetap tone-on-tone di setiap finish: dasar huruf lebih gelap dan lebih kasar.
 
@@ -112,7 +112,7 @@ Ukiran tetap tone-on-tone di setiap finish: dasar huruf lebih gelap dan lebih ka
 | `paper` | Studio hangat netral: softbox atas, strip kiri/kanan, flag gelap, lantai krem | S01, S02, S06, S10 Silver/Black |
 | `night` | Hampir hitam, satu strip rim dingin dari belakang-samping | S03, S08, S11 (S11: tambah Ember glow CSS) |
 | `dusk` | Matahari rendah ochre + glow cakrawala, langit gelap | S05 (S11 cadangan memakai dusk yang diputar 84° agar glow datang dari atas) |
-| `lamp` | Lampu tungsten hangat + pantulan dinding | S10 Gold |
+| `lamp` | Lampu hangat ±3500 K (dinetralkan, D-079) + pantulan dinding krem, strip kanan, flag gelap. 91 KB | S10 Gold (juga aman untuk Silver/Black) |
 
 Transisi antar env: crossfade dua env (render dua kali tidak perlu). Cukup tween `scene.environmentIntensity` turun → ganti env → naik dalam ±0,4 detik scroll, atau lerp warna latar CSS bersamaan.
 
@@ -192,16 +192,11 @@ Jarak gelinding di halaman uji: dari −R sampai 40% lebar layar (±55% di deskt
 - `s06-p0.90-proxy-debug.png`: proxy ditampilkan merah
 - `s06-p0.00` sampai `s06-p0.75`: jalur gelinding dan pose
 
-## Opsi Gold (revisi setelah D-078, menunggu pilihan pengguna)
+## Gold dan Lamp final (D-079)
 
-Gold yang disetujui (`gold` di `finishes.json`) tampak kecokelatan, terutama karena env **Lamp**: di env itu semua opsi kembali cokelat-oranye. Opsi disimpan sebagai `gold_a`, `gold_b`, `gold_c`. Setelah pengguna memilih, `gold` diganti dan opsi lain dihapus.
-
-| Opsi | Warna linear | Roughness | Kesan |
-| --- | --- | --- | --- |
-| A | 1,00 / 0,74 / 0,24 | 0,12 | Emas kuning 18K pekat |
-| **B (rekomendasi)** | 1,00 / 0,80 / 0,34 | 0,11 | Emas kuning 18K cerah dan bersih, tidak oranye dan tidak lemon |
-| C | 1,00 / 0,85 / 0,52 | 0,12 | Champagne, paling dekat dengan Gold V1 (`R-gold.png`) |
-
-Render: `renders/gold-options/sheet-blender.png` (baris Paper / Lamp / Night × kolom sekarang, A, B, C) dan `renders/gold-options/sheet-web.png` (Three.js, Paper / Night); file per opsi ada di folder yang sama. Usulan: Gold memakai env **Paper**, atau env Lamp yang lebih netral, bukan env Lamp sekarang.
+- `gold` di `finishes.json` = opsi B. Opsi A dan C tidak aktif lagi; nilainya disimpan di `_archive` dalam `finishes.json` sebagai catatan, dan render lamanya tetap di `renders/gold-options/`.
+- `env/v2-env-lamp.exr` di-bake ulang: lampu ±3500 K (dulu ±2700 K oranye), dinding pantul krem, dan dasar ruang hangat-netral. Suasana 22:00 tetap hangat, tapi Gold tidak lagi kecokelatan. Ukuran 91 KB (sebelumnya 97 KB).
+- Pembanding env Lamp baru (`renders/lamp-v2/`): `sheet-lamp.png` (atas Blender, bawah Three.js; Silver / Black / Gold), file per finish `blender-*-lamp.png` dan `web-*-lamp.png`, serta `web-gold-paper.png`.
+- Di Blender, bagian gelap Gold sedikit lebih zaitun daripada di Three.js. Acuannya tampilan web.
 
 Fallback S01–S03 dirender ulang dengan pose web-v2 (kamera `Cam_WebPose` di `.blend`, dihitung dari Euler three.js `YXZ` → kamera Blender, jarak sama dengan stage web).
