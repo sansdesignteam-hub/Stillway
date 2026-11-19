@@ -1,0 +1,39 @@
+---
+/**
+ * Empty section shell. Sets id, background, theme and clock markers for one of the 11
+ * sections (src/content/sections.ts). The content stays empty until HANDOFF-v2.md:
+ * pass children through the slot; without children a dashed placeholder label shows.
+ */
+import type { SectionDef } from '../content/sections';
+interface Props {
+  def: SectionDef;
+}
+const { def } = Astro.props;
+const hasContent = Astro.slots.has('default');
+---
+
+<section
+  id={def.id}
+  class:list={['section', `section--${def.id}`, `surface--${def.bg}`]}
+  data-section={def.id}
+  data-theme={def.theme}
+  data-time={def.time}
+  data-time-end={def.timeEnd}
+  data-states={def.states}
+  aria-label={def.name}
+>
+  {
+    hasContent ? (
+      <slot />
+    ) : (
+      <div class="placeholder">
+        <span class="t-mono">Section {def.n} · Act {def.act}</span>
+        <span class="placeholder__name">{def.name}</span>
+        <span class="t-mono">
+          {def.time}
+          {def.timeEnd ? ` → ${def.timeEnd}` : ''} · {def.states} states
+        </span>
+      </div>
+    )
+  }
+</section>

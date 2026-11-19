@@ -1,0 +1,184 @@
+@import './tokens.css';
+
+/* ---------- base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-weight: var(--w-regular);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+img,
+svg,
+canvas,
+video {
+  display: block;
+  max-width: 100%;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+a {
+  color: inherit;
+}
+button {
+  font: inherit;
+  color: inherit;
+}
+:focus-visible {
+  outline: 2px solid var(--ochre);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: -60px;
+  z-index: 100;
+  padding: 10px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--paper);
+  text-decoration: none;
+}
+.skip-link:focus {
+  top: 12px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- type roles (Moodboard §3) ---------- */
+.t-display,
+.t-h1,
+.t-h2 {
+  font-weight: var(--w-light);
+  letter-spacing: var(--track-tight);
+  line-height: 1.02;
+}
+.t-display {
+  font-size: var(--fs-display);
+}
+.t-h1 {
+  font-size: var(--fs-h1);
+}
+.t-h2 {
+  font-size: var(--fs-h2);
+  line-height: 1.1;
+}
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+  letter-spacing: var(--track-mono);
+  text-transform: uppercase;
+}
+.t-tag {
+  /* [ TAG ] */
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+  letter-spacing: var(--track-mono);
+  text-transform: uppercase;
+  color: var(--ochre);
+}
+.t-tag::before {
+  content: '[ ';
+}
+.t-tag::after {
+  content: ' ]';
+}
+.t-caption {
+  font-size: var(--fs-small);
+  color: var(--stone);
+}
+
+/* ---------- section surfaces (Moodboard §2.4) ---------- */
+.surface--paper {
+  background: var(--paper);
+  color: var(--ink);
+}
+.surface--sand {
+  background: var(--sand);
+  color: var(--ink);
+}
+.surface--night {
+  background: var(--night);
+  color: var(--paper);
+  --stone: var(--stone-on-night);
+  --line: var(--line-on-night);
+}
+.surface--dusk {
+  background: var(--dusk);
+  color: var(--paper);
+  --stone: var(--stone-on-night);
+  --line: var(--line-on-night);
+}
+
+/* ---------- section placeholders (until HANDOFF-v2.md) ---------- */
+.section {
+  position: relative;
+  min-height: 100svh;
+  padding: calc(var(--header-h) + 24px) var(--gutter) 48px;
+  display: grid;
+  align-content: end;
+}
+.placeholder {
+  max-width: var(--max);
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  align-items: baseline;
+  justify-content: space-between;
+  border-top: 1px dashed var(--line);
+  padding-top: 16px;
+  color: var(--stone);
+}
+.placeholder__name {
+  font-size: var(--fs-h2);
+  font-weight: var(--w-light);
+  letter-spacing: var(--track-tight);
+  color: inherit;
+}
+
+/* ---------- reduced motion ----------
+   Every state appears with a short fade instead of movement (Storyboard §1).
+   Elements marked [data-reveal] are revealed by motion.ts; without JS they are visible. */
+html.reduced [data-reveal] {
+  opacity: 0;
+  transition: opacity var(--fade-reduced) ease;
+}
+html.reduced [data-reveal].is-in {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}

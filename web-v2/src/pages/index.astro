@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Section from '../components/Section.astro';
+import { sections } from '../content/sections';
+---
+
+<Base>
+  <Header />
+  <main id="main">
+    {sections.map((def) => <Section def={def} />)}
+  </main>
+</Base>
+
+<script>
+  import { initMotion } from '../scripts/motion';
+  initMotion();
+</script>

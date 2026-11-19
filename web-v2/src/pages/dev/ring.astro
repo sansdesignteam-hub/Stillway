@@ -1,0 +1,65 @@
+---
+/**
+ * Dev check for the reusable ring stage (not part of the Home page).
+ * /dev/ring?light=night&led=sleep — lighting day|night, led heartRate|sleep|recovery|off.
+ */
+import Base from '../../layouts/Base.astro';
+---
+
+<Base title="Stillway V2 — ring stage (dev)">
+  <main id="main" class="dev">
+    <div class="dev__stage" data-dev-stage><canvas data-dev-canvas></canvas></div>
+    <p class="t-mono dev__note">Dev page · ring stage · ?light=day|night · ?led=heartRate|sleep|recovery|off</p>
+  </main>
+</Base>
+
+<style>
+  .dev {
+    min-height: 100svh;
+    display: grid;
+    place-items: center;
+    background: var(--paper);
+  }
+  .dev__stage {
+    position: fixed;
+    inset: 0;
+  }
+  .dev__stage canvas {
+    width: 100%;
+    height: 100%;
+  }
+  .dev__note {
+    position: fixed;
+    left: var(--gutter);
+    bottom: 16px;
+    color: var(--stone);
+  }
+  :global(html.dev-night) .dev {
+    background: var(--night);
+  }
+  :global(html.dev-night) .dev__note {
+    color: var(--stone-on-night);
+  }
+</style>
+
+<script>
+  import { loadRing } from '../../scripts/ring';
+  const q = new URLSearchParams(location.search);
+  const light = q.get('light') === 'night' ? 'night' : 'day';
+  if (light === 'night') document.documentElement.classList.add('dev-night');
+  const container = document.querySelector<HTMLElement>('[data-dev-stage]')!;
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-dev-canvas]')!;
+  loadRing().then(async ({ createRingStage, POSES, LED }) => {
+    const stage = await createRingStage({ canvas, container, lighting: light });
+    if (!stage) return;
+    const led = q.get('led') as keyof typeof LED | null;
+    if (led && LED[led]) stage.setLed(LED[led], 3);
+    stage.setPose(POSES.v1Hero);
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    stage.onFrame((t) => {
+      const { W, H } = stage.size();
+      stage.place({ x: 0, y: 0, width: Math.min(W, H) * 0.45 });
+      if (!reduced) stage.pivot.rotation.y = t * 0.4;
+    });
+  });
+</script>

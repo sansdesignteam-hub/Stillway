@@ -1,0 +1,126 @@
+---
+/**
+ * Navbar (Storyboard §5 audit: "tetap tampil di semua section + jam waktu-hari").
+ * Lockup left; links, the time-of-day clock and one CTA right. The clock is driven by
+ * src/scripts/clock.ts from each section's data-time / data-time-end.
+ * Ink follows the section underneath (data-theme light | dark).
+ * Final layout comes from HANDOFF-v2.md; this is the working shell.
+ */
+import Logo from './Logo.astro';
+import { nav, sections } from '../content/sections';
+const first = sections[0];
+---
+
+<header class="nav" data-nav data-theme={first.theme}>
+  <div class="nav__inner">
+    <a class="nav__home" href="#top" aria-label="Stillway, back to top"><Logo /></a>
+
+    <nav class="nav__links" aria-label="Main">
+      <ul>
+        {nav.links.map((l) => (
+          <li><a href={l.href}>{l.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="nav__end">
+      <p class="clock" aria-hidden="true">
+        <span class="clock__time" data-clock-time>{first.time}</span>
+        <span class="clock__part" data-clock-part>Morning</span>
+      </p>
+      <a class="nav__cta" href={nav.cta.href}>{nav.cta.label}</a>
+    </div>
+  </div>
+</header>
+
+<style>
+  .nav {
+    --nav-ink: var(--ink);
+    --nav-line: var(--line);
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 50;
+    height: var(--header-h);
+    color: var(--nav-ink);
+    transition: color 0.4s var(--ease-out);
+  }
+  .nav[data-theme='dark'] {
+    --nav-ink: var(--paper);
+    --nav-line: var(--line-on-night);
+  }
+  .nav__inner {
+    height: 100%;
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .nav__home {
+    text-decoration: none;
+    font-size: 1.25rem;
+  }
+  .nav__links {
+    margin-left: auto;
+  }
+  .nav__links ul {
+    display: flex;
+    gap: 28px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .nav__links a {
+    text-decoration: none;
+    font-size: var(--fs-small);
+  }
+  .nav__links a:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .nav__end {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .clock {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono-lg);
+    letter-spacing: var(--track-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .clock__time {
+    color: var(--ochre); /* live value = the one ochre element in the navbar */
+  }
+  .clock__part {
+    font-size: var(--fs-mono);
+    text-transform: uppercase;
+    opacity: 0.65;
+  }
+  .nav__cta {
+    padding: 10px 16px;
+    border-radius: var(--radius-pill);
+    background: var(--nav-ink);
+    color: var(--paper);
+    text-decoration: none;
+    font-size: var(--fs-small);
+    font-weight: var(--w-medium);
+    white-space: nowrap;
+  }
+  .nav[data-theme='dark'] .nav__cta {
+    color: var(--night);
+  }
+  @media (max-width: 760px) {
+    .nav__links,
+    .nav__cta {
+      display: none; /* mobile menu: open item, see README */
+    }
+    .nav__end {
+      margin-left: auto;
+    }
+  }
+</style>
