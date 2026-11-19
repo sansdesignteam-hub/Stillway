@@ -222,3 +222,13 @@ Pengguna memilih ring V1 yang glossy untuk S01: pantulan lumut dan bayangan di b
   - `env/v2-env-night-polished.exr` (69 KB): rim dingin lebar dengan inti tipis yang terang, fill dingin samar, dan lantai hangat redup.
   - Env lama tetap dipakai untuk Black/Gold brushed.
 - **`finishes.json`**: `silver` sekarang = polished (nilai sama dengan `silver_polished`, env `paperPolished`). Brushed diarsipkan di `_archive.silver_brushed`. Black dan Gold tetap brushed, jadi perlu GLB brushed (UV + normal map). Kalau satu GLB dipakai untuk semua finish, pakai `stillway-ring-v2-silver_web.glb`, lalu untuk Silver set `normalMap = null` dan `anisotropy = 0`. GLB polished (`-silver-polished_web.glb`) cukup bila hanya Silver yang dibutuhkan.
+
+## Black dan Gold polished (D-085)
+
+- `finishes.json`: `black_polished` dan `gold_polished` ditambahkan. `black` dan `gold` aktif sekarang memakai nilai polished. Brushed diarsipkan di `_archive.black_brushed` / `_archive.gold_brushed` (Silver brushed sudah lebih dulu di `_archive.silver_brushed`).
+  - **Black polished:** logam hitam 0,035, roughness 0,07, clearcoat tipis 0,3. Dasar huruf lebih terang dan matte (0,24, roughness 0,5) agar terbaca di atas hitam yang mengilap.
+  - **Gold polished:** warna opsi B (1,00/0,80/0,34), roughness 0,06. Dasar huruf lebih gelap (0,40/0,28/0,10, roughness 0,38).
+  - Semua polished: anisotropi 0, `normalMap: null`, `envMapIntensity` 1,5 (huruf 1,0). Dengan GLB brushed, cukup set `normalMap = null`. `ring-test/index.html` sudah melakukannya, dan mengembalikan normal map bila finish brushed dipilih.
+- Env: Silver/Black memakai `paperPolished`, Gold memakai `lamp` (D-069). Night memakai `nightPolished`.
+- Render pembanding (`renders/polished-finishes/`): `sheet-blender.png` dan `sheet-web.png` (baris Paper polished / Lamp / Night polished × kolom Silver / Black / Gold), dengan file per finish dan env `blender-*-polished-*.png` dan `web-*-polished-*.png`.
+- Cadangan S10 (`fallback/`): `fb-s10-silver-polished`, `fb-s10-black-polished`, `fb-s10-gold-polished` (PNG 1024 transparan + WebP, 24–26 KB). Versi brushed lama tetap ada.
