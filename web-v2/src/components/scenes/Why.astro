@@ -40,7 +40,7 @@ const last = why.steps[why.steps.length - 1];
     inset: 0;
     display: grid;
     place-items: center;
-    font-size: 13.5vw; /* Sofi ref: the line runs past both edges behind the ring */
+    font-size: 12vw; /* Sofi ref: edge to edge behind the ring (12vw at weight 500, D-082) */
     white-space: nowrap;
     --giant-o: 1;
   }
@@ -59,8 +59,8 @@ const last = why.steps[why.steps.length - 1];
     left: var(--margin);
     top: calc(var(--header-h) + 64px);
     font-size: var(--fs-h3);
-    font-weight: var(--w-light);
-    letter-spacing: -0.02em;
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
     line-height: 1.15;
   }
   .why__final span {
@@ -94,8 +94,8 @@ const last = why.steps[why.steps.length - 1];
     right: 0;
     bottom: calc(100% + 20px);
     font-size: var(--fs-h3);
-    font-weight: var(--w-light);
-    letter-spacing: -0.02em;
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
     color: var(--stone);
   }
   .why__right {

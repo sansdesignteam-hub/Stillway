@@ -36,10 +36,16 @@
   /* 3 typography: Geist + Geist Mono (Option A) */
   --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
-  --w-light: 300; /* headlines, big numbers */
-  --w-regular: 400; /* body, data cards */
-  --w-medium: 500; /* CTA, wordmark */
-  --track-tight: -0.03em; /* headlines + wordmark */
+  /* weights per text role = S01 / Hero V1 (D-082). No Light/thin weights anywhere in V2. */
+  --w-display: 500; /* wordmark and giant words: STILLWAY, "rhythm", "keeps the pattern." */
+  --w-heading: 450; /* statements, section headlines, big sentences, big numbers (S01 statement) */
+  --w-body: 400; /* body copy, paragraphs, data rows (S01 tagline / features) */
+  --w-label: 500; /* labels, tags, nav, CTA, clock, scroll line (S01 foot) */
+  --w-regular: var(--w-body); /* aliases kept for older rules */
+  --w-medium: var(--w-label);
+  --track-tight: -0.03em; /* headings, statements, numbers (S01 statement) */
+  --track-display: -0.02em; /* giant words (wordmark itself is 0, set in Hero) */
+  --track-label: 0.06em; /* uppercase sans labels (S01 foot) */
   --track-mono: 0.08em; /* [ tags ], clock, live values */
 
   /* type scale (HANDOFF-v2 §1.2 [U]; desktop 1440 → mobile 390) */

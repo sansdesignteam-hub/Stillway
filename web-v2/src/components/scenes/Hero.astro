@@ -1,82 +1,254 @@
 ---
-/** S01 Hero scene. Motion: scripts/sections/hero.ts. Layout: HANDOFF-v2 §2 S01 [U]. */
+/**
+ * S01 Hero (D-080): the V1 hero look — moss-and-stone photograph, the big STILLWAY wordmark,
+ * tagline / features / price row, statement and scroll line — with the V2 3D ring on the shared
+ * canvas. Copied from web/src/components/Hero.astro (web/ untouched).
+ * Motion: scripts/sections/hero.ts. Photo + zoom settings: content/heroBg.ts.
+ */
 import { hero } from '../../content/copy';
+import { heroBg } from '../../content/heroBg';
+const D = heroBg.desktop;
+const M = heroBg.mobile;
+
+const icons = [
+  'M11.5 9.6A4.6 4.6 0 0 1 6.4 4.5a4.6 4.6 0 1 0 5.1 5.1Z', // sleep: crescent
+  'M5 12V6M9 12V3M13 12V8', // activity and rest: bars
+  'M3 10h10M3 13h6M8 3.5a1.5 1.5 0 1 1 0 .01', // insight
+];
 ---
 
-<section class="scene scene--hero" data-scene="hero" aria-labelledby="hero-title">
+<section
+  class="scene scene--hero"
+  data-scene="hero"
+  aria-labelledby="hero-title"
+  style={`--ph-d:url(${D.placeholder}); --ph-m:url(${M.placeholder}); --v1-ratio:${heroBg.v1Ratio}; --d-ratio:${D.width / D.height}; --d-orig:${D.origW}; --m-ratio:${M.width / M.height}; --m-orig:${M.origW}`}
+>
   <div class="scene__back">
-    <div class="hero__glow" data-h-glow data-a></div>
-    <p class="hero__word giant" data-h-word data-a aria-hidden="true">{hero.wordmark}</p>
-  </div>
-  <img class="ring-fallback ring-fallback--hero" src="/ring-fallback/fb-s01-34.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="eager" decoding="async" />
-  <div class="scene__front">
-    <span class="sr-only" role="img" aria-label={hero.ringAlt}></span>
-    <div class="hero__copy" data-h-copy data-a>
-      <p class="t-mono hero__eyebrow">{hero.eyebrow}</p>
-      <h1 id="hero-title" class="t-display">{hero.headline}</h1>
-      <p class="hero__sub">{hero.sub}</p>
-      <a class="link-arrow" href={hero.link.href}>{hero.link.label}<span aria-hidden="true"> →</span></a>
+    <div class="hero__photo" data-h-photo data-a>
+      <picture>
+        <source media={M.media} type="image/webp" srcset={M.srcset} sizes="max(85vw, 150lvh)" />
+        <img src={D.src} srcset={D.srcset} sizes="max(226vw, 400lvh)" width={D.width} height={D.height} alt="" fetchpriority="low" decoding="async" data-h-img />
+      </picture>
+      <div class="hero__dim" style={`opacity:${heroBg.dim}`}></div>
     </div>
-    <p class="hero__hint t-mono" data-h-hint data-a aria-hidden="true">{hero.scroll}</p>
+    <div class="hero__glow" data-h-glow data-a></div>
+    <h1 class="hero__word" id="hero-title" data-h-word data-a>
+      <span class="sr-only">Stillway. {hero.tagline}</span>
+      <span class="hero__word-inner" aria-hidden="true">
+        {hero.wordmark.split('').map((ch) => <span class="hero__char">{ch}</span>)}
+      </span>
+    </h1>
+  </div>
+
+  <img class="ring-fallback hero__fb hero__fb--float" src="/ring-fallback/fb-s01-34.webp" alt={hero.ringAlt} width="1024" height="1024" data-ring-fallback data-fb-range="0,1" data-a decoding="async" />
+  <img class="ring-fallback hero__fb hero__fb--zoom" src="/ring-fallback/fb-s01-front.webp" alt="" width="1024" height="1024" data-ring-fallback data-fb-range="2,2" data-a loading="lazy" decoding="async" />
+  <img class="ring-fallback hero__fb hero__fb--end" src="/ring-fallback/fb-s02-34.webp" alt="" width="1024" height="1024" data-ring-fallback data-fb-range="3,3.5" data-a loading="lazy" decoding="async" />
+
+  <div class="scene__front">
+    <div class="hero__meta" data-h-meta data-a>
+      <p class="hero__tag" data-h-tag><i class="dot" aria-hidden="true"></i>{hero.tagline}</p>
+      <ul class="hero__features" data-h-features>
+        {
+          hero.features.map((f, i) => (
+            <li>
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                <path d={icons[i]} fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              {f}
+            </li>
+          ))
+        }
+      </ul>
+      <p class="hero__price" data-h-price>{hero.price}</p>
+    </div>
+    <p class="hero__statement" data-h-statement data-a>{hero.statement}</p>
+    <div class="hero__foot" data-h-foot data-a aria-hidden="true">
+      <span>{hero.scroll}</span>
+      <span><i class="dot"></i>{hero.foot}</span>
+    </div>
   </div>
 </section>
 
 <style>
+  .scene--hero {
+    color: #fff;
+  }
+  /* the ORIGINAL photo inside the extended canvas covers the viewport like V1's .hero__stage;
+     the canvas around it is what the zoom-out reveals (content/heroBg.ts) */
+  .hero__photo {
+    --cover: max(100vw, 100lvh * var(--v1-ratio));
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: calc(var(--cover) / var(--d-orig));
+    aspect-ratio: var(--d-ratio);
+    translate: -50% -50%;
+    transform-origin: 50% 50%;
+    will-change: transform, opacity;
+    background: var(--ph-d) center / 100% 100% no-repeat; /* light first paint under the full image */
+  }
+  .hero__photo picture,
+  .hero__photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .hero__photo img {
+    object-fit: cover;
+  }
+  .hero__dim {
+    position: absolute;
+    inset: 0;
+    background: #2a1f14;
+  }
   .hero__glow {
     position: absolute;
     left: 50%;
-    top: 62%;
-    width: 72vw; /* Viture ref: one soft glow rising behind the ring */
+    top: 54%;
+    width: 64vw;
     aspect-ratio: 1;
     translate: -50% -50%;
     background: var(--dawn-glow);
     filter: blur(70px);
   }
+  /* V1 wordmark: Geist Medium, justified across the width, behind the ring */
   .hero__word {
     position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    --giant-o: 0.12; /* Oryzo ref: a giant wordmark behind the object, kept faint (Storyboard) */
+    top: var(--header-h);
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 1.6vw var(--margin) 1.2vw;
+    font-weight: var(--w-display);
+    font-size: 19.4vw;
+    line-height: 0.74;
+    letter-spacing: 0;
+    color: #fff;
   }
-  .hero__copy {
+  .hero__word-inner {
+    display: flex;
+    justify-content: space-between;
+  }
+  .hero__char {
+    display: inline-block;
+  }
+  .hero__meta {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(var(--header-h) + 19.4vw * 0.74 + 2.8vw + 18px);
+    padding-inline: var(--margin);
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: clamp(16px, 1.6vw, 24px);
+    font-size: 15px;
+  }
+  .hero__tag {
+    grid-column: 1 / span 5;
+  }
+  .hero__features {
+    grid-column: 10 / span 2;
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .hero__features li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .hero__price {
+    grid-column: 12;
+    justify-self: end;
+    font-variant-numeric: tabular-nums;
+  }
+  .hero__statement {
     position: absolute;
     left: var(--margin);
-    bottom: clamp(32px, 7vh, 72px);
-    width: min(36rem, 42vw);
-    display: grid;
-    gap: 16px;
+    bottom: calc(28px + 52px);
+    max-width: 16em;
+    font-size: clamp(22px, 2.3vw, 34px);
+    font-weight: var(--w-heading);
+    line-height: 1.12;
+    letter-spacing: -0.03em;
   }
-  .hero__eyebrow {
-    color: var(--ochre);
-  }
-  .hero__sub {
-    color: var(--stone);
-    max-width: 30rem;
-  }
-  .hero__hint {
+  .hero__foot {
     position: absolute;
-    right: calc(var(--margin) + 24px);
-    bottom: clamp(32px, 7vh, 72px);
-    color: var(--stone);
+    left: var(--margin);
+    right: var(--margin);
+    bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    padding-block: 16px 18px;
+    font-size: 13px;
+    font-weight: var(--w-label);
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
   }
-  @media (max-width: 719px) {
-    .hero__glow {
-      width: 120vw;
-      top: 36%;
+  .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    margin-right: 10px;
+    vertical-align: 2px;
+  }
+  /* stills: float pose (state 1–2), close-up (state 3), S02 start (state 4) */
+  .hero__fb--float {
+    top: 46%;
+    width: min(30vw, 62vh);
+  }
+  .hero__fb--zoom {
+    left: 56%;
+    width: 130vw;
+    max-width: none;
+  }
+  .hero__fb--end {
+    width: min(36vw, 82vh);
+  }
+  @media (max-width: 760px) {
+    .hero__photo {
+      width: calc(var(--cover) / var(--m-orig));
+      aspect-ratio: var(--m-ratio);
+      background-image: var(--ph-m);
     }
     .hero__word {
-      place-items: start center;
-      padding-top: 23svh;
+      top: calc(var(--header-h) + 18px);
+      font-size: 18.2vw;
     }
-    .hero__copy {
-      width: auto;
-      right: var(--margin);
-      bottom: 28px;
-      gap: 12px;
+    .hero__meta {
+      top: calc(var(--header-h) + 18px + 18.2vw * 0.74 + 2.8vw + 14px);
+      grid-template-columns: 1fr auto;
+      font-size: 14px;
     }
-    .hero__hint {
+    .hero__tag {
+      grid-column: 1;
+    }
+    .hero__features {
       display: none;
+    }
+    .hero__price {
+      grid-column: 2;
+    }
+    .hero__statement {
+      font-size: 22px;
+      right: var(--margin);
+    }
+    .hero__fb--float {
+      top: 52%;
+      width: 66vw;
+    }
+    .hero__fb--zoom {
+      width: 190vw;
+    }
+    .hero__fb--end {
+      width: 70vw;
+    }
+    .hero__glow {
+      width: 120vw;
     }
   }
 </style>

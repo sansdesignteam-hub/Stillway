@@ -54,8 +54,8 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   }
   .sleep__head {
     font-size: var(--fs-h3);
-    font-weight: var(--w-light);
-    letter-spacing: -0.02em;
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
     line-height: 1.15;
   }
   .sleep__stats {
@@ -77,7 +77,7 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   .stat__value {
     margin: 0;
     font-size: var(--fs-number);
-    font-weight: var(--w-light);
+    font-weight: var(--w-heading);
     letter-spacing: -0.03em;
     line-height: 0.9;
     font-variant-numeric: tabular-nums;

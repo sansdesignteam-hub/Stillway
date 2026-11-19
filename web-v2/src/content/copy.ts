@@ -16,15 +16,20 @@ export const nav = {
   menu: { open: 'Menu', close: 'Close' },
 };
 
+/**
+ * S01 follows the V1 hero (D-080): wordmark, tagline, three features, price, statement, scroll
+ * line. Copy is V1's (web/src/content/home.ts); this overrides home-copy-v2's S01 block for now.
+ */
 export const hero = {
-  status: 'draft',
-  wordmark: 'Stillway',
-  eyebrow: 'Meet Stillway',
-  headline: 'Understand your rhythm.', // working copy D-014
-  sub: 'A smart ring that brings your sleep, activity, and rest into one everyday view.',
-  link: { label: 'Explore Stillway', href: '#why' },
+  status: 'V1 copy per D-080 (headline working copy D-014)',
+  wordmark: 'STILLWAY',
+  tagline: 'Understand your rhythm.',
+  features: ['Sleep summary', 'Activity and rest', 'Daily insight'],
+  price: '$299',
+  statement: 'A smart ring that brings your sleep, activity, and rest into one everyday view.',
   scroll: 'Scroll down',
-  ringAlt: 'The silver Stillway ring, standing upright in soft morning light.',
+  foot: 'Stillway',
+  ringAlt: 'The silver Stillway ring, the engraved name on its band, floating above a pale stone in a bed of moss.',
 };
 
 export const why = {

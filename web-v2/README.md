@@ -56,6 +56,19 @@ living on the stage, and `src/scripts/story.ts` drives it from the scroll positi
   opacity fade (`html.reduced [data-a]`), no breathing loop.
 - Without JS: `<noscript>` styles stack the scenes as normal sections.
 
+## S01 Hero (D-080)
+
+V1 hero look (moss photo, STILLWAY wordmark, tagline / features / $299, statement, scroll line; copied
+from `web/`, which stays untouched) with the V2 ring. Scroll: text slides out → ring zooms in turning
+until the sensors and the green light show, while the photo zooms OUT (Oryzo pattern) → ring zooms out
+to the S02 start pose while the photo fades to Paper. The ring follows the mouse in state 1 (fine pointer
+≥ 720 px). Ring env: V1 hero photo (desaturated) in S01, paper studio from the fade on.
+
+- Background: `public/hero/*.webp` (Visual Director outpaint, 72973fa); settings in `src/content/heroBg.ts`
+  (the original photo rect covers the viewport like V1 at scale 1; zoom out to 0.55 desktop / 0.5 mobile).
+- Motion and poses: `src/scripts/sections/hero.ts`; scene: `src/components/scenes/Hero.astro`.
+- Review shots + transition sequence/video: `docs/screens/s01-d080/`.
+
 ## Navbar (D-075)
 
 V1 style copied from `web/` (wordmark · round home tile · one translucent rounded bar with dividers ·
@@ -99,6 +112,21 @@ web-v2/
    ├─ scripts/ring/              model.ts, stage.ts, poses.ts, index.ts
    └─ styles/{tokens.css,global.css}
 ```
+
+## Typography (D-082) — rule for every section
+
+All V2 text follows the weights and style of S01 (Hero V1). Geist + Geist Mono only. **No Light (300)
+or thinner weights anywhere.** Tokens in `src/styles/tokens.css`:
+
+| Role | Token | Weight | Tracking | Used for |
+|---|---|---|---|---|
+| Display | `--w-display` | 500 | 0 (wordmark) / `--track-display` −0.02em | STILLWAY wordmark, giant words ("rhythm", "keeps the pattern.") |
+| Heading | `--w-heading` | 450 | `--track-tight` −0.03em | S01 statement, section headlines, big sentences (`.t-display`), big numbers (23:10, 7h 12m) |
+| Body | `--w-body` | 400 | normal | paragraphs, tagline, feature list, data rows |
+| Label | `--w-label` | 500 | `--track-label` 0.06em (sans caps) / `--track-mono` 0.08em (mono) | nav, CTA, scroll line (`.t-label`), mono tags and clock (`.t-mono`, `.t-tag`) |
+
+Sizes stay on the existing scale (`--fs-*`); S01 statement is the reference size for headlines
+(clamp(22px, 2.3vw, 34px)), larger statements may scale up but keep `--w-heading`.
 
 ## Tokens (Moodboard §2, HANDOFF-v2 §1)
 

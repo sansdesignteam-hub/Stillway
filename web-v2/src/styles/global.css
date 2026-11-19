@@ -15,7 +15,7 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-weight: var(--w-regular);
+  font-weight: var(--w-body);
   font-size: var(--fs-body);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -72,7 +72,7 @@ button {
 
 /* ---------- type roles (Moodboard §3) ---------- */
 .t-display {
-  font-weight: var(--w-light);
+  font-weight: var(--w-heading);
   letter-spacing: var(--track-tight);
   line-height: 0.98;
 }
@@ -81,6 +81,7 @@ button {
 }
 .t-mono {
   font-family: var(--font-mono);
+  font-weight: var(--w-label);
   font-size: var(--fs-mono);
   letter-spacing: var(--track-mono);
   text-transform: uppercase;
@@ -88,6 +89,7 @@ button {
 .t-tag {
   /* [ TAG ] */
   font-family: var(--font-mono);
+  font-weight: var(--w-label);
   font-size: var(--fs-mono);
   letter-spacing: var(--track-mono);
   text-transform: uppercase;
@@ -104,11 +106,19 @@ button {
   color: var(--stone);
 }
 
+/* S01 label style (uppercase sans, Hero foot) */
+.t-label {
+  font-size: 13px;
+  font-weight: var(--w-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+}
+
 /* ---------- shared bits ---------- */
 .giant {
   font-size: var(--fs-giant);
-  font-weight: var(--w-light);
-  letter-spacing: -0.04em;
+  font-weight: var(--w-display);
+  letter-spacing: var(--track-display);
   line-height: 0.85;
   white-space: nowrap;
   color: rgb(35 31 32 / var(--giant-o, 0.1));

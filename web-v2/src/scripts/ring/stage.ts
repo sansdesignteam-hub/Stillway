@@ -47,7 +47,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const camera = new THREE.PerspectiveCamera(FOV, 1, 1, 40000);
 
   const pmrem = new THREE.PMREMGenerator(renderer);
-  const envs: { paper?: THREE.Texture; night?: THREE.Texture } = {};
+  const envs: { paper?: THREE.Texture; night?: THREE.Texture; photo?: THREE.Texture } = {};
   const loadEnv = (url: string) =>
     new EXRLoader().loadAsync(url).then((t) => {
       t.mapping = THREE.EquirectangularReflectionMapping;
@@ -60,9 +60,41 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   } catch {
     /* no env: the ring still renders, darker */
   }
+  // the hero photograph as an equirect environment (V1 heroRing approach): the silver reflects moss and sun
+  // the hero photograph as an equirect environment, exactly as V1 heroRing (D-081: not neutralised)
+  try {
+    const tex = await new THREE.TextureLoader().loadAsync(RING_MODEL.env.photo);
+    tex.mapping = THREE.EquirectangularReflectionMapping;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    envs.photo = pmrem.fromEquirectangular(tex).texture;
+    tex.dispose();
+  } catch {
+    /* falls back to paper */
+  }
   // night env after the first paint of the ring
-  setTimeout(() => loadEnv(RING_MODEL.env.night).then((e) => ((envs.night = e), (lastLight = -1))).catch(() => {}), 300);
-  scene.environment = envs.paper ?? null;
+  setTimeout(() => loadEnv(RING_MODEL.env.night).then((e) => ((envs.night = e), (lastEnv = ''))).catch(() => {}), 300);
+  scene.environment = envs.photo ?? envs.paper ?? null;
+
+  // V1 hero rig for S01 (heroRing.ts): warm morning sun upper left + hemisphere, faded in with pose.photo
+  const sun = new THREE.DirectionalLight(0xffe2b8, 0);
+  sun.position.set(-600, 700, 500);
+  const hemi = new THREE.HemisphereLight(0xfff1dc, 0x3b3a1c, 0);
+  scene.add(sun, hemi);
+  // V1 live cast shadow on the stone (D-051): a shadow-only light and a transparent catcher plane
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const shadowSun = new THREE.DirectionalLight(0xffffff, 0); // casts only, adds no light
+  shadowSun.shadow.mapSize.set(1024, 1024);
+  shadowSun.shadow.radius = 6;
+  shadowSun.shadow.bias = -0.0005;
+  scene.add(shadowSun, shadowSun.target);
+  const catcherMat = new THREE.ShadowMaterial({ color: 0x1c140b, opacity: 0, transparent: true, depthWrite: false });
+  const catcher = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), catcherMat);
+  catcher.receiveShadow = true;
+  catcher.renderOrder = -1;
+  catcher.visible = false;
+  scene.add(catcher);
+  const SHADOW_DIR = new THREE.Vector3(0.55, 1, 0.75).normalize(); // V1 value
 
   const pivot = new THREE.Group(); // position, scale, view rotation
   const spinner = new THREE.Group(); // spin about the ring's own axis (model Z)
@@ -86,8 +118,30 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   ring.traverse((o) => {
     if (!o.isMesh) return;
     const m = o.material;
+    o.castShadow = true;
     if (M.shell.test(m.name)) shells.push(m); // brushed silver as authored in the GLB
   });
+  // polished (S01, D-081) vs brushed (authored). Values = finishes.json "silver_polished" from the
+  // 3D Designer, applied to this same GLB (normal map and anisotropy off), so S01 → S02 can blend the
+  // finish continuously instead of swapping to stillway-ring-v2-silver-polished_web.glb mid-scroll.
+  const band = shells.find((m) => !/Engrave/i.test(m.name)) as THREE.MeshPhysicalMaterial | undefined;
+  const engrave = shells.find((m) => /Engrave/i.test(m.name)) as THREE.MeshPhysicalMaterial | undefined;
+  const snap = (m?: THREE.MeshPhysicalMaterial) =>
+    m && { color: m.color.clone(), roughness: m.roughness, anisotropy: (m as any).anisotropy ?? 0, normal: m.normalScale?.x ?? 0, env: m.envMapIntensity ?? 1 };
+  const brushed = { band: snap(band), engrave: snap(engrave) };
+  const lin = (r: number, g: number, b: number) => new THREE.Color().setRGB(r, g, b, THREE.LinearSRGBColorSpace);
+  const POLISHED = {
+    band: { color: lin(0.92, 0.92, 0.93), roughness: 0.06, anisotropy: 0, normal: 0, env: 1.5 },
+    engrave: { color: lin(0.28, 0.28, 0.29), roughness: 0.38, anisotropy: 0, normal: 0, env: 1.0 },
+  };
+  const mix = (m: THREE.MeshPhysicalMaterial | undefined, a: any, b: any, g: number) => {
+    if (!m || !a) return;
+    m.color.copy(a.color).lerp(b.color, g);
+    m.roughness = a.roughness + (b.roughness - a.roughness) * g;
+    if ('anisotropy' in m) (m as any).anisotropy = a.anisotropy + (b.anisotropy - a.anisotropy) * g;
+    m.normalScale?.setScalar(a.normal + (b.normal - a.normal) * g);
+    m.envMapIntensity = a.env + (b.env - a.env) * g;
+  };
   // LEDs (D-062): both off until a section asks (S08 colours, "off" = red dot)
   const ledMain = ring.getObjectByName(RING_MODEL.meshes.ledMain)?.material as THREE.MeshStandardMaterial | undefined;
   const ledPower = ring.getObjectByName(RING_MODEL.meshes.ledPower)?.material as THREE.MeshStandardMaterial | undefined;
@@ -110,25 +164,64 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const rollQ = new THREE.Quaternion();
   const Z_AXIS = new THREE.Vector3(0, 0, 1);
   let lastAlpha = -1;
-  let lastLight = -1;
+  let lastEnv = '';
+  let lastLed = 0;
+  let lastGloss = -1;
   const apply = (p: Pose, extra: { breathe?: number } = {}) => {
     // width: fraction of viewport width, but never taller than 82% of the viewport
-    const w = Math.min(p.w * W, H * 0.82) * (1 + (extra.breathe ?? 0));
+    const raw = p.w * W;
+    const w = (Math.min(raw, H * 0.82) * (1 - p.uncap) + raw * p.uncap) * (1 + (extra.breathe ?? 0));
     pivot.position.set(p.x * W, p.y * H, 0);
     pivot.scale.setScalar(w / ringSize);
     pivot.rotation.set(p.rx, p.ry, p.rz, 'YXZ');
     if (p.roll) pivot.quaternion.premultiply(rollQ.setFromAxisAngle(Z_AXIS, p.roll));
     spinner.rotation.z = p.spin;
 
-    const n = Math.min(1, Math.max(0, p.light));
-    if (n !== lastLight) {
-      lastLight = n;
-      const night = n >= 0.5 && envs.night;
-      scene.environment = (night ? envs.night : envs.paper) ?? null;
-      // dip around the swap so it never pops: 1 → 0.15 → 1
-      scene.environmentIntensity = 0.15 + 0.85 * Math.min(1, Math.abs(n - 0.5) * 2.5);
+    // finish: brushed → polished (V1)
+    if (p.gloss !== lastGloss) {
+      lastGloss = p.gloss;
+      mix(band, brushed.band, POLISHED.band, p.gloss);
+      mix(engrave, brushed.engrave, POLISHED.engrave, p.gloss);
     }
 
+    // V1 rig and cast shadow, S01 only
+    sun.intensity = 2.2 * p.photo;
+    hemi.intensity = 0.35 * p.photo;
+    const sh = Math.max(0, p.shadow);
+    catcher.visible = sh > 0.005;
+    shadowSun.castShadow = catcher.visible;
+    if (catcher.visible) {
+      catcherMat.opacity = 0.55 * sh;
+      catcher.position.set(p.shadowX * W, p.shadowY * H, 0);
+      catcher.rotation.set(-Math.PI / 2 + 0.32, 0, 0); // stone top, foreshortened like the photo
+      catcher.scale.set(w * 3.2, w * 2.2, 1);
+      shadowSun.target.position.copy(catcher.position);
+      shadowSun.position.copy(catcher.position).addScaledVector(SHADOW_DIR, w * 4);
+      const c = shadowSun.shadow.camera;
+      c.left = c.bottom = -w * 1.6;
+      c.right = c.top = w * 1.6;
+      c.near = 1;
+      c.far = w * 9;
+      c.updateProjectionMatrix();
+    }
+
+    // env: night when light ≥ .5, else photo when photo ≥ .5, else paper; intensity dips around a swap
+    const n = Math.min(1, Math.max(0, p.light));
+    const ph = Math.min(1, Math.max(0, p.photo));
+    const key = n >= 0.5 && envs.night ? 'night' : ph >= 0.5 && envs.photo ? 'photo' : 'paper';
+    if (key !== lastEnv) {
+      lastEnv = key;
+      renderer.toneMappingExposure = key === 'photo' ? 1.15 : 1.0; // V1 hero exposure
+      scene.environment = envs[key] ?? envs.paper ?? null;
+      scene.environmentRotation = new THREE.Euler(0, key === 'photo' ? Math.PI * 0.6 : 0, 0);
+    }
+    const dip = Math.min(1, Math.abs(n - 0.5) * 2.5, Math.abs(ph - 0.5) * 2.5);
+    scene.environmentIntensity = (0.15 + 0.85 * dip) ;
+
+    if (Math.abs(p.led - lastLed) > 0.001) {
+      lastLed = p.led;
+      setLed(p.led > 0.01 ? '#34E07A' : null, RING_MODEL.ledIntensity * p.led);
+    }
     if (p.alpha !== lastAlpha) {
       lastAlpha = p.alpha;
       canvas.style.opacity = String(p.alpha);

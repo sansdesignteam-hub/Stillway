@@ -19,6 +19,12 @@
   --bar-bg: rgb(255 255 255 / 0.08);
   --bar-rule: rgb(255 255 255 / 0.14);
 }
+.site-header[data-theme='photo'] {
+  /* over the S01 photograph (V1 'photo' theme) */
+  --header-ink: #fff;
+  --bar-bg: rgb(255 255 255 / 0.14);
+  --bar-rule: rgb(255 255 255 / 0.25);
+}
 .site-header__inner {
   padding-inline: var(--margin);
   display: flex;
@@ -122,7 +128,16 @@
   opacity: 0.7;
   min-width: 6.4em;
 }
-.site-header[data-theme='dark'] .nav-cta {
+.site-header[data-theme='photo'] .clock__time {
+  /* ochre is unreadable on the warm photo: the live value goes white there (D-081 review) */
+  color: #fff;
+  font-weight: var(--w-medium);
+}
+.site-header[data-theme='photo'] .clock__part {
+  opacity: 0.85;
+}
+.site-header[data-theme='dark'] .nav-cta,
+.site-header[data-theme='photo'] .nav-cta {
   --btn-bg: var(--paper);
   --btn-ink: var(--ink);
   --btn-dot: var(--ink);
