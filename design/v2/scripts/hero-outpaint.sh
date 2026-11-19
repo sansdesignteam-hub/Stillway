@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# S01 hero background outpaint (D-080). Input: grey-padded canvas with the original photo scaled into the centre.
+set -euo pipefail
+G="$(cd "$(dirname "$0")/../../assets/v1/scripts" && pwd)/genref.sh"
+cd "$(dirname "$0")/../../.."
+IN="${1:-design/assets/v2/hero/_work/in-3x2.png}"; OUT="${2:-design/assets/v2/hero/_work/out-3x2.png}"
+"$G" "Keep this exact image and EXTEND it outward (outpainting). The photograph in the centre must stay exactly as it is, same position and same size; only fill the flat grey border around it so the scene continues naturally in every direction as one seamless real photograph, same camera, same lens, same warm early-morning golden light coming from the left, same colour grade and grain. Above: the same warm cream plaster wall continuing upward and sideways, with soft blurred leaf shadows falling across it and a few more out-of-focus leaves of the same small tree at the top right. Below and to the sides: the same dense low green moss carpet continuing toward the camera, with a few soft out-of-focus fern fronds in the near foreground at the bottom left and bottom right, and the moss slightly blurred where it is closest to the camera (shallow depth of field). Left side: the wall and moss continue, more fine grass stems. No ring, no jewellery, no shadow of a ring, no new rocks or stones, no people, no buildings, no text, no frame, no vignette, no visible seam or grey left." "$OUT" --size 1536x1024 --ref "$IN"
