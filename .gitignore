@@ -1,0 +1,5 @@
+# Local tool config (Blender MCP)
+.mcp.json
+
+# Blender autosave backups (files already tracked stay tracked)
+*.blend1
