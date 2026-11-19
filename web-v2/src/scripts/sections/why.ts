@@ -108,15 +108,19 @@ export const why: SectionMotion = {
   ring(u, ctx: Ctx): Pose {
     const m = ctx.mobile;
     const tq = ANGLE.threeQuarter;
-    const w = m ? 0.7 : 0.36;
-    // one continuous tumble over the whole section (state 1 → 4), eased only at the ends:
-    // a full turn about the screen's horizontal axis while turning toward the camera
+    // D-089: the ring keeps turning with the scroll, but as a turntable (about the vertical axis),
+    // one full turn between the key moments and a slow drift while each sentence is lit and at the
+    // end. At every key moment it is back at the reference three-quarter pose, where the engraved
+    // "Stillway" reads correctly (bottom → top, never upside down or mirrored).
+    //   key A: statement 1 lit (u 0.55–1.25) · key B: statement 2 lit (1.85–2.35) · end (≥ 2.85)
+    const turns = seg(u, 0, 0.55) + seg(u, 1.25, 1.85) + seg(u, 2.35, 2.85);
+    const drift = 0.12 * clamp01(u / 3); // slow motion inside the key moments
     const t = smooth(clamp01(u / 3));
-    const start = { rx: -0.15, ry: tq.ry - 0.15 };
-    const endP = { rx: ANGLE.facing.rx, ry: -0.3 };
-    let rx = start.rx + (endP.rx - start.rx) * t + Math.PI * 2 * t;
-    if (u >= 3) rx -= Math.PI * 2; // same orientation; keeps the 02 → 03 connection from unwinding
-    const ry = start.ry + (endP.ry - start.ry) * t;
-    return pose({ x: 0, y: m ? 0 : -0.02 * t, w, rx, ry, rz: 0, spin: 0 });
+    const ryBase = tq.ry - 0.15 + (0.25 * t); // turns a little toward the camera by the end
+    let ry = ryBase + Math.PI * 2 * turns + drift;
+    if (u >= 2.85) ry -= Math.PI * 6; // same orientation; the 02 → 03 connection does not unwind
+    // phones: the ring gets smaller at the end so "keeps the" / "pattern." clear it above and below
+    const w = m ? 0.7 - 0.18 * seg(u, 2.35, 2.85) : 0.36;
+    return pose({ x: 0, y: m ? 0 : -0.02 * t, w, rx: -0.15, ry, rz: 0, spin: 0 });
   },
 };

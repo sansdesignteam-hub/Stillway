@@ -187,15 +187,17 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
     .why__fb {
       --rw: 70vw;
     }
+    /* D-089: on phones the two halves sit above and below the (smaller) ring instead of over it */
     .why__wide {
       flex-direction: column;
       align-items: center;
       white-space: nowrap;
-      font-size: 19vw;
+      font-size: 15vw;
       line-height: 0.9;
     }
     .why__wide-gap {
-      height: 0;
+      width: 0;
+      height: 60vw; /* ring at 52vw wide (≈ 56vw tall at this angle) + air */
     }
     .why__final {
       top: calc(var(--header-h) + 40px);
