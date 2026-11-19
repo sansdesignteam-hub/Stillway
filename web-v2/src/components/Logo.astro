@@ -1,8 +1,7 @@
 ---
 /**
- * Lockup (Moodboard §4): ring mark (a thin band seen from the front, an ochre dot as the
- * sensor window) + "Stillway" in Geist Medium, tracking −3%. Same lockup in navbar and footer.
- * Placeholder drawing until the Visual Director exports the final mark.
+ * Logo: the word "Stillway" only, Geist Medium, tracking −3% (D-083 replaces the ring-mark lockup
+ * of D-079).
  */
 interface Props {
   class?: string;
@@ -12,10 +11,6 @@ const { class: cls = '', label = 'Stillway' } = Astro.props;
 ---
 
 <span class:list={['logo', cls]} aria-label={label} role="img">
-  <svg class="logo__mark" viewBox="0 0 24 24" aria-hidden="true">
-    <circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2.2" />
-    <circle cx="12" cy="3.4" r="1.7" fill="var(--ochre)" />
-  </svg>
   <span class="logo__word" aria-hidden="true">Stillway</span>
 </span>
 

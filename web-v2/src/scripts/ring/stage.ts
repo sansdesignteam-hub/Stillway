@@ -47,7 +47,63 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const camera = new THREE.PerspectiveCamera(FOV, 1, 1, 40000);
 
   const pmrem = new THREE.PMREMGenerator(renderer);
-  const envs: { paper?: THREE.Texture; night?: THREE.Texture; photo?: THREE.Texture } = {};
+  const envs: { paper?: THREE.Texture; night?: THREE.Texture } = {};
+  /** photo → paper blends, index 0 = photo env (S01), last = paper env (S02); see buildBlends */
+  let blends: THREE.Texture[] = [];
+  const BLEND_STEPS = 9;
+  let paperTex: THREE.Texture | null = null;
+  let photoTex: THREE.Texture | null = null;
+  try {
+    paperTex = await new EXRLoader().loadAsync(RING_MODEL.env.paper);
+    paperTex.mapping = THREE.EquirectangularReflectionMapping;
+    envs.paper = pmrem.fromEquirectangular(paperTex).texture;
+  } catch {
+    /* no env: the ring still renders, darker */
+  }
+  // the hero photograph as an equirect environment, exactly as V1 heroRing (D-081: not neutralised)
+  try {
+    photoTex = await new THREE.TextureLoader().loadAsync(RING_MODEL.env.photo);
+    photoTex.mapping = THREE.EquirectangularReflectionMapping;
+    photoTex.colorSpace = THREE.SRGBColorSpace;
+  } catch {
+    /* falls back to paper */
+  }
+  /**
+   * S01 → S02 must not pop (D-083): instead of swapping the photo env for the paper env at one
+   * scroll point, prebuild BLEND_STEPS environments that mix the two (photo rotated 0.6π as in V1)
+   * and step through them with pose.photo. A shader sphere renders the mix, PMREM bakes each step.
+   */
+  const buildBlends = () => {
+    if (!photoTex || !paperTex) return;
+    const mat = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      depthWrite: false,
+      uniforms: { photo: { value: photoTex }, paper: { value: paperTex }, t: { value: 0 }, rot: { value: Math.PI * 0.6 } },
+      vertexShader: 'varying vec3 vDir; void main(){ vDir = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+      fragmentShader: `
+        uniform sampler2D photo; uniform sampler2D paper; uniform float t; uniform float rot; varying vec3 vDir;
+        vec2 equi(vec3 d){ return vec2(atan(d.z, d.x) * 0.15915494 + 0.5, asin(clamp(d.y,-1.0,1.0)) * 0.31830989 + 0.5); }
+        void main(){
+          vec3 d = normalize(vDir);
+          float c = cos(rot), s = sin(rot);
+          vec3 r = vec3(c * d.x + s * d.z, d.y, -s * d.x + c * d.z);
+          vec3 a = texture2D(photo, equi(r)).rgb;
+          vec3 b = texture2D(paper, equi(d)).rgb;
+          gl_FragColor = vec4(mix(a, b, t), 1.0);
+        }`,
+    });
+    const blendScene = new THREE.Scene();
+    blendScene.add(new THREE.Mesh(new THREE.SphereGeometry(10, 64, 32), mat));
+    blends = [];
+    for (let i = 0; i < BLEND_STEPS; i++) {
+      mat.uniforms.t.value = i / (BLEND_STEPS - 1);
+      blends.push(pmrem.fromScene(blendScene, 0, 0.1, 100).texture);
+    }
+    mat.dispose();
+  };
+  buildBlends();
+  // night env after the first paint of the ring
+  setTimeout(() => loadEnv(RING_MODEL.env.night).then((e) => ((envs.night = e), (lastEnv = ''))).catch(() => {}), 300);
   const loadEnv = (url: string) =>
     new EXRLoader().loadAsync(url).then((t) => {
       t.mapping = THREE.EquirectangularReflectionMapping;
@@ -55,25 +111,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       t.dispose();
       return env;
     });
-  try {
-    envs.paper = await loadEnv(RING_MODEL.env.paper);
-  } catch {
-    /* no env: the ring still renders, darker */
-  }
-  // the hero photograph as an equirect environment (V1 heroRing approach): the silver reflects moss and sun
-  // the hero photograph as an equirect environment, exactly as V1 heroRing (D-081: not neutralised)
-  try {
-    const tex = await new THREE.TextureLoader().loadAsync(RING_MODEL.env.photo);
-    tex.mapping = THREE.EquirectangularReflectionMapping;
-    tex.colorSpace = THREE.SRGBColorSpace;
-    envs.photo = pmrem.fromEquirectangular(tex).texture;
-    tex.dispose();
-  } catch {
-    /* falls back to paper */
-  }
-  // night env after the first paint of the ring
-  setTimeout(() => loadEnv(RING_MODEL.env.night).then((e) => ((envs.night = e), (lastEnv = ''))).catch(() => {}), 300);
-  scene.environment = envs.photo ?? envs.paper ?? null;
+  scene.environment = blends[0] ?? envs.paper ?? null;
 
   // V1 hero rig for S01 (heroRing.ts): warm morning sun upper left + hemisphere, faded in with pose.photo
   const sun = new THREE.DirectionalLight(0xffe2b8, 0);
@@ -208,15 +246,16 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     // env: night when light ≥ .5, else photo when photo ≥ .5, else paper; intensity dips around a swap
     const n = Math.min(1, Math.max(0, p.light));
     const ph = Math.min(1, Math.max(0, p.photo));
-    const key = n >= 0.5 && envs.night ? 'night' : ph >= 0.5 && envs.photo ? 'photo' : 'paper';
+    // photo ↔ paper: step through the prebuilt blends (no pop); paper ↔ night: dip and swap at 0.5
+    const step = blends.length ? Math.round((1 - ph) * (blends.length - 1)) : -1;
+    const key = n >= 0.5 && envs.night ? 'night' : step >= 0 ? `blend${step}` : 'paper';
     if (key !== lastEnv) {
       lastEnv = key;
-      renderer.toneMappingExposure = key === 'photo' ? 1.15 : 1.0; // V1 hero exposure
-      scene.environment = envs[key] ?? envs.paper ?? null;
-      scene.environmentRotation = new THREE.Euler(0, key === 'photo' ? Math.PI * 0.6 : 0, 0);
+      scene.environment = key === 'night' ? envs.night! : step >= 0 ? blends[step] : envs.paper ?? null;
     }
-    const dip = Math.min(1, Math.abs(n - 0.5) * 2.5, Math.abs(ph - 0.5) * 2.5);
-    scene.environmentIntensity = (0.15 + 0.85 * dip) ;
+    renderer.toneMappingExposure = 1.0 + 0.15 * ph; // V1 hero exposure 1.15 → 1.0, continuous
+    const dip = Math.min(1, Math.abs(n - 0.5) * 2.5);
+    scene.environmentIntensity = 0.15 + 0.85 * dip;
 
     if (Math.abs(p.led - lastLed) > 0.001) {
       lastLed = p.led;

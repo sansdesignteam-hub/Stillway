@@ -31,7 +31,6 @@ const icons = [
       </picture>
       <div class="hero__dim" style={`opacity:${heroBg.dim}`}></div>
     </div>
-    <div class="hero__glow" data-h-glow data-a></div>
     <h1 class="hero__word" id="hero-title" data-h-word data-a>
       <span class="sr-only">Stillway. {hero.tagline}</span>
       <span class="hero__word-inner" aria-hidden="true">
@@ -40,10 +39,12 @@ const icons = [
     </h1>
   </div>
 
-  <img class="ring-fallback hero__fb hero__fb--float" src="/ring-fallback/fb-s01-34.webp" alt={hero.ringAlt} width="1024" height="1024" data-ring-fallback data-fb-range="0,1" data-a decoding="async" />
-  <img class="ring-fallback hero__fb hero__fb--zoom" src="/ring-fallback/fb-s01-front.webp" alt="" width="1024" height="1024" data-ring-fallback data-fb-range="2,2" data-a loading="lazy" decoding="async" />
-  <img class="ring-fallback hero__fb hero__fb--end" src="/ring-fallback/fb-s02-34.webp" alt="" width="1024" height="1024" data-ring-fallback data-fb-range="3,3.5" data-a loading="lazy" decoding="async" />
 
+  <!-- polished stills (3D Designer 16cfbaf): reduced motion / WebGL failure only; frame 1024, ring 640 px
+       centred at (512, 442), so the image is 1.6× the ring width -->
+  <img class="ring-fallback hero__fb hero__fb--shadow" src="/ring-fallback/fb-s01-polished-shadow.webp" alt="" width="1024" height="1024" data-ring-fallback data-fb-range="0,1" data-a decoding="async" />
+  <img class="ring-fallback hero__fb" src="/ring-fallback/fb-s01-polished.webp" alt={hero.ringAlt} width="1024" height="1024" data-ring-fallback data-fb-range="0,1" data-a decoding="async" />
+  <img class="ring-fallback hero__fb hero__fb--end" src="/ring-fallback/fb-s02-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-fb-range="3,3.5" data-a loading="lazy" decoding="async" />
   <div class="scene__front">
     <div class="hero__meta" data-h-meta data-a>
       <p class="hero__tag" data-h-tag><i class="dot" aria-hidden="true"></i>{hero.tagline}</p>
@@ -61,10 +62,10 @@ const icons = [
       </ul>
       <p class="hero__price" data-h-price>{hero.price}</p>
     </div>
-    <p class="hero__statement" data-h-statement data-a>{hero.statement}</p>
-    <div class="hero__foot" data-h-foot data-a aria-hidden="true">
-      <span>{hero.scroll}</span>
-      <span><i class="dot"></i>{hero.foot}</span>
+    <!-- D-087: statement bottom-left and "Scroll down" bottom-right on one baseline; no "• Stillway" -->
+    <div class="hero__bottom">
+      <p class="hero__statement" data-h-statement data-a>{hero.statement}</p>
+      <span class="hero__foot" data-h-foot data-a aria-hidden="true">{hero.scroll}</span>
     </div>
   </div>
 </section>
@@ -100,16 +101,6 @@ const icons = [
     position: absolute;
     inset: 0;
     background: #2a1f14;
-  }
-  .hero__glow {
-    position: absolute;
-    left: 50%;
-    top: 54%;
-    width: 64vw;
-    aspect-ratio: 1;
-    translate: -50% -50%;
-    background: var(--dawn-glow);
-    filter: blur(70px);
   }
   /* V1 wordmark: Geist Medium, justified across the width, behind the ring */
   .hero__word {
@@ -164,24 +155,27 @@ const icons = [
     justify-self: end;
     font-variant-numeric: tabular-nums;
   }
-  .hero__statement {
-    position: absolute;
-    left: var(--margin);
-    bottom: calc(28px + 52px);
-    max-width: 16em;
-    font-size: clamp(22px, 2.3vw, 34px);
-    font-weight: var(--w-heading);
-    line-height: 1.12;
-    letter-spacing: -0.03em;
-  }
-  .hero__foot {
+  .hero__bottom {
     position: absolute;
     left: var(--margin);
     right: var(--margin);
-    bottom: 0;
+    bottom: 18px;
     display: flex;
     justify-content: space-between;
-    padding-block: 16px 18px;
+    align-items: last baseline;
+    gap: 24px;
+  }
+  .hero__statement {
+    /* exactly 3 balanced lines at 1440 (D-087): ~27 characters per line, no orphan */
+    max-width: 14.6em;
+    text-wrap: balance;
+    font-size: clamp(22px, 2.3vw, 34px);
+    font-weight: var(--w-heading);
+    line-height: 1.12;
+    letter-spacing: var(--track-tight);
+  }
+  .hero__foot {
+    flex: none;
     font-size: 13px;
     font-weight: var(--w-label);
     letter-spacing: var(--track-label);
@@ -209,7 +203,29 @@ const icons = [
   .hero__fb--end {
     width: min(36vw, 82vh);
   }
+  .hero__fb {
+    --rw: min(30vw, 62vh); /* ring width, as the 3D float pose */
+    width: calc(var(--rw) * 1.6);
+    max-width: none;
+    translate: -50% 0;
+    top: calc(53% - var(--rw) * 1.6 * 0.4316);
+  }
+  .hero__fb--end {
+    --rw: min(36vw, 82vh);
+    top: calc(50% - var(--rw) * 1.6 * 0.4316);
+  }
   @media (max-width: 760px) {
+    .hero__fb {
+      --rw: 66vw;
+      top: calc(40% - var(--rw) * 1.6 * 0.4316);
+    }
+    .hero__fb--shadow {
+      display: none;
+    }
+    .hero__fb--end {
+      --rw: 70vw;
+      top: calc(50% - var(--rw) * 1.6 * 0.4316);
+    }
     .hero__photo {
       width: calc(var(--cover) / var(--m-orig));
       aspect-ratio: var(--m-ratio);
@@ -235,7 +251,7 @@ const icons = [
     }
     .hero__statement {
       font-size: 22px;
-      right: var(--margin);
+      max-width: 11.5em;
     }
     .hero__fb--float {
       top: 52%;
@@ -247,8 +263,5 @@ const icons = [
     .hero__fb--end {
       width: 70vw;
     }
-    .hero__glow {
-      width: 120vw;
     }
-  }
 </style>

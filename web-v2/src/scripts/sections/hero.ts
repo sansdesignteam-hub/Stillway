@@ -65,7 +65,6 @@ export const hero: SectionMotion = {
     el = {
       photo: q('[data-h-photo]'),
       img: q('[data-h-img]'),
-      glow: q('[data-h-glow]'),
       word: q('[data-h-word]'),
       tag: q('[data-h-tag]'),
       features: q('[data-h-features]'),
@@ -98,7 +97,6 @@ export const hero: SectionMotion = {
     // 1 → 2: the photo zooms out behind the ring; 2 → 3: it fades to Paper
     const z = lerp(1, ctx.mobile ? heroBg.mobile.zoomTo : heroBg.desktop.zoomTo, seg(u, 0.9, 2.2));
     put(el.photo, { o: 1 - seg(u, 2.05, 2.8), s: z }, ctx);
-    put(el.glow, { o: seg(u, 2.4, 3) * (1 - seg(u, 3.5, 4.1)) }, ctx);
   },
   theme: (u) => (u < 2.45 ? 'photo' : null),
   ring(u, ctx: Ctx) {
@@ -109,8 +107,7 @@ export const hero: SectionMotion = {
       [0.9, pose({ ...floatPose(ctx), y: m ? 0.12 : 0.01, w: m ? 0.72 : 0.34, rx: -0.55, ry: 0.15, rz: -1.2, spin: 0.2, uncap: 1, shadow: 0 })],
       // close-up (s01-state3-zoom-in.png): opening toward the camera, the sensors and the green
       // light on the inner wall, the band running off the edge
-      [2, pose({ x: m ? 0.34 : 0.12, y: 0.02, w: m ? 1.9 : 0.95, rx: -0.3, ry: -0.42, rz: 0.1, spin: -0.3, photo: 1, uncap: 1, led: 0.6, gloss: 1 })],
-      [2.4, pose({ x: m ? 0.1 : 0.07, y: 0.02, w: m ? 1.3 : 0.62, rx: -0.24, ry: -0.6, rz: 0.06, spin: -0.15, photo: 0.4, uncap: 1, led: 0.2, gloss: 0.8 })],
+      [2, pose({ x: m ? 0.34 : 0.12, y: 0.02, w: m ? 1.9 : 0.95, rx: -0.3, ry: -0.42, rz: 0.1, spin: -0.3, photo: 1, uncap: 1, led: 0.6 })],
       [3, end],
     ]);
     // mouse tilt in state 1 only (V1 heroRing: ±0.22 / ±0.32 rad, eased)
@@ -119,7 +116,19 @@ export const hero: SectionMotion = {
     tilt.x += (mouse.y * 0.22 * tk - tilt.x) * 0.06;
     tilt.y += (mouse.x * 0.32 * tk - tilt.y) * 0.06;
     const bob = Math.sin(performance.now() / 1000 * 1.3) * 0.008 * w * (ctx.reduced ? 0 : 1);
-    return { ...p, rx: p.rx + tilt.x * w, ry: p.ry + tilt.y * w, y: p.y + bob, photo: u < 2.4 ? 1 : p.photo };
+    // zoom out (2 → 3): one eased segment for position/rotation (no keyframe in between, so no
+    // stop-and-go); env photo → paper, exposure and the green light fade over the same stretch
+    // (D-083). The finish stays polished throughout (D-085).
+    const out = seg(u, 2, 2.95);
+    return {
+      ...p,
+      rx: p.rx + tilt.x * w,
+      ry: p.ry + tilt.y * w,
+      y: p.y + bob,
+      photo: u < 2 ? 1 : 1 - out,
+      led: u < 2 ? p.led : 0.6 * (1 - seg(u, 2, 2.6)),
+      uncap: u < 2 ? p.uncap : 1,
+    };
   },
 };
 
