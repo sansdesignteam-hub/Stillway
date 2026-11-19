@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stillway V2 ring test</title>
+<style>
+  /* Test page by 3D Designer (V2 stage 2). Not production code. */
+  html, body { margin: 0; height: 100%; background: var(--bg, #F7F5F0); font: 12px/1.4 system-ui, sans-serif; }
+  canvas { display: block; width: 100vw; height: 100vh; }
+  .hud { position: fixed; left: 12px; bottom: 12px; background: rgba(0,0,0,.55); color: #fff; padding: 8px 10px; border-radius: 6px; }
+  .hud button { margin: 2px; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud" id="hud">
+  <div>Finish: <button data-f="silver">Silver</button><button data-f="black">Black</button><button data-f="gold">Gold</button></div>
+  <div>Env: <button data-e="paper">Paper</button><button data-e="night">Night</button><button data-e="dusk">Dusk</button><button data-e="lamp">Lamp</button></div>
+  <div>LED: <button data-l="#34E07A">Green</button><button data-l="#3B8CFF">Blue</button><button data-l="#A06BFF">Violet</button><button data-l="off">Off</button></div>
+  <div id="msg"></div>
+</div>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
+
+const q = new URLSearchParams(location.search);
+const BG = { paper: '#F7F5F0', night: '#17120F', dusk: '#3a2414', lamp: '#EFE6DB' };
+const msg = (t) => (document.getElementById('msg').textContent = t);
+if (q.has('nohud')) document.getElementById('hud').style.display = 'none';
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: q.has('alpha'), preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.AgXToneMapping;
+renderer.toneMappingExposure = 1.0;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(17.06, 1, 0.001, 10);
+// Same view as Blender Cam_Ref34 (Blender XYZ -> three X, Z, -Y)
+const D = 0.115, el = THREE.MathUtils.degToRad(8), az = THREE.MathUtils.degToRad(-45);
+camera.position.set(D * Math.cos(el) * Math.cos(az), D * Math.sin(el), -D * Math.cos(el) * Math.sin(az));
+camera.lookAt(0, 0, 0);
+
+const finishes = await (await fetch('../finishes.json')).json();
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envCache = {};
+async function setEnv(name) {
+  if (!envCache[name]) {
+    const tex = await new EXRLoader().loadAsync('../' + finishes.envPresets[name].file);
+    tex.mapping = THREE.EquirectangularReflectionMapping;
+    envCache[name] = pmrem.fromEquirectangular(tex).texture; tex.dispose();
+  }
+  scene.environment = envCache[name];
+  scene.environmentIntensity = finishes.envPresets[name].environmentIntensity;
+  if (!q.has('alpha')) { const bg = q.get('bg') || BG[name]; document.body.style.setProperty('--bg', bg); renderer.setClearColor(bg, 1); }
+  else renderer.setClearColor(0x000000, 0);
+}
+
+const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/');
+const gltf = await new GLTFLoader().setDRACOLoader(draco).loadAsync('../stillway-ring-v2-silver_web.glb');
+const ring = gltf.scene; scene.add(ring);
+let shell, engrave;
+ring.traverse((o) => { if (o.isMesh) {
+  if (o.material.name === 'Ring_Silver') shell = o.material;
+  if (o.material.name === 'Ring_Silver_Engrave') engrave = o.material;
+}});
+const led = ring.getObjectByName('led_main').material; led.toneMapped = false;
+
+function apply(m, p) {
+  m.color.setRGB(...p.color, THREE.LinearSRGBColorSpace);
+  m.metalness = p.metalness; m.roughness = p.roughness;
+  if ('anisotropy' in p) { m.anisotropy = p.anisotropy; m.anisotropyRotation = p.anisotropyRotation; }
+  if ('normalScale' in p && m.normalScale) m.normalScale.setScalar(p.normalScale);
+  m.clearcoat = p.clearcoat || 0; m.clearcoatRoughness = p.clearcoatRoughness || 0;
+  m.needsUpdate = true;
+}
+async function setFinish(f, envOverride) {
+  apply(shell, finishes[f].shell); apply(engrave, finishes[f].engrave);
+  await setEnv(envOverride || finishes[f].envPreset);
+}
+function setLed(v) {
+  if (v === 'off') { led.emissiveIntensity = 0; return; }
+  led.emissive.set(v); led.emissiveIntensity = 2.2;
+}
+document.querySelectorAll('[data-f]').forEach((b) => (b.onclick = () => setFinish(b.dataset.f)));
+document.querySelectorAll('[data-e]').forEach((b) => (b.onclick = () => setEnv(b.dataset.e)));
+document.querySelectorAll('[data-l]').forEach((b) => (b.onclick = () => setLed(b.dataset.l)));
+
+await setFinish(q.get('finish') || 'silver', q.get('env'));
+setLed(q.get('led') || '#34E07A');
+
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / h;
+  // keep the vertical extent like the square Blender frame
+  camera.fov = w >= h ? 17.06 : 2 * THREE.MathUtils.radToDeg(Math.atan(Math.tan(THREE.MathUtils.degToRad(8.53)) / camera.aspect));
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+const spin = q.has('spin');
+renderer.setAnimationLoop((t) => {
+  if (spin) ring.rotation.y = t * 0.0004;
+  renderer.render(scene, camera);
+});
+msg('ok');
+document.title += ' · ready';
+</script>
+</body>
+</html>

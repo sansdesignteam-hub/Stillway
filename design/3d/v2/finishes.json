@@ -1,0 +1,25 @@
+{
+  "_note": "Stillway V2 ring finishes for three.js MeshPhysicalMaterial. Colors are LINEAR RGB (use color.setRGB(r,g,b, THREE.LinearSRGBColorSpace)). Apply 'shell' to material 'Ring_Silver' and 'engrave' to 'Ring_Silver_Engrave'. The brushed normal map and UVs are shared and stay as loaded from the GLB. Values are 3D Designer proposals pending user review.",
+  "silver": {
+    "shell":   { "color": [0.92, 0.90, 0.87], "metalness": 1, "roughness": 0.18, "anisotropy": 0.55, "anisotropyRotation": 1.5708, "normalScale": 0.5, "clearcoat": 0 },
+    "engrave": { "color": [0.40, 0.39, 0.38], "metalness": 1, "roughness": 0.50, "clearcoat": 0 },
+    "envPreset": "paper"
+  },
+  "black": {
+    "shell":   { "color": [0.035, 0.035, 0.04], "metalness": 1, "roughness": 0.20, "anisotropy": 0.50, "anisotropyRotation": 1.5708, "normalScale": 0.5, "clearcoat": 0.25, "clearcoatRoughness": 0.08 },
+    "engrave": { "color": [0.055, 0.055, 0.06], "metalness": 1, "roughness": 0.55, "clearcoat": 0.25, "clearcoatRoughness": 0.08 },
+    "envPreset": "paper"
+  },
+  "gold": {
+    "shell":   { "color": [0.95, 0.74, 0.36], "metalness": 1, "roughness": 0.17, "anisotropy": 0.55, "anisotropyRotation": 1.5708, "normalScale": 0.5, "clearcoat": 0 },
+    "engrave": { "color": [0.52, 0.37, 0.17], "metalness": 1, "roughness": 0.50, "clearcoat": 0 },
+    "envPreset": "lamp"
+  },
+  "envPresets": {
+    "paper": { "file": "env/v2-env-paper.exr", "environmentIntensity": 1.0, "exposure": 1.0, "sections": ["S01", "S02", "S06", "S10 Silver/Black"], "use": "Warm neutral studio for Paper/Sand backgrounds" },
+    "night": { "file": "env/v2-env-night.exr", "environmentIntensity": 1.0, "exposure": 1.0, "sections": ["S03", "S08", "S11"], "use": "Near-black with one cold rim strip; ring shows only its edge" },
+    "dusk":  { "file": "env/v2-env-dusk.exr",  "environmentIntensity": 1.0, "exposure": 1.0, "sections": ["S05"], "use": "Low ochre sun and glow, dark sky" },
+    "lamp":  { "file": "env/v2-env-lamp.exr",  "environmentIntensity": 1.0, "exposure": 1.0, "sections": ["S10 Gold"], "use": "Warm tungsten lamp light (active when Gold is selected)" }
+  },
+  "renderer": { "toneMapping": "AgX", "outputColorSpace": "srgb", "envRotationY": 0 }
+}
