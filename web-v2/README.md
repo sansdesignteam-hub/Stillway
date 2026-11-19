@@ -71,6 +71,7 @@ to the S02 start pose while the photo fades to Paper. The ring follows the mouse
 
 ## Navbar (D-075)
 
+Logo = the word "Stillway" only, no ring mark (D-083). No scroll rail anywhere (D-083).
 V1 style copied from `web/` (wordmark · round home tile · one translucent rounded bar with dividers ·
 clock · compact arrow button; phone: burger + sensiq-style panel, D-053) with V2 content: lockup, links
 Rhythm / The ring / The app / Finishes / FAQ, Geist Mono clock, "Find your size" (D-069).
@@ -87,8 +88,12 @@ Files: `src/components/Header.astro`, `src/components/Button.astro`, `src/styles
 - Poses: `src/scripts/ring/poses.ts` — `Pose {x, y, w, rx, ry, rz, spin, roll, light, alpha}`.
   `ANGLE.threeQuarter` matches the engraving reference: opening left, band right, "Stillway" reading
   bottom → top (D-075).
-- Stills: `public/ring-fallback/*.webp` (3D Designer fallback/) show while WebGL loads, if it fails,
-  and always for reduced motion (no WebGL then).
+- Finish: polished silver (finishes.json `silver_polished`) in every section (D-085); envs
+  `v2-env-paper-polished.exr` / `v2-env-night-polished.exr`; S01 uses the V1 hero photo env. Photo → paper
+  is blended through 9 prebuilt PMREM steps (no pop), exposure 1.15 → 1.0 continuous (D-083).
+- Stills: `public/ring-fallback/fb-s0*-polished*.webp` (3D Designer 16cfbaf) show while WebGL loads, if it
+  fails, and always for reduced motion (no WebGL then). No brushed stills (D-083/D-085).
+- The ring canvas fades in (0.9 s) only after GLB, finish and S01 env are ready.
 - Dev only: `window.__ringOverride = { w: 0.9, spin: 0 }` in the console merges into the live pose.
 
 ## Structure

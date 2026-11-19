@@ -6,7 +6,7 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
 ---
 
 <section class="scene scene--sleep" data-scene="sleep" aria-labelledby="sleep-title">
-  <img class="ring-fallback ring-fallback--sleep" src="/ring-fallback/fb-s03-rim.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
+  <img class="ring-fallback sleep__fb" src="/ring-fallback/fb-s03-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
   <div class="scene__front">
     <p class="sleep__kicker t-mono" data-s-kicker data-a aria-hidden="true">{sleep.kicker}</p>
     <div class="sleep__col">
@@ -98,7 +98,20 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   .sleep__sim {
     color: var(--stone);
   }
+  .sleep__fb {
+    --rw: min(40vw, 82vh);
+    left: 25%;
+    width: calc(var(--rw) * 1.6);
+    max-width: none;
+    translate: -50% 0;
+    top: calc(50% - var(--rw) * 1.6 * 0.4316);
+  }
   @media (max-width: 719px) {
+    .sleep__fb {
+      --rw: 60vw;
+      left: 50%;
+      top: calc(30% - var(--rw) * 1.6 * 0.4316);
+    }
     .sleep__col {
       left: var(--margin);
       top: auto;

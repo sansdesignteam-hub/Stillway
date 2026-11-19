@@ -28,7 +28,6 @@ export const hero = {
   price: '$299',
   statement: 'A smart ring that brings your sleep, activity, and rest into one everyday view.',
   scroll: 'Scroll down',
-  foot: 'Stillway',
   ringAlt: 'The silver Stillway ring, the engraved name on its band, floating above a pale stone in a bed of moss.',
 };
 

@@ -79,7 +79,6 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
   const nav = document.querySelector<HTMLElement>('[data-nav]');
   const clockTime = document.querySelectorAll<HTMLElement>('[data-clock-time]');
   const clockPart = document.querySelectorAll<HTMLElement>('[data-clock-part]');
-  const railDot = document.querySelector<HTMLElement>('[data-rail-dot]');
   const vhProbe = document.querySelector<HTMLElement>('[data-vh]')!;
 
   const items: Item[] = sections.map((def) => {
@@ -179,12 +178,6 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     clockTime.forEach((el) => el.textContent !== text && (el.textContent = text));
     clockPart.forEach((el) => el.textContent !== part && (el.textContent = part));
 
-    /* rail: ochre dot follows progress inside the current section */
-    if (railDot) {
-      const p = inConn ? 0 : clamp01(u / Math.max(0.001, cur.end));
-      railDot.style.transform = `translate3d(0, ${(p * 100).toFixed(2)}cqh, 0)`;
-    }
-
     /* ring */
     if (ring) {
       let pose: Pose;
@@ -227,8 +220,9 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     setRing(r: RingStage) {
       ring = r;
       lastPoseKey = '';
-      frame();
+      frame(); // first frame with the real pose, finish and env; the canvas fades in over 0.9 s
       document.documentElement.classList.add('ring-ready');
+      setTimeout(() => document.documentElement.classList.add('ring-live'), 1000);
     },
   };
 }

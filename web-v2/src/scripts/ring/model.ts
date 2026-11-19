@@ -25,8 +25,8 @@ export const RING_MODEL = {
   ledIntensity: 2.2,
   /** environment maps (EXR, 3D handoff stage 2); all light comes from the env, no extra lamps */
   env: {
-    paper: '/env/v2-env-paper.exr', // S01, S02
-    night: '/env/v2-env-night.exr', // S03
+    paper: '/env/v2-env-paper-polished.exr', // S02 (3D Designer 16cfbaf: made for the polished finish)
+    night: '/env/v2-env-night-polished.exr', // S03
     photo: '/env/hero-env.jpg', // S01 over the moss photograph (V1 approach, D-080)
   },
 } as const;

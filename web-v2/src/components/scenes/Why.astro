@@ -1,29 +1,58 @@
 ---
-/** S02 Why Stillway scene. Motion: scripts/sections/why.ts. Layout: HANDOFF-v2 §2 S02 [U]. */
+/**
+ * S02 Why Stillway (D-084), after the oryzo.ai intro: big statement left, ring centre turning with
+ * the scroll, paragraph right; the text lights up character by character with the scroll and goes
+ * out the same way. End state: "Stillway just keeps the pattern." small (no label, no underline) and
+ * "keeps the pattern." moving in from both sides to flank the ring, like Oryzo's "it's wearable".
+ * Motion: scripts/sections/why.ts.
+ */
 import { why } from '../../content/copy';
 const last = why.steps[why.steps.length - 1];
+const words = (t: string) => t.split(' ');
+const wide = words(why.wide); // ["keeps", "the", "pattern."]
+const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the left, the rest from the right
 ---
 
 <section class="scene scene--why" data-scene="why" aria-labelledby="why-title">
   <div class="scene__back">
     <p class="why__word giant" data-w-word data-a aria-hidden="true">{why.backWord}</p>
-    <p class="why__wide giant" data-w-wide data-a aria-hidden="true">{why.wide}</p>
+    <p class="why__wide giant" data-w-wide data-a aria-hidden="true">
+      <span class="why__wide-l" data-w-wide-l>{wide.slice(0, split).join(' ')}</span>
+      <span class="why__wide-gap"></span>
+      <span class="why__wide-r" data-w-wide-r>{wide.slice(split).join(' ')}</span>
+    </p>
   </div>
-  <img class="ring-fallback ring-fallback--why" src="/ring-fallback/fb-s02-34.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
+  <img class="ring-fallback why__fb" src="/ring-fallback/fb-s02-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
   <div class="scene__front">
-    <p class="why__label t-mono" data-w-label data-a>{why.label}</p>
     <h2 id="why-title" class="sr-only">{why.label}</h2>
-    <p class="why__final" data-w-final data-a><span>{last.big}</span></p>
+    <p class="why__final" data-w-final data-a>{last.big}</p>
     <div class="why__left">
-      <p class="why__prev" data-w-prev data-a aria-hidden="true">{why.steps[0].big}</p>
-      <div class="why__bigs">
-        {why.steps.slice(0, 2).map((s) => <p class="why__big t-display" data-w-big data-a>{s.big}</p>)}
-      </div>
+      {
+        why.steps.slice(0, 2).map((s) => (
+          <p class="why__big t-display" data-w-big data-a aria-label={s.big}>
+            {words(s.big).map((w) => (
+              <span class="w" aria-hidden="true">
+                {w.split('').map((c) => <span class="c">{c}</span>)}
+              </span>
+            ))}
+          </p>
+        ))
+      }
     </div>
     <div class="why__right">
-      {why.steps.slice(0, 2).map((s) => <p class="why__small" data-w-small data-a>{s.small}</p>)}
+      {
+        why.steps.slice(0, 2).map((s) => (
+          <p class="why__small" data-w-small data-a aria-label={s.small}>
+            {words(s.small).map((w) => (
+              <span class="w" aria-hidden="true">
+                {w.split('').map((c) => <span class="c">{c}</span>)}
+              </span>
+            ))}
+          </p>
+        ))
+      }
     </div>
-    <p class="why__small why__end" data-w-small data-a>{last.small}</p>
+    <p class="why__small why__end" data-w-end data-a>{last.small}</p>
   </div>
 </section>
 
@@ -37,37 +66,33 @@ const last = why.steps[why.steps.length - 1];
   }
   .why__wide {
     position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    font-size: 12vw; /* Sofi ref: edge to edge behind the ring (12vw at weight 500, D-082) */
+    left: 0;
+    right: 0;
+    top: 50%;
+    translate: 0 -50%;
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    font-size: 12vw; /* Sofi / Oryzo "it's wearable": edge to edge behind the ring (weight 500, D-082) */
     white-space: nowrap;
     --giant-o: 1;
   }
-  .why__label {
-    position: absolute;
-    left: var(--margin);
-    top: calc(var(--header-h) + 32px);
-    color: var(--ochre);
-    transition: color 0.3s ease;
+  .why__wide-gap {
+    width: 0.3em;
   }
-  .why__label:global(.is-quiet) {
-    color: var(--stone);
+  .why__wide-l,
+  .why__wide-r {
+    display: inline-block;
+    will-change: transform;
   }
   .why__final {
     position: absolute;
     left: var(--margin);
-    top: calc(var(--header-h) + 64px);
+    top: calc(50% - 12vw * 0.82);
     font-size: var(--fs-h3);
     font-weight: var(--w-heading);
     letter-spacing: var(--track-tight);
     line-height: 1.15;
-  }
-  .why__final span {
-    text-decoration: underline;
-    text-decoration-color: var(--ochre);
-    text-decoration-thickness: 2px;
-    text-underline-offset: 8px;
   }
   .why__left {
     position: absolute;
@@ -75,41 +100,30 @@ const last = why.steps[why.steps.length - 1];
     top: 50%;
     translate: 0 -50%;
     width: calc((100vw - 2 * var(--margin)) * 4 / 12);
-  }
-  .why__big {
-    /* Oryzo ref: a short statement block beside the object, not a wall of type */
-    font-size: clamp(2.5rem, 1.2rem + 3.4vw, 4.25rem);
-    line-height: 1;
-  }
-  .why__bigs {
     display: grid;
-    align-items: start;
   }
-  .why__bigs > * {
+  .why__left > *,
+  .why__right > * {
     grid-area: 1 / 1;
   }
-  .why__prev {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: calc(100% + 20px);
-    font-size: var(--fs-h3);
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
-    color: var(--stone);
+  .why__big {
+    font-size: clamp(2.5rem, 1.2rem + 3.4vw, 4.25rem);
+    line-height: 1;
   }
   .why__right {
     position: absolute;
     right: var(--margin);
     top: 50%;
+    translate: 0 -50%;
     width: calc((100vw - 2 * var(--margin)) * 3 / 12);
     display: grid;
   }
-  .why__right > * {
-    grid-area: 1 / 1;
-  }
   .why__small {
-    color: var(--stone);
+    color: var(--ink);
+    font-size: clamp(1.0625rem, 0.9rem + 0.45vw, 1.375rem);
+    font-weight: var(--w-heading);
+    line-height: 1.3;
+    letter-spacing: -0.01em;
   }
   .why__end {
     position: absolute;
@@ -117,19 +131,43 @@ const last = why.steps[why.steps.length - 1];
     bottom: clamp(32px, 9vh, 96px);
     width: calc((100vw - 2 * var(--margin)) * 3 / 12);
   }
+  /* character reveal (oryzo): each character goes from dim to full with the scroll */
+  .w {
+    display: inline-block;
+    white-space: nowrap;
+    margin-right: 0.26em;
+  }
+  .c {
+    display: inline-block;
+    opacity: var(--o, 0.12);
+  }
+  .why__fb {
+    --rw: min(36vw, 82vh);
+    width: calc(var(--rw) * 1.6);
+    max-width: none;
+    translate: -50% 0;
+    top: calc(50% - var(--rw) * 1.6 * 0.4316);
+  }
   @media (max-width: 719px) {
-    .why__word {
-      place-items: center;
+    .why__fb {
+      --rw: 70vw;
     }
     .why__wide {
-      white-space: normal;
-      text-align: center;
-      font-size: var(--fs-giant);
-      line-height: 0.85;
-      padding: 0 8px;
+      flex-direction: column;
+      align-items: center;
+      white-space: nowrap;
+      font-size: 19vw;
+      line-height: 0.9;
+    }
+    .why__wide-gap {
+      height: 0;
+    }
+    .why__final {
+      top: calc(var(--header-h) + 40px);
+      font-size: 1.25rem;
     }
     .why__left {
-      top: calc(var(--header-h) + 128px);
+      top: calc(var(--header-h) + 40px);
       translate: none;
       right: var(--margin);
       width: auto;
@@ -137,20 +175,14 @@ const last = why.steps[why.steps.length - 1];
     .why__left .why__big {
       font-size: var(--fs-h2m);
     }
-    .why__prev {
-      bottom: calc(100% + 10px);
-      font-size: 1rem;
-    }
     .why__right,
     .why__end {
       top: auto;
+      translate: none;
       right: var(--margin);
       bottom: 28px;
       left: var(--margin);
       width: auto;
-    }
-    .why__final {
-      font-size: 1.25rem;
     }
   }
 </style>
