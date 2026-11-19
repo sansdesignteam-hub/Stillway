@@ -40,6 +40,14 @@ const { title = meta.title, description = meta.description } = Astro.props;
         }
       })();
     </script>
+    <noscript>
+      <style>
+        .stage { position: static; height: auto; }
+        .stage__scenes { position: static; height: auto; }
+        .scene { position: relative; min-height: 100svh; }
+        .tracks, .stage__ring, .rail { display: none; }
+      </style>
+    </noscript>
   </head>
   <body id="top">
     <a class="skip-link" href="#main">Skip to content</a>

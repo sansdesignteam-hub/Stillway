@@ -6,9 +6,11 @@ Concept project for the Sans Brothers portfolio, not a real product. `noindex`.
 
 - **V1** lives in `../web/` (stillway-one.vercel.app) and is **frozen**. Nothing here imports from it;
   modules and assets were copied.
-- **Status: scaffold only.** Tokens, motion foundation, ring stage, navbar + clock and 11 empty
-  sections. Section content waits for the Visual Director's `design/v2/HANDOFF-v2.md` and the
-  Strategy Director's V2 copy.
+- **Status:** S01 Hero, S02 Why Stillway, S03 Sleep summary built (awaiting user review, D-070).
+  S04–S11 are dashed placeholders. Visual source: `design/v2/HANDOFF-v2.md` (branch Visual-Director);
+  copy source: `context/home-copy-v2.md` (branch Strategic-Content, D-066); ring:
+  `design/3d/v2/HANDOFF-v2-ring.md` (branch 3D-Designer).
+- Deploy: Vercel project `stillway-v2`, root directory `web-v2`, after the user reviews S01–S03 (D-070).
 
 ## Run
 
@@ -20,99 +22,84 @@ npm run build     # static output in web-v2/dist
 npm run preview
 ```
 
-Dev check for the ring: `/dev/ring?light=day|night&led=heartRate|sleep|recovery|off`.
-
-Stack (same as V1): Astro 7.4.5 (static), GSAP 3.15 + ScrollTrigger, Lenis 1.3.27, three 0.187,
+Stack (same as V1): Astro 7.4.5 (static), GSAP 3.15 (ticker only), Lenis 1.3.27, three 0.187,
 Geist + Geist Mono (Fontsource variable 5.3.0).
+
+## How the page works (D-063)
+
+One **fixed stage** holds everything you see; the page underneath is a row of empty **tracks**
+(`#hero`, `#why`, … `#close`) that only give scroll length and anchors.
+
+```
+stage (position: fixed)
+├─ bg layer          section colour, cross-faded in each connection (+ dusk overlay)
+├─ scene back  z1    giant words, Dawn glow          ← behind the ring
+├─ WebGL canvas z2   the one ring
+├─ scene front z3    headlines, numbers, links       ← in front of the ring
+└─ rail        z4    progress line with the ochre dot (hidden < 720 px)
+```
+
+Real ScrollTrigger pins would put each section in its own stacking context, so the ring could
+not sit between a section's back text and its front text. Instead every section is "pinned" by
+living on the stage, and `src/scripts/story.ts` drives it from the scroll position:
+
+- Each section has a local position `u` in viewport heights: `[-tin, 0)` incoming connection
+  (Storyboard §3: 0–30% out, 30–70% middle, 70–100% in + clock), `0 … states-1` its states,
+  then a short hold. Lengths live in `src/content/sections.ts`.
+- A section module (`src/scripts/sections/*.ts`) writes its own DOM from `u` (`update`) and returns
+  the ring pose for `u` (`ring`). Across a connection the ring is interpolated from the previous
+  section's last pose to the next section's first pose (or a custom `ringIn`).
+- Clock and daypart label (`Last night` in S03, `Tomorrow` in S11) switch at 70% of a connection;
+  navbar ink follows the background; the rail dot follows progress inside the section.
+- Mobile (< 720 px, D-069): same model, still pinned and scrubbed, ring stays 3D; layouts differ.
+- Reduced motion: no Lenis, `u` snaps to whole states, no transforms, every change is a 300 ms
+  opacity fade (`html.reduced [data-a]`), no breathing loop.
+- Without JS: `<noscript>` styles stack the scenes as normal sections.
+
+## Ring
+
+- Model: `src/scripts/ring/model.ts` is the only place that names the GLB, material patterns and LED
+  mesh names. Now: `public/models/stillway-ring-v2-silver_web.glb` (V2 stage 1, engraved "Stillway",
+  satin finish; brushed and Black/Gold arrive in stage 2).
+- Stage: `src/scripts/ring/stage.ts` — one renderer, Day rig (RoomEnvironment studio + warm key,
+  placeholder for the V2 studio HDRI) and Night rig (environment almost off + one cool rim light)
+  mixed by `pose.light`. `setLed(colour | 'off' | null)` drives `led_main` / `led_power` (D-062).
+- Poses: `src/scripts/ring/poses.ts` — `Pose {x, y, w, rx, ry, rz, spin, light, alpha}`; `spin = π`
+  shows the engraved logo on the visible outer band.
+- Loads lazily after first paint; if WebGL or the model fails, the story reads without the ring.
 
 ## Structure
 
 ```
 web-v2/
-├─ astro.config.mjs          static output; fs.allow '..' so masters can be read from ../design
-├─ public/
-│  ├─ models/stillway-ring-silver_web.glb   copied from V1 (= design/3d/ring/…_web.glb)
-│  ├─ draco/                 Draco decoder (copied from V1)
-│  ├─ env/                   hero-env.jpg (day), env-night.jpg (night) environment maps
-│  └─ favicon.svg            ring mark placeholder
+├─ public/{models,draco,favicon.svg}
+├─ docs/screens/                 review screenshots 1440 / 390 per state
 └─ src/
-   ├─ content/sections.ts    the 11 sections: id, time, background, theme, states; nav + dayparts
-   ├─ layouts/Base.astro     fonts, tokens, html.js / .reduced / .motion-ready flags
-   ├─ pages/index.astro      Header + 11 <Section>s
-   ├─ pages/dev/ring.astro   dev check for the ring stage (not linked from Home)
-   ├─ components/
-   │  ├─ Header.astro        lockup, links, time-of-day clock, CTA; ink follows the section theme
-   │  ├─ Logo.astro          ring mark + “Stillway” (placeholder drawing until the final mark)
-   │  └─ Section.astro       empty section shell with a dashed placeholder label
-   ├─ scripts/
-   │  ├─ motion.ts           Lenis + ScrollTrigger, reduced motion, registerSection() registry
-   │  ├─ clock.ts            navbar clock + navbar theme
-   │  └─ ring/
-   │     ├─ index.ts         loadRing(): lazy import, three.js is its own chunk
-   │     ├─ stage.ts         createRingStage(): renderer, env, GLB+Draco, pose, LED, render loop
-   │     └─ poses.ts         V1 poses, day/night lighting presets, LED colours
-   └─ styles/
-      ├─ tokens.css          Moodboard §2–3: 5 colours, derivatives, LED colours, type, layout
-      └─ global.css          base, type roles (.t-display/.t-h1/.t-h2/.t-mono/.t-tag), surfaces
+   ├─ content/sections.ts        11 sections: id, time, daypart, background, states, lengths
+   ├─ content/copy.ts            on-page copy (from home-copy-v2.md, with status)
+   ├─ layouts/Base.astro         fonts, html.js / .reduced flags, noscript fallback
+   ├─ pages/index.astro          Header + Stage(scenes) + tracks
+   ├─ components/Header.astro    lockup, links, clock, "Find your size" (D-069), mobile menu
+   ├─ components/Stage.astro     fixed stage layers + rail
+   ├─ components/scenes/         Hero, Why, Sleep, Placeholder
+   ├─ scripts/motion.ts          Lenis, ring loading, anchors, menu
+   ├─ scripts/story.ts           scroll engine (see above)
+   ├─ scripts/anim.ts            seg / window4 / put helpers
+   ├─ scripts/sections/          hero.ts, why.ts, sleep.ts, placeholder.ts
+   ├─ scripts/ring/              model.ts, stage.ts, poses.ts, index.ts
+   └─ styles/{tokens.css,global.css}
 ```
 
-## Sections and the clock
-
-Ids are the anchors and the `data-section` keys (`src/content/sections.ts`, from Storyboard §1).
-
-| # | id | Name | Clock | Background | Navbar |
-|---|---|---|---|---|---|
-| 01 | `hero` | Hero | 06:50 | Paper + Dawn glow | light |
-| 02 | `why` | Why Stillway | 07:10 | Paper | light |
-| 03 | `sleep` | Sleep summary | 23:10 | Night | dark |
-| 04 | `activity` | Activity & rest | 07:40 → 15:30 | Night | dark |
-| 05 | `insight` | Daily insight | 17:30 | Dusk | dark |
-| 06 | `details` | Product details | 21:00 | Paper + Sand base | light |
-| 07 | `specs` | Specs & benefits | 21:00 | Sand → full-bleed photo | light |
-| 08 | `features` | Features | 21:00 | Night | dark |
-| 09 | `app` | The app | 21:00 | Paper | light |
-| 10 | `finishes` | Finishes & pricing | 22:00 | Sand | light |
-| 11 | `close` | Closing, FAQ & footer | 06:50 | Night + Ember glow | dark |
-
-The clock reads the section at the middle of the viewport. Inside a section it moves from
-`data-time` to `data-time-end` (only Activity has one); between sections it jumps, so
-23:10 → 07:40 reads as a flashback, not as eight hours of scroll. Steps of 5 minutes.
-
-## Tokens (Moodboard §2)
+## Tokens (Moodboard §2, HANDOFF-v2 §1)
 
 Five colours only: `--paper #F7F5F0`, `--sand #EFE6DB`, `--ink #231F20`, `--night #17120F`,
-`--ochre #B76F20`. Derivatives: `--stone` (ink 65%), `--line` (ink 12%), `--dawn-glow`,
-`--ember-glow`, `--dusk`. `.surface--night` / `.surface--dusk` flip `--stone`/`--line` to paper.
-LED colours (`--led-*`) are product light: ring render and small legend/chip dots only.
-Ochre: one element per view, never a full background, never the primary button.
+`--ochre #B76F20`; derivatives `--stone`, `--line`, `--dawn-glow`, `--ember-glow`, `--dusk`.
+LED colours are product light only. Type scale `--fs-giant/display/number/h3/body/small/mono` and
+layout `--margin/--header-h/--radius-*` follow HANDOFF-v2 §1.2–1.3 ([U] values, kept in tokens.css).
 
-## Motion
+## Open items
 
-- `initMotion()` starts Lenis on the GSAP ticker and keeps ScrollTrigger in sync.
-- Add a section's motion with `registerSection('<id>', ({ el, reduced, lenis }) => { … return cleanup })`
-  before `initMotion()`; it runs inside `gsap.matchMedia()` so it is reverted cleanly.
-- Reduced motion: `html.reduced`, no Lenis, no pinning, no loops. Mark state content with
-  `data-reveal`; it fades in over `--fade-reduced` (300 ms) when it enters the viewport.
-
-## Ring stage
-
-```ts
-const { createRingStage, POSES, LED } = await loadRing();
-const stage = await createRingStage({ canvas, container, lighting: 'night' });
-if (stage) {
-  stage.setPose(POSES.front);
-  stage.setLed(LED.sleep, 3);
-  stage.onFrame((t) => stage.place({ x: 0, y: 0, width: 420 })); // px from the container centre, y up
-}
-```
-
-Returns `null` without WebGL or if the model fails: keep a poster image as fallback.
-Each stage clones the model and its materials, so LED colour/finish are per stage.
-
-## Open items (developer side)
-
-- One WebGL stage per section vs. one fixed canvas shared by the whole page (the storyboard keeps
-  the same ring across 01→02→03 and 05→06). Decide after HANDOFF-v2.md.
-- Finishes Black/Gold (Section 10) need GLBs or material specs from the 3D Designer.
-- Mobile menu, logo final mark, navbar labels and CTA copy are placeholders.
-- Vercel: second project, name and deploy timing not decided (D-059).
+- Silver looks flat on Paper under the placeholder studio environment; waiting for the V2 HDRI (3D stage 2).
+- Logo SVG for the navbar lockup is still a drawn placeholder (HANDOFF-v2 §1.4).
+- Navbar link list (5 links + CTA) follows home-copy-v2 (draft); HANDOFF-v2 §1.5 proposed 3 links
+  and no CTA — D-069 approved the CTA.

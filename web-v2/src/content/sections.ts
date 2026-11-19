@@ -1,56 +1,45 @@
 /**
- * The 11 sections of V2, from Storyboard.md §1 ("Peta section").
- * Only structure lives here: id, time on the navbar clock, background and theme.
- * Copy for each section comes from the Strategy Director; layout from the
- * Visual Director's handoff (design/v2/HANDOFF-v2.md). Nothing here is final copy.
+ * The 11 sections of V2 (Storyboard §1). Structure only; copy is in copy.ts.
  *
- * `time` is where the clock stands when the section starts; `timeEnd` (optional) is where it
- * stands when the section ends. Inside a section the clock moves from `time` to `timeEnd`;
- * between sections it jumps (23:10 → 07:40 is a flashback, not a 8-hour scroll).
+ * Scroll model (story.ts): the page is a row of "tracks" in normal flow. Each track is as tall
+ * as its story needs; everything visible lives on one fixed stage (D-063). Lengths are in
+ * viewport heights:
+ *   tin   incoming connection (Storyboard §3): 0–30% out, 30–70% middle, 70–100% in + clock change
+ *   states  1 state = 1 viewport of scroll between state 1 and the last state
+ *   hold  dwell on the last state before the next connection starts
  */
-export type Theme = 'light' | 'dark';
 export type Bg = 'paper' | 'sand' | 'night' | 'dusk';
 
 export interface SectionDef {
-  n: string; // "01"
-  id: string; // anchor id, also the data-section value
-  name: string; // working name from the storyboard (English, shown only in placeholders)
+  n: string;
+  id: string; // anchor id + data-section
+  name: string;
   act: 1 | 2 | 3 | 4;
   time: string;
   timeEnd?: string;
+  part?: string; // daypart label override next to the clock (home-copy-v2: "Last night", "Tomorrow")
   bg: Bg;
-  theme: Theme; // navbar ink on top of this section
   states: number;
+  tin: number;
+  hold: number;
+  built: boolean; // false = placeholder until its handoff/copy is built
 }
 
 export const sections: SectionDef[] = [
-  { n: '01', id: 'hero', name: 'Hero', act: 1, time: '06:50', bg: 'paper', theme: 'light', states: 4 },
-  { n: '02', id: 'why', name: 'Why Stillway', act: 1, time: '07:10', bg: 'paper', theme: 'light', states: 4 },
-  { n: '03', id: 'sleep', name: 'Sleep summary', act: 2, time: '23:10', bg: 'night', theme: 'dark', states: 4 },
-  { n: '04', id: 'activity', name: 'Activity & rest', act: 2, time: '07:40', timeEnd: '15:30', bg: 'night', theme: 'dark', states: 5 },
-  { n: '05', id: 'insight', name: 'Daily insight', act: 2, time: '17:30', bg: 'dusk', theme: 'dark', states: 4 },
-  { n: '06', id: 'details', name: 'Product details', act: 3, time: '21:00', bg: 'paper', theme: 'light', states: 4 },
-  { n: '07', id: 'specs', name: 'Specs & benefits', act: 3, time: '21:00', bg: 'sand', theme: 'light', states: 5 },
-  { n: '08', id: 'features', name: 'Features', act: 3, time: '21:00', bg: 'night', theme: 'dark', states: 3 },
-  { n: '09', id: 'app', name: 'The app', act: 3, time: '21:00', bg: 'paper', theme: 'light', states: 3 },
-  { n: '10', id: 'finishes', name: 'Finishes & pricing', act: 4, time: '22:00', bg: 'sand', theme: 'light', states: 4 },
-  { n: '11', id: 'close', name: 'Closing, FAQ & footer', act: 4, time: '06:50', bg: 'night', theme: 'dark', states: 4 },
+  { n: '01', id: 'hero', name: 'Hero', act: 1, time: '06:50', bg: 'paper', states: 4, tin: 0, hold: 0.5, built: true },
+  { n: '02', id: 'why', name: 'Why Stillway', act: 1, time: '07:10', bg: 'paper', states: 4, tin: 0.6, hold: 0.6, built: true },
+  { n: '03', id: 'sleep', name: 'Sleep summary', act: 2, time: '23:10', part: 'Last night', bg: 'night', states: 4, tin: 1, hold: 0.6, built: true },
+  { n: '04', id: 'activity', name: 'Activity & rest', act: 2, time: '07:40', timeEnd: '15:30', bg: 'night', states: 1, tin: 1, hold: 0.6, built: false },
+  { n: '05', id: 'insight', name: 'Daily insight', act: 2, time: '17:30', bg: 'dusk', states: 1, tin: 1, hold: 0.6, built: false },
+  { n: '06', id: 'details', name: 'Product details', act: 3, time: '21:00', bg: 'paper', states: 1, tin: 1, hold: 0.6, built: false },
+  { n: '07', id: 'specs', name: 'Specs & benefits', act: 3, time: '21:00', bg: 'sand', states: 1, tin: 1, hold: 0.6, built: false },
+  { n: '08', id: 'features', name: 'Features', act: 3, time: '21:00', bg: 'night', states: 1, tin: 1, hold: 0.6, built: false },
+  { n: '09', id: 'app', name: 'The app', act: 3, time: '21:00', bg: 'paper', states: 1, tin: 1, hold: 0.6, built: false },
+  { n: '10', id: 'finishes', name: 'Finishes & pricing', act: 4, time: '22:00', bg: 'sand', states: 1, tin: 1, hold: 0.6, built: false },
+  { n: '11', id: 'close', name: 'Closing, FAQ & footer', act: 4, time: '06:50', part: 'Tomorrow', bg: 'night', states: 1, tin: 1, hold: 0.6, built: false },
 ];
 
-/** Navbar. Labels and CTA are placeholders until the Strategy Director's V2 copy lands. */
-export const nav = {
-  status: 'placeholder',
-  links: [
-    { label: 'Rhythm', href: '#sleep' },
-    { label: 'The ring', href: '#details' },
-    { label: 'App', href: '#app' },
-    { label: 'Finishes', href: '#finishes' },
-  ],
-  // CTA wording from Storyboard §2 (Section 11); placeholder here.
-  cta: { label: 'Find your size', href: '#finishes' },
-};
-
-/** Part-of-day label next to the clock (same breaks as V1). */
+/** Daypart label next to the clock (home-copy-v2 §0, same breaks as V1). */
 export const dayparts: Array<[number, string]> = [
   [0, 'Night'],
   [5 * 60, 'Morning'],

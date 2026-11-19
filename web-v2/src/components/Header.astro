@@ -1,17 +1,16 @@
 ---
 /**
- * Navbar (Storyboard §5 audit: "tetap tampil di semua section + jam waktu-hari").
- * Lockup left; links, the time-of-day clock and one CTA right. The clock is driven by
- * src/scripts/clock.ts from each section's data-time / data-time-end.
- * Ink follows the section underneath (data-theme light | dark).
- * Final layout comes from HANDOFF-v2.md; this is the working shell.
+ * Navbar (HANDOFF-v2 §1.5, home-copy-v2 §0): lockup left; links, the time-of-day clock and the
+ * "Find your size" CTA (D-069) right. Mobile: lockup + clock + Menu button with a panel.
+ * Ink follows the surface under it (data-theme, set by story.ts).
  */
 import Logo from './Logo.astro';
-import { nav, sections } from '../content/sections';
+import { nav } from '../content/copy';
+import { sections } from '../content/sections';
 const first = sections[0];
 ---
 
-<header class="nav" data-nav data-theme={first.theme}>
+<header class="nav" data-nav data-theme="light">
   <div class="nav__inner">
     <a class="nav__home" href="#top" aria-label="Stillway, back to top"><Logo /></a>
 
@@ -23,50 +22,69 @@ const first = sections[0];
       </ul>
     </nav>
 
-    <div class="nav__end">
-      <p class="clock" aria-hidden="true">
-        <span class="clock__time" data-clock-time>{first.time}</span>
-        <span class="clock__part" data-clock-part>Morning</span>
-      </p>
-      <a class="nav__cta" href={nav.cta.href}>{nav.cta.label}</a>
-    </div>
+    <p class="clock" aria-hidden="true">
+      <span class="clock__time" data-clock-time>{first.time}</span>
+      <span class="clock__sep">·</span>
+      <span class="clock__part" data-clock-part>Morning</span>
+    </p>
+
+    <a class="nav__cta" href={nav.cta.href}>{nav.cta.label}</a>
+
+    <button
+      class="nav__menu"
+      type="button"
+      aria-expanded="false"
+      aria-controls="site-menu"
+      data-menu-toggle
+      data-open={nav.menu.open}
+      data-close={nav.menu.close}
+    >
+      <span data-menu-label>{nav.menu.open}</span>
+    </button>
+  </div>
+
+  <div class="menu" id="site-menu" data-menu hidden>
+    <ul class="menu__list">
+      {nav.links.map((l) => (
+        <li><a href={l.href}>{l.label}</a></li>
+      ))}
+    </ul>
+    <a class="menu__cta" href={nav.cta.href}>{nav.cta.label}</a>
   </div>
 </header>
 
 <style>
   .nav {
     --nav-ink: var(--ink);
-    --nav-line: var(--line);
     position: fixed;
     inset: 0 0 auto;
     z-index: 50;
-    height: var(--header-h);
     color: var(--nav-ink);
-    transition: color 0.4s var(--ease-out);
+    transition: color 0.45s var(--ease-out);
+    pointer-events: none;
   }
   .nav[data-theme='dark'] {
     --nav-ink: var(--paper);
-    --nav-line: var(--line-on-night);
   }
   .nav__inner {
-    height: 100%;
-    max-width: var(--max);
-    margin: 0 auto;
-    padding: 0 var(--gutter);
+    height: var(--header-h);
+    padding: 0 var(--margin);
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 28px;
+  }
+  .nav a,
+  .nav button {
+    pointer-events: auto;
   }
   .nav__home {
     text-decoration: none;
     font-size: 1.25rem;
-  }
-  .nav__links {
-    margin-left: auto;
+    margin-right: auto;
   }
   .nav__links ul {
     display: flex;
-    gap: 28px;
+    gap: 26px;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -79,26 +97,22 @@ const first = sections[0];
     text-decoration: underline;
     text-underline-offset: 4px;
   }
-  .nav__end {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-  }
   .clock {
     display: flex;
     align-items: baseline;
-    gap: 8px;
+    gap: 6px;
     font-family: var(--font-mono);
-    font-size: var(--fs-mono-lg);
+    font-size: var(--fs-mono);
     letter-spacing: var(--track-mono);
+    text-transform: uppercase;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
   .clock__time {
-    color: var(--ochre); /* live value = the one ochre element in the navbar */
+    color: var(--ochre);
   }
+  .clock__sep,
   .clock__part {
-    font-size: var(--fs-mono);
-    text-transform: uppercase;
     opacity: 0.65;
   }
   .nav__cta {
@@ -110,17 +124,74 @@ const first = sections[0];
     font-size: var(--fs-small);
     font-weight: var(--w-medium);
     white-space: nowrap;
+    transition: background-color 0.45s var(--ease-out), color 0.45s var(--ease-out);
   }
   .nav[data-theme='dark'] .nav__cta {
     color: var(--night);
   }
-  @media (max-width: 760px) {
-    .nav__links,
-    .nav__cta {
-      display: none; /* mobile menu: open item, see README */
+  .nav__menu {
+    display: none;
+    border: 1px solid currentColor;
+    background: none;
+    border-radius: var(--radius-pill);
+    padding: 7px 14px;
+    font-size: var(--fs-small);
+    cursor: pointer;
+  }
+  .menu {
+    position: fixed;
+    inset: var(--header-h) 0 auto;
+    padding: 24px var(--margin) 32px;
+    background: var(--paper);
+    color: var(--ink);
+    border-bottom: 1px solid var(--line);
+    pointer-events: auto;
+  }
+  .menu__list {
+    list-style: none;
+    margin: 0 0 24px;
+    padding: 0;
+  }
+  .menu__list a {
+    display: block;
+    padding: 12px 0;
+    font-size: 1.75rem;
+    font-weight: var(--w-light);
+    letter-spacing: var(--track-tight);
+    text-decoration: none;
+    border-bottom: 1px solid var(--line);
+  }
+  .menu__cta {
+    display: inline-block;
+    padding: 12px 20px;
+    border-radius: var(--radius-pill);
+    background: var(--ink);
+    color: var(--paper);
+    text-decoration: none;
+    font-weight: var(--w-medium);
+  }
+  :global(html.menu-open) .nav {
+    --nav-ink: var(--ink);
+  }
+  @media (max-width: 1023px) {
+    .nav__links {
+      display: none;
     }
-    .nav__end {
-      margin-left: auto;
+  }
+  @media (max-width: 719px) {
+    .nav__cta {
+      display: none;
+    }
+    .nav__menu {
+      display: inline-block;
+    }
+    .nav__inner {
+      gap: 14px;
+    }
+  }
+  @media (min-width: 720px) {
+    .menu {
+      display: none;
     }
   }
 </style>
