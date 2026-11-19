@@ -1,0 +1,116 @@
+---
+/** S03 Sleep summary scene. Motion: scripts/sections/sleep.ts. Layout: HANDOFF-v2 §2 S03 [U]. */
+import { sleep } from '../../content/copy';
+/** "7h 12m" → numbers + small raised units (Sensiq number tile ref); "23:10" stays whole */
+const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].map((m) => ({ text: m[0], unit: !!m[2] }));
+---
+
+<section class="scene scene--sleep" data-scene="sleep" aria-labelledby="sleep-title">
+  <img class="ring-fallback ring-fallback--sleep" src="/ring-fallback/fb-s03-rim.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
+  <div class="scene__front">
+    <p class="sleep__kicker t-mono" data-s-kicker data-a aria-hidden="true">{sleep.kicker}</p>
+    <div class="sleep__col">
+      <h2 id="sleep-title" class="sleep__head" data-s-head data-a>{sleep.headline}</h2>
+      <dl class="sleep__stats">
+        {
+          sleep.stats.map((s) => (
+            <div class="stat" data-s-stat data-a>
+              <dt class="stat__tag t-tag">{s.tag}</dt>
+              <dd class="stat__value" aria-label={s.sr}>
+                {split(s.value).map((t) => (t.unit ? <span class="stat__unit">{t.text}</span> : t.text))}
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+      <div class="sleep__foot" data-s-foot data-a>
+        <p class="sleep__line">{sleep.line}</p>
+        <p class="t-mono sleep__sim">{sleep.simulated}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .scene--sleep {
+    color: var(--paper);
+    --stone: var(--stone-on-night);
+  }
+  .sleep__kicker {
+    position: absolute;
+    left: 50%;
+    bottom: 14vh;
+    translate: -50% 0;
+    color: var(--stone);
+  }
+  .sleep__col {
+    position: absolute;
+    left: calc(var(--margin) + (100vw - 2 * var(--margin)) * 7 / 12);
+    right: var(--margin);
+    top: 50%;
+    translate: 0 -50%;
+    display: grid;
+    gap: 28px;
+  }
+  .sleep__head {
+    font-size: var(--fs-h3);
+    font-weight: var(--w-light);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .sleep__stats {
+    margin: 0;
+    display: grid;
+    gap: 22px;
+  }
+  .stat {
+    display: grid;
+    gap: 4px;
+  }
+  .stat__tag {
+    color: var(--stone);
+    transition: color 0.3s ease;
+  }
+  .stat:global(.is-active) .stat__tag {
+    color: var(--ochre);
+  }
+  .stat__value {
+    margin: 0;
+    font-size: var(--fs-number);
+    font-weight: var(--w-light);
+    letter-spacing: -0.03em;
+    line-height: 0.9;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat__unit {
+    font-size: 0.34em;
+    vertical-align: 1.45em;
+    margin-left: 0.04em;
+    letter-spacing: 0;
+  }
+  .sleep__foot {
+    display: grid;
+    gap: 6px;
+  }
+  .sleep__line {
+    font-size: var(--fs-small);
+  }
+  .sleep__sim {
+    color: var(--stone);
+  }
+  @media (max-width: 719px) {
+    .sleep__col {
+      left: var(--margin);
+      top: auto;
+      bottom: 24px;
+      translate: none;
+      gap: 14px;
+    }
+    .sleep__stats {
+      gap: 10px;
+    }
+    .sleep__kicker {
+      bottom: 30svh;
+    }
+  }
+</style>

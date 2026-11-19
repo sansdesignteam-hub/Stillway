@@ -1,0 +1,39 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Stage from '../components/Stage.astro';
+import Hero from '../components/scenes/Hero.astro';
+import Why from '../components/scenes/Why.astro';
+import Sleep from '../components/scenes/Sleep.astro';
+import Placeholder from '../components/scenes/Placeholder.astro';
+import { sections } from '../content/sections';
+
+const built: Record<string, any> = { hero: Hero, why: Why, sleep: Sleep };
+const len = (i: number) => {
+  const d = sections[i];
+  return d.tin + d.states - 1 + d.hold + (i === sections.length - 1 ? 1 : 0);
+};
+---
+
+<Base>
+  <Header />
+  <Stage>
+    {
+      sections.map((def) => {
+        const C = built[def.id];
+        return C ? <C /> : <Placeholder def={def} />;
+      })
+    }
+  </Stage>
+
+  <!-- Scroll length + anchors. Content lives on the fixed stage (story.ts). -->
+  <div class="tracks" aria-hidden="true">
+    {sections.map((def, i) => <div class="track" id={def.id} data-tin={def.tin} style={`--len:${len(i)}`} />)}
+  </div>
+  <div class="vh-probe" data-vh></div>
+</Base>
+
+<script>
+  import { initMotion } from '../scripts/motion';
+  initMotion();
+</script>

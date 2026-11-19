@@ -1,0 +1,73 @@
+/*
+ * Stillway V2 tokens — Moodboard.md §2–§3 (Figma "Website AI - 1 Ring", Moodboard).
+ * Five colours and nothing else. Derivatives are mixes of those five, not new colours.
+ * Page proportion: Paper ±45% · Night ±30% · Sand ±15% · Ink ±8% · Ochre ≤ 2%.
+ */
+:root {
+  /* 2.1 palette */
+  --paper: #f7f5f0; /* light background */
+  --sand: #efe6db; /* second light background: tiles, cards, panels, chips */
+  --ink: #231f20; /* text + primary button on light */
+  --night: #17120f; /* dark background */
+  --ochre: #b76f20; /* the only accent: labels, [ tags ], active chip, progress, live data, glow. Never a full background, never the primary button */
+
+  /* 2.2 derivatives */
+  --stone: rgb(35 31 32 / 0.65); /* ink 65%: secondary text, captions (≈ #6B645C on paper) */
+  --line: rgb(35 31 32 / 0.12); /* ink 12%: dividers, card borders (≈ #DBD5CC on paper) */
+  --stone-on-night: rgb(247 245 240 / 0.65); /* paper 65% on night (same rule, flipped) */
+  --line-on-night: rgb(247 245 240 / 0.12);
+  /* glows: one shape per section, behind the ring, never on top of it */
+  --dawn-glow: radial-gradient(closest-side, rgb(183 111 32 / 0.35), rgb(183 111 32 / 0)); /* on paper */
+  --ember-glow: radial-gradient(closest-side, rgb(183 111 32 / 0.4), rgb(183 111 32 / 0)); /* on night, from above */
+  --glow-blur: 60px;
+  --dusk: linear-gradient(180deg, var(--ochre) 0%, var(--night) 100%); /* only Daily insight (17:30) */
+
+  /* 2.3 product LED colours — ring render + small legend/chip dots only.
+     Never text, background, buttons or UI charts. */
+  --led-heart-rate: #34e07a; /* green · day · heart rate */
+  --led-sleep: #3b8cff; /* blue · night · sleep */
+  --led-recovery: #a06bff; /* violet · morning · recovery / HRV */
+  --led-off: #ff3b30; /* red · ring off (one line of copy) */
+
+  /* footer logo hover shine (Storyboard §2, Section 11) — a sweep, not a UI colour */
+  --shine-cream: #e9dcc8;
+  --shine-amber: #f4c98e;
+
+  /* 3 typography: Geist + Geist Mono (Option A) */
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --w-light: 300; /* headlines, big numbers */
+  --w-regular: 400; /* body, data cards */
+  --w-medium: 500; /* CTA, wordmark */
+  --track-tight: -0.03em; /* headlines + wordmark */
+  --track-mono: 0.08em; /* [ tags ], clock, live values */
+
+  /* type scale (HANDOFF-v2 §1.2 [U]; desktop 1440 → mobile 390) */
+  --fs-giant: clamp(7rem, 24vw, 23rem); /* hero wordmark, "rhythm", "keeps the pattern." */
+  --fs-display: clamp(2.75rem, 1.6rem + 4.6vw, 6rem); /* 44 → 96 px */
+  --fs-number: clamp(3.5rem, 2.2rem + 5.4vw, 7rem); /* 56 → 112 px */
+  --fs-h3: clamp(1.375rem, 1.1rem + 1vw, 2rem); /* 22 → 32 px */
+  --fs-h2m: 2.25rem; /* mobile big sentence in S02 */
+  --fs-body: clamp(1rem, 0.95rem + 0.15vw, 1.125rem); /* 16 → 18 px */
+  --fs-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem); /* 13 → 14 px */
+  --fs-mono: clamp(0.75rem, 0.73rem + 0.08vw, 0.8125rem); /* 12 → 13 px */
+  --fs-mono-lg: 0.875rem;
+
+  /* layout (HANDOFF-v2 §1.3 [U]) */
+  --margin: clamp(16px, 2.8vw, 40px);
+  --gutter: clamp(12px, 1.4vw, 20px);
+  --header-h: 76px; /* V1 navbar (D-075): 52 px bar + 12 px inset */
+  --radius-s: 8px;
+  --radius-m: 16px;
+  --radius-pill: 999px;
+
+  /* motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-shine: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --fade-reduced: 300ms; /* reduced motion: every state is a short fade (Storyboard §1) */
+}
+@media (max-width: 760px) {
+  :root {
+    --header-h: 60px;
+  }
+}

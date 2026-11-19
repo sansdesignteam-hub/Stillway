@@ -1,0 +1,46 @@
+---
+/** Sections not built yet: dashed label only. */
+import type { SectionDef } from '../../content/sections';
+interface Props {
+  def: SectionDef;
+}
+const { def } = Astro.props;
+const dark = def.bg === 'night' || def.bg === 'dusk';
+---
+
+<section class:list={['scene', dark && 'scene--dark']} data-scene={def.id} aria-label={def.name}>
+  <div class="scene__front">
+    <div class="ph" data-ph data-a>
+      <span class="t-mono">Section {def.n} · not built yet</span>
+      <span class="ph__name">{def.name}</span>
+      <span class="t-mono">{def.time}{def.timeEnd ? ` → ${def.timeEnd}` : ''}</span>
+    </div>
+  </div>
+</section>
+
+<style>
+  .scene--dark {
+    color: var(--paper);
+    --stone: var(--stone-on-night);
+    --line: var(--line-on-night);
+  }
+  .ph {
+    position: absolute;
+    left: var(--margin);
+    right: var(--margin);
+    bottom: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    align-items: baseline;
+    justify-content: space-between;
+    border-top: 1px dashed var(--line);
+    padding-top: 16px;
+    color: var(--stone);
+  }
+  .ph__name {
+    font-size: var(--fs-h3);
+    font-weight: var(--w-light);
+    letter-spacing: -0.02em;
+  }
+</style>

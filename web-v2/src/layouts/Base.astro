@@ -1,0 +1,57 @@
+---
+import '@fontsource-variable/geist/index.css';
+import '@fontsource-variable/geist-mono/index.css';
+import 'lenis/dist/lenis.css';
+import '../styles/global.css';
+import '../styles/nav.css';
+import { meta } from '../content/sections';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+const { title = meta.title, description = meta.description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <!-- Concept project (D-025): keep it out of search indexes. -->
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#F7F5F0" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline>
+      // .js: scripts run. .reduced: the visitor asked for less motion, every state becomes a
+      // ±300 ms fade. .motion-ready: motion will run; removed after 2.5 s if motion.ts never
+      // starts, so nothing stays hidden.
+      (function () {
+        var d = document.documentElement;
+        d.classList.add('js');
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          d.classList.add('reduced');
+        } else {
+          d.classList.add('motion-ready');
+          setTimeout(function () {
+            if (!window.__stillwayMotion) d.classList.remove('motion-ready');
+          }, 2500);
+        }
+      })();
+    </script>
+    <noscript>
+      <style>
+        .stage { position: static; height: auto; }
+        .stage__scenes { position: static; height: auto; }
+        .scene { position: relative; min-height: 100svh; }
+        .tracks, .stage__ring, .rail { display: none; }
+      </style>
+    </noscript>
+  </head>
+  <body id="top">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <slot />
+  </body>
+</html>

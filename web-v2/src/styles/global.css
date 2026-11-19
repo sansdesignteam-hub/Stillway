@@ -1,0 +1,217 @@
+@import './tokens.css';
+
+/* ---------- base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-weight: var(--w-regular);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+img,
+svg,
+canvas,
+video {
+  display: block;
+  max-width: 100%;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+a {
+  color: inherit;
+}
+button {
+  font: inherit;
+  color: inherit;
+}
+:focus-visible {
+  outline: 2px solid var(--ochre);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: -60px;
+  z-index: 100;
+  padding: 10px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--paper);
+  text-decoration: none;
+}
+.skip-link:focus {
+  top: 12px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- type roles (Moodboard §3) ---------- */
+.t-display {
+  font-weight: var(--w-light);
+  letter-spacing: var(--track-tight);
+  line-height: 0.98;
+}
+.t-display {
+  font-size: var(--fs-display);
+}
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+  letter-spacing: var(--track-mono);
+  text-transform: uppercase;
+}
+.t-tag {
+  /* [ TAG ] */
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+  letter-spacing: var(--track-mono);
+  text-transform: uppercase;
+  color: var(--ochre);
+}
+.t-tag::before {
+  content: '[ ';
+}
+.t-tag::after {
+  content: ' ]';
+}
+.t-caption {
+  font-size: var(--fs-small);
+  color: var(--stone);
+}
+
+/* ---------- shared bits ---------- */
+.giant {
+  font-size: var(--fs-giant);
+  font-weight: var(--w-light);
+  letter-spacing: -0.04em;
+  line-height: 0.85;
+  white-space: nowrap;
+  color: rgb(35 31 32 / var(--giant-o, 0.1));
+  user-select: none;
+}
+.link-arrow {
+  justify-self: start;
+  font-weight: var(--w-medium);
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 6px;
+  pointer-events: auto;
+}
+.link-arrow:hover {
+  text-decoration-color: currentColor;
+}
+
+/* ---------- stage scenes (see Stage.astro for the layer order) ---------- */
+.scene {
+  position: absolute;
+  inset: 0;
+  /* no z-index, opacity or transform here: the ring must be able to sit between the layers */
+}
+.scene__back,
+.scene__front {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.scene__back {
+  z-index: 1;
+}
+.scene__front {
+  z-index: 3;
+}
+.scene a,
+.scene button {
+  pointer-events: auto;
+}
+/* until story.ts runs, only the hero shows (no JS: everything stacks, see .no-story) */
+html.js .scene [data-a] {
+  opacity: 0;
+}
+html.js .scene--hero [data-a] {
+  opacity: 1;
+}
+
+/* ---------- ring stills (3D fallback/): between the back and front layers ---------- */
+.ring-fallback {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  width: min(44vw, 82vh);
+  height: auto;
+  translate: -50% -50%;
+  pointer-events: none;
+}
+html.ring-ready .ring-fallback {
+  display: none;
+}
+.ring-fallback--sleep {
+  left: 25%;
+  width: min(52vw, 82vh);
+}
+@media (max-width: 719px) {
+  .ring-fallback {
+    width: 96vw;
+    top: 36%;
+  }
+  .ring-fallback--sleep {
+    left: 50%;
+    top: 30%;
+    width: 80vw;
+  }
+}
+
+/* ---------- tracks: scroll length + anchors ---------- */
+.track {
+  height: calc(var(--len) * 100svh);
+}
+.vh-probe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100svh;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ---------- reduced motion ----------
+   Every state appears with a short fade instead of movement (Storyboard §1). story.ts snaps
+   opacity to 0/1 and never writes transforms; this transition makes the fade. */
+html.reduced .scene [data-a] {
+  transition: opacity var(--fade-reduced) ease, visibility var(--fade-reduced);
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}

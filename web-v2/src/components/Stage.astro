@@ -1,0 +1,86 @@
+---
+/**
+ * The fixed stage (D-063). Layers, back to front:
+ *   bg (section colour, cross-faded by story.ts) · dusk overlay
+ *   scene back layers (giant words, glow)  — z 1
+ *   the WebGL ring canvas                   — z 2
+ *   scene front layers (copy, numbers)      — z 3
+ *   rail                                    — z 4
+ * Scenes must never get opacity/transform themselves (that would create a stacking context and
+ * pull their back text in front of the ring); story.ts animates their children only.
+ */
+---
+
+<div class="stage">
+  <div class="stage__bg" data-bg></div>
+  <div class="stage__dusk" data-dusk></div>
+  <canvas class="stage__ring" data-ring-canvas aria-hidden="true"></canvas>
+  <main id="main" class="stage__scenes" tabindex="-1">
+    <slot />
+  </main>
+  <div class="rail" aria-hidden="true"><span class="rail__dot" data-rail-dot></span></div>
+</div>
+
+<style>
+  .stage {
+    position: fixed;
+    inset: 0;
+    height: 100lvh;
+    pointer-events: none;
+  }
+  .stage__bg,
+  .stage__dusk {
+    position: absolute;
+    inset: 0;
+    background: var(--paper);
+  }
+  .stage__dusk {
+    background: var(--dusk);
+    opacity: 0;
+  }
+  .stage__ring {
+    position: absolute;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+  :global(html.ring-ready) .stage__ring {
+    transition: none;
+  }
+  .stage__scenes {
+    position: absolute;
+    inset: 0;
+    height: 100svh;
+    outline: none;
+  }
+  .rail {
+    position: absolute;
+    z-index: 4;
+    right: calc(var(--margin) / 2);
+    top: 30vh;
+    height: 40vh;
+    width: 1px;
+    background: var(--line);
+    container-type: size;
+  }
+  .rail__dot {
+    position: absolute;
+    left: -2.5px;
+    top: -3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ochre);
+  }
+  :global(html[data-surface='dark']) .rail {
+    background: var(--line-on-night);
+  }
+  @media (max-width: 719px) {
+    .rail {
+      display: none;
+    }
+  }
+</style>
