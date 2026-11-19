@@ -109,6 +109,7 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
   /** snap to whole states for reduced motion; connections switch at their middle */
   const snap = (it: Item, u: number) => {
     if (!reduced) return u;
+    if (u < -it.def.tin) return -99; // not reached yet: nothing of it shows
     if (u < 0) return u < -it.def.tin / 2 ? -it.def.tin : 0;
     if (u > it.end) return u - it.end < 0.15 ? it.end : it.end + 1; // leaving: fully out
     return Math.min(it.def.states - 1, Math.round(u));
