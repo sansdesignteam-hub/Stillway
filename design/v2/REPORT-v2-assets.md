@@ -119,3 +119,9 @@ Kartu Night juga menjadi tujuan transisi S06 → S07 ("kartu yang sama kembali s
 - U-E: Pose tangan S06 = tangan kiri C-02, punggung tangan ke kamera, telunjuk tegak; ring berhenti di pangkal telunjuk dengan logo vertikal menghadap kamera.
 - U-F: Logo di foto AI harus bersih atau tidak terlihat; logo acak diganti dengan tempelan dari render acuan.
 - U-G: Adegan kartu S07: Night (selimut, lampu meja), Desk (keyboard), Move (tali sepatu), Rinse (wastafel). Everyday = studio dengan C-02 duduk di sepertiga kanan.
+
+---
+
+## Pembaruan 19 Nov 2026: produksi selesai (D-071–D-073)
+
+Semua aset A-1 sampai A-4 sudah dibuat dan tersimpan di `design/assets/v2/`. Status, acuan yang dipakai per foto, prompt retouch, dan koordinat sumbu telunjuk untuk 3D Designer ada di `design/assets/v2/README.md`. Koreksi prompt: logo di jari terbaca **horizontal** (D-072), dan ibu jari tangan kiri dilihat dari punggung ada di kanan gambar.
