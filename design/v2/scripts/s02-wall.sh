@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# S02 soft shadow wall, option B warm Paper (D-088). Usage: s02-wall.sh REF.png [suffix]
+set -euo pipefail
+G="$(cd "$(dirname "$0")/../../assets/v1/scripts" && pwd)/genref.sh"
+cd "$(dirname "$0")/../../.."
+REF="$1"; SUF="${2:-}"; W=design/assets/v2/s02/_work
+BASE="Real photograph of a plain smooth matte plaster wall painted a warm off-white cream (like paper, hex #F7F5F0), in the same style as the attached reference but warmer: soft warm early-morning sunlight through a window casts the shadows of palm fronds onto the wall, plus a soft rectangle of brighter window light. The palm-frond shadows are clearly readable as long leaflet shapes but SOFT and LOW CONTRAST: blurred edges, light warm grey-beige, never darker than about 15 percent below the wall tone. Calm, minimal, airy, warm. No people, no objects, no furniture, no floor line, no text, no logo, no frame, no vignette."
+"$G" "$BASE Horizontal 16:9 website background: one real green palm frond enters from the TOP RIGHT corner, gently out of focus, filling only the top-right fifth of the frame; its soft shadows sweep diagonally along the top edge toward the left and down the right side; the window-light rectangle sits on the right third. The CENTRE, the whole middle horizontal band and the lower half are clean, evenly lit cream wall with only the faintest trace of shadow, because large dark text and a ring will sit there." "$W/B-desktop-raw$SUF.png" --size 1536x864 --ref "$REF" &
+"$G" "$BASE Vertical 9:16 phone website background: one real green palm frond enters from the TOP RIGHT corner, gently out of focus, filling only the top-right fifth of the frame; its soft shadows sweep across the top quarter and a little down the right edge; the window-light rectangle at the upper right. The middle and the lower two thirds are clean, evenly lit cream wall with only the faintest trace of shadow, because large dark text and a ring will sit there." "$W/B-mobile-raw$SUF.png" --size 864x1536 --ref "$REF" &
+wait
