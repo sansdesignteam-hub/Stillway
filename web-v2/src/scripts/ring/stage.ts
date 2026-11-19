@@ -47,7 +47,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const camera = new THREE.PerspectiveCamera(FOV, 1, 1, 40000);
 
   const pmrem = new THREE.PMREMGenerator(renderer);
-  const envs: { paper?: THREE.Texture; night?: THREE.Texture } = {};
+  const envs: { paper?: THREE.Texture; night?: THREE.Texture; photo?: THREE.Texture } = {};
   const loadEnv = (url: string) =>
     new EXRLoader().loadAsync(url).then((t) => {
       t.mapping = THREE.EquirectangularReflectionMapping;
@@ -60,9 +60,27 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   } catch {
     /* no env: the ring still renders, darker */
   }
+  // the hero photograph as an equirect environment (V1 heroRing approach): the silver reflects moss and sun
+  // Desaturated so the brushed silver stays silver (the raw warm photo turned it gold).
+  try {
+    const img = await new THREE.ImageLoader().loadAsync(RING_MODEL.env.photo);
+    const c = document.createElement('canvas');
+    c.width = img.width;
+    c.height = img.height;
+    const g = c.getContext('2d')!;
+    g.filter = 'saturate(30%) brightness(118%) contrast(108%)';
+    g.drawImage(img, 0, 0);
+    const tex = new THREE.CanvasTexture(c);
+    tex.mapping = THREE.EquirectangularReflectionMapping;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    envs.photo = pmrem.fromEquirectangular(tex).texture;
+    tex.dispose();
+  } catch {
+    /* falls back to paper */
+  }
   // night env after the first paint of the ring
-  setTimeout(() => loadEnv(RING_MODEL.env.night).then((e) => ((envs.night = e), (lastLight = -1))).catch(() => {}), 300);
-  scene.environment = envs.paper ?? null;
+  setTimeout(() => loadEnv(RING_MODEL.env.night).then((e) => ((envs.night = e), (lastEnv = ''))).catch(() => {}), 300);
+  scene.environment = envs.photo ?? envs.paper ?? null;
 
   const pivot = new THREE.Group(); // position, scale, view rotation
   const spinner = new THREE.Group(); // spin about the ring's own axis (model Z)
@@ -110,25 +128,34 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const rollQ = new THREE.Quaternion();
   const Z_AXIS = new THREE.Vector3(0, 0, 1);
   let lastAlpha = -1;
-  let lastLight = -1;
+  let lastEnv = '';
+  let lastLed = 0;
   const apply = (p: Pose, extra: { breathe?: number } = {}) => {
     // width: fraction of viewport width, but never taller than 82% of the viewport
-    const w = Math.min(p.w * W, H * 0.82) * (1 + (extra.breathe ?? 0));
+    const raw = p.w * W;
+    const w = (Math.min(raw, H * 0.82) * (1 - p.uncap) + raw * p.uncap) * (1 + (extra.breathe ?? 0));
     pivot.position.set(p.x * W, p.y * H, 0);
     pivot.scale.setScalar(w / ringSize);
     pivot.rotation.set(p.rx, p.ry, p.rz, 'YXZ');
     if (p.roll) pivot.quaternion.premultiply(rollQ.setFromAxisAngle(Z_AXIS, p.roll));
     spinner.rotation.z = p.spin;
 
+    // env: night when light ≥ .5, else photo when photo ≥ .5, else paper; intensity dips around a swap
     const n = Math.min(1, Math.max(0, p.light));
-    if (n !== lastLight) {
-      lastLight = n;
-      const night = n >= 0.5 && envs.night;
-      scene.environment = (night ? envs.night : envs.paper) ?? null;
-      // dip around the swap so it never pops: 1 → 0.15 → 1
-      scene.environmentIntensity = 0.15 + 0.85 * Math.min(1, Math.abs(n - 0.5) * 2.5);
+    const ph = Math.min(1, Math.max(0, p.photo));
+    const key = n >= 0.5 && envs.night ? 'night' : ph >= 0.5 && envs.photo ? 'photo' : 'paper';
+    if (key !== lastEnv) {
+      lastEnv = key;
+      scene.environment = envs[key] ?? envs.paper ?? null;
+      scene.environmentRotation = new THREE.Euler(0, key === 'photo' ? Math.PI * 0.6 : 0, 0);
     }
+    const dip = Math.min(1, Math.abs(n - 0.5) * 2.5, Math.abs(ph - 0.5) * 2.5);
+    scene.environmentIntensity = (0.15 + 0.85 * dip) * (key === 'photo' ? 1.7 : 1); // the photo env is darker than the studio EXRs
 
+    if (Math.abs(p.led - lastLed) > 0.001) {
+      lastLed = p.led;
+      setLed(p.led > 0.01 ? '#34E07A' : null, RING_MODEL.ledIntensity * p.led);
+    }
     if (p.alpha !== lastAlpha) {
       lastAlpha = p.alpha;
       canvas.style.opacity = String(p.alpha);

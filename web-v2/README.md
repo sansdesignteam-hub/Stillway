@@ -56,6 +56,19 @@ living on the stage, and `src/scripts/story.ts` drives it from the scroll positi
   opacity fade (`html.reduced [data-a]`), no breathing loop.
 - Without JS: `<noscript>` styles stack the scenes as normal sections.
 
+## S01 Hero (D-080)
+
+V1 hero look (moss photo, STILLWAY wordmark, tagline / features / $299, statement, scroll line; copied
+from `web/`, which stays untouched) with the V2 ring. Scroll: text slides out → ring zooms in turning
+until the sensors and the green light show, while the photo zooms OUT (Oryzo pattern) → ring zooms out
+to the S02 start pose while the photo fades to Paper. The ring follows the mouse in state 1 (fine pointer
+≥ 720 px). Ring env: V1 hero photo (desaturated) in S01, paper studio from the fade on.
+
+- Background: `public/hero/*.webp` (Visual Director outpaint, 72973fa); settings in `src/content/heroBg.ts`
+  (the original photo rect covers the viewport like V1 at scale 1; zoom out to 0.55 desktop / 0.5 mobile).
+- Motion and poses: `src/scripts/sections/hero.ts`; scene: `src/components/scenes/Hero.astro`.
+- Review shots + transition sequence/video: `docs/screens/s01-d080/`.
+
 ## Navbar (D-075)
 
 V1 style copied from `web/` (wordmark · round home tile · one translucent rounded bar with dividers ·

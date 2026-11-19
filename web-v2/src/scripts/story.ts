@@ -30,6 +30,8 @@ export interface SectionMotion {
   init?: (root: HTMLElement) => void;
   update?: (u: number, ctx: Ctx, root: HTMLElement) => void;
   ring?: (u: number, ctx: Ctx) => Pose;
+  /** navbar theme override for u (S01 over the photograph uses 'photo'); null = from the background */
+  theme?: (u: number) => 'photo' | 'light' | 'dark' | null;
   /** custom ring path across the incoming connection, x in [0, 1]; default = lerp in 30–70% */
   ringIn?: (x: number, ctx: Ctx, from: Pose, to: Pose) => Pose;
 }
@@ -131,10 +133,13 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     /* still poster of the ring (3D fallback/): while WebGL loads, if it fails, and for reduced motion */
     if (!ring) {
       items.forEach((it) => {
-        const f = it.scene.querySelector<HTMLElement>('[data-ring-fallback]');
-        if (!f) return;
         const uu = snap(it, (y - it.top) / vh - it.def.tin);
-        put(f, { o: window4(uu, -0.4, -0.05, it.end + 0.1, it.end + 0.5) }, ctx);
+        it.scene.querySelectorAll<HTMLElement>('[data-ring-fallback]').forEach((f) => {
+          // optional data-fb-range="a,b": the still shows only for states a..b (S01 has three)
+          const r = f.dataset.fbRange?.split(',').map(Number);
+          const [a, b] = r ?? [0, it.end];
+          put(f, { o: window4(uu, a - 0.4, a - 0.05, b + 0.1, b + 0.5) }, ctx);
+        });
       });
     }
 
@@ -157,7 +162,7 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     const duskW = (prev && inConn && prev.def.bg === 'dusk' ? 1 - k : 0) + (cur.def.bg === 'dusk' ? k : 0);
     duskEl.style.opacity = duskW.toFixed(3);
     const darkW = (prev && inConn && isDark(prev.def.bg) ? 1 - k : 0) + (isDark(cur.def.bg) ? k : 0);
-    const theme = darkW > 0.5 ? 'dark' : 'light';
+    const theme = (!inConn && cur.m.theme?.(u)) || (darkW > 0.5 ? 'dark' : 'light');
     if (nav && nav.dataset.theme !== theme) nav.dataset.theme = theme;
     document.documentElement.dataset.surface = theme;
 

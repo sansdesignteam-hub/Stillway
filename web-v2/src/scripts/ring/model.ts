@@ -26,5 +26,6 @@ export const RING_MODEL = {
   env: {
     paper: '/env/v2-env-paper.exr', // S01, S02
     night: '/env/v2-env-night.exr', // S03
+    photo: '/env/hero-env.jpg', // S01 over the moss photograph (V1 approach, D-080)
   },
 } as const;
