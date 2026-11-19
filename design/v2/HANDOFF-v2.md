@@ -1,7 +1,26 @@
 # Handoff visual V2 — Stillway Home (`web-v2/`)
 
 Dari: Visual Director · Untuk: Developer (juga 3D Designer dan Strategy Director) · 19 November 2026
-Status dokumen: **draf handoff**. Dasar: D-059, D-060.
+Status dokumen: **handoff rev 2** (19 Nov 2026), diperbarui sesuai D-061–D-070. Dasar: D-059, D-060, D-061–D-070.
+
+### Keputusan yang sudah disetujui dan berlaku di handoff ini
+
+| ID | Ringkas | Bagian |
+|---|---|---|
+| D-061 | Logo di ring = **teks "Stillway" saja**, engrave tone-on-tone, vertikal mengikuti band (ref `design/v2/references/ring-logo-engrave-ref.png` di checkout main) | §1.4, §5 |
+| D-062 | Lampu hanya di **jendela A** (hijau/biru/ungu); merah hanya menandai ring mati | S08, §5 |
+| D-063 | **Satu canvas WebGL `position: fixed`**, satu ring, pose per section dari timeline scroll | §3 |
+| D-064 | Aset V2 = **studio Paper/Sand**; moss rock V1 tidak dipakai (termasuk Everyday S07), kecuali 5 foto C-02 di S04 | §4, §5 |
+| D-065 | Aset baru diproduksi Visual Director (`gpt-image-bridge`), karakter **C-02**, setelah render acuan ring berlogo | §6 |
+| D-066 | Copy V2 = `context/home-copy-v2.md` (branch Strategic-Content). **Readiness 82 dihapus** dari S09. Data simulasi + durasi S04 (walk 25, stretch 15, stairs 20 min) disetujui | S04, S09 |
+| D-067 | Spesifikasi tampil **tanpa `*` / label Illustrative**: 7 hari, 100 m, 4 g / 2,6 mm, ukuran 6–13, iPhone & Android, $299. Disclaimer concept project di footer tetap | S07, S10 |
+| D-068 | "30-night trial" dan FAQ retur = kebijakan konsep | S11 |
+| D-069 | CTA "Find your size" (navbar, S11) → S10; tombol S10 "Choose {finish} · $299" hanya memunculkan catatan concept; finish **hanya klik swatch**; footer **tanpa form/newsletter/share**; mobile tetap pin + scrub, S07 & S09 lebih ringan, ring tetap 3D, S10 swipe | §1.5, S07, S09, S10, S11, Mobile |
+| D-070 | Vercel `stillway-v2` setelah S01–S03; file 3D V2 di `design/3d/v2/` | §5 |
+
+Bagian yang mengikuti keputusan di atas ditandai **[D-0xx disetujui]**. Label [U] yang tersisa tetap usulan.
+
+Catatan label "Simulated data": D-067 hanya membebaskan **angka spesifikasi produk** dari tanda `*`/Illustrative. Angka app/tidur (S03, S04, S05, S09) tetap memakai "Simulated data" (home-copy-v2).
 
 ## 0. Cara membaca
 
@@ -22,8 +41,8 @@ Label status di setiap baris:
 Catatan penting tentang Figma: Storyboard 2 berisi **panel storyboard per state** (thumbnail ±420 px dengan catatan), **bukan** frame layout 1440 / 390 yang siap diukur. Jadi semua angka posisi/ukuran di §2 yang tidak bertanda [F] adalah usulan [U] yang diturunkan dari komposisi panel. Figma juga **tidak punya variables/styles** (`get_variable_defs` kosong); token di §1 diambil dari teks Moodboard dan swatch Branding.
 
 Aturan umum yang tetap berlaku:
-- Semua teks di website berbahasa Inggris (D-021). Copy final dari Strategy Director; copy di dokumen ini = draf dari Storyboard.
-- Angka produk/app = contoh. Tampilkan label **"Simulated data"** atau tanda `*` seperti di Storyboard. Jangan menambah klaim kesehatan.
+- Semua teks di website berbahasa Inggris (D-021). **Sumber copy = `context/home-copy-v2.md` [D-066 disetujui]**; copy yang dikutip di dokumen ini hanya penunjuk layout. Jika berbeda, ikuti home-copy-v2.
+- Angka app/tidur = contoh → label **"Simulated data"**. Angka spesifikasi produk tampil tanpa `*` [D-067 disetujui]. Jangan menambah klaim kesehatan.
 - `web/` (V1) dibekukan. Modul/aset V1 boleh **disalin** ke `web-v2/`, tidak boleh diubah di tempat (D-059).
 
 ---
@@ -59,7 +78,7 @@ Palet UI hanya 5 warna. Tidak ada warna lain di UI.
 |---|---|
 | Kontras | Teks di Paper/Sand = Ink. Teks di Night = Paper. |
 | Ochre | Label, tag `[ ]`, chip aktif, progress, nilai live, scroll marker, glow. **Tidak pernah** background penuh, **tidak pernah** warna tombol utama. |
-| LED | Hanya (a) cahaya di render ring S08, (b) titik 6 px di legenda S08 dan chip/kartu S09. Tidak untuk teks, bg, tombol, grafik UI. Pengecualian [F]: grafik di layar app S09 memakai warna lampu (grafik HR hijau, tahap tidur biru, bar HRV ungu) — terlihat di panel Figma. |
+| LED | Hanya (a) cahaya di **jendela A** ring [D-062 disetujui], (b) titik 6 px di legenda S08 dan chip/kartu S09. `--led-off` hanya untuk titik kecil di baris "Red means it's off." (tidak menyala di 3D). Tidak untuk teks, bg, tombol, grafik UI. Pengecualian [F]: grafik di layar app S09 memakai warna lampu (grafik HR hijau, tahap tidur biru, bar HRV ungu) — terlihat di panel Figma. |
 | Dilarang | Biru, kuning, lime, peach, atau warna tambahan di UI. |
 
 Gradient/glow [F] (rumus dari Moodboard §2.2; nilai CSS-nya [U]):
@@ -125,18 +144,24 @@ Figma tidak mendefinisikan grid, spacing, atau radius sebagai token. Yang terlih
 --ease-shine: cubic-bezier(.22, .61, .36, 1); /* [F] hover logo */
 ```
 
-### 1.4 Logo [F]
+### 1.4 Logo
 
-- Lockup: **ring mark** (lingkaran tipis = band dilihat dari depan; tebal stroke [U] ±8% diameter, ukur ulang dari frame Branding) dengan **titik ochre** di posisi jam 12 (= jendela sensor) + wordmark **"Stillway"** Geist Medium −3%.
-- Satu lockup untuk navbar, footer (selebar layar, sedikit terpotong di bawah, dengan hover shine), dan engraving tone-on-tone di sisi luar ring.
-- Belum ada file SVG di Figma (hanya digambar di frame Branding). **[U]** Developer membuat `logo.svg` dari Geist Medium (teks di-outline) + `<circle>`; Visual Director memeriksa sebelum dipakai di footer.
+**Di web (navbar, footer) [F]:** lockup **ring mark** (lingkaran tipis = band dilihat dari depan; tebal stroke [U] ±8% diameter, ukur ulang dari frame Branding) dengan **titik ochre** di posisi jam 12 + wordmark **"Stillway"** Geist Medium −3%. Footer: selebar layar, sedikit terpotong di bawah, dengan hover shine. Belum ada file SVG di Figma; **[U]** Developer membuat `logo.svg` dari Geist Medium (teks di-outline) + `<circle>`, Visual Director memeriksa.
+
+**Di ring [D-061 disetujui]:** **teks "Stillway" saja, tanpa ring mark.** Mengikuti `design/v2/references/ring-logo-engrave-ref.png`:
+- teks dibaca **vertikal**, searah lebar band (tegak lurus keliling), di sisi luar ring;
+- **terukir/emboss tone-on-tone** di permukaan brushed: warnanya sama dengan logam, terbaca dari bayangan tepi huruf, bukan cat atau warna kontras;
+- ukuran kecil, hanya mengisi ±60–70% lebar band;
+- font Geist Medium = usulan sampai render 3D Designer ditinjau.
+- Dibuat 3D Designer (Blender). Semua render, cutout, foto, dan model V2 memakai ring ini. Lockup web (ring mark + wordmark) **tidak** di-engrave di ring; ini mempersempit Moodboard §4.
 
 ### 1.5 Elemen global [F dari panel Storyboard]
 
 - **Navbar** (tampil di semua section): lockup kecil kiri; 3 item navigasi di tengah-kanan; **jam waktu-hari** Geist Mono warna ochre di kanan. Di bg gelap teks Paper.
 - **Rail progress scroll**: garis tipis vertikal di tepi kanan dengan titik ochre yang turun sesuai progres section.
 - **Jam navbar** berganti per section: `06:50 → 07:10 → 23:10 → 07:40…15:30 → 17:30 → 21:00 → 22:00 → 06:50`. Pergantian jam terjadi di 70–100% tiap sambungan (§3).
-- [U] Isi 3 item navigasi: `Rhythm` (→S03), `The ring` (→S06), `Finishes` (→S10); CTA kecil tidak ada di navbar (satu tombol utama ada di S10/S11). Mobile: lockup + jam + hamburger (pola panel menu V1 D-053).
+- **CTA navbar "Find your size" → anchor ke S10 [D-069 disetujui].** Tombol pill kecil (Ink di bg terang, Paper di bg gelap). Item navigasi lain: ikuti home-copy-v2; usulan [U] `Rhythm` (→S03), `The ring` (→S06).
+- Mobile [U]: lockup + jam + hamburger (pola panel menu V1 D-053); CTA "Find your size" ada di dalam panel menu.
 - [U] Rail progress disembunyikan di mobile (< 720 px).
 
 ---
@@ -147,7 +172,10 @@ Format: tujuan · copy draf [F] · state [F] · layout 1440 / 390 · catatan. Pe
 
 Panjang pin [U]: 1 state ≈ 100vh scroll. Section 4-state = `+=300%`, 5-state = `+=400%`, 3-state = `+=200%`. Sambungan antar section (§3) memakai ±100vh tersendiri, atau digabung ke awal pin section berikutnya.
 
-**Mobile — keputusan terbuka [?] (Storyboard §6.4).** Usulan default [U] di bawah: semua section tetap di-pin dan di-scrub di mobile (ceritanya bergantung pada ring yang sama), kecuali S07 dan S09 yang mendapat versi lebih ringan. Pin di mobile memakai `100svh`.
+**Mobile [D-069 disetujui]:** semua section tetap **di-pin dan di-scrub** di mobile; **ring tetap 3D** (tanpa tilt mouse, seperti D-051); **S07 dan S09 dibuat lebih ringan**; rotasi ring S10 lewat **swipe**. Rincian "lebih ringan" [U]:
+- S07: state 2 (4 kartu berjajar) jadi grid 2×2 kecil; garis orbit dan progress lingkaran disembunyikan, counter jadi teks `1/4`; panel mini tetap (UI kecil), pergantian kartu = crossfade, bukan tumpukan 3D.
+- S09: deskripsi kanan digabung ke bawah HP; footer hanya progress + persen; isi layar HP tetap bergeser mengikuti scroll.
+- Pin memakai `100svh`; panjang pin dikurangi ±25% dibanding desktop.
 
 ### S01 · Hero — 06:50 · Paper + Dawn glow
 
@@ -210,7 +238,7 @@ Copy [F]: "ACTIVITY and rest." + "Through the day the ring keeps two quiet talli
 | 4 | 75 | 12:30 makan siang | Resting · 30 min lunch |
 | 5 | 100 | 15:30 tangga | Moving · stairs → foto lain keluar ke kiri, bingkai putus-putus memudar, foto menggelap ke Dusk |
 
-- Durasi selain 09:00 berbeda antara Storyboard (15 min walk, 5 min stretch, 20 min stairs) dan build V1 (25 min walk, 15 min stretch, 20 min stairs and errands). Storyboard §6.5 meminta **ikut build**. [U] Pakai nilai build V1 sampai Strategy Director mengunci copy.
+- **Durasi [D-066 disetujui]:** 07:40 walk **25 min** · 09:00 focus 40 min · 10:30 stretch **15 min** · 12:30 lunch 30 min · 15:30 stairs **20 min**. Teks persis ikuti home-copy-v2.
 - Layout [F]: judul + paragraf kiri atas; filmstrip tengah (foto aktif besar dalam bingkai putus-putus, 4 foto kecil berjajar); jam besar + titik status + durasi + "Simulated data" kiri bawah; daftar jam kanan bawah (aktif terang).
 - **1440 [U]:** foto aktif 4:5, tinggi ±62vh, center; foto kecil ±12vh. Bingkai `1px dashed rgb(247 245 240 / .4)`, offset 12 px.
 - **390 [U]:** judul atas, foto aktif ±78vw lebar center, foto kecil jadi strip 5 titik/thumbnail di bawahnya; jam besar + status di bawah; daftar jam disembunyikan (cukup jam besar).
@@ -248,25 +276,27 @@ Layout:
 - Panel Figma [F]: judul kiri (col 1–5), tile Sand kotak di kanan dengan ring di atasnya; label mono "BEAT 1/2/3" ochre di atas teks langkah.
 - **1440 [U]:** tile Sand ±560×560 px, col 7–11, sudut 0 (tile = alas); alas Sand = strip horizontal penuh ±18vh di bawah tile, tempat ring menggelinding.
 - **390 [U]:** judul atas, tile full-width di bawahnya (±90vw persegi). State 4: foto tangan di bawah judul, ±100vw lebar, jari mengarah ke atas.
+- **Tangan State 4 [D-065 disetujui: foto cut-out C-02; pose = usulan, lihat `REPORT-v2-assets.md` A-1]:** tangan **kiri** C-02, punggung tangan menghadap kamera, jari menunjuk ke atas; **telunjuk** terangkat dan sedikit terpisah, tiga jari lain sedikit menekuk ke bawah, ibu jari rileks di kiri. Ring 3D turun vertikal sepanjang telunjuk dan berhenti di pangkal jari (proksimal), **logo menghadap kamera**, jendela sensor tersembunyi di sisi telapak. Bagian belakang ring ditutup **proxy jari** depth-only milik 3D Designer. Foto dikirim ke 3D Designer sebagai PNG alpha + koordinat sumbu telunjuk.
 - [?] Storyboard §6.6: bg terang di jam 21:00 mungkin terasa janggal; cek setelah build.
 
 ### S07 · Specs & benefits — 21:00 · Sand → foto full-bleed
 
-Copy [F]: "Through the day." · label pill mono "MADE FOR EVERY HOUR" · (I) Night "Sleeps with you. Charges while you don't." · (II) Desk "Sized to forget." · (III) Move "Light enough to lose track of." · (IV) Rinse "Hands in water. Ring stays on." · Penutup "The Everyday — Ring shown where it's worn." Tag: `[ SIZE ]`, `[ WEIGHT · THICKNESS ]`, `[ BATTERY ]`, `[ WATER RATING ]` (Figma menulis tag ini dalam bahasa Indonesia — **di web wajib Inggris**).
+Copy [F]: "Through the day." · label pill mono "MADE FOR EVERY HOUR" · (I) Night "Sleeps with you. Charges while you don't." · (II) Desk "Sized to forget." · (III) Move "Light enough to lose track of." · (IV) Rinse "Hands in water. Ring stays on." · Penutup "The Everyday — Ring shown where it's worn." Tag: `[ SIZE ]`, `[ WEIGHT · THICKNESS ]`, `[ BATTERY ]`, `[ WATER RATING ]` (Figma menulis tag ini dalam bahasa Indonesia — **di web wajib Inggris**). Isi kartu dan panel mini: ikuti tabel S07 di home-copy-v2.
 
 | State [F] | % | Isi |
 |---|---|---|
 | 1 | 0 | "Through the day" besar center + pill "MADE FOR EVERY HOUR" |
 | 2 | 25 | "Through" ke kiri, "the day" ke kanan; 4 kartu foto potret masuk dari bawah, berjajar center dengan label mono kecil di bawah tiap kartu |
 | 3 | 50 | (I) Night 1/4: kartu scale up ke center; kartu lain ditumpuk di belakang; judul "(I) Night" di atas garis tipis; caps kecil kiri + kanan; garis orbit dekoratif; counter 1/4 + progress lingkaran; panel putih kecil baterai 7 hari (bisa digeser per hari) |
-| 4 | 75 | 2/4 Desk (slider ukuran) → 3/4 Move (bar berat ~4 g*) → 4/4 Rinse (rating air). Layout sama |
+| 4 | 75 | 2/4 Desk (slider ukuran) → 3/4 Move (bar berat 4 g) → 4/4 Rinse (rating air). Layout sama |
 | 5 | 100 | Kartu mengecil; foto lingkungan di belakangnya membesar jadi full-bleed; "The Everyday" putih besar + caption "Ring shown where it's worn." |
 
 Layout [U]:
 - **1440:** kartu aktif 4:5, tinggi ±60vh, center; caps kiri di col 1–3 atas, paragraf kiri col 1–3 bawah, caps kanan col 10–12, counter + panel mini kanan bawah. Garis orbit = elips SVG `1px var(--line)` mengelilingi kartu.
-- **390:** kartu aktif ±80vw; caps + paragraf di bawah kartu; counter di atas kartu; panel mini di bawah teks. State 2 (4 kartu berjajar) diganti 2×2 grid kecil.
+- **390 [D-069 disetujui: versi lebih ringan]:** lihat rincian Mobile di atas §S01.
 - Panel mini = UI asli, bg Paper, radius `--radius-m`, label mono, satu elemen ochre (hari/nilai aktif).
-- Semua angka `*`: "about a week per charge*", "~4 g*", "5 ATM*", ukuran 6–13* (contoh di panel Figma). Lihat Storyboard §6.1.
+- **Angka spesifikasi [D-067 disetujui], tanpa `*`:** Up to 7 days · 100 m · about 4 g, 2.6 mm · sizes 6–13. Panel baterai per hari tetap berlabel "Simulated data" (home-copy-v2). Panel Figma masih menulis "5 ATM" dan `*` — **diganti** oleh D-067.
+- Foto kartu dan foto full-bleed "The Everyday" = **studio Paper/Sand dengan karakter C-02** [D-064, D-065 disetujui]; komposisi di `REPORT-v2-assets.md` A-2 dan A-3. Panel Figma (moss rock) tidak berlaku lagi.
 
 ### S08 · Features — 21:00 · Night
 
@@ -280,7 +310,9 @@ Satu fitur: lampu sensor yang warnanya mengikuti scroll. Tanpa chip, hotspot, at
 
 Warna lampu vs scroll [F]: 25–50% hijau penuh; 50–75% → biru (penuh di ±75%); 75–100% → ungu. Interpolasi dari progres ScrollTrigger (`gsap.utils.interpolate`). Reduced motion: warna berganti langsung, tanpa denyut glow. Opsional desktop: klik label legenda untuk lompat ke posisi scroll.
 
-Render [F]: mesh lampu dipisah `led_main` (jendela sensor) dan `led_power` (titik merah); `emissive` + intensitas 2–4; PointLight kecil sewarna di dalam ring agar memantul ke permukaan dalam; Bloom threshold ±0.9 hanya untuk lampu + sprite flare additive. Jalur B: 3 still (hijau/biru/ungu) di-crossfade. Catatan: Figma menyebut `@react-three/postprocessing`; `web-v2/` adalah Astro + three murni, jadi pakai `three/examples/jsm/postprocessing` (UnrealBloomPass) [U].
+**Satu jendela [D-062 disetujui]:** hanya **jendela A** yang menyala (hijau → biru → ungu). Jendela B gelap (tidak menyala). Titik merah **tidak** dirender di 3D; cukup baris copy "Red means it's off." dengan titik 6 px `--led-off`. Ini menggantikan catatan Figma tentang node `led_power`.
+
+Render [F, disesuaikan D-062]: satu material/mesh lampu `led_main` di jendela A; `emissive` + intensitas 2–4; PointLight kecil sewarna di dalam ring agar memantul ke permukaan dalam; Bloom threshold ±0.9 hanya untuk lampu + sprite flare additive. Jalur B: 3 still (hijau/biru/ungu) di-crossfade. Catatan: Figma menyebut `@react-three/postprocessing`; `web-v2/` adalah Astro + three murni, jadi pakai `three/examples/jsm/postprocessing` (UnrealBloomPass) [U].
 
 Klaim [F]: biru/ungu = lampu status mode, **bukan** klaim sensor. Copy tidak boleh menulis "blue measures oxygen". Tag `[ SENSOR · LAMPU ]` di Figma → di web `[ SENSOR · LIGHT ]` [U].
 
@@ -294,12 +326,14 @@ Tanpa ring. HP di tengah dan diam; hanya isi layar yang bergeser ke atas [F].
 |---|---|---|---|---|---|
 | 1 | 0 | ● GREEN LIGHT · HEART RATE | HEART RATE · Today · resting · **58 bpm** · grafik 24 jam hijau · "Peak 82 bpm on the stairs, 15:30" · "Steady day, calm evening." | "The green light, read back. Your heart rate through the day, at a glance." | "Resting 58 bpm. Peak on the stairs, 15:30." |
 | 2 | 50 | ● BLUE LIGHT · SLEEP | SLEEP · "Settled 23:10 · up 06:22" · **7h 12m** · tahap tidur biru · Deep 1h 32m / REM 1h 48m / Light 3h 52m | "The blue light, read back. Your night, in order: when you settled, how deep you went." | "Deep, REM and light sleep, measured minute by minute." |
-| 3 | 100 | ● VIOLET LIGHT · RECOVERY | RECOVERY · HRV · this week · **48 ms · Ready** · 7 bar ungu (hari ini paling terang) · Readiness · this morning · **82 · An easy day ahead.** | "The violet light, read back. One number tells you how the night paid off." | "HRV across the week, with today in full colour." |
+| 3 | 100 | ● VIOLET LIGHT · RECOVERY | RECOVERY · HRV · this week · 7 bar ungu Mon–Sun (hari ini paling terang) · "Steady day, calm evening." — **tanpa Readiness/skor [D-066 disetujui]** | ikuti home-copy-v2 (kalimat "One number…" dihapus) | "HRV across the week, with today in full colour." |
+
+Layar Recovery [D-066]: hapus kartu "Readiness · this morning · 82 · An easy day ahead." yang ada di panel Figma. Nilai HRV (mis. `48 ms`) dan labelnya ikuti home-copy-v2; jangan tambahkan label penilaian seperti "Ready" bila home-copy-v2 tidak memuatnya.
 
 - Kartu aktif di layar diberi **outline ochre** 1 px [F]. Chip dan deskripsi crossfade per state [F].
 - Footer section [F]: kiri `Heart rate · Sleep · Recovery` (yang aktif tebal); kanan "scroll down" + garis progress + persen.
-- Semua angka contoh → tambahkan "Simulated data" kecil di bawah HP [U] (Storyboard §6.7).
-- Kalimat "measured minute by minute" adalah klaim teknis; minta Strategy Director memastikan nadanya ilustratif [U].
+- Semua angka app → "Simulated data" kecil di bawah HP (set data D-066).
+- Mobile [D-069 disetujui: lebih ringan]: lihat rincian Mobile di atas §S01.
 
 Layout [U]:
 - **1440:** HP 300×620 px (bezel Ink 10 px, radius 44, layar Paper radius 34), center. Deskripsi kiri col 1–3 di 25% tinggi; kanan col 10–12 di 70% tinggi. Footer menempel di bawah pin, margin 40.
@@ -309,7 +343,7 @@ Layout [U]:
 ### S10 · Finishes & pricing — 22:00 · Sand
 
 Satu-satunya section interaktif [F].
-Copy [F]: "Turn it yourself." → "Find your size and finish." · Silver / Black / Gold · "$299*" · "No required subscription." · "In the box: the ring, a charging dock, and a sizing kit." · satu tombol utama.
+Copy [F]: "Turn it yourself." → "Find your size and finish." · Silver / Black / Gold · "$299" (tanpa `*`, D-067) · "No required subscription." · "In the box: the ring, a charging dock, and a sizing kit." · satu tombol utama.
 
 | State [F] | % | Isi | Ring |
 |---|---|---|---|
@@ -318,13 +352,15 @@ Copy [F]: "Turn it yourself." → "Find your size and finish." · Silver / Black
 | 3 | 67 | Pilih Gold; pencahayaan → **Lamp light** (label mono "LAMP LIGHT"); panel ikut menghangat | Pantulan lebih hangat (HDRI berganti) |
 | 4 | 100 | Ukuran, isi box, harga + satu tombol | Diam di finish terpilih |
 
-Catatan state [U]: state 2–3 di Storyboard adalah **contoh** interaksi user, bukan sesuatu yang dipaksa oleh scroll. Usulan: scroll tidak mengganti finish; pin hanya menahan section sampai panel lengkap (state 4) terlihat. Finish berubah hanya saat user klik swatch. Lamp light ikut finish Gold, atau [?] jadi toggle terpisah.
+**Aturan finish [D-069 disetujui]:** finish **hanya berganti lewat klik swatch** (atau tap), **tidak pernah** oleh scroll. State 2–3 di Storyboard adalah contoh interaksi user. Pin hanya menahan section sampai panel lengkap (state 4) terlihat. Finish terpilih ikut terbawa ke S11 (3D Designer, PLAN-v2). [U] Lamp light ikut aktif saat Gold dipilih (sesuai panel Figma); bukan toggle terpisah.
+
+**Tombol utama [D-069 disetujui]:** label `Choose {finish} · $299` (mis. `Choose Silver · $299`), berubah mengikuti swatch. Klik **hanya** memunculkan catatan "Stillway is a concept project and is not for sale." — tanpa cart, tanpa navigasi. [U] Catatan muncul sebagai baris kecil di bawah tombol (fade 200 ms, `aria-live="polite"`), bukan modal. Harga **$299 tanpa `*`** [D-067].
 
 Layout:
 - Panel Figma [F]: kiri = tile/foto ring di atas permukaan dengan elips putus-putus (orbit drag) dan tombol ‹ ›; kanan = panel kartu Paper berisi judul, 3 swatch bulat (aktif = ring outline), harga, tombol pill Ink.
 - **1440 [U]:** split 7/5. Stage ring col 1–7 (tile Sand lebih gelap 4% atau foto studio, radius `--radius-m`); panel col 8–12, padding 32. Urutan panel: judul `--fs-h3` → swatch (28 px) + nama finish → ukuran (chip 6–13*, link "Not sure? Free sizing kit") → isi box (satu baris + thumbnail) → harga `--fs-number` kecil (48) + "No required subscription." → tombol full-width.
-- **390 [U]:** stage ring ±100vw persegi di atas (swipe), panel di bawah tidak di-pin (scroll normal), tombol sticky di bawah layar saat panel terlihat.
-- Tombol utama [?]: tujuan klik belum ditentukan (tidak ada cart/checkout — D-022). Usulan: label "Choose Silver · $299*" yang menggulir ke S11 atau membuka catatan "Concept project — not for sale".
+- **390:** stage ring ±100vw persegi di atas, **rotasi lewat swipe [D-069 disetujui]**; [U] section tetap di-pin sampai panel tampil, tombol sticky di bawah layar saat panel terlihat.
+- Isi box: thumbnail kecil foto studio (aset A-4, `REPORT-v2-assets.md`) di baris "In the box".
 
 ### S11 · Closing, FAQ & footer — 06:50 besok · Night + Ember glow
 
@@ -344,7 +380,9 @@ Layout [U]:
 - **1440:** FAQ kolom 560 px center; tombol pill Paper dengan teks Ink (tombol di bg gelap). Lockup footer: lebar 100vw, tinggi ±22vw, 15% bagian bawah terpotong.
 - **390:** "see your night." 2 baris; FAQ full-width margin 16; footer bertumpuk 1 kolom; lockup 100vw.
 
-Ketidaksesuaian yang perlu dicek [?]: panel Figma State 4 menampilkan **field email "Get the first morning report"** dan email kontak `hello@stillway.co*`. Form pengumpulan data **di luar lingkup** (D-022). Usulan [U]: hapus field email, ganti dengan teks statis; email kontak pakai placeholder berlabel ilustratif atau tidak ditampilkan.
+**Footer [D-069 disetujui]: tanpa form email, tanpa newsletter, tanpa tombol share** (D-022). Field "Get the first morning report", "Share Stillway", dan "Copy URL" di panel Figma State 4 **dihapus**. Yang tersisa [U]: kolom link anchor (Sizing → S10, FAQ, Privacy note bila ada di home-copy-v2), disclaimer "Stillway is a concept project and is not for sale." (wajib), dan lockup selebar layar. Email kontak `hello@stillway.co` tidak ditampilkan kecuali home-copy-v2 memuatnya.
+
+Tombol S11 "Find your size and finish →" → anchor S10 [D-069]. Baris mono di bawahnya ikuti home-copy-v2 (`No required subscription · Sizing kit included · 30-night trial`; 30-night trial = kebijakan konsep D-068).
 
 ---
 
@@ -365,7 +403,7 @@ Setiap sambungan: 0–30% = keluar, 30–70% = tengah, 70–100% = masuk + jam b
 | 09 → 10 | Isi layar HP + deskripsi fade out; HP bergeser ke kanan dan melebar jadi panel | Paper → Sand; ring fade in di kiri (scale 0.8 → 1), tile muncul | Isi panel fade in; 21:00 → 22:00 |
 | 10 → 11 | Panel fade out ke kanan | Ring (finish terpilih) dari tile kiri ke center, scale 0.32; tile fade out; Sand → Night, Ember glow dari atas | "TOMORROW MORNING, see your night." fade in; 22:00 → 06:50 |
 
-[U] Implementasi: **satu canvas WebGL tetap (`position: fixed`)** untuk ring di seluruh halaman, dengan pose/skala/visibilitas dikendalikan satu timeline per section. Ini satu-satunya cara agar "frame akhir = frame awal" benar-benar mulus dan agar ring tetap "satu tokoh" (Storyboard §1). Canvas disembunyikan (render berhenti) di S04, S07, S09. Satu konteks WebGL saja (catatan D-052).
+**Implementasi [D-063 disetujui]: satu canvas WebGL `position: fixed`** untuk ring di seluruh halaman, satu renderer, satu model; pose/skala/visibilitas/rig cahaya dikendalikan timeline scroll per section. [U] Canvas disembunyikan (render berhenti) di S04, S07, S09; `pointer-events` hanya aktif di area ring S10. Rincian pose dan rig: `design/3d/PLAN-v2.md` / handoff 3D V2 di `design/3d/v2/` (D-070).
 
 Reduced motion [F]: setiap state langsung tampil dengan fade ±300 ms, tanpa gerak besar, tanpa loop (napas ring di S01 juga mati).
 
@@ -378,20 +416,21 @@ Reduced motion [F]: setiap state langsung tampil dengan fade ±300 ms, tanpa ger
 | Warna | Dawn/Day/Dusk/Night biru-malam #151820, banyak token usulan | 5 warna saja; Night hangat #17120F; ochre satu aksen |
 | Font | Geist Variable | Geist + **Geist Mono** |
 | Hero | Foto batu + ring 3D mendarat di batu | Kanvas Paper + Dawn glow, wordmark raksasa, ring 3D tanpa latar foto |
-| Aset dasar | Set nature "moss rock" (D-032/D-035) | Studio bersih: Paper/Sand, tile, cut-out tangan. **Set moss rock tidak dipakai** kecuali di foto lama yang diizinkan |
+| Aset dasar | Set nature "moss rock" (D-032/D-035) | **Studio Paper/Sand [D-064 disetujui]**: tile, cut-out tangan, kartu studio. Moss rock tidak dipakai, kecuali 5 foto C-02 di S04 |
 | Section | 10 | 11 (baru: Why Stillway, Specs & benefits, Features, The app) |
-| Ring | Foto + 3D di hero dan CTA | Satu ring 3D di 8 section, dengan logo terukir |
+| Ring | Foto + 3D di hero dan CTA; 2 jendela LED | Satu ring 3D di 8 section, satu canvas [D-063]; teks "Stillway" terukir [D-061]; lampu hanya jendela A [D-062] |
+| Footer | — | Tanpa form/newsletter/share [D-069] |
 
 ---
 
 ## 5. Aset V2 (Storyboard §4 + label ASET di Figma)
 
-Status: **Reuse** = bisa dipakai ulang dari V1 · **Baru (img)** = perlu image generation (Visual Director) · **3D** = milik 3D Designer · **UI** = HTML/CSS oleh Developer. Semua produksi baru **menunggu persetujuan pengguna** (lihat `REPORT-v2-handoff.md`).
+Status: **Reuse** = bisa dipakai ulang dari V1 · **Baru (img)** = image generation Visual Director, **disetujui D-065**, dimulai setelah render acuan ring berlogo dari 3D Designer · **3D** = milik 3D Designer (file di `design/3d/v2/`, D-070) · **UI** = HTML/CSS oleh Developer. Prompt dan komposisi aset baru: `design/v2/REPORT-v2-assets.md`.
 
 | ID | Section | Aset | Status | Sumber / catatan |
 |---|---|---|---|---|
-| 3D-1 | 01, 02, 03, 05, 06, 08, 10, 11 | Ring silver acuan: tepi chamfer, dalam hitam matte, 2 pad oval, jendela sensor, **logo "Stillway" tone-on-tone di sisi luar** | **3D** (update) | Basis `design/3d/ring/stillway-ring-silver_web.glb`. Perlu: engraving logo [?], node LED terpisah (3D-2), material siap ganti finish. Logo di produk menunggu konfirmasi (Storyboard §6.3) |
-| 3D-2 | 08 (juga 01 hijau samar, 03, 05) | Lampu sensor emissive: `led_main` + `led_power`, warna dikendalikan kode | **3D** | Saat ini satu material `LED_*` |
+| 3D-1 | 01, 02, 03, 05, 06, 08, 10, 11 | Ring silver acuan: tepi chamfer, dalam hitam matte, 2 pad oval, jendela sensor, **teks "Stillway" terukir tone-on-tone, vertikal searah band** | **3D** (sedang dibuat) | [D-061 disetujui] Ref `design/v2/references/ring-logo-engrave-ref.png`. Render acuan berlogo = prasyarat semua aset Baru (img) |
+| 3D-2 | 08 (juga 01 hijau samar, 03, 05) | Lampu sensor emissive **hanya jendela A**, warna dikendalikan kode; jendela B gelap; tanpa titik merah 3D | **3D** | [D-062 disetujui] |
 | 3D-3 | 05 | Shot makro "kamera masuk ke lubang ring" (±1.9× layar) | **3D** | Uji kualitas mesh/normal map di jarak sangat dekat |
 | 3D-4 | 06 | Gelinding di alas + contact shadow; jalur B 40–60 frame render | **3D** | Butuh logo terukir agar putaran terbaca |
 | 3D-5 | 10 | Finish **Black** dan **Gold** (material, bukan tint) + HDRI **Daylight** dan **Lamp light** | **3D** | `HANDOFF-hero-ring.md`: Black/Gold belum dibuat; belum ada HDRI asli |
@@ -399,11 +438,11 @@ Status: **Reuse** = bisa dipakai ulang dari V1 · **Baru (img)** = perlu image g
 | 3D-7 | 01–11 | Cadangan statis per pose kunci (poster / reduced motion / WebGL gagal), PNG transparan | **3D** (render) | ±10 still: S01 3/4 + depan, S02 3/4, S03 rim, S05 makro, S06 depan/samping/45°, S08 hijau/biru/ungu, S10 ×3 finish, S11 |
 | R-1 | 04 | 5 foto momen C-02 (`S3p-0740/0900/1030/1230/1530`) | **Reuse** | `design/assets/v1/home/`. Sesuai D-054–D-058. Ring di foto **belum punya logo** dan bentuknya belum dicek ke 3D-1 — cukup untuk V2 awal karena ring kecil di jari; retouch logo opsional |
 | R-2 | 06 (S1–3 cadangan) | Foto ring-master `01-front`, `02-side-profile`, `08-flat-45` | **Reuse sementara** | Dipakai di panel Figma S06 sebagai label ASET. Hanya placeholder/cadangan; Storyboard menolak "foto datar yang digeser" untuk gerak utama |
-| R-3 | 10 | `R-black.png`, `R-gold.png`, `P-01-silver-daylight.png` | **Tidak dipakai** [U] | Set moss rock + tanpa logo. Diganti 3D-5 |
-| R-4 | 10 | Isi box: `A-11-package-flatlay.png` (Figma: "A-11-package-flatlay 2") | **Baru (img)** | V1 berlatar batu; V2 butuh versi studio Sand. Bentuk charger/sizing kit masih usulan (`R-kit.png`) |
-| N-1 | 06 | Foto tangan **tanpa ring, tanpa background**, satu jari terangkat, cut-out di #F7F5F0, ruang kosong di kiri | **Baru (img)** | Prompt dasar di Storyboard §4. Pose harus pas dengan jalur ring 3D yang turun ke pangkal jari. Tangan C-02 (laki-laki) [?] |
-| N-2 | 07 | 4 foto kartu potret: Night, Desk, Move, Rinse — ring di jari dengan logo | **Baru (img)** | Rasio 4:5. Karakter C-02 [?]. Kartu Night juga = hasil transisi dari foto tangan S06 |
-| N-3 | 07 | 1 foto lingkungan full-bleed "The Everyday" + ring | **Baru (img)** | 16:9 desktop + crop 9:16 mobile. Panel Figma memakai foto ring di batu berlumut — **bertentangan** dengan studio V2 [?] |
+| R-3 | 10 | `R-black.png`, `R-gold.png`, `P-01-silver-daylight.png` | **Tidak dipakai** [D-064] | Set moss rock + tanpa logo. Diganti 3D-5 |
+| R-4 / A-4 | 10 | Isi box studio: ring + charging dock + sizing kit di atas Sand | **Baru (img)** [D-065] | Pengganti `A-11-package-flatlay.png` (batu). Bentuk dock/kit dari `masters/R-kit.png` (masih usulan bentuk) |
+| N-1 / A-1 | 06 | Foto tangan kiri C-02 **tanpa ring, tanpa background** (cut-out, alpha), telunjuk terangkat | **Baru (img)** [D-065] | Pose harus pas dengan pose akhir ring 3D (§S06). Diserahkan ke 3D Designer untuk proxy jari |
+| N-2 / A-2 | 07 | 4 foto kartu potret 4:5: Night, Desk, Move, Rinse — C-02, ring berlogo di telunjuk kiri, studio Paper/Sand | **Baru (img)** [D-064, D-065] | Kartu Night juga = hasil transisi dari foto tangan S06 |
+| N-3 / A-3 | 07 | Foto full-bleed "The Everyday" — **studio Paper/Sand** + C-02 + ring | **Baru (img)** [D-064] | 16:9 desktop + crop 9:16 mobile. Moss rock di panel Figma tidak dipakai |
 | U-1 | 05, 09 | Kartu app + layar app (Heart rate, Sleep, Recovery) | **UI** | HTML, bukan gambar [F] |
 | U-2 | 09 | Mockup HP (bezel) | **UI** | CSS/SVG polos, tanpa merek perangkat nyata |
 | U-3 | 01, 11, navbar | Logo lockup SVG (ring mark + wordmark) | **UI** | Lihat §1.4 |
@@ -416,15 +455,17 @@ Aturan [F]: setiap gambar yang memperlihatkan ring memakai bentuk ring acuan dan
 
 ---
 
-## 6. Rencana produksi aset baru (menunggu persetujuan — belum ada gambar yang dibuat)
+## 6. Produksi aset baru [D-065 disetujui]
 
-| Urutan | Aset | Metode [U] | Prasyarat |
+Status: **menunggu render acuan ring berlogo dari 3D Designer.** Belum ada gambar yang dibuat. Prompt, komposisi, pose, dan kriteria tolak tiap aset ada di `design/v2/REPORT-v2-assets.md`.
+
+| Urutan | Aset | Metode | Prasyarat |
 |---|---|---|---|
-| 1 | Konfirmasi logo di ring + render acuan 3D-1 dengan engraving | 3D Designer | Jawaban pengguna soal logo (Storyboard §6.3) |
-| 2 | N-1 foto tangan cut-out | `gpt-image-bridge`; prompt Storyboard §4 + referensi `C-02-character.png` (warna kulit/tangan) + pose dari panel Figma S06. 3 variasi, cek 5 digit di crop penuh | Pose disepakati dengan 3D Designer (jalur ring) |
-| 3 | N-2 empat kartu S07 | `gpt-image-bridge`, referensi C-02 + render 3D-1 (logo). Latar studio hangat Paper/Sand, satu properti per adegan: Night (seprai linen, lampu redup), Desk (meja kayu, keyboard), Move (tali sepatu/handuk), Rinse (wastafel batu, air) | Langkah 1 |
-| 4 | N-3 foto "The Everyday" | Sama; satu adegan luar/dalam ruang dengan C-02, ring jelas | Jawaban apakah boleh moss rock |
-| 5 | R-4 isi box studio | `gpt-image-bridge` dengan `R-kit.png` sebagai referensi bentuk, latar Sand | Bentuk charger/sizing kit disetujui |
-| 6 | Retouch logo di R-1 (opsional) | Edit AI area ring saja | Langkah 1 |
+| 0 | Render acuan ring berlogo (3D-1) | 3D Designer, Blender | Sedang dibuat |
+| 1 | A-1 tangan cut-out S06 | `gpt-image-bridge`, ref C-02 + render acuan; 3 variasi | Render acuan; pose disepakati dengan 3D Designer |
+| 2 | A-2 empat kartu S07 | `gpt-image-bridge`, ref C-02 + render acuan + A-1 (warna kulit) | Langkah 1 |
+| 3 | A-3 "The Everyday" studio | Sama | Langkah 1 |
+| 4 | A-4 isi box studio | `gpt-image-bridge`, ref render acuan + `R-kit.png` | Render acuan |
+| 5 | Retouch logo di R-1 (opsional, belum diminta) | Edit AI area ring saja | Persetujuan terpisah |
 
-Kriteria tolak (mengikuti anti-slop V1): tangan tidak 5 digit atau pose tidak wajar; ring berbeda dari acuan (jumlah pad, sensor, chamfer); logo terbaca terbalik/berantakan; warna di luar palet (biru/hijau dominan); teks/watermark di gambar; ring melayang tanpa kontak.
+Penyerahan: file final ke `design/assets/v2/` (PNG master) + WebP web oleh Developer; A-1 juga dikirim ke 3D Designer untuk proxy jari.
