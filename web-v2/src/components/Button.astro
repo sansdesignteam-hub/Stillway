@@ -1,0 +1,21 @@
+---
+/** One button style for the whole page (after ayocin.com): label + round arrow; on hover the circle fills the button. */
+interface Props {
+  [key: string]: unknown;
+  href: string;
+  label: string;
+  variant?: 'ink' | 'paper';
+  class?: string;
+  compact?: boolean;
+}
+const { href, label, variant = 'ink', class: className, compact = false, ...rest } = Astro.props;
+const arrow = 'M3 8h9M8.5 4.5 12 8l-3.5 3.5';
+---
+
+<a class:list={['btn', `btn--${variant}`, compact && 'btn--compact', className]} href={href} {...rest}>
+  <span class="btn__label">{label}</span>
+  <span class="btn__icon" aria-hidden="true">
+    <svg class="btn__arrow" viewBox="0 0 16 16" width="15" height="15"><path d={arrow} fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+    <svg class="btn__arrow btn__arrow--next" viewBox="0 0 16 16" width="15" height="15"><path d={arrow} fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+  </span>
+</a>

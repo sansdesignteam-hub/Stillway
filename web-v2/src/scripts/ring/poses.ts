@@ -6,6 +6,7 @@
  * rx, ry, rz: rotation in radians. 0/0/0 = the opening faces the camera (a circle).
  * spin: turn about the ring's own axis (radians); brings the engraved logo (outer band, opposite
  *       the sensor window) toward or away from the viewer.
+ * roll: turn in the screen plane (radians), applied after rx/ry/rz (default 0).
  * light: 0 = Day studio (Paper), 1 = Night rim light (S03).
  * alpha: canvas opacity (the ring is the only object, so fading the canvas fades the ring).
  */
@@ -17,6 +18,7 @@ export interface Pose {
   ry: number;
   rz: number;
   spin: number;
+  roll: number;
   light: number;
   alpha: number;
 }
@@ -28,18 +30,18 @@ export const lerpPose = (a: Pose, b: Pose, t: number): Pose => {
 };
 
 /**
- * Named angles used by S01–S03, tuned by eye against the V2 GLB (stage 1).
- * spin = π turns the engraved "Stillway" to the visible outer band and the two sensor windows
- * to the visible inner wall.
+ * Named angles used by S01–S03, matched by eye to design/v2/references/ring-logo-engrave-ref.png
+ * and the 3D Designer's fallback poses (V2 GLB, stage 2): opening on the left, outer band on the
+ * right, the engraved "Stillway" reading bottom → top with the letter tops toward the opening,
+ * sensor windows visible on the inner wall (D-075). spin 0 puts the logo on the visible band.
  */
-const LOGO = Math.PI;
 export const ANGLE = {
-  /** three-quarter: outer band with the logo on the left, inner wall and sensors on the right */
-  threeQuarter: { rx: -0.42, ry: 0.95, rz: 0.12, spin: LOGO },
+  /** reference three-quarter (RING_REF): band upright, logo readable bottom → top */
+  threeQuarter: { rx: -0.15, ry: -0.85, rz: 0, spin: 0 },
   /** "facing the camera": opening toward the viewer, slight tilt so the band reads as a band */
-  facing: { rx: -0.22, ry: 0.18, rz: 0.04, spin: LOGO },
+  facing: { rx: -0.2, ry: -0.2, rz: 0, spin: 0 },
   /** tilted, rising (S01 state 2) */
-  tilted: { rx: -0.62, ry: 0.55, rz: 0.22, spin: LOGO + 0.25 },
+  tilted: { rx: -0.5, ry: -0.6, rz: -0.18, spin: 0.2 },
 };
 
 /** LED colours from Moodboard §2.3 (product light, not UI colour). */
@@ -64,4 +66,4 @@ export function along(u: number, frames: Array<[number, Pose]>): Pose {
   return frames[frames.length - 1][1];
 }
 
-export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, light: 0, alpha: 1, ...p });
+export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, alpha: 1, ...p });

@@ -18,7 +18,7 @@
  * pose of the state; no breathing loop.
  */
 import { sections, dayparts, type SectionDef } from '../content/sections';
-import { clamp01, seg, smooth, lerp, type Ctx } from './anim';
+import { clamp01, seg, lerp, put, window4, type Ctx } from './anim';
 import { lerpPose, type Pose } from './ring/poses';
 import type { RingStage } from './ring/stage';
 import { hero } from './sections/hero';
@@ -127,6 +127,16 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     const inConn = u < 0;
     const prev = items[ci - 1];
 
+    /* still poster of the ring (3D fallback/): while WebGL loads, if it fails, and for reduced motion */
+    if (!ring) {
+      items.forEach((it) => {
+        const f = it.scene.querySelector<HTMLElement>('[data-ring-fallback]');
+        if (!f) return;
+        const uu = snap(it, (y - it.top) / vh - it.def.tin);
+        put(f, { o: window4(uu, -0.4, -0.05, it.end + 0.1, it.end + 0.5) }, ctx);
+      });
+    }
+
     /* scenes: the current one, the previous one while it fades out, the next one (for back words) */
     items.forEach((it, i) => {
       const show = i === ci || i === ci - 1 || i === ci + 1;
@@ -177,6 +187,8 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
         const to = poseOf(cur, 0);
         pose = cur.m.ringIn ? cur.m.ringIn(tinX, ctx, from, to) : lerpPose(from, to, seg(tinX, 0.3, 0.7));
       } else pose = poseOf(cur, u);
+      // dev only: window.__ringOverride = { w: 0.9, x: 0 } merges into the pose (stripped from builds)
+      if (import.meta.env.DEV && (window as any).__ringOverride) pose = { ...pose, ...(window as any).__ringOverride };
       // breathing: S01 state 1 only, scale 1 → 1.02 (the one autoplay animation), never for reduced motion
       let breathe = 0;
       if (!reduced && cur.def.id === 'hero') {

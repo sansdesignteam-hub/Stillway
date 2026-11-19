@@ -32,7 +32,7 @@ export const hero: SectionMotion = {
       [0, pose({ x: 0, y: m ? 0.15 : 0.02, w: m ? 0.78 : 0.34, ...ANGLE.threeQuarter })],
       [1, pose({ x: 0, y: m ? 0.2 : 0.07, w: m ? 0.76 : 0.33, ...ANGLE.tilted })],
       [2, pose({ x: 0, y: m ? 0.08 : 0.03, w: m ? 0.74 : 0.35, ...ANGLE.facing })],
-      [3, pose({ x: 0, y: 0, w: m ? 0.7 : 0.36, ...ANGLE.threeQuarter, ry: ANGLE.threeQuarter.ry + 0.2 })],
+      [3, pose({ x: 0, y: 0, w: m ? 0.7 : 0.36, ...ANGLE.threeQuarter, ry: ANGLE.threeQuarter.ry - 0.15 })],
     ]);
   },
 };

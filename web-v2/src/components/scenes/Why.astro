@@ -9,6 +9,7 @@ const last = why.steps[why.steps.length - 1];
     <p class="why__word giant" data-w-word data-a aria-hidden="true">{why.backWord}</p>
     <p class="why__wide giant" data-w-wide data-a aria-hidden="true">{why.wide}</p>
   </div>
+  <img class="ring-fallback ring-fallback--why" src="/ring-fallback/fb-s02-34.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
   <div class="scene__front">
     <p class="why__label t-mono" data-w-label data-a>{why.label}</p>
     <h2 id="why-title" class="sr-only">{why.label}</h2>
@@ -39,7 +40,7 @@ const last = why.steps[why.steps.length - 1];
     inset: 0;
     display: grid;
     place-items: center;
-    font-size: 10.4vw;
+    font-size: 13.5vw; /* Sofi ref: the line runs past both edges behind the ring */
     white-space: nowrap;
     --giant-o: 1;
   }
@@ -74,6 +75,11 @@ const last = why.steps[why.steps.length - 1];
     top: 50%;
     translate: 0 -50%;
     width: calc((100vw - 2 * var(--margin)) * 4 / 12);
+  }
+  .why__big {
+    /* Oryzo ref: a short statement block beside the object, not a wall of type */
+    font-size: clamp(2.5rem, 1.2rem + 3.4vw, 4.25rem);
+    line-height: 1;
   }
   .why__bigs {
     display: grid;

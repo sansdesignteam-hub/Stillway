@@ -156,6 +156,36 @@ html.js .scene--hero [data-a] {
   opacity: 1;
 }
 
+/* ---------- ring stills (3D fallback/): between the back and front layers ---------- */
+.ring-fallback {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  width: min(44vw, 82vh);
+  height: auto;
+  translate: -50% -50%;
+  pointer-events: none;
+}
+html.ring-ready .ring-fallback {
+  display: none;
+}
+.ring-fallback--sleep {
+  left: 25%;
+  width: min(52vw, 82vh);
+}
+@media (max-width: 719px) {
+  .ring-fallback {
+    width: 96vw;
+    top: 36%;
+  }
+  .ring-fallback--sleep {
+    left: 50%;
+    top: 30%;
+    width: 80vw;
+  }
+}
+
 /* ---------- tracks: scroll length + anchors ---------- */
 .track {
   height: calc(var(--len) * 100svh);

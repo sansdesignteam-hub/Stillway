@@ -42,9 +42,9 @@ export const sleep: SectionMotion = {
     const side = m ? { x: 0, y: 0.2, w: 0.6 } : { x: -0.25, y: 0, w: 0.4 };
     const tq = ANGLE.threeQuarter;
     return along(u, [
-      [0, pose({ x: 0, y: m ? 0.05 : 0, w: m ? 0.78 : 0.5, ...tq, ry: tq.ry + 0.1, light: 1 })],
-      [1, pose({ ...side, ...tq, ry: tq.ry - 0.1, light: 1 })],
-      [2, pose({ ...side, ...tq, ry: tq.ry - 0.35, rx: tq.rx * 0.8, light: 1 })],
+      [0, pose({ x: 0, y: m ? 0.05 : 0, w: m ? 0.78 : 0.5, ...tq, ry: tq.ry - 0.1, light: 1 })],
+      [1, pose({ ...side, ...tq, ry: tq.ry + 0.1, light: 1 })],
+      [2, pose({ ...side, ...tq, ry: tq.ry + 0.3, rx: -0.22, light: 1 })],
       [3, pose({ ...side, ...ANGLE.facing, light: 1 })],
     ]);
   },

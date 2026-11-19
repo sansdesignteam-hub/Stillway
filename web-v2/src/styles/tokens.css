@@ -56,7 +56,7 @@
   /* layout (HANDOFF-v2 §1.3 [U]) */
   --margin: clamp(16px, 2.8vw, 40px);
   --gutter: clamp(12px, 1.4vw, 20px);
-  --header-h: 64px;
+  --header-h: 76px; /* V1 navbar (D-075): 52 px bar + 12 px inset */
   --radius-s: 8px;
   --radius-m: 16px;
   --radius-pill: 999px;
@@ -65,4 +65,9 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-shine: cubic-bezier(0.22, 0.61, 0.36, 1);
   --fade-reduced: 300ms; /* reduced motion: every state is a short fade (Storyboard §1) */
+}
+@media (max-width: 760px) {
+  :root {
+    --header-h: 60px;
+  }
 }

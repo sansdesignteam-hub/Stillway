@@ -8,6 +8,7 @@ import { hero } from '../../content/copy';
     <div class="hero__glow" data-h-glow data-a></div>
     <p class="hero__word giant" data-h-word data-a aria-hidden="true">{hero.wordmark}</p>
   </div>
+  <img class="ring-fallback ring-fallback--hero" src="/ring-fallback/fb-s01-34.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="eager" decoding="async" />
   <div class="scene__front">
     <span class="sr-only" role="img" aria-label={hero.ringAlt}></span>
     <div class="hero__copy" data-h-copy data-a>
@@ -24,8 +25,8 @@ import { hero } from '../../content/copy';
   .hero__glow {
     position: absolute;
     left: 50%;
-    top: 54%;
-    width: 60vw;
+    top: 62%;
+    width: 72vw; /* Viture ref: one soft glow rising behind the ring */
     aspect-ratio: 1;
     translate: -50% -50%;
     background: var(--dawn-glow);
@@ -36,7 +37,7 @@ import { hero } from '../../content/copy';
     inset: 0;
     display: grid;
     place-items: center;
-    --giant-o: 0.09;
+    --giant-o: 0.12; /* Oryzo ref: a giant wordmark behind the object, kept faint (Storyboard) */
   }
   .hero__copy {
     position: absolute;

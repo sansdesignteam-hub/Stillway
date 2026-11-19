@@ -48,10 +48,10 @@ export const why: SectionMotion = {
     const m = ctx.mobile;
     const tq = ANGLE.threeQuarter;
     return along(u, [
-      [0, pose({ x: 0, y: 0, w: m ? 0.7 : 0.36, ...tq, ry: tq.ry + 0.2 })],
-      [1, pose({ x: 0, y: 0, w: m ? 0.7 : 0.36, ...tq, ry: tq.ry - 0.15 })],
-      [2, pose({ x: 0, y: 0, w: m ? 0.7 : 0.36, ...tq, ry: tq.ry - 0.5, rx: tq.rx * 0.7 })],
-      [3, pose({ x: 0, y: m ? 0 : -0.02, w: m ? 0.7 : 0.36, ...ANGLE.facing, ry: 0.32 })],
+      [0, pose({ x: 0, y: 0, w: m ? 0.7 : 0.36, ...tq, ry: tq.ry - 0.15 })],
+      [1, pose({ x: 0, y: 0, w: m ? 0.7 : 0.36, ...tq, ry: tq.ry + 0.1 })],
+      [2, pose({ x: 0, y: 0, w: m ? 0.7 : 0.36, ...tq, ry: tq.ry + 0.35, rx: -0.2 })],
+      [3, pose({ x: 0, y: m ? 0 : -0.02, w: m ? 0.7 : 0.36, ...ANGLE.facing, ry: -0.3 })],
     ]);
   },
 };

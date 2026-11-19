@@ -6,6 +6,7 @@ import { defineConfig } from 'astro/config';
 // keeping the Visual Director's files the single source of truth.
 export default defineConfig({
   output: 'static',
+  devToolbar: { enabled: false }, // keeps review screenshots on the dev server clean
   vite: {
     server: { fs: { allow: ['..'] } },
   },

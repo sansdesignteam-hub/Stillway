@@ -56,17 +56,27 @@ living on the stage, and `src/scripts/story.ts` drives it from the scroll positi
   opacity fade (`html.reduced [data-a]`), no breathing loop.
 - Without JS: `<noscript>` styles stack the scenes as normal sections.
 
+## Navbar (D-075)
+
+V1 style copied from `web/` (wordmark · round home tile · one translucent rounded bar with dividers ·
+clock · compact arrow button; phone: burger + sensiq-style panel, D-053) with V2 content: lockup, links
+Rhythm / The ring / The app / Finishes / FAQ, Geist Mono clock, "Find your size" (D-069).
+Files: `src/components/Header.astro`, `src/components/Button.astro`, `src/styles/nav.css`, menu logic in
+`src/scripts/motion.ts`.
+
 ## Ring
 
-- Model: `src/scripts/ring/model.ts` is the only place that names the GLB, material patterns and LED
-  mesh names. Now: `public/models/stillway-ring-v2-silver_web.glb` (V2 stage 1, engraved "Stillway",
-  satin finish; brushed and Black/Gold arrive in stage 2).
-- Stage: `src/scripts/ring/stage.ts` — one renderer, Day rig (RoomEnvironment studio + warm key,
-  placeholder for the V2 studio HDRI) and Night rig (environment almost off + one cool rim light)
-  mixed by `pose.light`. `setLed(colour | 'off' | null)` drives `led_main` / `led_power` (D-062).
-- Poses: `src/scripts/ring/poses.ts` — `Pose {x, y, w, rx, ry, rz, spin, light, alpha}`; `spin = π`
-  shows the engraved logo on the visible outer band.
-- Loads lazily after first paint; if WebGL or the model fails, the story reads without the ring.
+- Model: `src/scripts/ring/model.ts` is the only place that names the GLB, env maps, material
+  patterns and LED mesh names. Now: V2 stage 2 from the 3D Designer (feaa83d): brushed silver GLB
+  (147 KB), `public/env/v2-env-{paper,night}.exr`. Black/Gold (finishes.json) wait for S10.
+- Stage: `src/scripts/ring/stage.ts` — one renderer, all light from the env (paper for S01–S02, night
+  for S03), swapped at `pose.light = 0.5` with an intensity dip. `setLed()` drives `led_main` / `led_power`.
+- Poses: `src/scripts/ring/poses.ts` — `Pose {x, y, w, rx, ry, rz, spin, roll, light, alpha}`.
+  `ANGLE.threeQuarter` matches the engraving reference: opening left, band right, "Stillway" reading
+  bottom → top (D-075).
+- Stills: `public/ring-fallback/*.webp` (3D Designer fallback/) show while WebGL loads, if it fails,
+  and always for reduced motion (no WebGL then).
+- Dev only: `window.__ringOverride = { w: 0.9, spin: 0 }` in the console merges into the live pose.
 
 ## Structure
 

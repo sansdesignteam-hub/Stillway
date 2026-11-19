@@ -4,17 +4,16 @@
  * one ring. Sections never touch three.js; they return a Pose (poses.ts) for the current scroll
  * position and story.ts calls `stage.apply(pose)` each frame.
  *
- * Lighting: two rigs mixed by pose.light.
- *  - Day (0): neutral studio environment (three's RoomEnvironment, placeholder for the 3D
- *    Designer's warm studio HDRI) + warm key light upper left.
- *  - Night (1): environment almost off, one cool rim light from behind one side, so only the
- *    edge of the ring catches light (S03).
+ * Lighting (3D handoff stage 2): all light comes from the V2 environment maps, no extra lamps.
+ *  - pose.light 0 = env "paper" (warm studio, S01–S02), 1 = env "night" (near-black with one cold
+ *    rim strip, S03). Across a connection the env intensity dips, the env swaps at 0.5, and it
+ *    comes back up (handoff: "tween intensity down → swap → up").
  * Returns null without WebGL or if the model fails; the page then shows no ring (sections still read).
  */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
 import { RING_MODEL } from './model';
 import type { Pose } from './poses';
 
@@ -41,26 +40,29 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const isPhone = () => window.innerWidth < 720;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isPhone() ? 1.5 : 2));
   renderer.toneMapping = THREE.AgXToneMapping;
-  renderer.toneMappingExposure = 1.1;
+  renderer.toneMappingExposure = 1.0;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(FOV, 1, 1, 40000);
 
   const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  scene.environmentRotation = new THREE.Euler(0.2, Math.PI * 0.25, 0);
-
-  // Day rig
-  const key = new THREE.DirectionalLight(0xffe6c8, 2.0);
-  key.position.set(-600, 700, 600);
-  const fill = new THREE.HemisphereLight(0xfff4e6, 0xd9cbb8, 0.5);
-  // Night rig: one cool light from behind-right, grazing the edge
-  const rim = new THREE.DirectionalLight(0xcfe0ff, 0);
-  rim.position.set(900, 250, -500);
-  const rim2 = new THREE.DirectionalLight(0xcfe0ff, 0);
-  rim2.position.set(700, -200, -300);
-  scene.add(key, fill, rim, rim2);
+  const envs: { paper?: THREE.Texture; night?: THREE.Texture } = {};
+  const loadEnv = (url: string) =>
+    new EXRLoader().loadAsync(url).then((t) => {
+      t.mapping = THREE.EquirectangularReflectionMapping;
+      const env = pmrem.fromEquirectangular(t).texture;
+      t.dispose();
+      return env;
+    });
+  try {
+    envs.paper = await loadEnv(RING_MODEL.env.paper);
+  } catch {
+    /* no env: the ring still renders, darker */
+  }
+  // night env after the first paint of the ring
+  setTimeout(() => loadEnv(RING_MODEL.env.night).then((e) => ((envs.night = e), (lastLight = -1))).catch(() => {}), 300);
+  scene.environment = envs.paper ?? null;
 
   const pivot = new THREE.Group(); // position, scale, view rotation
   const spinner = new THREE.Group(); // spin about the ring's own axis (model Z)
@@ -84,8 +86,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   ring.traverse((o) => {
     if (!o.isMesh) return;
     const m = o.material;
-    if (M.shell.test(m.name)) shells.push(m); // roughness/metalness as authored (satin, stage 1)
-    if (M.liner.test(m.name)) m.envMapIntensity = 0.5;
+    if (M.shell.test(m.name)) shells.push(m); // brushed silver as authored in the GLB
   });
   // LEDs (D-062): both off until a section asks (S08 colours, "off" = red dot)
   const ledMain = ring.getObjectByName(RING_MODEL.meshes.ledMain)?.material as THREE.MeshStandardMaterial | undefined;
@@ -106,22 +107,27 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   window.addEventListener('resize', resize);
   resize();
 
+  const rollQ = new THREE.Quaternion();
+  const Z_AXIS = new THREE.Vector3(0, 0, 1);
   let lastAlpha = -1;
+  let lastLight = -1;
   const apply = (p: Pose, extra: { breathe?: number } = {}) => {
     // width: fraction of viewport width, but never taller than 82% of the viewport
     const w = Math.min(p.w * W, H * 0.82) * (1 + (extra.breathe ?? 0));
     pivot.position.set(p.x * W, p.y * H, 0);
     pivot.scale.setScalar(w / ringSize);
     pivot.rotation.set(p.rx, p.ry, p.rz, 'YXZ');
+    if (p.roll) pivot.quaternion.premultiply(rollQ.setFromAxisAngle(Z_AXIS, p.roll));
     spinner.rotation.z = p.spin;
 
     const n = Math.min(1, Math.max(0, p.light));
-    key.intensity = 2.0 * (1 - n);
-    fill.intensity = 0.5 * (1 - n);
-    scene.environmentIntensity = 1 - 0.94 * n;
-    rim.intensity = 9 * n;
-    rim2.intensity = 3 * n;
-    for (const m of shells) m.envMapIntensity = 1.2 - 0.8 * n;
+    if (n !== lastLight) {
+      lastLight = n;
+      const night = n >= 0.5 && envs.night;
+      scene.environment = (night ? envs.night : envs.paper) ?? null;
+      // dip around the swap so it never pops: 1 → 0.15 → 1
+      scene.environmentIntensity = 0.15 + 0.85 * Math.min(1, Math.abs(n - 0.5) * 2.5);
+    }
 
     if (p.alpha !== lastAlpha) {
       lastAlpha = p.alpha;
