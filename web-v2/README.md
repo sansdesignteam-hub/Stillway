@@ -113,6 +113,21 @@ web-v2/
    └─ styles/{tokens.css,global.css}
 ```
 
+## Typography (D-082) — rule for every section
+
+All V2 text follows the weights and style of S01 (Hero V1). Geist + Geist Mono only. **No Light (300)
+or thinner weights anywhere.** Tokens in `src/styles/tokens.css`:
+
+| Role | Token | Weight | Tracking | Used for |
+|---|---|---|---|---|
+| Display | `--w-display` | 500 | 0 (wordmark) / `--track-display` −0.02em | STILLWAY wordmark, giant words ("rhythm", "keeps the pattern.") |
+| Heading | `--w-heading` | 450 | `--track-tight` −0.03em | S01 statement, section headlines, big sentences (`.t-display`), big numbers (23:10, 7h 12m) |
+| Body | `--w-body` | 400 | normal | paragraphs, tagline, feature list, data rows |
+| Label | `--w-label` | 500 | `--track-label` 0.06em (sans caps) / `--track-mono` 0.08em (mono) | nav, CTA, scroll line (`.t-label`), mono tags and clock (`.t-mono`, `.t-tag`) |
+
+Sizes stay on the existing scale (`--fs-*`); S01 statement is the reference size for headlines
+(clamp(22px, 2.3vw, 34px)), larger statements may scale up but keep `--w-heading`.
+
 ## Tokens (Moodboard §2, HANDOFF-v2 §1)
 
 Five colours only: `--paper #F7F5F0`, `--sand #EFE6DB`, `--ink #231F20`, `--night #17120F`,
