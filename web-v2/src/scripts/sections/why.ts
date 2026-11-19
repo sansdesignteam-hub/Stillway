@@ -65,10 +65,12 @@ export const why: SectionMotion = {
     // D-088 background: fades in from Paper while S01 hands over (the photo there has faded to
     // Paper by u ≈ −0.6), drifts up slowly with the scroll (parallax), and leaves in the 30–70%
     // middle of the connection to S03, together with Paper → Night.
+    // VD README: 01 → 02 fades in over Paper with scale 1.03 → 1; 02 → 03 the photo goes first
+    // (30–55% of the connection), then Paper → Night (story.ts, 30–70%).
     if (el.bg) {
       const inn = seg(u, -1.0, -0.2);
-      const leave = 1 - seg(u, END + 0.3, END + 0.7);
-      put(el.bg, { o: inn * leave, yv: whyBg.parallax * (0.5 - clamp01((u + 1) / (END + 1))) }, ctx);
+      const leave = 1 - seg(u, END + 0.3, END + 0.55);
+      put(el.bg, { o: inn * leave, s: 1.03 - 0.03 * inn, yv: whyBg.parallax * (0.5 - clamp01((u + 1) / (END + 1))) }, ctx);
     }
     // "rhythm": shows while the ring zooms out of S01 (u ≈ −1.1 … −0.4), gone on the way to state 2
     put(el.word, { o: seg(u, -1.1, -0.4) * (1 - seg(u, 0.25, 0.8)) }, ctx);

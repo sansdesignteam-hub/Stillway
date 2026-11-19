@@ -23,8 +23,8 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
       D && (
         <div class="why__bg" data-w-bg data-a style={`--pos-d:${D.position}; --pos-m:${M?.position ?? D.position}; --overscan:${whyBg.overscan}`}>
           <picture>
-            {M && <source media={M.media} srcset={M.srcset ?? M.src} />}
-            <img src={D.src} srcset={D.srcset} sizes="100vw" width={D.width} height={D.height} alt="" loading="lazy" decoding="async" />
+            {M && <source media={M.media} srcset={M.srcset ?? M.src} sizes="100vw" />}
+            <img src={D.src} srcset={D.srcset} sizes="100vw" width={D.width} height={D.height} alt="" decoding="async" />
           </picture>
         </div>
       )

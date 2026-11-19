@@ -17,9 +17,23 @@ export const whyBg: {
   overscan: number;
   envTint: number;
 } = {
-  desktop: null, // e.g. { src: '/why/why-bg-desktop.webp', width: 3840, height: 2160, position: '50% 50%' }
-  mobile: null, // e.g. { src: '/why/why-bg-mobile.webp', width: 1080, height: 1920, position: '50% 40%', media: '(max-width: 760px)' }
-  parallax: 0.04,
-  overscan: 1.08,
+  // option B (warm), Visual Director 0b40d41; leaves and shadows top/top-right, clean wall ≈ Paper
+  desktop: {
+    src: '/why/s02-wall-B-desktop-1920x1080.webp',
+    srcset: '/why/s02-wall-B-desktop-1920x1080.webp 1920w, /why/s02-wall-B-desktop-2880x1620.webp 2880w',
+    width: 2880,
+    height: 1620,
+    position: '50% 20%', // VD note: keeps the leaves clear of the navbar CTA at 1440
+  },
+  mobile: {
+    src: '/why/s02-wall-B-mobile-1080x1920.webp',
+    srcset: '/why/s02-wall-B-mobile-1080x1920.webp 1080w, /why/s02-wall-B-mobile-1440x2560.webp 1440w',
+    width: 1440,
+    height: 2560,
+    position: '50% 30%',
+    media: '(max-width: 760px)',
+  },
+  parallax: 0.03,
+  overscan: 1.04,
   envTint: 1,
 };
