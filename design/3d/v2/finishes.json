@@ -121,6 +121,16 @@
         "S10 Gold"
       ],
       "use": "Warm tungsten lamp light (active when Gold is selected)"
+    },
+    "heroV1": {
+      "file": "web/public/env/hero-env.jpg (V1, sRGB equirect JPG, same as design/3d/hero-test/env.jpg)",
+      "environmentRotationY": 1.885,
+      "exposure": 1.15,
+      "lights": "DirectionalLight #ffe2b8 2.2 from upper left (-600,700,500) + HemisphereLight #fff1dc/#3b3a1c 0.35 + shadow-only light and ShadowMaterial on the stone, exactly as V1 heroRing.ts",
+      "sections": [
+        "S01"
+      ],
+      "use": "V1 moss-and-stone hero (D-081)"
     }
   },
   "renderer": {
@@ -184,5 +194,34 @@
       "envPreset": "paper",
       "_label": "Option C - champagne, closest to V1 R-gold"
     }
+  },
+  "silver_polished": {
+    "_label": "Silver polished (D-081, S01): same as the V1 hero silver, no brushing. Prefer the GLB stillway-ring-v2-silver-polished_web.glb (no UV/texture). If applied to the brushed GLB instead, also set normalMap = null and anisotropy = 0.",
+    "shell": {
+      "color": [
+        0.92,
+        0.92,
+        0.93
+      ],
+      "metalness": 1,
+      "roughness": 0.06,
+      "anisotropy": 0,
+      "normalMap": null,
+      "envMapIntensity": 1.5,
+      "clearcoat": 0
+    },
+    "engrave": {
+      "color": [
+        0.28,
+        0.28,
+        0.29
+      ],
+      "metalness": 1,
+      "roughness": 0.38,
+      "envMapIntensity": 1.0,
+      "clearcoat": 0
+    },
+    "glb": "stillway-ring-v2-silver-polished_web.glb",
+    "envPreset": "heroV1"
   }
 }

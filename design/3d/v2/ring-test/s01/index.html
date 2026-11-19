@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stillway V2 S01 polished test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  /* Test page by 3D Designer (D-051). Mirrors web/src hero geometry; not production code. */
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #3a2f22; color: #fff; font-family: Geist, system-ui, sans-serif; }
+  .hero__track { position: relative; height: 210svh; }
+  .hero__pin { position: sticky; top: 0; height: 100svh; min-height: 560px; overflow: hidden; }
+  .hero__stage { position: absolute; left: 50%; top: 50%;
+    width: max(100vw, 100svh * 1.7652, 560px * 1.7652); aspect-ratio: 2556 / 1448; transform: translate(-50%, -50%); }
+  .hero__bg { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hero__dim { position: absolute; inset: 0; background: #1c140b; opacity: .42; }
+  .hero__word { position: absolute; left: 0; right: 0; top: 64px; z-index: 2; text-align: center;
+    font-weight: 600; font-size: 19.4vw; line-height: .8; letter-spacing: -.02em; white-space: nowrap; }
+  .hero__contact { position: absolute; left: 42.5%; top: 75.2%; width: 11%; height: 2.6%; border-radius: 50%;
+    background: #1c140b; filter: blur(10px); opacity: 0; z-index: 3; }
+  .hero__ring-fallback { position: absolute; left: 39%; top: 51.5%; width: 16.5%; z-index: 3; transition: opacity .6s; }
+  .hero__ring-fallback img { width: 100%; height: auto; display: block; }
+  canvas.ring3d { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; opacity: 0; transition: opacity .8s; }
+  .ready canvas.ring3d { opacity: 1; }
+  .ready .hero__ring-fallback { opacity: 0; }
+  .hud { position: fixed; left: 16px; bottom: 16px; z-index: 10; font-size: 12px; letter-spacing: .04em;
+    background: rgba(0,0,0,.45); padding: 8px 10px; border-radius: 6px; }
+  .hud label { margin-right: 10px; cursor: pointer; }
+  .after { height: 100svh; display: grid; place-items: center; background: #efe9df; color: #2b241b; }
+</style>
+</head>
+<body>
+<section class="hero">
+  <div class="hero__track">
+    <div class="hero__pin" id="pin">
+      <div class="hero__stage">
+        <img class="hero__bg" src="../../../hero-test/hero-bg.jpg?v=2" alt="" />
+        <div class="hero__dim" id="dim"></div>
+      </div>
+      <h1 class="hero__word" id="word">STILLWAY</h1>
+      <div class="hero__stage" style="z-index:3;pointer-events:none" id="front">
+        <div class="hero__contact" id="contact"></div>
+        <!-- fallback / poster: the current photo cutout -->
+        <div class="hero__ring-fallback" id="landed"><img src="../../../../assets/v1/home/user/H-02-ring-cutout.png" alt="Stillway smart ring in silver" /></div>
+      </div>
+      <canvas class="ring3d" id="c"></canvas>
+    </div>
+  </div>
+</section>
+<section class="after"><p>Next section</p></section>
+<div class="hud">
+  <label><input type="checkbox" id="cmp" /> show photo cutout (compare)</label>
+  <span id="fps"></span>
+</div>
+
+<script>addEventListener('error',e=>{document.getElementById('fps').textContent='ERR '+e.message});addEventListener('unhandledrejection',e=>{document.getElementById('fps').textContent='ERR '+(e.reason&&e.reason.message||e.reason)});</script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+const q = new URLSearchParams(location.search);
+const forceP = q.has('p') ? parseFloat(q.get('p')) : null;      // ?p=0..1 freezes scroll progress (for review)
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const pin = document.getElementById('pin');
+const front = document.getElementById('front');
+const landedEl = document.getElementById('landed');
+const canvas = document.getElementById('c');
+
+// ---------- WebGL check: keep the photo cutout if unavailable or reduced motion ----------
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' }); }
+catch (e) { renderer = null; }
+if (!renderer || reduced) { console.info('3D off: fallback image kept'); }
+else start();
+
+function start() {
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.toneMapping = THREE.AgXToneMapping;
+  renderer.toneMappingExposure = 1.15;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+  const scene = new THREE.Scene();
+  let FOV = 30;
+  const camera = new THREE.PerspectiveCamera(FOV, 1, 1, 20000);
+
+  // environment = the hero photograph itself, wrapped as an equirect map,
+  // so the polished silver reflects warm moss, stone and sun like the photo cutout
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  new THREE.TextureLoader().load('../../../hero-test/env.jpg?v=2', (tex) => {
+    tex.mapping = THREE.EquirectangularReflectionMapping;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    scene.environment = pmrem.fromEquirectangular(tex).texture;
+    scene.environmentRotation = new THREE.Euler(0, Math.PI * 0.6, 0);
+    tex.dispose();
+  });
+  const sun = new THREE.DirectionalLight(0xffe2b8, 2.2);   // warm morning sun, upper left
+  sun.position.set(-600, 700, 500);
+  scene.add(sun);
+  scene.add(new THREE.HemisphereLight(0xfff1dc, 0x3b3a1c, 0.35));
+
+  // ---------- live cast shadow on the stone (replaces the shadow baked into the photo) ----------
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const shadowSun = new THREE.DirectionalLight(0xffffff, 0);   // casts only, adds no light
+  shadowSun.castShadow = true;
+  shadowSun.shadow.mapSize.set(1024, 1024);
+  shadowSun.shadow.radius = 6;
+  shadowSun.shadow.bias = -0.0005;
+  scene.add(shadowSun, shadowSun.target);
+  const catcherMat = new THREE.ShadowMaterial({ color: 0x1c140b, opacity: 0.5, transparent: true });
+  const catcher = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), catcherMat);   // the stone top, seen from slightly above
+  catcher.receiveShadow = true;
+  catcherMat.depthWrite = false; catcher.renderOrder = -1;
+  scene.add(catcher);
+  // light direction relative to the ring: from the front-right, high (the photo's old shadow fell back-left)
+  const SHADOW_DIR = new THREE.Vector3(0.55, 1, 0.75).normalize();
+
+  // ---------- ring ----------
+  const pivot = new THREE.Group();   // position + scale + scroll spin + mouse tilt
+  const pose = new THREE.Group();    // fixed "photo" pose: opening up and toward the viewer
+  pivot.add(pose); scene.add(pivot);
+  // Photo pose, measured from H-02: the opening's axis leans `theta` deg from screen-right toward up,
+  // `phi` deg away from the camera; `psi` turns the sensors around the axis. File frame: axis +Z, sensors at -X.
+  const POSE = { theta: 66, phi: 50, psi: q.has('psi') ? +q.get('psi') : 0, scale: 1.0 };
+  function setPose({ theta, phi, psi, scale }) {
+    const d = THREE.MathUtils.degToRad;
+    const a = new THREE.Vector3(Math.sin(d(phi)) * Math.cos(d(theta)), Math.sin(d(phi)) * Math.sin(d(theta)), Math.cos(d(phi)));
+    // sensors sit on the far inner wall: the radial direction pointing away from the camera
+    const r = new THREE.Vector3(0, 0, -1).addScaledVector(a, Math.cos(d(phi))).normalize().applyAxisAngle(a, d(psi));
+    const xw = r.clone().negate(), zw = a, yw = zw.clone().cross(xw);
+    pose.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(xw, yw, zw));
+    pose.scale.setScalar(scale);
+    placeCatcher();
+  }
+  window.__ring = { pose, pivot, setPose };   // dev hook for pose tuning
+  let ringSize = 1;
+
+  const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/');
+  new GLTFLoader().setDRACOLoader(draco).load('../../' + (q.get('glb') || 'stillway-ring-v2-silver-polished_web.glb'), (g) => {
+    try {
+    const ring = g.scene;
+    // centre it
+    const box = new THREE.Box3().setFromObject(ring);
+    ring.position.sub(box.getCenter(new THREE.Vector3()));
+    ringSize = box.getSize(new THREE.Vector3()).x;   // outer diameter (m)
+    ring.traverse((o) => {
+      if (!o.isMesh) return;
+      o.castShadow = true;
+      const m = o.material;
+      if (m.name === 'Ring_Silver') { m.envMapIntensity = 1.5; m.roughness = 0.06; }
+      if (m.name === 'Ring_Silver_Engrave') { m.envMapIntensity = 1.0; }
+      if (/Liner/i.test(m.name)) { m.envMapIntensity = 0.5; }
+      if (/Glass|Frame/i.test(m.name)) { m.envMapIntensity = 0.9; }
+    });
+    // sensors (-X in file) rotated to the far inner wall, opening tipped up toward camera
+    pose.add(ring);
+    setPose(POSE);
+    placeCatcher();
+    document.body.classList.add('ready');
+    document.documentElement.dataset.loaded = '1'; setTimeout(() => (document.title += ' · ready'), 800);
+    if (q.has('cmp')) document.body.classList.remove('ready');
+    } catch (err) { document.getElementById('fps').textContent = 'ERR ' + err.message; }
+  }, undefined, (err) => { document.getElementById('fps').textContent = 'LOAD ERR ' + (err.message || err); });
+
+  document.getElementById('cmp').addEventListener('change', (e) => {
+    document.body.classList.toggle('ready', !e.target.checked);
+  });
+
+  // ---------- layout: same geometry as the current hero ----------
+  let W = 0, H = 0, landed = { x: 0, y: 0, w: 0 }, floatP = { x: 0, y: 0, w: 0 };
+  const isPhone = () => innerWidth < 720;
+  function resize() {
+    W = pin.clientWidth; H = pin.clientHeight;
+    renderer.setSize(W, H, false);
+    camera.aspect = W / H;
+    camera.position.set(0, 0, (H / 2) / Math.tan(THREE.MathUtils.degToRad(FOV / 2)));  // 1 unit = 1 css px at z=0
+    camera.updateProjectionMatrix();
+    // landed pose comes from the cutout box (photo coordinates)
+    const pr = pin.getBoundingClientRect(), r = landedEl.getBoundingClientRect();
+    landed = { x: r.left - pr.left + r.width / 2 - W / 2, y: -(r.top - pr.top + r.height / 2 - H / 2), w: r.width * 0.98 };
+    const fw = isPhone() ? innerWidth * 0.66 : Math.min(innerWidth * 0.3, H * 0.62);
+    floatP = { x: 0, y: -H * (isPhone() ? 0 : 0.03), w: fw };
+    placeCatcher();
+  }
+  // shadow catcher sits where the ring's lowest point touches the stone in the landed pose
+  let landedBottom = 0;
+  function placeCatcher() {
+    if (!pose.children.length) return;
+    pivot.position.set(landed.x, landed.y, 0); pivot.scale.setScalar(landed.w / ringSize); pivot.rotation.set(0, 0, 0);
+    pivot.updateMatrixWorld(true);
+    landedBottom = new THREE.Box3().setFromObject(pose).min.y;
+    const w = landed.w;
+    catcher.position.set(landed.x, landedBottom + 0.5, 0);
+    catcher.rotation.set(-Math.PI / 2 + 0.32, 0, 0);       // stone top, foreshortened like the photo
+    catcher.scale.set(w * 3.2, w * 2.2, 1);
+    shadowSun.target.position.copy(catcher.position);
+    shadowSun.position.copy(catcher.position).addScaledVector(SHADOW_DIR, w * 4);
+    const c = shadowSun.shadow.camera;
+    c.left = c.bottom = -w * 1.6; c.right = c.top = w * 1.6; c.near = 1; c.far = w * 9;
+    c.updateProjectionMatrix();
+  }
+  addEventListener('resize', resize); resize();
+  window.__ring.setFov = (f) => { FOV = f; camera.fov = f; resize(); };
+
+  // ---------- input ----------
+  const mouse = { x: 0, y: 0 }, tilt = { x: 0, y: 0 };
+  // mouse tilt only with a real pointer on a wide screen (D-051: mobile is 3D without tilt)
+  const canTilt = () => matchMedia('(hover: hover) and (pointer: fine)').matches && !isPhone();
+  addEventListener('pointermove', (e) => { mouse.x = e.clientX / innerWidth * 2 - 1; mouse.y = e.clientY / innerHeight * 2 - 1; });
+  if (q.has('mx')) { mouse.x = +q.get('mx'); mouse.y = +q.get('my') || 0; }
+
+  const clamp01 = (v) => Math.min(1, Math.max(0, v));
+  const easeIO = (t) => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  const lerp = (a, b, t) => a + (b - a) * t;
+  let pSm = 0;
+  const contact = document.getElementById('contact'), dim = document.getElementById('dim'), word = document.getElementById('word');
+  const fpsEl = document.getElementById('fps'); let frames = 0, last = performance.now();
+
+  // render only while the hero is on screen
+  let visible = true;
+  new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(pin.parentElement);
+
+  renderer.setAnimationLoop((tms) => {
+    if (!visible) return;
+    const t = tms / 1000;
+    const track = pin.parentElement;
+    const raw = forceP ?? clamp01(-track.getBoundingClientRect().top / (track.offsetHeight - pin.offsetHeight));
+    pSm += (raw - pSm) * 0.09;                       // ~ scrub smoothing
+    const k = easeIO(clamp01(pSm / 0.72));            // landing progress (same window as current GSAP timeline)
+    const hover = 1 - k;
+
+    // position + size: float centre -> landed on the stone
+    const x = lerp(floatP.x, landed.x, k), y = lerp(floatP.y, landed.y, k) + Math.sin(t * 1.3) * 10 * hover;
+    const w = lerp(floatP.w, landed.w, k);
+    pivot.position.set(x, y, 0);
+    pivot.scale.setScalar(w / ringSize);
+
+    // scroll: slow turn as it comes down (one full revolution minus the settle), mouse: gentle tilt
+    const tk = canTilt() || q.has('mx') ? 1 : 0;
+    tilt.x += (mouse.y * 0.22 * tk - tilt.x) * 0.06;
+    tilt.y += (mouse.x * 0.32 * tk - tilt.y) * 0.06;
+    const mk = lerp(1, 0.35, k);                      // less mouse once it rests on the stone
+    pivot.rotation.set(
+      tilt.x * mk + Math.sin(t * 0.9) * 0.03 * hover,
+      -(1 - k) * Math.PI * 2 + tilt.y * mk,           // one slow full turn while landing: starts and ends on the photo pose
+      THREE.MathUtils.degToRad(lerp(-9, 0, k)) + Math.sin(t * 0.9) * 0.028 * hover,
+    );
+
+    // cast shadow grows in as the ring nears the stone
+    catcherMat.opacity = 0.55 * Math.pow(clamp01((k - 0.35) / 0.65), 1.5);
+
+    // same supporting moves as the current hero
+    contact.style.opacity = (0.35 * clamp01((pSm - 0.6) / 0.15)).toFixed(3);
+    dim.style.opacity = lerp(0.42, 0.2, clamp01(pSm / 0.7)).toFixed(3);
+    const wk = clamp01((pSm - 0.12) / 0.45);
+    word.style.transform = `translateY(${-18 * wk}%)`; word.style.opacity = 1 - wk;
+
+    renderer.render(scene, camera);
+    frames++; if (tms - last > 1000) { fpsEl.textContent = frames + ' fps'; frames = 0; last = tms; }
+  });
+}
+</script>
+</body>
+</html>
