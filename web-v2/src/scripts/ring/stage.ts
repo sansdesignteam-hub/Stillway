@@ -220,6 +220,56 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   }
   spinner.add(ring);
 
+  /* S08: window A lit in the three mode colours (D-062), a soft flare sprite and the coloured bounce
+     on the inner band (point light). Placed at the LED mesh centre, nudged toward the ring axis. */
+  const LED_COLS = [new THREE.Color('#34E07A'), new THREE.Color('#3B8CFF'), new THREE.Color('#A06BFF')];
+  const ledColor = (c: number) => {
+    const k = Math.min(2, Math.max(0, c));
+    const i = Math.min(1, Math.floor(k));
+    return LED_COLS[i].clone().lerp(LED_COLS[i + 1], k - i);
+  };
+  const flareTex = (() => {
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = 256;
+    const g = cv.getContext('2d')!;
+    const glow = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+    glow.addColorStop(0, 'rgba(255,255,255,1)');
+    glow.addColorStop(0.08, 'rgba(255,255,255,0.85)');
+    glow.addColorStop(0.3, 'rgba(255,255,255,0.22)');
+    glow.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = glow;
+    g.fillRect(0, 0, 256, 256);
+    // one thin streak across (the client reference's flare line)
+    const st = g.createLinearGradient(0, 0, 256, 0);
+    st.addColorStop(0, 'rgba(255,255,255,0)');
+    st.addColorStop(0.5, 'rgba(255,255,255,0.9)');
+    st.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = st;
+    g.fillRect(0, 126, 256, 4);
+    const t = new THREE.CanvasTexture(cv);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  })();
+  const flare = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map: flareTex, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false, transparent: true, toneMapped: false, opacity: 0 }),
+  );
+  flare.material.rotation = -0.42;
+  flare.renderOrder = 10;
+  flare.visible = false;
+  const bounce = new THREE.PointLight(0x34e07a, 0, 0, 0);
+  const ledMesh = ring.getObjectByName(RING_MODEL.meshes.ledMain) as THREE.Mesh | undefined;
+  if (ledMesh) {
+    ring.updateMatrixWorld(true);
+    const bb = new THREE.Box3().setFromObject(ledMesh);
+    const c = bb.getCenter(new THREE.Vector3());
+    const local = ring.worldToLocal(c.clone());
+    // toward the axis (the window faces the skin, inward)
+    const inward = new THREE.Vector3(-local.x, -local.y, 0).normalize().multiplyScalar(ringSize * 0.04);
+    flare.position.copy(local).add(inward);
+    bounce.position.copy(local).add(inward.multiplyScalar(2));
+    ring.add(flare, bounce);
+  }
+
   let W = 0;
   let H = 0;
   const resize = () => {
@@ -238,7 +288,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const X_AXIS = new THREE.Vector3(1, 0, 0);
   let lastAlpha = -1;
   let lastEnv = '';
-  let lastLed = 0;
+  let lastLedKey = '';
   let lastGloss = -1;
   const apply = (p: Pose, extra: { breathe?: number } = {}) => {
     // width: fraction of viewport width, but never taller than 82% of the viewport
@@ -305,9 +355,22 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     // the swap dip never goes below 0.45, so the ring is never a black shape in a connection (D-090 r1)
     scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim);
 
-    if (Math.abs(p.led - lastLed) > 0.001) {
-      lastLed = p.led;
-      setLed(p.led > 0.01 ? '#34E07A' : null, RING_MODEL.ledIntensity * p.led);
+    const ledKey = p.led.toFixed(3) + '|' + p.ledc.toFixed(3);
+    if (ledKey !== lastLedKey) {
+      lastLedKey = ledKey;
+      setLed(p.led > 0.01 ? '#' + ledColor(p.ledc).getHexString() : null, RING_MODEL.ledIntensity * p.led);
+    }
+    const fl = Math.max(0, p.flare);
+    flare.visible = fl > 0.005;
+    bounce.intensity = 0;
+    if (flare.visible) {
+      const col = ledColor(p.ledc);
+      flare.material.color.copy(col);
+      flare.material.opacity = Math.min(1, fl);
+      flare.scale.set(ringSize * 0.6, ringSize * 0.6, 1);
+      bounce.color.copy(col);
+      bounce.distance = w * 0.9;
+      bounce.intensity = 2.4 * fl;
     }
     if (p.alpha !== lastAlpha) {
       lastAlpha = p.alpha;

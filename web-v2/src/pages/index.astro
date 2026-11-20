@@ -9,11 +9,13 @@ import Activity from '../components/scenes/Activity.astro';
 import Insight from '../components/scenes/Insight.astro';
 import Details from '../components/scenes/Details.astro';
 import Specs from '../components/scenes/Specs.astro';
+import Features from '../components/scenes/Features.astro';
+import App from '../components/scenes/App.astro';
 import Placeholder from '../components/scenes/Placeholder.astro';
 import { sections } from '../content/sections';
 import { heroBg } from '../content/heroBg';
 
-const built: Record<string, any> = { hero: Hero, why: Why, sleep: Sleep, activity: Activity, insight: Insight, details: Details, specs: Specs };
+const built: Record<string, any> = { hero: Hero, why: Why, sleep: Sleep, activity: Activity, insight: Insight, details: Details, specs: Specs, features: Features, app: App };
 const len = (i: number) => {
   const d = sections[i];
   return d.tin + d.states - 1 + d.hold + (i === sections.length - 1 ? 1 : 0);

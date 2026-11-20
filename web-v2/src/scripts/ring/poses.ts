@@ -24,6 +24,10 @@
  * fing: 0..1 finger proxy on (S06 state 4): a depth-only lathe along the index finger of the hand
  *       photo hides the back of the ring (design/3d/v2/s06-pose.json); fx, fy = ring seat (fractions
  *       of the viewport from the centre, y up), fs = CSS px per image px of the hand photo.
+ * ledc: colour of window A while lit, 0 = green (heart rate) → 1 = blue (sleep) → 2 = violet (recovery),
+ *       blended between the LED tokens (Moodboard §2.3, D-062). S08 drives it by scroll.
+ * flare: 0..1 soft flare on window A (thin streak + glow sprite) and its coloured bounce on the inner
+ *        band (S08, client LED reference).
  * alpha: canvas opacity (the ring is the only object, so fading the canvas fades the ring).
  */
 export interface Pose {
@@ -51,6 +55,8 @@ export interface Pose {
   fx: number;
   fy: number;
   fs: number;
+  ledc: number;
+  flare: number;
   alpha: number;
 }
 
@@ -97,4 +103,4 @@ export function along(u: number, frames: Array<[number, Pose]>): Pose {
   return frames[frames.length - 1][1];
 }
 
-export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, shadowX: 0, shadowY: -0.3, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, alpha: 1, ...p });
+export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, shadowX: 0, shadowY: -0.3, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, ledc: 0, flare: 0, alpha: 1, ...p });

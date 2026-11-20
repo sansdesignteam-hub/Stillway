@@ -1,0 +1,210 @@
+---
+/**
+ * S08 Features — 21:00 · Night (D-096). References (Figma sticky 40004118:132):
+ *  - Shift → composition and rhythm: dark ground, the camera close on one detail, a short title per
+ *    state top left, a small block bottom left with a counter chip (1/3).
+ *  - Client LED flare → states 2–3: big silver ring at three-quarter, one light in window A with a soft
+ *    flare and its bounce on the inner band (ring/stage.ts, pose.led / ledc / flare).
+ *  - Ultrahuman sensor glow → the light seen from inside the ring; green → blue → violet by scroll.
+ * Story told by scroll only: the legend is labels, not buttons (no chips, no clicks).
+ * Motion: scripts/sections/features.ts.
+ */
+import { features as d } from '../../content/copy';
+---
+
+<section class="scene scene--features" data-scene="features" aria-labelledby="features-title">
+  <!-- reduced motion / no WebGL: the polished Night still (no lit window; open question D-096) -->
+  <img class="ring-fallback ft__fb" src="/ring-fallback/fb-s03-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
+  <div class="scene__front">
+    <p class="sr-only">{d.alt}</p>
+    <h2 id="features-title" class="ft__heads">
+      {
+        d.heads.map((h, i) => (
+          <span class="ft__head" data-f-head={i} data-a>
+            {h}
+          </span>
+        ))
+      }
+    </h2>
+
+    <div class="ft__block">
+      <p class="ft__count t-mono" aria-hidden="true">
+        {d.heads.map((_, i) => <span data-f-count={i} data-a>{i + 1}/3</span>)}
+      </p>
+      <p class="ft__sub" data-f-sub data-a>{d.sub}</p>
+      <div class="ft__legendwrap" data-f-legendwrap data-a>
+        <p class="t-mono ft__tag">{d.tag}</p>
+        <ul class="ft__legend">
+          {
+            d.legend.map((l, i) => (
+              <li data-f-leg={i} class={`ft__leg ft__leg--${l.key}`}>
+                <i aria-hidden="true" />
+                {l.label}
+              </li>
+            ))
+          }
+        </ul>
+        <div class="ft__bodies">
+          {
+            d.legend.map((l, i) => (
+              <p class="ft__body" data-f-body={i} data-a>
+                {l.body}
+              </p>
+            ))
+          }
+        </div>
+        <p class="ft__off" data-f-off data-a>{d.off}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .scene--features {
+    color: var(--paper);
+  }
+  .ft__fb {
+    left: 66%;
+    width: min(42vw, 72vh);
+  }
+  .ft__heads {
+    position: absolute;
+    left: var(--margin);
+    top: calc(var(--header-h) + 5vh);
+    width: min(40rem, 46vw);
+    font-size: clamp(2.25rem, 1.2rem + 2.6vw, 3.75rem);
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
+    line-height: 1;
+  }
+  .ft__head {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  /* Shift: a small block bottom left with a counter chip, a title and a short body */
+  .ft__block {
+    position: absolute;
+    left: var(--margin);
+    bottom: 8vh;
+    width: min(26rem, 34vw);
+    display: grid;
+    gap: 14px;
+  }
+  .ft__count {
+    position: relative;
+    width: 44px;
+    height: 26px;
+    color: var(--stone-on-night);
+  }
+  /* the chip lives on each number so it fades with it (no empty chip between states) */
+  .ft__count span {
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    background: rgb(247 245 240 / 0.1);
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+  }
+  .ft__sub {
+    font-size: var(--fs-h3);
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
+    line-height: 1.15;
+  }
+  .ft__legendwrap {
+    display: grid;
+    gap: 14px;
+  }
+  .ft__sub,
+  .ft__legendwrap {
+    grid-area: 2 / 1;
+  }
+  .ft__tag {
+    color: var(--stone-on-night);
+  }
+  .ft__legend {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+    font-size: 15px;
+  }
+  .ft__leg {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: var(--on, 0.68);
+  }
+  .ft__leg i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--c);
+    box-shadow: 0 0 calc(10px * (var(--on, 0.68) - 0.6) * 2.5) var(--c);
+  }
+  .ft__leg--green {
+    --c: var(--led-heart-rate);
+  }
+  .ft__leg--blue {
+    --c: var(--led-sleep);
+  }
+  .ft__leg--violet {
+    --c: var(--led-recovery);
+  }
+  .ft__bodies {
+    display: grid;
+  }
+  .ft__body {
+    grid-area: 1 / 1;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--paper);
+  }
+  .ft__off {
+    font-size: var(--fs-small);
+    color: var(--stone-on-night);
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  @media (max-width: 719px) {
+    .ft__fb {
+      left: 50%;
+      width: 80vw;
+    }
+    .ft__heads {
+      top: calc(var(--header-h) + 3vh);
+      width: auto;
+      right: var(--margin);
+      font-size: 2.1rem;
+    }
+    .ft__block {
+      width: auto;
+      right: var(--margin);
+      bottom: 4vh;
+      gap: 10px;
+    }
+    .ft__legendwrap {
+      gap: 10px;
+    }
+    .ft__legend {
+      grid-auto-flow: column;
+      font-size: 12px;
+      gap: 6px;
+    }
+    .ft__leg {
+      gap: 6px;
+    }
+    .ft__body {
+      font-size: 14px;
+    }
+  }
+</style>

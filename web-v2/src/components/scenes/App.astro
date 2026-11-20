@@ -1,0 +1,232 @@
+---
+/**
+ * S09 The app — 21:00 · Paper (D-096). References (Figma sticky 40004185:54):
+ *  - Sofi → main layout: the phone still in the middle on Paper, one short text top left, one bottom
+ *    right; footer with the active label left and "Scroll down" + progress + percent right. No ring.
+ *  - Oura "Wake up knowing" → order only: the main number first, then the detail (sleep stages as
+ *    bars). No score (D-066).
+ *  - Dribbble sleep app → one big number per screen; the screen content scrolls, the phone stays.
+ * Screen style: Moodboard §5 / Figma Mobile App 40004128:58 — cream cards, Ink type, thin Ink line
+ * without a grid, an Ochre dot for "now", an Ochre outline on the active card; the small dot on each
+ * card uses the mode light colour (§2.3). Real HTML; every number is simulated data.
+ * Motion: scripts/sections/app.ts.
+ */
+import { app as d } from '../../content/copy';
+import AppPhone from '../AppPhone.astro';
+
+---
+
+<section class="scene scene--app" data-scene="app" aria-labelledby="app-title">
+  <div class="scene__front">
+    <h2 id="app-title" class="sr-only">The app</h2>
+
+    <!-- Sofi: one short text top left (with the light chip), one bottom right -->
+    <div class="ap__left">
+      {
+        d.states.map((s, i) => (
+          <div class="ap__lstate" data-p-left={i} data-a>
+            <p class={`ap__chip t-mono ap__chip--${s.key}`}>
+              <i aria-hidden="true" />
+              {s.chip}
+            </p>
+            <p class="ap__ltext">{s.left}</p>
+          </div>
+        ))
+      }
+    </div>
+    <div class="ap__right">
+      {
+        d.states.map((s, i) => (
+          <p class="ap__rtext" data-p-right={i} data-a>
+            {s.right}
+          </p>
+        ))
+      }
+    </div>
+
+    <!-- the phone stays; only its screen content moves -->
+    <AppPhone />
+    <p class="ap__sim t-mono" data-p-sim data-a>{d.simulated}</p>
+
+    <!-- Sofi footer: active label left; Scroll down + progress + percent right -->
+    <div class="ap__foot" data-p-foot data-a>
+      <p class="ap__flabels">
+        {
+          d.states.map((s, i) => (
+            <span data-p-flabel={i}>{s.label}</span>
+          ))
+        }
+      </p>
+      <p class="ap__fright">
+        <span>{d.scroll}</span>
+        <i class="ap__prog" aria-hidden="true"><b data-p-prog></b></i>
+        <span class="ap__pct" data-p-pct>33%</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .scene--app {
+    color: var(--ink);
+    --ph: min(78svh, 760px);
+    --pw: calc(var(--ph) * 0.485);
+  }
+  .ap__left {
+    position: absolute;
+    left: 8vw;
+    top: 22vh;
+    width: min(22vw, 20rem);
+  }
+  .ap__lstate {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    display: grid;
+    gap: 14px;
+  }
+  .ap__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-self: start;
+    padding: 5px 10px;
+    border-radius: var(--radius-pill);
+    background: var(--sand);
+    text-transform: uppercase;
+  }
+  .ap__chip i,
+  .ap__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--c);
+    flex: none;
+  }
+  .ap__chip--green,
+  .ap__dot--green {
+    --c: var(--led-heart-rate);
+  }
+  .ap__chip--blue,
+  .ap__dot--blue {
+    --c: var(--led-sleep);
+  }
+  .ap__chip--violet,
+  .ap__dot--violet {
+    --c: var(--led-recovery);
+  }
+  /* D-096 r1: body size as S04/S06, full Ink */
+  .ap__ltext,
+  .ap__rtext {
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .ap__right {
+    position: absolute;
+    left: 68vw;
+    top: 54vh;
+    width: min(22vw, 20rem);
+  }
+  .ap__rtext {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  .ap__sim {
+    position: absolute;
+    left: 50%;
+    top: calc(50% + 1vh + var(--ph) / 2 + 10px);
+    translate: -50% 0;
+    color: var(--stone);
+  }
+  .ap__foot {
+    position: absolute;
+    left: var(--margin);
+    right: var(--margin);
+    bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+  }
+  .ap__flabels {
+    position: relative;
+    min-width: 8em;
+    height: 1.4em;
+  }
+  .ap__flabels span {
+    position: absolute;
+    left: 0;
+    top: 0;
+    white-space: nowrap;
+  }
+  .ap__fright {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .ap__prog {
+    width: 120px;
+    height: 1px;
+    background: rgb(35 31 32 / 0.2);
+  }
+  .ap__prog b {
+    display: block;
+    height: 100%;
+    width: calc(var(--p, 0.33) * 100%);
+    background: var(--ink);
+  }
+  .ap__pct {
+    min-width: 3ch;
+    font-variant-numeric: tabular-nums;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  @media (max-width: 719px) {
+    .scene--app {
+      --ph: min(52svh, 460px);
+    }
+    .ap__left {
+      left: var(--margin);
+      right: var(--margin);
+      top: calc(var(--header-h) + 8px);
+      width: auto;
+    }
+    .ap__lstate {
+      gap: 8px;
+    }
+    .ap__ltext,
+    .ap__rtext {
+      font-size: 15px;
+      line-height: 1.4;
+    }
+    .scene--app :global(.ap__phone) {
+      top: 50%;
+    }
+    .ap__sim {
+      top: calc(50% + var(--ph) / 2 + 6px);
+    }
+    .ap__right {
+      left: var(--margin);
+      right: var(--margin);
+      top: auto;
+      bottom: 50px;
+      width: auto;
+      height: 2.8em;
+    }
+    .ap__foot {
+      font-size: 12px;
+    }
+    .ap__prog {
+      width: 60px;
+    }
+  }
+</style>

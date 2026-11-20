@@ -1,0 +1,442 @@
+---
+/**
+ * The phone in S09 (D-096, screens rebuilt for D-097): a still frame whose HTML screen scrolls one
+ * page per state (Heart rate → Sleep → Recovery). Screen language from Figma Moodboard Mobile App
+ * 40004128:58 (six sticky notes):
+ *  - Metric detail (Oura 52 bpm): one value very large, the unit small, one line of meaning under it.
+ *  - Colour block: one full panel per metric, an Ember/Dawn gradient (Ochre → Night, Ochre → Paper),
+ *    never flat orange and never a thin-outlined cream card. Brand rule (Moodboard), so the inspector's
+ *    gradient ban is allowed for these three panels only.
+ *  - Charts: one thin line, no grid and no axis labels, only key points labelled; an Ochre dot for now.
+ *  - Timed insight (Ultrahuman): a nudge with its time stamp on top ("23:10 · Settled"), then 7h 12m.
+ *  - Screen set: one strong panel per screen and at most one small data card.
+ * Lines of meaning come only from existing copy (home-copy-v2 §03, §09). Every number is simulated.
+ * `page` (local review only) renders one page without the scroll.
+ */
+import { app as d, sleep as s3 } from '../content/copy';
+
+interface Props {
+  page?: number;
+}
+const { page } = Astro.props;
+
+// simulated heart rate 00:00 → 21:00 (now), 30-minute steps; resting ≈ 58, peak 82 at 15:30 (copy)
+const HR = [57, 58.2, 56.7, 55.9, 57.6, 58, 56.2, 56.3, 58, 57.5, 55.8, 56.8, 57.2, 60.1, 62.5, 63.5, 63.6, 64.1, 63, 64.7, 68.3, 68.5, 65, 63, 65.4, 68.7, 68.1, 64.5, 63.1, 66, 74, 82, 67.1, 66.1, 66.7, 67.7, 67.6, 66, 64.1, 63.5, 64.4, 65.3, 64.7];
+const CW = 300;
+const CH = 120;
+const xOf = (i: number) => (i / 48) * CW;
+const yOf = (v: number) => CH - 8 - ((v - 52) / 32) * (CH - 16);
+const hrPath = HR.map((v, i) => `${i ? 'L' : 'M'}${xOf(i).toFixed(1)} ${yOf(v).toFixed(1)}`).join(' ');
+const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(2)}%`;
+const peak = { x: xOf(31), y: yOf(82) };
+const rest = { x: xOf(5), y: yOf(58) };
+const now = { x: xOf(42), y: yOf(HR[42]) };
+const stageMax = Math.max(...d.sleep.stages.map((st) => st.min));
+const nudge = { time: '23:10', what: 'Settled' }; // = "Settled 23:10" (copy), set as the time-stamped nudge
+---
+
+<div class="ap__phone" data-p-phone data-a data-only={page}>
+  <div class="ap__screen">
+    <div class="ap__status" aria-hidden="true">
+      <span>21:00</span><i class="ap__island"></i><i class="ap__batt"></i>
+    </div>
+    <div class="ap__viewport">
+      <div class="ap__scroll" data-p-scroll>
+        <!-- 1 · Heart rate: one Ember panel, 58 bpm huge, the day as one thin line -->
+        <section class="ap__page" aria-label="Heart rate, simulated data">
+          <p class="ap__ptitle"><i class="ap__dot ap__dot--green" aria-hidden="true"></i>Heart rate</p>
+          <article class="ap__panel ap__panel--ember" data-p-card="0">
+            <p class="ap__label">{d.heart.label}</p>
+            <p class="ap__big">{d.heart.value}<span class="ap__unit">{d.heart.unit}</span></p>
+            <p class="ap__mean">Peak on the stairs, 15:30.</p>
+            <div class="ap__chart" aria-hidden="true">
+              <svg viewBox={`0 0 ${CW} ${CH}`} preserveAspectRatio="none">
+                <path d={hrPath} class="ap__line" vector-effect="non-scaling-stroke"></path>
+              </svg>
+              <i class="ap__pt" style={`left:${pct(peak.x, CW)};top:${pct(peak.y, CH)}`}></i>
+              <i class="ap__pt ap__pt--now" style={`left:${pct(now.x, CW)};top:${pct(now.y, CH)}`}></i>
+              <span class="ap__key ap__key--peak" style={`left:${pct(peak.x, CW)};top:${pct(peak.y, CH)}`}>82 bpm · 15:30</span>
+              <span class="ap__key ap__key--rest" style={`left:${pct(rest.x, CW)};top:${pct(rest.y, CH)}`}>58 bpm</span>
+            </div>
+          </article>
+        </section>
+
+        <!-- 2 · Sleep: the time-stamped nudge first, then 7h 12m and the stages (Oura order, no score) -->
+        <section class="ap__page" aria-label="Sleep, simulated data">
+          <p class="ap__ptitle"><i class="ap__dot ap__dot--blue" aria-hidden="true"></i>Sleep</p>
+          <article class="ap__nudge">
+            <p class="ap__stamp"><b>{nudge.time}</b> · {nudge.what}</p>
+            <p class="ap__ntext">{s3.line}</p>
+          </article>
+          <article class="ap__panel ap__panel--night" data-p-card="1">
+            <p class="ap__label">Rested</p>
+            <p class="ap__big ap__big--hm">{d.sleep.h}<span class="ap__unit">h</span> {d.sleep.m}<span class="ap__unit">m</span></p>
+            <p class="ap__mean">{d.sleep.line}</p>
+            <ul class="ap__stages">
+              {
+                d.sleep.stages.map((st) => (
+                  <li>
+                    <span class="ap__sname">{st.name}</span>
+                    <span class="ap__sdur">{st.d}</span>
+                    <span class="ap__sbar" aria-hidden="true">
+                      <b style={`width:${((st.min / stageMax) * 100).toFixed(1)}%`} />
+                    </span>
+                  </li>
+                ))
+              }
+            </ul>
+          </article>
+        </section>
+
+        <!-- 3 · Recovery: one Dawn panel, the week as seven bars, today in full colour; no score -->
+        <section class="ap__page" aria-label="Recovery, simulated data">
+          <p class="ap__ptitle"><i class="ap__dot ap__dot--violet" aria-hidden="true"></i>Recovery</p>
+          <article class="ap__panel ap__panel--dawn" data-p-card="2">
+            <p class="ap__label">{d.recovery.title}</p>
+            <p class="ap__say">{d.recovery.line}</p>
+            <div class="ap__week" aria-hidden="true">
+              {
+                d.recovery.bars.map((b, i) => (
+                  <span class={i === d.recovery.bars.length - 1 ? 'is-today' : ''}>
+                    <b style={`height:${(b * 100).toFixed(0)}%`} />
+                  </span>
+                ))
+              }
+            </div>
+            <p class="ap__ends" aria-hidden="true"><span>{d.recovery.days[0]}</span><span>Today</span></p>
+          </article>
+        </section>
+      </div>
+    </div>
+    <nav class="ap__tabs" aria-hidden="true">
+      {
+        d.states.map((st, i) => (
+          <span data-p-tab={i}>
+            <i class={`ap__dot ap__dot--${st.key}`} />
+            {st.label}
+          </span>
+        ))
+      }
+    </nav>
+  </div>
+</div>
+
+<style>
+  /* the phone: a still object; a small shadow only (it is the one thing that floats) */
+  .ap__phone {
+    --u: calc(var(--ph) / 100); /* 1% of the phone height */
+    --t-s: max(11px, calc(var(--u) * 1.8)); /* small text */
+    --t-m: max(12px, calc(var(--u) * 2.15)); /* body text */
+    position: absolute;
+    left: 50%;
+    top: calc(50% + 1vh);
+    width: var(--pw, calc(var(--ph) * 0.485));
+    height: var(--ph);
+    margin: calc(var(--ph) / -2) 0 0 calc(var(--pw, calc(var(--ph) * 0.485)) / -2);
+    padding: calc(var(--u) * 1.4);
+    border-radius: calc(var(--u) * 7.5);
+    background: var(--ink);
+    box-shadow: 0 6px 16px rgb(35 31 32 / 0.07);
+  }
+  .ap__screen {
+    position: relative;
+    height: 100%;
+    border-radius: calc(var(--u) * 6.2);
+    background: var(--paper);
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    color: var(--ink);
+  }
+  .ap__status {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: calc(var(--u) * 2.2) calc(var(--u) * 4) calc(var(--u) * 1.2);
+    font-size: var(--t-s);
+    font-weight: var(--w-label);
+    font-variant-numeric: tabular-nums;
+  }
+  .ap__island {
+    position: absolute;
+    left: 50%;
+    top: calc(var(--u) * 1.6);
+    width: 30%;
+    height: calc(var(--u) * 3.6);
+    translate: -50% 0;
+    border-radius: 99px;
+    background: var(--ink);
+  }
+  .ap__batt {
+    width: calc(var(--u) * 3.4);
+    height: calc(var(--u) * 1.6);
+    border-radius: 3px;
+    background: var(--ink);
+  }
+  .ap__viewport {
+    position: relative;
+    overflow: hidden;
+  }
+  .ap__scroll {
+    will-change: transform;
+  }
+  .ap__page {
+    padding: calc(var(--u) * 1.6) calc(var(--u) * 2.6) calc(var(--u) * 4);
+    display: grid;
+    align-content: start;
+    gap: calc(var(--u) * 1.8);
+  }
+  .ap__ptitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: max(14px, calc(var(--u) * 2.8));
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
+    padding: 0 calc(var(--u) * 0.6);
+  }
+  .ap__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--c);
+    flex: none;
+  }
+  .ap__dot--green {
+    --c: var(--led-heart-rate);
+  }
+  .ap__dot--blue {
+    --c: var(--led-sleep);
+  }
+  .ap__dot--violet {
+    --c: var(--led-recovery);
+  }
+
+  /* one strong panel per metric: Ember (Ochre → Night) or Dawn (Ochre → Paper), Moodboard colour block */
+  .ap__panel {
+    position: relative;
+    border-radius: calc(var(--u) * 3.2);
+    padding: calc(var(--u) * 3) calc(var(--u) * 3) calc(var(--u) * 3.2);
+    display: grid;
+    gap: calc(var(--u) * 0.8);
+    overflow: hidden;
+  }
+  .ap__panel--ember {
+    color: var(--paper);
+    background: linear-gradient(180deg, var(--ochre) 0%, color-mix(in srgb, var(--ochre) 45%, var(--night)) 46%, var(--night) 100%);
+  }
+  .ap__panel--night {
+    color: var(--paper);
+    background: linear-gradient(180deg, var(--night) 0%, color-mix(in srgb, var(--ochre) 14%, var(--night)) 58%, color-mix(in srgb, var(--ochre) 70%, var(--night)) 100%);
+  }
+  .ap__panel--dawn {
+    color: var(--ink);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--ochre) 50%, var(--paper)) 0%, color-mix(in srgb, var(--ochre) 20%, var(--paper)) 55%, var(--sand) 100%);
+  }
+  .ap__label {
+    font-size: var(--t-m);
+    opacity: 0.78;
+  }
+  /* metric detail: the value very large, the unit small */
+  .ap__big {
+    white-space: nowrap;
+    font-size: calc(var(--u) * 16);
+    font-weight: var(--w-heading);
+    letter-spacing: -0.045em;
+    line-height: 0.9;
+    font-variant-numeric: tabular-nums;
+    margin-top: calc(var(--u) * 0.6);
+  }
+  .ap__big--hm {
+    font-size: calc(var(--u) * 11.5);
+  }
+  .ap__unit {
+    font-size: 0.24em;
+    margin-left: 0.14em;
+    letter-spacing: 0;
+    opacity: 0.8;
+  }
+  .ap__mean {
+    font-size: var(--t-m);
+    line-height: 1.35;
+  }
+  .ap__say {
+    font-size: max(15px, calc(var(--u) * 3.6));
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
+    line-height: 1.1;
+    max-width: 11em;
+    margin-top: calc(var(--u) * 0.4);
+  }
+
+  /* chart: one thin line, no grid, no axis; labels only at the key points; Ochre dot for now */
+  .ap__chart {
+    position: relative;
+    height: calc(var(--u) * 27);
+    margin-top: calc(var(--u) * 4);
+  }
+  .ap__chart svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .ap__line {
+    fill: none;
+    stroke: var(--paper);
+    stroke-width: 1.5px;
+    stroke-linejoin: round;
+  }
+  .ap__pt {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    margin: -3.5px 0 0 -3.5px;
+    border-radius: 50%;
+    background: var(--paper);
+  }
+  .ap__pt--now {
+    width: 10px;
+    height: 10px;
+    margin: -5px 0 0 -5px;
+    background: var(--ochre);
+    box-shadow: 0 0 0 2px var(--night);
+  }
+  .ap__key {
+    position: absolute;
+    font-size: var(--t-s);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .ap__key--peak {
+    translate: calc(-100% - 8px) -50%;
+  }
+  .ap__key--rest {
+    translate: -20% calc(100% - 2px);
+    opacity: 0.8;
+  }
+
+  /* timed insight (Ultrahuman): time stamp on top, one sentence */
+  .ap__nudge {
+    border-radius: calc(var(--u) * 2.4);
+    background: var(--sand);
+    padding: calc(var(--u) * 1.8) calc(var(--u) * 2.4);
+    display: grid;
+    gap: calc(var(--u) * 0.6);
+  }
+  .ap__stamp {
+    font-size: var(--t-s);
+    color: var(--stone);
+    font-variant-numeric: tabular-nums;
+  }
+  /* the time in Ink (Ochre on Sand is 3.2:1); the Ochre stays as the one small "now" mark */
+  .ap__stamp b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .ap__stamp b::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin: 0 6px 1px 0;
+    border-radius: 50%;
+    background: var(--ochre);
+  }
+  .ap__ntext {
+    font-size: var(--t-m);
+    line-height: 1.35;
+  }
+
+  /* sleep stages as bars (Oura order: the number first, then the detail) */
+  .ap__stages {
+    list-style: none;
+    margin: calc(var(--u) * 2.6) 0 0;
+    padding: 0;
+    display: grid;
+    gap: calc(var(--u) * 1.8);
+    font-size: var(--t-m);
+  }
+  .ap__stages li {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    row-gap: calc(var(--u) * 0.7);
+  }
+  .ap__sdur {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.8;
+  }
+  .ap__sbar {
+    grid-column: 1 / -1;
+    height: calc(var(--u) * 1.1);
+    border-radius: 99px;
+    background: rgb(247 245 240 / 0.16);
+    overflow: hidden;
+  }
+  .ap__sbar b {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--paper);
+  }
+
+  /* recovery: seven bars, today in full Ink; labels only at the two ends */
+  .ap__week {
+    height: calc(var(--u) * 34);
+    margin-top: calc(var(--u) * 4);
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: calc(var(--u) * 1.2);
+    align-items: end;
+  }
+  .ap__week span {
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+  }
+  .ap__week b {
+    display: block;
+    width: 100%;
+    border-radius: 3px 3px 0 0;
+    background: rgb(35 31 32 / 0.16);
+  }
+  .ap__week .is-today b {
+    background: var(--ink);
+  }
+  .ap__ends {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--t-s);
+    color: var(--stone);
+  }
+  .ap__ends span:last-child {
+    color: var(--ink);
+  }
+
+  .ap__tabs {
+    display: flex;
+    justify-content: space-around;
+    padding: calc(var(--u) * 1.6) calc(var(--u) * 2) calc(var(--u) * 3);
+    background: var(--sand);
+    font-size: var(--t-s);
+    color: var(--stone);
+  }
+  .ap__tabs span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.3s;
+  }
+  .ap__tabs span.is-on {
+    color: var(--ink);
+  }
+
+  /* local review only: one page, no scroll */
+  .ap__phone[data-only='0'] .ap__page:not(:nth-child(1)),
+  .ap__phone[data-only='1'] .ap__page:not(:nth-child(2)),
+  .ap__phone[data-only='2'] .ap__page:not(:nth-child(3)) {
+    display: none;
+  }
+</style>
