@@ -211,7 +211,9 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const FIN = [
     { band: { color: lin(0.92, 0.92, 0.93), roughness: 0.06, cc: 0, ccr: 0, env: 1.5 }, engrave: { color: lin(0.28, 0.28, 0.29), roughness: 0.38, cc: 0, ccr: 0, env: 1.0 } },
     { band: { color: lin(0.035, 0.035, 0.04), roughness: 0.07, cc: 0.3, ccr: 0.03, env: 1.5 }, engrave: { color: lin(0.24, 0.24, 0.25), roughness: 0.5, cc: 0, ccr: 0, env: 1.0 } },
-    { band: { color: lin(1.0, 0.8, 0.34), roughness: 0.06, cc: 0, ccr: 0, env: 1.5 }, engrave: { color: lin(0.4, 0.28, 0.1), roughness: 0.38, cc: 0, ccr: 0, env: 1.0 } },
+    // Gold: finishes.json gold_polished, warmed a little and given more env so AgX keeps it a bright 18K
+    // yellow instead of olive (D-098 r1; the user rejected brownish Gold in D-078/D-079)
+    { band: { color: lin(1.0, 0.66, 0.15), roughness: 0.06, cc: 0, ccr: 0, env: 2.3 }, engrave: { color: lin(0.4, 0.28, 0.1), roughness: 0.38, cc: 0, ccr: 0, env: 1.0 } },
   ];
   const finSpec = (part: 'band' | 'engrave', a: number, b: number, t: number) => {
     const A = FIN[Math.round(a)]?.[part] ?? FIN[0][part];
@@ -388,7 +390,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     const dip = Math.min(1, Math.abs(n - 0.5) * 2.5, Math.abs(dk - 0.5) * 2.5, Math.abs(lp - 0.5) * 2.5);
     // on Night the polished env is almost black: lift it with the rim so the band keeps a silver gradient
     // the swap dip never goes below 0.45, so the ring is never a black shape in a connection (D-090 r1)
-    scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim);
+    // the Lamp env is darker than the studio: lift it so finishes keep their brightness under it
+    scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim) * (1 + 0.7 * lp);
 
     const ledKey = p.led.toFixed(3) + '|' + p.ledc.toFixed(3);
     if (ledKey !== lastLedKey) {

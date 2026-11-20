@@ -42,7 +42,14 @@ const len = (i: number) => {
 
   <!-- Scroll length + anchors. Content lives on the fixed stage (story.ts). -->
   <div class="tracks" aria-hidden="true">
-    {sections.map((def, i) => <div class="track" id={def.id} data-tin={def.tin} style={`--len:${len(i)}`} />)}
+    {
+      sections.map((def, i) => (
+        <div class="track" id={def.id} data-tin={def.tin} style={`--len:${len(i)}`}>
+          {/* D-098 r1: FAQ links land on the FAQ (S11 state 3 = connection + 2 states) */}
+          {def.id === 'close' && <span id="faq" data-tin={def.tin + 2} />}
+        </div>
+      ))
+    }
   </div>
   <div class="vh-probe" data-vh></div>
 </Base>

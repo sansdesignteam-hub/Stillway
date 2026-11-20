@@ -165,8 +165,8 @@ import { finishes as d } from '../../content/copy';
     position: absolute;
     right: var(--margin);
     top: calc(var(--header-h) + 3vh);
-    width: min(28rem, 34vw);
-    max-height: calc(100svh - var(--header-h) - 6vh);
+    width: min(30rem, 36vw);
+    max-height: calc(100svh - var(--header-h) - 4vh);
     padding: 26px 28px 24px;
     border-radius: var(--radius-m);
     background: var(--panel);
@@ -191,17 +191,18 @@ import { finishes as d } from '../../content/copy';
     font-weight: var(--w-heading);
     font-variant-numeric: tabular-nums;
   }
+  /* D-098 r1: readable at desktop — 15px, Stone darkened toward Ink */
   .fn__muted {
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.45;
-    color: var(--stone);
+    color: rgb(35 31 32 / 0.78);
   }
   .fn__group {
     display: grid;
     gap: 10px;
   }
   .fn__label {
-    font-size: 14px;
+    font-size: 15px;
   }
   .fn__label b {
     font-weight: 600;
@@ -218,8 +219,8 @@ import { finishes as d } from '../../content/copy';
     border: 0;
     background: none;
     font: inherit;
-    font-size: 13px;
-    color: var(--stone);
+    font-size: 14px;
+    color: rgb(35 31 32 / 0.78);
     cursor: pointer;
   }
   .fn__swatch i {
@@ -262,8 +263,8 @@ import { finishes as d } from '../../content/copy';
     border: 0;
     background: transparent;
     font: inherit;
-    font-size: 13px;
-    color: var(--stone);
+    font-size: 14px;
+    color: rgb(35 31 32 / 0.78);
     cursor: pointer;
   }
   .fn__seg button[aria-pressed='true'] {
@@ -315,7 +316,7 @@ import { finishes as d } from '../../content/copy';
   }
   .fn__note {
     min-height: 1.4em;
-    font-size: 14px;
+    font-size: 15px;
     text-align: center;
     color: var(--ink);
   }

@@ -124,9 +124,11 @@ export const close: SectionMotion = {
       y: (m ? 0.02 : 0) + up,
       w,
       ...ANGLE.facing,
-      light: 1,
-      rim: 0.55,
-      warm: 0.5,
+      // D-098 r1: the neutral studio env (as S05) so every finish reads in its own colour on the dark;
+      // the Night env left Gold almost black. A warm rim from the glow side.
+      light: 0,
+      rim: 0,
+      warm: 0.7,
       ...finishPose(1),
       alpha: 1 - seg(up, 0.55, 0.9),
     });
