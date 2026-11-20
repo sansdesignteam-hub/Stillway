@@ -21,6 +21,7 @@ let flabels: HTMLElement[] = [];
 let cards: HTMLElement[] = [];
 let tabs: HTMLElement[] = [];
 let page = 0;
+let stops: number[] = [];
 let lastIdx = -1;
 
 const focusOf = (u: number) => {
@@ -39,6 +40,10 @@ export const app: SectionMotion = {
     flabels = all('[data-p-flabel]');
     cards = all('[data-p-card]');
     tabs = all('[data-p-tab]');
+    // re-measure the page stops after a resize or when the fonts land
+    const reset = () => (page = 0);
+    window.addEventListener('resize', reset);
+    document.fonts?.ready.then(reset);
   },
   update(u, ctx) {
     const H = window.innerHeight;
@@ -55,16 +60,21 @@ export const app: SectionMotion = {
     rights.forEach((l, i) => put(l, { o: near(i) * inn * out, y: (1 - near(i)) * 10 }, ctx));
     flabels.forEach((l, i) => (l.style.opacity = near(i).toFixed(3)));
 
-    // the screen scrolls one page per state; the phone does not move
+    // the screen scrolls one page per state; pages are as tall as their content, so the head of the
+    // next page peeks under the current one (D-096 r1). The last stop is capped so Recovery ends at
+    // the bottom of the screen instead of leaving a tall empty space.
     if (el.scroll) {
-      // one page = the visible screen height (between the status bar and the tab bar)
       const vh = el.scroll.parentElement?.offsetHeight ?? 0;
       if (vh && vh !== page) {
         page = vh;
-        el.scroll.style.setProperty('--pageh', `${vh}px`);
+        const pages = [...el.scroll.children] as HTMLElement[];
+        const max = Math.max(0, el.scroll.scrollHeight - vh);
+        stops = pages.map((p) => Math.min(p.offsetTop, max));
       }
-      if (ctx.reduced) el.scroll.style.transform = `translate3d(0, ${(-Math.round(f) * page).toFixed(1)}px, 0)`;
-      else el.scroll.style.transform = `translate3d(0, ${(-f * page).toFixed(1)}px, 0)`;
+      const fi = ctx.reduced ? Math.round(f) : f;
+      const i0 = Math.min(1, Math.floor(fi));
+      const y = stops.length ? lerp(stops[i0], stops[i0 + 1], fi - i0) : 0;
+      el.scroll.style.transform = `translate3d(0, ${(-y).toFixed(1)}px, 0)`;
     }
     const idx = Math.round(f);
     if (idx !== lastIdx) {

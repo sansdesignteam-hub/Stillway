@@ -207,10 +207,12 @@ const stageMax = Math.max(...d.sleep.stages.map((s) => s.min));
   .ap__dot--violet {
     --c: var(--led-recovery);
   }
+  /* D-096 r1: body size as S04/S06, full Ink */
   .ap__ltext,
   .ap__rtext {
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.5;
+    color: var(--ink);
   }
   .ap__right {
     position: absolute;
@@ -274,8 +276,7 @@ const stageMax = Math.max(...d.sleep.stages.map((s) => s.min));
     will-change: transform;
   }
   .ap__page {
-    height: var(--pageh, calc(var(--ph) * 0.8));
-    padding: calc(var(--ph) * 0.02) calc(var(--ph) * 0.03) 0;
+    padding: calc(var(--ph) * 0.02) calc(var(--ph) * 0.03) calc(var(--ph) * 0.05);
     display: grid;
     align-content: start;
     gap: calc(var(--ph) * 0.02);
@@ -404,7 +405,7 @@ const stageMax = Math.max(...d.sleep.stages.map((s) => s.min));
     font-variant-numeric: tabular-nums;
   }
   .ap__week {
-    height: calc(var(--ph) * 0.3);
+    height: calc(var(--ph) * 0.36);
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: calc(var(--ph) * 0.012);
@@ -512,7 +513,7 @@ const stageMax = Math.max(...d.sleep.stages.map((s) => s.min));
     }
     .ap__ltext,
     .ap__rtext {
-      font-size: 13.5px;
+      font-size: 15px;
       line-height: 1.4;
     }
     .ap__phone {
@@ -525,9 +526,9 @@ const stageMax = Math.max(...d.sleep.stages.map((s) => s.min));
       left: var(--margin);
       right: var(--margin);
       top: auto;
-      bottom: 52px;
+      bottom: 50px;
       width: auto;
-      height: 3em;
+      height: 2.8em;
     }
     .ap__foot {
       font-size: 12px;

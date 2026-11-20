@@ -48,7 +48,7 @@ export const features: SectionMotion = {
     put(el.sub, { o: window4(u, -0.2, 0.1, 0.35, 0.6) }, ctx);
     put(el.legend, { o: seg(u, 0.55, 0.85) * out }, ctx);
     const c = ledcOf(u);
-    legs.forEach((l, i) => l.style.setProperty('--on', (0.4 + 0.6 * clamp01(1 - Math.abs(c - i))).toFixed(3)));
+    legs.forEach((l, i) => l.style.setProperty('--on', (0.68 + 0.32 * clamp01(1 - Math.abs(c - i))).toFixed(3)));
     bodies.forEach((b, i) => put(b, { o: clamp01(1 - Math.abs(c - i) * 1.8) }, ctx));
     put(el.off, { o: seg(u, 1.6, 1.9) }, ctx);
   },
