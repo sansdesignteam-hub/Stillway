@@ -1,0 +1,409 @@
+---
+/**
+ * S10 Finishes & pricing — 22:00 · Sand (D-098, D-099). References (Figma sticky 40004118:141):
+ *  - Mirelz viewer → state 1: the visitor turns the ring 360° (drag / swipe, ‹ › buttons, a small
+ *    "Drag to turn" hint); it only turns, no zoom, and eases back to its start pose when left alone.
+ *  - Shift PDP → the panel on the right: name, price, Finish swatches with labels under them, Size as
+ *    boxes 6–13, one full-width button, one small line under it; plenty of room.
+ *  - Ultrahuman PDP → a swatch changes the real material (finishes.json *_polished, D-085), with a
+ *    Daylight / Lamp light toggle; the panel warms a little under Lamp light.
+ * Finish changes only by click (D-069). The button shows an inline note (role="status"), no cart
+ * (D-074). CTA Ink #1C1B1A (sticky). Motion and controls: scripts/sections/finishes.ts.
+ */
+import { finishes as d } from '../../content/copy';
+---
+
+<section class="scene scene--finishes" data-scene="finishes" aria-labelledby="finishes-title" data-lamp="0">
+  <!-- Lamp light (D-100): Sand dims toward a warm evening tone, a low lamp glow on the lamp side -->
+  <div class="scene__back"><div class="fn__dim" aria-hidden="true"></div></div>
+  <!-- reduced motion / no WebGL: the polished still of the chosen finish -->
+  <img class="ring-fallback fn__fb" src={d.finishes[0].still} alt="" width="1024" height="1024" data-ring-fallback data-fn-still data-a loading="lazy" decoding="async" />
+
+  <div class="scene__front">
+    <h2 id="finishes-title" class="fn__heads">
+      {
+        d.heads.map((h, i) => (
+          <span class="fn__head" data-fn-head={i} data-a>
+            {h}
+          </span>
+        ))
+      }
+    </h2>
+
+    <!-- the viewer: drag / swipe area over the ring (horizontal turns it, vertical still scrolls) -->
+    <div class="fn__drag" data-fn-drag aria-hidden="true"></div>
+    <div class="fn__turn" data-fn-turn data-a>
+      <button type="button" class="fn__arrow" data-fn-prev aria-label={d.prev}>‹</button>
+      <span class="fn__hint"><span class="fn__hint-d">{d.hint.desktop}</span><span class="fn__hint-m">{d.hint.mobile}</span></span>
+      <button type="button" class="fn__arrow" data-fn-next aria-label={d.next}>›</button>
+    </div>
+
+    <!-- Shift PDP panel -->
+    <div class="fn__panel" data-fn-panel data-a>
+      <div class="fn__top">
+        <p class="fn__name">{d.name}</p>
+        <p class="fn__price">{d.price}</p>
+      </div>
+      <p class="fn__muted">{d.priceLine}</p>
+
+      <div class="fn__group" role="group" aria-labelledby="fn-finish-label">
+        <p class="fn__label" id="fn-finish-label">{d.finishLabel}: <b data-fn-finish-name>{d.finishes[0].name}</b></p>
+        <div class="fn__swatches">
+          {
+            d.finishes.map((f, i) => (
+              <button type="button" class={`fn__swatch fn__swatch--${f.name.toLowerCase()}`} data-fn-swatch={i} aria-pressed={i === 0 ? 'true' : 'false'}>
+                <i aria-hidden="true" />
+                <span>{f.name}</span>
+              </button>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="fn__group" role="group" aria-label={d.light.label}>
+        <div class="fn__seg">
+          <button type="button" data-fn-light="0" aria-pressed="true">{d.light.day}</button>
+          <button type="button" data-fn-light="1" aria-pressed="false">{d.light.lamp}</button>
+        </div>
+      </div>
+
+      <!-- state 4: size, box, trial and the one button -->
+      <div class="fn__more" data-fn-more data-a>
+        <div class="fn__group" role="group" aria-labelledby="fn-size-label">
+          <p class="fn__label" id="fn-size-label">{d.sizeLabel}<span data-fn-size-name></span></p>
+          <p class="fn__muted">{d.sizeLine}</p>
+          <div class="fn__sizes">
+            {
+              d.sizes.map((n) => (
+                <button type="button" data-fn-size={n} aria-pressed="false">
+                  {n}
+                </button>
+              ))
+            }
+          </div>
+        </div>
+        <p class="fn__muted fn__box">{d.trial} · {d.box}</p>
+        <button type="button" class="fn__cta" data-fn-cta>{d.button(d.finishes[0].name)}</button>
+        <p class="fn__note" data-fn-note role="status" aria-live="polite"></p>
+      </div>
+    </div>
+    <p class="sr-only">{d.alt}</p>
+  </div>
+</section>
+
+<style>
+  .scene--finishes {
+    color: var(--ink);
+    --panel: rgb(247 245 240 / 0.6);
+  }
+  .scene--finishes[data-lamp='1'] {
+    --panel: color-mix(in srgb, var(--paper) 86%, var(--ochre) 14%);
+  }
+  .fn__dim {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    background:
+      radial-gradient(55% 70% at 4% 34%, rgb(183 111 32 / 0.2), rgb(183 111 32 / 0) 70%),
+      color-mix(in srgb, var(--night) 72%, var(--ochre) 28%);
+  }
+  .scene--finishes[data-lamp='1'] .fn__dim {
+    opacity: 0.17;
+  }
+  .scene--finishes .fn__panel {
+    transition: background 0.6s ease;
+  }
+  :global(html.reduced) .scene--finishes .fn__dim,
+  :global(html.reduced) .scene--finishes .fn__panel {
+    transition: none;
+  }
+  .fn__fb {
+    left: 32%;
+    width: min(40vw, 70vh);
+  }
+  .fn__heads {
+    position: absolute;
+    left: var(--margin);
+    top: calc(var(--header-h) + 4vh);
+    width: min(46rem, 58vw);
+    font-size: clamp(2.25rem, 1.2rem + 2.2vw, 3.25rem);
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
+    line-height: 1;
+  }
+  .fn__head {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  /* the drag area covers the ring's half of the screen; touch-action keeps vertical page scroll */
+  .fn__drag {
+    position: absolute;
+    left: 0;
+    top: calc(var(--header-h) + 16vh);
+    width: 62vw;
+    bottom: 12vh;
+    pointer-events: auto;
+    touch-action: pan-y;
+    cursor: grab;
+  }
+  .fn__drag:active {
+    cursor: grabbing;
+  }
+  .fn__turn {
+    position: absolute;
+    left: 32%;
+    bottom: 7vh;
+    translate: -50% 0;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 14px;
+  }
+  .fn__arrow {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 0;
+    background: rgb(35 31 32 / 0.08);
+    color: var(--ink);
+    font: inherit;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .fn__arrow:hover {
+    background: rgb(35 31 32 / 0.16);
+  }
+  .fn__hint-m {
+    display: none;
+  }
+  /* Shift PDP panel */
+  .fn__panel {
+    position: absolute;
+    right: var(--margin);
+    top: calc(var(--header-h) + 3vh);
+    width: min(30rem, 36vw);
+    max-height: calc(100svh - var(--header-h) - 4vh);
+    padding: 26px 28px 24px;
+    border-radius: var(--radius-m);
+    background: var(--panel);
+    transition: background 0.6s ease;
+    display: grid;
+    gap: 16px;
+    align-content: start;
+    pointer-events: auto;
+  }
+  .fn__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .fn__name {
+    font-size: clamp(1.375rem, 1.1rem + 0.8vw, 1.875rem);
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
+  }
+  .fn__price {
+    font-size: clamp(1.25rem, 1rem + 0.6vw, 1.625rem);
+    font-weight: var(--w-heading);
+    font-variant-numeric: tabular-nums;
+  }
+  /* D-098 r1: readable at desktop — 15px, Stone darkened toward Ink */
+  .fn__muted {
+    font-size: 15px;
+    line-height: 1.45;
+    color: rgb(35 31 32 / 0.78);
+  }
+  .fn__group {
+    display: grid;
+    gap: 10px;
+  }
+  .fn__label {
+    font-size: 15px;
+  }
+  .fn__label b {
+    font-weight: 600;
+  }
+  .fn__swatches {
+    display: flex;
+    gap: 18px;
+  }
+  .fn__swatch {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 14px;
+    color: rgb(35 31 32 / 0.78);
+    cursor: pointer;
+  }
+  .fn__swatch i {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--sw);
+    box-shadow: inset 0 0 0 1px rgb(35 31 32 / 0.12);
+    outline: 1.5px solid transparent;
+    outline-offset: 3px;
+    transition: outline-color 0.2s;
+  }
+  .fn__swatch[aria-pressed='true'] i {
+    outline-color: var(--ink);
+  }
+  .fn__swatch[aria-pressed='true'] {
+    color: var(--ink);
+  }
+  /* product finishes (material, not UI colour) */
+  .fn__swatch--silver {
+    --sw: radial-gradient(circle at 35% 30%, #f6f6f7, #b9b9bd 55%, #8c8c90);
+  }
+  .fn__swatch--black {
+    --sw: radial-gradient(circle at 35% 30%, #4a4a4e, #141416 55%, #050506);
+  }
+  .fn__swatch--gold {
+    --sw: radial-gradient(circle at 35% 30%, #fbe7b5, #e0b55e 55%, #a97a2a);
+  }
+  .fn__seg {
+    display: flex;
+    gap: 6px;
+    padding: 4px;
+    border-radius: var(--radius-pill);
+    background: rgb(35 31 32 / 0.06);
+    justify-self: start;
+  }
+  .fn__seg button {
+    padding: 7px 14px;
+    border-radius: var(--radius-pill);
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 14px;
+    color: rgb(35 31 32 / 0.78);
+    cursor: pointer;
+  }
+  .fn__seg button[aria-pressed='true'] {
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .fn__more {
+    display: grid;
+    gap: 16px;
+  }
+  .fn__sizes {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
+  }
+  .fn__sizes button {
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid rgb(35 31 32 / 0.14);
+    background: transparent;
+    font: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+  }
+  .fn__sizes button[aria-pressed='true'] {
+    border-color: var(--ink);
+    background: var(--paper);
+  }
+  .fn__cta {
+    width: 100%;
+    height: 52px;
+    border-radius: var(--radius-pill);
+    border: 0;
+    background: #1c1b1a;
+    color: var(--paper);
+    font: inherit;
+    font-size: 16px;
+    font-weight: var(--w-label);
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.2s;
+  }
+  .fn__cta:hover {
+    background: #000;
+  }
+  .fn__cta:active {
+    transform: scale(0.99);
+  }
+  .fn__note {
+    min-height: 1.4em;
+    font-size: 15px;
+    text-align: center;
+    color: var(--ink);
+  }
+  .scene--finishes button:focus-visible {
+    outline: 2px solid var(--ochre);
+    outline-offset: 3px;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  @media (max-width: 719px) {
+    .fn__fb {
+      left: 50%;
+      top: 34%;
+      width: 60vw;
+    }
+    .fn__heads {
+      top: calc(var(--header-h) + 2vh);
+      width: auto;
+      right: var(--margin);
+      font-size: 2rem;
+    }
+    .fn__drag {
+      top: calc(var(--header-h) + 8vh);
+      width: 100vw;
+      bottom: auto;
+      height: 34vh;
+    }
+    .fn__turn {
+      left: 50%;
+      bottom: auto;
+      top: calc(var(--header-h) + 40vh);
+      font-size: 13px;
+    }
+    .fn__hint-d {
+      display: none;
+    }
+    .fn__hint-m {
+      display: inline;
+    }
+    .fn__arrow {
+      width: 36px;
+      height: 36px;
+    }
+    .fn__panel {
+      left: 12px;
+      right: 12px;
+      top: auto;
+      bottom: 12px;
+      width: auto;
+      max-height: none;
+      padding: 16px 16px 14px;
+      gap: 10px;
+    }
+    .fn__more {
+      gap: 10px;
+    }
+    .fn__sizes button {
+      height: 36px;
+    }
+    .fn__cta {
+      height: 46px;
+    }
+  }
+</style>

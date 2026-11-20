@@ -50,7 +50,11 @@ export const app: SectionMotion = {
     const out = 1 - seg(u, END, END + 0.4);
     const rise = ctx.reduced ? (u >= -0.5 ? 1 : 0) : seg(u, -0.5, -0.05);
     const inn = seg(u, -0.3, 0); // 70–100%: chip, texts, footer
-    put(el.phone, { o: Math.min(1, rise * 1.6) * out, y: (1 - rise) * H * 0.55 }, ctx);
+    // 09 → 10 (Storyboard §3): the screen content fades first, then the phone slides right and widens
+    // into the S10 panel (finishes.ts brings the panel in from the same side)
+    const go = seg(u, END + 0.25, END + 0.75);
+    put(el.phone, { o: Math.min(1, rise * 1.6) * (1 - seg(u, END + 0.5, END + 0.8)), y: (1 - rise) * H * 0.55, x: go * window.innerWidth * 0.26, s: 1 + 0.12 * go }, ctx);
+    if (el.scroll) el.scroll.style.opacity = (1 - seg(u, END, END + 0.3)).toFixed(3);
     put(el.sim, { o: inn * out }, ctx);
     put(el.foot, { o: inn * out }, ctx);
 

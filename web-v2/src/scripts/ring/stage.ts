@@ -131,6 +131,13 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const warmRim = new THREE.DirectionalLight(0xe0a35c, 0);
   warmRim.position.set(-900, -520, 260);
   scene.add(warmRim);
+  // S10 Lamp light (D-100): one warm desk lamp from the side — an amber highlight along the band edge
+  // facing it, readable on all three finishes (Black included); the env and base colours stay as in
+  // Daylight, so Gold keeps its 18K yellow (the Lamp env made it brownish)
+  const deskLamp = new THREE.DirectionalLight(0xffa451, 0);
+  deskLamp.position.set(-900, 300, 700);
+  const deskFill = new THREE.PointLight(0xff9a3c, 0, 0, 0);
+  scene.add(deskLamp, deskFill);
   // V1 live cast shadow on the stone (D-051): a shadow-only light and a transparent catcher plane
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -205,6 +212,35 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     m.normalScale?.setScalar(a.normal + (b.normal - a.normal) * g);
     m.envMapIntensity = a.env + (b.env - a.env) * g;
   };
+  /* S10–S11 finishes (finishes.json silver/black/gold = *_polished, D-085): no brushing (normal 0,
+     anisotropy 0), Black with a thin clearcoat. Index 0 silver, 1 black, 2 gold. */
+  const FIN = [
+    { band: { color: lin(0.92, 0.92, 0.93), roughness: 0.06, cc: 0, ccr: 0, env: 1.5 }, engrave: { color: lin(0.28, 0.28, 0.29), roughness: 0.38, cc: 0, ccr: 0, env: 1.0 } },
+    { band: { color: lin(0.035, 0.035, 0.04), roughness: 0.07, cc: 0.3, ccr: 0.03, env: 1.5 }, engrave: { color: lin(0.24, 0.24, 0.25), roughness: 0.5, cc: 0, ccr: 0, env: 1.0 } },
+    // Gold: finishes.json gold_polished, warmed a little and given more env so AgX keeps it a bright 18K
+    // yellow instead of olive (D-098 r1; the user rejected brownish Gold in D-078/D-079)
+    { band: { color: lin(1.0, 0.66, 0.15), roughness: 0.06, cc: 0, ccr: 0, env: 2.3 }, engrave: { color: lin(0.4, 0.28, 0.1), roughness: 0.38, cc: 0, ccr: 0, env: 1.0 } },
+  ];
+  const finSpec = (part: 'band' | 'engrave', a: number, b: number, t: number) => {
+    const A = FIN[Math.round(a)]?.[part] ?? FIN[0][part];
+    const B = FIN[Math.round(b)]?.[part] ?? FIN[0][part];
+    const k = (x: number, y: number) => x + (y - x) * t;
+    return { color: A.color.clone().lerp(B.color, t), roughness: k(A.roughness, B.roughness), cc: k(A.cc, B.cc), ccr: k(A.ccr, B.ccr), env: k(A.env, B.env) };
+  };
+  const applyFin = (m: THREE.MeshPhysicalMaterial | undefined, part: 'band' | 'engrave', p: Pose) => {
+    if (!m) return;
+    const target = finSpec(part, p.finA, p.finB, p.finT);
+    const base = FIN[0][part];
+    const g = p.custom;
+    m.color.copy(base.color).lerp(target.color, g);
+    m.roughness = base.roughness + (target.roughness - base.roughness) * g;
+    m.envMapIntensity = base.env + (target.env - base.env) * g;
+    if ('clearcoat' in m) {
+      m.clearcoat = target.cc * g;
+      m.clearcoatRoughness = target.ccr;
+    }
+  };
+  let lastFin = '';
   // LEDs (D-062): both off until a section asks (S08 colours, "off" = red dot)
   const ledMain = ring.getObjectByName(RING_MODEL.meshes.ledMain)?.material as THREE.MeshStandardMaterial | undefined;
   const ledPower = ring.getObjectByName(RING_MODEL.meshes.ledPower)?.material as THREE.MeshStandardMaterial | undefined;
@@ -289,7 +325,6 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   let lastAlpha = -1;
   let lastEnv = '';
   let lastLedKey = '';
-  let lastGloss = -1;
   const apply = (p: Pose, extra: { breathe?: number } = {}) => {
     // width: fraction of viewport width, but never taller than 82% of the viewport
     const raw = p.w * W;
@@ -308,10 +343,17 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     spinner.rotation.z = p.spin;
 
     // finish: brushed → polished (V1)
-    if (p.gloss !== lastGloss) {
-      lastGloss = p.gloss;
+    const finKey = `${p.gloss}|${p.custom.toFixed(3)}|${p.finA}|${p.finB}|${p.finT.toFixed(3)}`;
+    if (finKey !== lastFin) {
+      lastFin = finKey;
       mix(band, brushed.band, POLISHED.band, p.gloss);
       mix(engrave, brushed.engrave, POLISHED.engrave, p.gloss);
+      if (p.custom > 0.001) {
+        applyFin(band, 'band', p);
+        applyFin(engrave, 'engrave', p);
+      } else {
+        if (band && 'clearcoat' in band) band.clearcoat = 0;
+      }
     }
 
     // V1 rig and cast shadow, S01 only
@@ -320,6 +362,12 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     rim.intensity = 14 * p.rim;
     rimFill.intensity = 3.2 * p.rim;
     warmRim.intensity = 7 * p.warm;
+    const lp = Math.min(1, Math.max(0, p.lamp));
+    deskLamp.intensity = 9 * lp;
+    // a soft close fill on the lamp side so the edge glows rather than shows one sharp line
+    deskFill.intensity = 2.2 * lp;
+    deskFill.position.set(pivot.position.x - w * 1.1, pivot.position.y + w * 0.45, w * 0.6);
+    deskFill.distance = w * 2.6;
     const sh = Math.max(0, p.shadow);
     catcher.visible = sh > 0.005;
     shadowSun.castShadow = catcher.visible;
@@ -353,7 +401,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     const dip = Math.min(1, Math.abs(n - 0.5) * 2.5, Math.abs(dk - 0.5) * 2.5);
     // on Night the polished env is almost black: lift it with the rim so the band keeps a silver gradient
     // the swap dip never goes below 0.45, so the ring is never a black shape in a connection (D-090 r1)
-    scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim);
+    // under the desk lamp the room is a little dimmer (evening), so the amber edge reads (D-100)
+    scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim) * (1 - 0.12 * lp);
 
     const ledKey = p.led.toFixed(3) + '|' + p.ledc.toFixed(3);
     if (ledKey !== lastLedKey) {
