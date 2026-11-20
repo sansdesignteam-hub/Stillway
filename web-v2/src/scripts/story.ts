@@ -25,6 +25,8 @@ import { hero } from './sections/hero';
 import { why } from './sections/why';
 import { sleep } from './sections/sleep';
 import { placeholder } from './sections/placeholder';
+import { activity } from './sections/activity';
+import { insight } from './sections/insight';
 
 export interface SectionMotion {
   init?: (root: HTMLElement) => void;
@@ -32,10 +34,12 @@ export interface SectionMotion {
   ring?: (u: number, ctx: Ctx) => Pose;
   /** navbar theme override for u (S01 over the photograph uses 'photo'); null = from the background */
   theme?: (u: number) => 'photo' | 'light' | 'dark' | null;
+  /** clock text (HH:MM) for u, when the section drives its own clock (S04 follows the photo) */
+  clock?: (u: number) => string;
   /** custom ring path across the incoming connection, x in [0, 1]; default = lerp in 30–70% */
   ringIn?: (x: number, ctx: Ctx, from: Pose, to: Pose) => Pose;
 }
-const motions: Record<string, SectionMotion> = { hero, why, sleep };
+const motions: Record<string, SectionMotion> = { hero, why, sleep, activity, insight };
 
 const BG: Record<string, [number, number, number]> = {
   paper: [0xf7, 0xf5, 0xf0],
@@ -173,8 +177,9 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       const span = clockFrom === cur ? clamp01(u / Math.max(0.001, cur.end)) : 1;
       min = lerp(toMin(d.time), toMin(d.timeEnd), span);
     }
-    const text = fmt(Math.floor(min / 5) * 5);
-    const part = d.part ?? partOf(min);
+    let text = fmt(Math.floor(min / 5) * 5);
+    if (clockFrom.m.clock) text = clockFrom.m.clock(clockFrom === cur ? u : clockFrom.end);
+    const part = d.part ?? partOf(toMin(text));
     clockTime.forEach((el) => el.textContent !== text && (el.textContent = text));
     clockPart.forEach((el) => el.textContent !== part && (el.textContent = part));
 

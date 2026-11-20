@@ -5,11 +5,13 @@ import Stage from '../components/Stage.astro';
 import Hero from '../components/scenes/Hero.astro';
 import Why from '../components/scenes/Why.astro';
 import Sleep from '../components/scenes/Sleep.astro';
+import Activity from '../components/scenes/Activity.astro';
+import Insight from '../components/scenes/Insight.astro';
 import Placeholder from '../components/scenes/Placeholder.astro';
 import { sections } from '../content/sections';
 import { heroBg } from '../content/heroBg';
 
-const built: Record<string, any> = { hero: Hero, why: Why, sleep: Sleep };
+const built: Record<string, any> = { hero: Hero, why: Why, sleep: Sleep, activity: Activity, insight: Insight };
 const len = (i: number) => {
   const d = sections[i];
   return d.tin + d.states - 1 + d.hold + (i === sections.length - 1 ? 1 : 0);

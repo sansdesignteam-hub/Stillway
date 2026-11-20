@@ -47,7 +47,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const camera = new THREE.PerspectiveCamera(FOV, 1, 1, 40000);
 
   const pmrem = new THREE.PMREMGenerator(renderer);
-  const envs: { paper?: THREE.Texture; night?: THREE.Texture } = {};
+  const envs: { paper?: THREE.Texture; night?: THREE.Texture; dusk?: THREE.Texture } = {};
   /** photo → paper blends, index 0 = photo env (S01), last = paper env (S02); see buildBlends */
   let blends: THREE.Texture[] = [];
   const BLEND_STEPS = 9;
@@ -104,6 +104,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   buildBlends();
   // night env after the first paint of the ring
   setTimeout(() => loadEnv(RING_MODEL.env.night).then((e) => ((envs.night = e), (lastEnv = ''))).catch(() => {}), 300);
+  setTimeout(() => loadEnv(RING_MODEL.env.dusk).then((e) => ((envs.dusk = e), (lastEnv = ''))).catch(() => {}), 900);
   const loadEnv = (url: string) =>
     new EXRLoader().loadAsync(url).then((t) => {
       t.mapping = THREE.EquirectangularReflectionMapping;
@@ -118,6 +119,14 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   sun.position.set(-600, 700, 500);
   const hemi = new THREE.HemisphereLight(0xfff1dc, 0x3b3a1c, 0);
   scene.add(sun, hemi);
+  // S03 (Ultrahuman ref): one cold light grazing the band edge from behind one side, so a dark
+  // polished ring still reads as silver along its bevel
+  const rim = new THREE.DirectionalLight(0xdfe8ff, 0);
+  rim.position.set(900, 420, -650);
+  // a low, cool front fill so the outer band reads as silver (not black) on Night (D-090)
+  const rimFill = new THREE.DirectionalLight(0xdfe8ff, 0);
+  rimFill.position.set(-700, 260, 900);
+  scene.add(rim, rimFill);
   // V1 live cast shadow on the stone (D-051): a shadow-only light and a transparent catcher plane
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -225,6 +234,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     // V1 rig and cast shadow, S01 only
     sun.intensity = 2.2 * p.photo;
     hemi.intensity = 0.35 * p.photo;
+    rim.intensity = 14 * p.rim;
+    rimFill.intensity = 3.2 * p.rim;
     const sh = Math.max(0, p.shadow);
     catcher.visible = sh > 0.005;
     shadowSun.castShadow = catcher.visible;
@@ -248,14 +259,16 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     const ph = Math.min(1, Math.max(0, p.photo));
     // photo ↔ paper: step through the prebuilt blends (no pop); paper ↔ night: dip and swap at 0.5
     const step = blends.length ? Math.round((1 - ph) * (blends.length - 1)) : -1;
-    const key = n >= 0.5 && envs.night ? 'night' : step >= 0 ? `blend${step}` : 'paper';
+    const dk = Math.min(1, Math.max(0, p.dusk));
+    const key = dk >= 0.5 && envs.dusk ? 'dusk' : n >= 0.5 && envs.night ? 'night' : step >= 0 ? `blend${step}` : 'paper';
     if (key !== lastEnv) {
       lastEnv = key;
-      scene.environment = key === 'night' ? envs.night! : step >= 0 ? blends[step] : envs.paper ?? null;
+      scene.environment = key === 'dusk' ? envs.dusk! : key === 'night' ? envs.night! : step >= 0 ? blends[step] : envs.paper ?? null;
     }
     renderer.toneMappingExposure = 1.0 + 0.15 * ph; // V1 hero exposure 1.15 → 1.0, continuous
-    const dip = Math.min(1, Math.abs(n - 0.5) * 2.5);
-    scene.environmentIntensity = 0.15 + 0.85 * dip;
+    const dip = Math.min(1, Math.abs(n - 0.5) * 2.5, Math.abs(dk - 0.5) * 2.5);
+    // on Night the polished env is almost black: lift it with the rim so the band keeps a silver gradient
+    scene.environmentIntensity = (0.15 + 0.85 * dip) * (1 + 1.4 * p.rim);
 
     if (Math.abs(p.led - lastLed) > 0.001) {
       lastLed = p.led;

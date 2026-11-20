@@ -10,6 +10,8 @@
  * photo: 1 = environment from the hero photograph (V1 hero-env.jpg) so the ring sits in the moss
  *        scene of S01 (D-080); 0 = the V2 env picked by `light`.
  * uncap: 0 = width capped at 82% of the viewport height, 1 = no cap (S01 zoom in).
+ * dusk: 1 = the Dusk env (S05), swapped in with an intensity dip like night.
+ * rim: 0..1 strength of the cold rim light that grazes the band edge in S03 (Ultrahuman ref).
  * light: 0 = Day studio (Paper), 1 = Night rim light (S03).
  * led: 0..1 glow of the green light in sensor window A (S01 close-up shows it, as in the reference).
  * gloss: 1 = polished silver (finishes.json silver_polished) — every V2 section (D-085);
@@ -28,6 +30,8 @@ export interface Pose {
   spin: number;
   roll: number;
   light: number;
+  dusk: number;
+  rim: number;
   photo: number;
   uncap: number;
   led: number;
@@ -81,4 +85,4 @@ export function along(u: number, frames: Array<[number, Pose]>): Pose {
   return frames[frames.length - 1][1];
 }
 
-export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, shadowX: 0, shadowY: -0.3, alpha: 1, ...p });
+export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, shadowX: 0, shadowY: -0.3, alpha: 1, ...p });

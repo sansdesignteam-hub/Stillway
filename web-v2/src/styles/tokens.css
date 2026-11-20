@@ -20,7 +20,9 @@
   --dawn-glow: radial-gradient(closest-side, rgb(183 111 32 / 0.35), rgb(183 111 32 / 0)); /* on paper */
   --ember-glow: radial-gradient(closest-side, rgb(183 111 32 / 0.4), rgb(183 111 32 / 0)); /* on night, from above */
   --glow-blur: 60px;
-  --dusk: linear-gradient(180deg, var(--ochre) 0%, var(--night) 100%); /* only Daily insight (17:30) */
+  /* only Daily insight (17:30): Ochre → Night with a warm glow from the lower corner (Oryzo ref, D-090) */
+  --dusk: radial-gradient(120% 95% at 0% 100%, rgb(183 111 32 / 0.9) 0%, rgb(183 111 32 / 0.35) 38%, rgb(183 111 32 / 0) 70%),
+    linear-gradient(180deg, rgb(183 111 32 / 0.18) 0%, var(--night) 55%);
 
   /* 2.3 product LED colours — ring render + small legend/chip dots only.
      Never text, background, buttons or UI charts. */
