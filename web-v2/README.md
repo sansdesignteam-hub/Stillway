@@ -6,8 +6,7 @@ Concept project for the Sans Brothers portfolio, not a real product. `noindex`.
 
 - **V1** lives in `../web/` (stillway-one.vercel.app) and is **frozen**. Nothing here imports from it;
   modules and assets were copied.
-- **Status:** S01 Hero, S02 Why Stillway, S03 Sleep summary built (awaiting user review, D-070).
-  S04–S11 are dashed placeholders. Visual source: `design/v2/HANDOFF-v2.md` (branch Visual-Director);
+- **Status:** all 11 sections built (S01–S11, D-061…D-099). Visual source: `design/v2/HANDOFF-v2.md` (branch Visual-Director);
   copy source: `context/home-copy-v2.md` (branch Strategic-Content, D-066); ring:
   `design/3d/v2/HANDOFF-v2-ring.md` (branch 3D-Designer).
 - Deploy: Vercel project `stillway-v2`, root directory `web-v2`, after the user reviews S01–S03 (D-070).
@@ -97,6 +96,21 @@ to the S02 start pose while the photo fades to Paper. The ring follows the mouse
 - 07 → 08: the S07 photo now sits on the back layer so the ring can appear over it. 08 → 09: violet dims, a
   brief green, the ring leaves upward, Night → Paper as the light wipe (plain Sand edge).
 - Review shots: `docs/screens/s08-s09-d096/`.
+
+## S10 Finishes & pricing · S11 Closing (D-098, D-099)
+
+- **S10** (`sections/finishes.ts`, `scenes/Finishes.astro`): Mirelz viewer (drag / swipe turns the ring
+  360°, ‹ › jump 90°, eases back after ~3 s) + Shift PDP panel. Swatches change the real material
+  (`ring/stage.ts` FIN = finishes.json `*_polished`: Silver, Black with clearcoat, Gold option B) through
+  `Pose.custom / finA / finB / finT`; Daylight / Lamp light swaps to `v2-env-lamp.exr` (`Pose.lamp`) and
+  warms the panel. The choice lives in `scripts/finish.ts` and carries into S11. Button → inline note
+  (`role="status"`), no cart. Reduced motion: the polished still of the chosen finish.
+- **S11** (`sections/close.ts`, `scenes/Close.astro`): one dark canvas — the closing line across the ring
+  under the Ember glow, the button, the FAQ column (one open at a time), the caps statement, footer and
+  the full-width wordmark with the hover shine. Past state 2 the canvas moves like a page (measured).
+  10 → 11: Night rises from below with an Ember edge (`.stage__wipe[data-tone=rise]`).
+- 09 → 10: the phone's screen fades, the phone slides right and widens as the panel comes in.
+- Review shots: `docs/screens/s10-s11-d098/`.
 
 ## Navbar (D-075)
 

@@ -47,7 +47,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const camera = new THREE.PerspectiveCamera(FOV, 1, 1, 40000);
 
   const pmrem = new THREE.PMREMGenerator(renderer);
-  const envs: { paper?: THREE.Texture; night?: THREE.Texture; dusk?: THREE.Texture } = {};
+  const envs: { paper?: THREE.Texture; night?: THREE.Texture; dusk?: THREE.Texture; lamp?: THREE.Texture } = {};
   /** photo → paper blends, index 0 = photo env (S01), last = paper env (S02); see buildBlends */
   let blends: THREE.Texture[] = [];
   const BLEND_STEPS = 9;
@@ -105,6 +105,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   // night env after the first paint of the ring
   setTimeout(() => loadEnv(RING_MODEL.env.night).then((e) => ((envs.night = e), (lastEnv = ''))).catch(() => {}), 300);
   setTimeout(() => loadEnv(RING_MODEL.env.dusk).then((e) => ((envs.dusk = e), (lastEnv = ''))).catch(() => {}), 900);
+  setTimeout(() => loadEnv(RING_MODEL.env.lamp).then((e) => ((envs.lamp = e), (lastEnv = ''))).catch(() => {}), 1500);
   const loadEnv = (url: string) =>
     new EXRLoader().loadAsync(url).then((t) => {
       t.mapping = THREE.EquirectangularReflectionMapping;
@@ -205,6 +206,33 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     m.normalScale?.setScalar(a.normal + (b.normal - a.normal) * g);
     m.envMapIntensity = a.env + (b.env - a.env) * g;
   };
+  /* S10–S11 finishes (finishes.json silver/black/gold = *_polished, D-085): no brushing (normal 0,
+     anisotropy 0), Black with a thin clearcoat. Index 0 silver, 1 black, 2 gold. */
+  const FIN = [
+    { band: { color: lin(0.92, 0.92, 0.93), roughness: 0.06, cc: 0, ccr: 0, env: 1.5 }, engrave: { color: lin(0.28, 0.28, 0.29), roughness: 0.38, cc: 0, ccr: 0, env: 1.0 } },
+    { band: { color: lin(0.035, 0.035, 0.04), roughness: 0.07, cc: 0.3, ccr: 0.03, env: 1.5 }, engrave: { color: lin(0.24, 0.24, 0.25), roughness: 0.5, cc: 0, ccr: 0, env: 1.0 } },
+    { band: { color: lin(1.0, 0.8, 0.34), roughness: 0.06, cc: 0, ccr: 0, env: 1.5 }, engrave: { color: lin(0.4, 0.28, 0.1), roughness: 0.38, cc: 0, ccr: 0, env: 1.0 } },
+  ];
+  const finSpec = (part: 'band' | 'engrave', a: number, b: number, t: number) => {
+    const A = FIN[Math.round(a)]?.[part] ?? FIN[0][part];
+    const B = FIN[Math.round(b)]?.[part] ?? FIN[0][part];
+    const k = (x: number, y: number) => x + (y - x) * t;
+    return { color: A.color.clone().lerp(B.color, t), roughness: k(A.roughness, B.roughness), cc: k(A.cc, B.cc), ccr: k(A.ccr, B.ccr), env: k(A.env, B.env) };
+  };
+  const applyFin = (m: THREE.MeshPhysicalMaterial | undefined, part: 'band' | 'engrave', p: Pose) => {
+    if (!m) return;
+    const target = finSpec(part, p.finA, p.finB, p.finT);
+    const base = FIN[0][part];
+    const g = p.custom;
+    m.color.copy(base.color).lerp(target.color, g);
+    m.roughness = base.roughness + (target.roughness - base.roughness) * g;
+    m.envMapIntensity = base.env + (target.env - base.env) * g;
+    if ('clearcoat' in m) {
+      m.clearcoat = target.cc * g;
+      m.clearcoatRoughness = target.ccr;
+    }
+  };
+  let lastFin = '';
   // LEDs (D-062): both off until a section asks (S08 colours, "off" = red dot)
   const ledMain = ring.getObjectByName(RING_MODEL.meshes.ledMain)?.material as THREE.MeshStandardMaterial | undefined;
   const ledPower = ring.getObjectByName(RING_MODEL.meshes.ledPower)?.material as THREE.MeshStandardMaterial | undefined;
@@ -289,7 +317,6 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   let lastAlpha = -1;
   let lastEnv = '';
   let lastLedKey = '';
-  let lastGloss = -1;
   const apply = (p: Pose, extra: { breathe?: number } = {}) => {
     // width: fraction of viewport width, but never taller than 82% of the viewport
     const raw = p.w * W;
@@ -308,10 +335,17 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     spinner.rotation.z = p.spin;
 
     // finish: brushed → polished (V1)
-    if (p.gloss !== lastGloss) {
-      lastGloss = p.gloss;
+    const finKey = `${p.gloss}|${p.custom.toFixed(3)}|${p.finA}|${p.finB}|${p.finT.toFixed(3)}`;
+    if (finKey !== lastFin) {
+      lastFin = finKey;
       mix(band, brushed.band, POLISHED.band, p.gloss);
       mix(engrave, brushed.engrave, POLISHED.engrave, p.gloss);
+      if (p.custom > 0.001) {
+        applyFin(band, 'band', p);
+        applyFin(engrave, 'engrave', p);
+      } else {
+        if (band && 'clearcoat' in band) band.clearcoat = 0;
+      }
     }
 
     // V1 rig and cast shadow, S01 only
@@ -344,13 +378,14 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     // photo ↔ paper: step through the prebuilt blends (no pop); paper ↔ night: dip and swap at 0.5
     const step = blends.length ? Math.round((1 - ph) * (blends.length - 1)) : -1;
     const dk = Math.min(1, Math.max(0, p.dusk));
-    const key = dk >= 0.5 && envs.dusk ? 'dusk' : n >= 0.5 && envs.night ? 'night' : step >= 0 ? `blend${step}` : 'paper';
+    const lp = Math.min(1, Math.max(0, p.lamp));
+    const key = dk >= 0.5 && envs.dusk ? 'dusk' : n >= 0.5 && envs.night ? 'night' : lp >= 0.5 && envs.lamp ? 'lamp' : step >= 0 ? `blend${step}` : 'paper';
     if (key !== lastEnv) {
       lastEnv = key;
-      scene.environment = key === 'dusk' ? envs.dusk! : key === 'night' ? envs.night! : step >= 0 ? blends[step] : envs.paper ?? null;
+      scene.environment = key === 'dusk' ? envs.dusk! : key === 'night' ? envs.night! : key === 'lamp' ? envs.lamp! : step >= 0 ? blends[step] : envs.paper ?? null;
     }
     renderer.toneMappingExposure = 1.0 + 0.15 * ph; // V1 hero exposure 1.15 → 1.0, continuous
-    const dip = Math.min(1, Math.abs(n - 0.5) * 2.5, Math.abs(dk - 0.5) * 2.5);
+    const dip = Math.min(1, Math.abs(n - 0.5) * 2.5, Math.abs(dk - 0.5) * 2.5, Math.abs(lp - 0.5) * 2.5);
     // on Night the polished env is almost black: lift it with the rim so the band keeps a silver gradient
     // the swap dip never goes below 0.45, so the ring is never a black shape in a connection (D-090 r1)
     scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim);

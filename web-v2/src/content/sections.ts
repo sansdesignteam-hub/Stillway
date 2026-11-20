@@ -35,8 +35,8 @@ export const sections: SectionDef[] = [
   { n: '07', id: 'specs', name: 'Specs & benefits', act: 3, time: '21:00', bg: 'sand', states: 7, tin: 1, hold: 0.6, built: true },
   { n: '08', id: 'features', name: 'Features', act: 3, time: '21:00', bg: 'night', states: 3, tin: 1, hold: 0.6, built: true },
   { n: '09', id: 'app', name: 'The app', act: 3, time: '21:00', bg: 'paper', states: 3, tin: 1, hold: 0.6, built: true },
-  { n: '10', id: 'finishes', name: 'Finishes & pricing', act: 4, time: '22:00', bg: 'sand', states: 1, tin: 1, hold: 0.6, built: false },
-  { n: '11', id: 'close', name: 'Closing, FAQ & footer', act: 4, time: '06:50', part: 'Tomorrow', bg: 'night', states: 1, tin: 1, hold: 0.6, built: false },
+  { n: '10', id: 'finishes', name: 'Finishes & pricing', act: 4, time: '22:00', bg: 'sand', states: 2, tin: 1, hold: 1, built: true },
+  { n: '11', id: 'close', name: 'Closing, FAQ & footer', act: 4, time: '06:50', part: 'Tomorrow', bg: 'night', states: 4, tin: 1, hold: 0.4, built: true },
 ];
 
 /** Daypart label next to the clock (home-copy-v2 §0, same breaks as V1). */

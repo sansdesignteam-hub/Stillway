@@ -31,6 +31,8 @@ import { details } from './sections/details';
 import { specs } from './sections/specs';
 import { features } from './sections/features';
 import { app } from './sections/app';
+import { finishes } from './sections/finishes';
+import { close } from './sections/close';
 
 export interface SectionMotion {
   init?: (root: HTMLElement) => void;
@@ -43,7 +45,7 @@ export interface SectionMotion {
   /** custom ring path across the incoming connection, x in [0, 1]; default = lerp in 30–70% */
   ringIn?: (x: number, ctx: Ctx, from: Pose, to: Pose) => Pose;
 }
-const motions: Record<string, SectionMotion> = { hero, why, sleep, activity, insight, details, specs, features, app };
+const motions: Record<string, SectionMotion> = { hero, why, sleep, activity, insight, details, specs, features, app, finishes, close };
 
 const BG: Record<string, [number, number, number]> = {
   paper: [0xf7, 0xf5, 0xf0],
@@ -183,6 +185,11 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       duskO = k < 0.999 ? 1 : 0;
       wipeY = -250 + 250 * k;
       wipeTone = 'warm';
+    } else if (inConn && prev && cur.def.id === 'close' && !isDark(prev.def.bg)) {
+      // D-098: Sand → Night for the closing canvas: night rises from below with a warm Ember edge
+      if (k < 0.999) bgEl.style.backgroundColor = `rgb(${BG[prev.def.bg].join(' ')})`;
+      wipeY = 100 - 250 * k;
+      wipeTone = 'rise';
     } else if (inConn && prev && prev.def.bg === 'night' && !isDark(cur.def.bg)) {
       // D-096: Night → Paper (08 → 09) the same way, light sweeping down, with a plain Sand edge
       if (k < 0.999) bgEl.style.backgroundColor = `rgb(${BG.night.join(' ')})`;
@@ -193,7 +200,7 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       mask = `linear-gradient(to top, #000 ${(p - 20).toFixed(1)}%, transparent ${(p + 20).toFixed(1)}%)`;
     }
     duskEl.style.opacity = duskO.toFixed(3);
-    const wv = wipeY === null || wipeY >= -0.01 ? 'hidden' : 'visible';
+    const wv = wipeY === null || (wipeTone === 'rise' ? wipeY <= -149.99 : wipeY >= -0.01) ? 'hidden' : 'visible';
     if (wipeEl.style.visibility !== wv) wipeEl.style.visibility = wv;
     if (wipeY !== null && wipeEl.dataset.tone !== wipeTone) wipeEl.dataset.tone = wipeTone;
     if (wipeY !== null) wipeEl.style.transform = `translate3d(0, ${wipeY.toFixed(2)}lvh, 0)`;
