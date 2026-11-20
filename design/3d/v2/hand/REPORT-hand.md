@@ -2,7 +2,7 @@
 
 Dari: 3D Designer · Untuk: Claude Code (main), pengguna · 20 November 2026
 Dasar: D-102, brief `design/3d/v2/BRIEF-3d-s06-hand.md`.
-Status: **draf tahap 1, menunggu tinjauan pengguna.** Belum ada perubahan di `web-v2/` atau `web/` (D-046). File V1/V2 lain tidak diubah (D-070); `stillway-ring-v2.blend` hanya dibaca untuk mengambil ring.
+Status: **draf tahap 1, menunggu tinjauan pengguna. Jangan dipasang di website dulu** (pengguna, 20 November 2026: "Nanti jangan dipasang dulu di Website, saya ada pertanyaan nanti"). Belum ada perubahan di `web-v2/` atau `web/` (D-046). File V1/V2 lain tidak diubah (D-070); `stillway-ring-v2.blend` hanya dibaca untuk mengambil ring.
 
 ## 1. Yang diserahkan
 
