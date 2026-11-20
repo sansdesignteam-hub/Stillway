@@ -14,8 +14,9 @@ import type { SectionMotion } from '../story';
 
 let el: Record<string, HTMLElement | null> = {};
 const END = 3.6;
-// rim 0.35: a little cool light so the silver still reads as silver in the ochre Dusk env
-const DUSK = { dusk: 1, light: 0, rim: 0.35 };
+// D-090 r1: the ring must read neutral silver (not copper) — neutral paper-polished env, no Dusk
+// env, plus one weak ochre rim from the glow side (lower left)
+const DUSK = { dusk: 0, light: 0, rim: 0, warm: 1 };
 
 export const insightStart = (ctx: Ctx): Pose =>
   pose({ x: ctx.mobile ? 0.14 : 0.2, y: ctx.mobile ? 0.12 : 0.04, w: ctx.mobile ? 0.8 : 0.42, ...ANGLE.threeQuarter, ...DUSK });
@@ -29,9 +30,10 @@ export const insight: SectionMotion = {
     const out = 1 - seg(u, END, END + 0.3);
     const headIn = seg(u, -0.25, 0.1);
     const toEdge = seg(u, 0.5, 1.3);
-    put(el.head, { o: headIn * (1 - seg(u, 1.6, 2.1)) * out, x: ctx.mobile ? 0 : -16 * toEdge, yv: ctx.mobile ? 0 : 0.03 * toEdge }, ctx);
+    // state 2: the headline stays left, clear of the ring; it is fully gone before the card arrives
+    put(el.head, { o: headIn * (1 - seg(u, 1.15, 1.55)) * out, x: ctx.mobile ? 0 : -16 * toEdge, yv: ctx.mobile ? 0 : 0.03 * toEdge }, ctx);
     put(el.h2, { o: seg(u, 0.4, 1) }, ctx);
-    const card = seg(u, 1.5, 2.1);
+    const card = seg(u, 1.65, 2.2);
     put(el.card, { o: card * out, s: 0.95 + 0.05 * card }, ctx);
     if (el.bar) el.bar.style.setProperty('--p', String(seg(u, 1.8, 2.8)));
     put(el.body, { o: window4(u, 2.5, 3, END, END + 0.3) }, ctx);
@@ -43,7 +45,8 @@ export const insight: SectionMotion = {
     const inside = pose({ x: 0, y: 0, w: m ? 2.4 : 1.2, rx: -0.06, ry: 0.04, rz: 0, spin: Math.PI, uncap: 1, ...DUSK });
     return along(u, [
       [0, start],
-      [1, pose({ ...start, x: m ? 0.06 : 0.1, y: m ? 0.06 : 0.01, w: m ? 1.1 : 0.62, ...ANGLE.threeQuarter, ry: ANGLE.threeQuarter.ry + 0.3, uncap: 1, ...DUSK })],
+      // state 2: grows on its own side, leaving the headline area free
+      [1, pose({ ...start, x: m ? 0.1 : 0.24, y: m ? 0.1 : 0.02, w: m ? 0.95 : 0.5, ...ANGLE.threeQuarter, ry: ANGLE.threeQuarter.ry + 0.3, uncap: 1, ...DUSK })],
       [2, inside],
       [3, inside],
     ]);

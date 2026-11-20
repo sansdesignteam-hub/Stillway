@@ -127,6 +127,10 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const rimFill = new THREE.DirectionalLight(0xdfe8ff, 0);
   rimFill.position.set(-700, 260, 900);
   scene.add(rim, rimFill);
+  // S05: one weak ochre rim from the Dusk glow (lower left); the env stays neutral (D-090 r1)
+  const warmRim = new THREE.DirectionalLight(0xe0a35c, 0);
+  warmRim.position.set(-900, -520, 260);
+  scene.add(warmRim);
   // V1 live cast shadow on the stone (D-051): a shadow-only light and a transparent catcher plane
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -236,6 +240,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     hemi.intensity = 0.35 * p.photo;
     rim.intensity = 14 * p.rim;
     rimFill.intensity = 3.2 * p.rim;
+    warmRim.intensity = 7 * p.warm;
     const sh = Math.max(0, p.shadow);
     catcher.visible = sh > 0.005;
     shadowSun.castShadow = catcher.visible;
@@ -268,7 +273,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     renderer.toneMappingExposure = 1.0 + 0.15 * ph; // V1 hero exposure 1.15 → 1.0, continuous
     const dip = Math.min(1, Math.abs(n - 0.5) * 2.5, Math.abs(dk - 0.5) * 2.5);
     // on Night the polished env is almost black: lift it with the rim so the band keeps a silver gradient
-    scene.environmentIntensity = (0.15 + 0.85 * dip) * (1 + 1.4 * p.rim);
+    // the swap dip never goes below 0.45, so the ring is never a black shape in a connection (D-090 r1)
+    scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim);
 
     if (Math.abs(p.led - lastLed) > 0.001) {
       lastLed = p.led;

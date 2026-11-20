@@ -17,7 +17,7 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   <img class="ring-fallback sleep__fb" src="/ring-fallback/fb-s03-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
   <div class="scene__front">
     <div class="sleep__col">
-      <p class="sleep__kicker t-mono" data-s-kicker data-a>{sleep.kicker}</p>
+      <!-- no kicker: the navbar clock already reads "23:10 · Last night" (D-090 r1) -->
       <h2 id="sleep-title" class="sleep__head" data-s-head data-a>{sleep.headline}</h2>
       <dl class="sleep__slot">
         {
@@ -46,11 +46,12 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   }
   /* text column left (Ultrahuman ref 1 composition): kicker, headline, one number slot, foot */
   .sleep__col {
+    --n: clamp(5rem, 18vw, 17rem); /* active number: ~half the width (Ultrahuman ref), ≈2× before */
     position: absolute;
     left: var(--margin);
     top: 50%;
     translate: 0 -50%;
-    width: min(34rem, 40vw);
+    width: 58vw;
     display: grid;
     gap: 20px;
   }
@@ -58,15 +59,15 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
     color: var(--stone);
   }
   .sleep__head {
-    font-size: var(--fs-h3);
-    font-weight: var(--w-heading);
+    font-size: clamp(22px, 2.3vw, 34px); /* = S01 statement */
+    font-weight: var(--w-display);
     letter-spacing: var(--track-tight);
     line-height: 1.15;
   }
   /* one slot: all three numbers share it; the active one is full size, older ones shrink upward */
   .sleep__slot {
     /* room above for the previous number, which shrinks upward when the next one arrives */
-    margin: calc(var(--fs-number) * 0.85) 0 0;
+    margin: calc(var(--n) * 0.32) 0 0;
     display: grid;
     min-height: calc(var(--fs-number) * 1.6);
     align-items: end;
@@ -87,7 +88,8 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   }
   .stat__value {
     margin: 0;
-    font-size: calc(var(--fs-number) * 1.3);
+    font-size: var(--n);
+    white-space: nowrap;
     font-weight: var(--w-heading);
     letter-spacing: var(--track-tight);
     line-height: 0.9;
@@ -130,8 +132,8 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
     .sleep__slot {
       margin-top: 52px;
     }
-    .stat__value {
-      font-size: 4.25rem;
+    .sleep__col {
+      --n: 27vw;
     }
     .sleep__fb {
       --rw: 80vw;

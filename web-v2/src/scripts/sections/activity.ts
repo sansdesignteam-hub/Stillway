@@ -57,9 +57,9 @@ export const activity: SectionMotion = {
     // strip geometry: active width A (portrait), small width s, gap g
     const W = window.innerWidth;
     const H = window.innerHeight;
-    const A = ctx.mobile ? W * 0.64 : Math.min(H * 0.7 * 0.714, W * 0.34);
-    const s = ctx.mobile ? A * 0.32 : A * 0.34;
-    const g = ctx.mobile ? 12 : 22;
+    const A = ctx.mobile ? W * 0.58 : Math.min(H * 0.7 * 0.714, W * 0.34);
+    const s = ctx.mobile ? A * 0.24 : A * 0.34; // phones: small thumbs that fit fully beside the frame
+    const g = ctx.mobile ? 18 : 22;
     const near = A / 2 + g + s / 2;
     const darken = seg(x, 0.2, 0.6);
     const enter = (1 - inn) * W * 0.5; // the strip comes in from the right
@@ -95,12 +95,14 @@ export const activity: SectionMotion = {
     const p = insightStart(ctx);
     return { ...p, w: p.w * 0.9, alpha: 0 };
   },
-  // 03 → 04: the ring shrinks and fades out where it is (30–70%)
+  // 03 → 04: the ring shrinks where it is at full opacity (stays silver, never a half-transparent dark
+  // shape on Night), then goes quickly at the end of the middle stretch (D-090 r1)
   ringIn(x, _ctx, from) {
-    const t = seg(x, 0.3, 0.7);
-    const to: Pose = { ...from, w: from.w * 0.55, alpha: 0 };
+    const t = seg(x, 0.3, 0.68);
+    const to: Pose = { ...from, w: from.w * 0.5 };
     const o = {} as Pose;
     for (const key of Object.keys(from) as (keyof Pose)[]) o[key] = lerp(from[key], to[key], t);
+    o.alpha = 1 - seg(x, 0.56, 0.72);
     return o;
   },
 };

@@ -158,12 +158,32 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
 
     /* background */
     const mid = inConn && prev ? seg(tinX, 0.3, 0.7) : 1;
-    const a = prev ? BG[prev.def.bg] : BG[cur.def.bg];
-    const b = BG[cur.def.bg];
+    // a Dusk side never lerps its base: the base is the other section's colour and the opaque Dusk
+    // layer cross-fades over it (D-090 r1: no muddy grey mix between Dusk and Paper)
+    let a = prev ? BG[prev.def.bg] : BG[cur.def.bg];
+    let b = BG[cur.def.bg];
+    if (prev && prev.def.bg === 'dusk') a = b;
+    if (prev && cur.def.bg === 'dusk') b = a;
     const k = inConn ? mid : 1;
     bgEl.style.backgroundColor = `rgb(${a.map((v, j) => Math.round(lerp(v, b[j], k))).join(' ')})`;
-    const duskW = (prev && inConn && prev.def.bg === 'dusk' ? 1 - k : 0) + (cur.def.bg === 'dusk' ? k : 0);
-    duskEl.style.opacity = duskW.toFixed(3);
+    // Dusk enters as a soft wipe rising from the bottom (Storyboard 04 → 05: "Dusk naik dari bawah")
+    // and leaves as Paper wiping down from the top — never a 50% dissolve, which reads as muddy grey
+    // (D-090 r1)
+    let duskO = cur.def.bg === 'dusk' ? 1 : 0;
+    let mask = 'none';
+    if (inConn && prev && prev.def.bg === 'dusk' && cur.def.bg !== 'dusk') {
+      duskO = 1;
+      const p = -20 + 140 * k; // paper edge moves down
+      mask = `linear-gradient(to bottom, transparent ${(p - 20).toFixed(1)}%, #000 ${(p + 20).toFixed(1)}%)`;
+    } else if (inConn && prev && cur.def.bg === 'dusk' && prev.def.bg !== 'dusk') {
+      const p = -20 + 140 * k; // dusk edge moves up
+      mask = `linear-gradient(to top, #000 ${(p - 20).toFixed(1)}%, transparent ${(p + 20).toFixed(1)}%)`;
+    }
+    duskEl.style.opacity = duskO.toFixed(3);
+    if (duskEl.style.maskImage !== mask) {
+      duskEl.style.maskImage = mask;
+      duskEl.style.webkitMaskImage = mask;
+    }
     const darkW = (prev && inConn && isDark(prev.def.bg) ? 1 - k : 0) + (isDark(cur.def.bg) ? k : 0);
     const theme = (!inConn && cur.m.theme?.(u)) || (darkW > 0.5 ? 'dark' : 'light');
     if (nav && nav.dataset.theme !== theme) nav.dataset.theme = theme;

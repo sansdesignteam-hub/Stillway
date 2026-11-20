@@ -41,7 +41,7 @@ const first = d.frames[0];
         {
           d.frames.map((f) => (
             <li class="act__item" data-a-item data-a data-time={f.time} data-state={f.state} data-detail={f.detail}>
-              <Img src={srcs[f.key as keyof typeof srcs]} alt={f.alt} sizes="(max-width: 719px) 64vw, 34vh" widths={[480, 768, 1060]} />
+              <Img src={srcs[f.key as keyof typeof srcs]} alt={f.alt} sizes="(max-width: 719px) 58vw, 34vh" widths={[480, 768, 1060]} loading="eager" />
               <span class="sr-only">
                 {f.time}, {f.state}, {f.detail} (simulated).
               </span>
@@ -93,17 +93,24 @@ const first = d.frames[0];
     display: grid;
     gap: 16px;
   }
+  /* Oryzo "SO PORTABLE, / it's wearable": line 1 small dim caps, line 2 big, bright and heavier */
   .act__title {
     display: grid;
-    gap: 2px;
-    font-size: var(--fs-h3);
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
-    line-height: 1.1;
+    gap: 4px;
+    line-height: 1.05;
   }
   .act__caps {
+    font-size: clamp(15px, 1.25vw, 19px);
+    font-weight: var(--w-label);
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     color: var(--stone);
+  }
+  .act__line {
+    font-size: clamp(28px, 2.6vw, 40px);
+    font-weight: var(--w-display);
+    letter-spacing: var(--track-tight);
+    color: var(--paper);
   }
   .act__body {
     font-size: var(--fs-small);
@@ -210,7 +217,7 @@ const first = d.frames[0];
   }
   @media (max-width: 719px) {
     .scene--activity {
-      --a: 64vw;
+      --a: 58vw;
     }
     .act__head {
       top: calc(var(--header-h) + 8px);
