@@ -15,6 +15,7 @@
 import { put, seg, lerp, clamp01, smooth, type Ctx } from '../anim';
 import { pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
+import { detailsLeaveRing } from './details';
 
 const END = 6.6;
 let root: HTMLElement | null = null;
@@ -242,5 +243,7 @@ export const specs: SectionMotion = {
   },
   // no 3D ring in S07 (it is only in the card photos)
   ring: () => pose({ x: 0.2, y: 0, w: 0.1, alpha: 0 }),
+  // 06 → 07: the polished ring stays on the finger while the hand photo shrinks into a card
+  ringIn: (x, ctx) => detailsLeaveRing(x, ctx),
 };
 

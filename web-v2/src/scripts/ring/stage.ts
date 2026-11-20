@@ -148,11 +148,11 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const SHADOW_DIR = new THREE.Vector3(0.55, 1, 0.75).normalize(); // V1 value
 
   /* S06 finger proxy (s06-pose.json fingerProxy): lathe around +Y in hand-photo px, y = 0 at the
-     ring seat; depth only, drawn before the ring so the back of the band hides behind the finger */
+     ring seat (profile reversed so the faces point outward, as ring-test/s06.html); depth only, drawn before the ring so the back of the band hides behind the finger */
   const PROFILE = [[0, 337], [15, 334], [28, 320], [35, 300], [38, 280], [40, 260], [42, 220], [44.6, 160], [48, 120], [47, 60], [46, 0], [48, -110], [0, -110]];
   const finger = new THREE.Mesh(
-    new THREE.LatheGeometry(PROFILE.map(([r, y]) => new THREE.Vector2(r * 0.96, y)), 48),
-    new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: true }),
+    new THREE.LatheGeometry(PROFILE.map(([r, y]) => new THREE.Vector2(r * 1.02, y)).reverse(), 48),
+    new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: true, side: THREE.DoubleSide }),
   );
   finger.renderOrder = -2;
   finger.visible = false;

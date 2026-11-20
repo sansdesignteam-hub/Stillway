@@ -26,7 +26,8 @@ function layout(ctx: Ctx) {
   const W = window.innerWidth;
   const H = window.innerHeight;
   const m = ctx.mobile;
-  const D = m ? Math.min(W * 0.5, H * 0.26) : H * 0.3;
+  // D-093 r1: the standing ring is the figure of the screen (Ultrahuman ref ±55–65% of the height)
+  const D = m ? Math.min(W * 0.7, H * 0.36) : Math.min(H * 0.6, W * 0.36);
   const py = H * (m ? 0.6 : 0.74); // plinth top
   const face = H * 0.036;
   const cy = py + face * 0.55 - D / 2; // the ring stands on the middle of the top face
@@ -48,6 +49,12 @@ function setVars(ctx: Ctx) {
   root.style.setProperty('--hy', `${L.hy.toFixed(1)}px`);
   root.style.setProperty('--hs', L.hs.toFixed(4));
   root.style.setProperty('--py', `${L.py.toFixed(1)}px`);
+  // reduced motion / no WebGL: polished still (fb-s02, ring 84.6% of the image height) on the plinth
+  const fbw = L.D / 0.846;
+  const cx = (0.5 + (ctx.mobile ? -0.02 : 0.12)) * L.W;
+  root.style.setProperty('--fbw', `${fbw.toFixed(1)}px`);
+  root.style.setProperty('--fbx', `${(cx - 0.528 * fbw).toFixed(1)}px`);
+  root.style.setProperty('--fby', `${(L.py + L.face * 0.55 - 0.918 * fbw).toFixed(1)}px`);
   return L;
 }
 
@@ -62,8 +69,8 @@ const SIDE = { rx: 0, ry: -Math.PI / 2 + 0.08, rz: 0, spin: 0, pitch: 0.12 };
 const EDGE = { rx: 0, ry: -Math.PI / 4, rz: 0, spin: 0, pitch: 20 * D2R };
 
 function rollX(u: number, ctx: Ctx, L: ReturnType<typeof layout>) {
-  const start = ctx.mobile ? -0.42 : -0.5;
-  const stop = ctx.mobile ? -0.02 : 0.05;
+  const start = ctx.mobile ? -0.42 : -0.43;
+  const stop = ctx.mobile ? -0.02 : 0.12;
   const over = stop + (0.06 * L.D) / 2 / L.W;
   const t = ctx.reduced ? 1 : clamp01(u);
   // 0 → 22%: power2.out to a little past the stop; 22 → 25%: sine back (s06-pose.json rolling)
@@ -121,6 +128,51 @@ function fingerPose(slide: number, L: ReturnType<typeof layout>, extra: Partial<
   });
 }
 
+/**
+ * 06 → 07 (Storyboard §3): the hand photo shrinks into a card with rounded corners around the
+ * finger, moves to the centre (where S07's cards appear) and fades. leave 0..1 (eased).
+ */
+function cardLeave(leave: number, L: ReturnType<typeof layout>, ctx: Ctx) {
+  const k = seg(leave, 0, 0.55);
+  const cw = Math.min(L.W * (ctx.mobile ? 0.5 : 0.2), L.H * 0.36);
+  const ch = cw * 1.25;
+  const cx = L.seat.x;
+  const cy = L.hy + 300 * L.hs;
+  const mv = seg(leave, 0.15, 0.6);
+  return {
+    k,
+    t: lerp(0, cy - ch / 2, k),
+    b: lerp(0, L.H - (cy + ch / 2), k),
+    l: lerp(0, cx - cw / 2, k),
+    r: lerp(0, L.W - (cx + cw / 2), k),
+    mx: (L.W / 2 - cx) * mv,
+    my: (L.H / 2 - cy) * mv,
+    s: 1 - 0.35 * seg(leave, 0.2, 0.6),
+    o: 1 - seg(leave, 0.5, 0.7),
+  };
+}
+
+/** the 3D ring on the finger follows the card out (it is not part of the photo, D-093 r1) */
+export function detailsLeaveRing(x: number, ctx: Ctx): Pose {
+  const L = layout(ctx);
+  const leave = seg(x, 0, 1);
+  const c = cardLeave(leave, L, ctx);
+  const p = fingerPose(1, L, { shadow: 0 });
+  // card transform: translate(mx, my) scale(s) about the viewport centre
+  const sx = L.W / 2 + (L.seat.x - L.W / 2) * c.s + c.mx;
+  const sy = L.H / 2 + (L.seat.y - L.H / 2) * c.s + c.my;
+  return {
+    ...p,
+    x: fx(sx, L.W),
+    y: fy(sy, L.H),
+    w: p.w * c.s,
+    fx: fx(sx, L.W),
+    fy: fy(sy, L.H),
+    fs: p.fs * c.s,
+    alpha: c.o,
+  };
+}
+
 export const details: SectionMotion = {
   init(r) {
     root = r;
@@ -131,6 +183,7 @@ export const details: SectionMotion = {
       card: q('[data-d-card]'),
       hand: q('[data-d-hand]'),
       ringed: q('[data-d-ringed]'),
+      seatShadow: q('[data-d-seat]'),
       head: q('[data-d-head]'),
       fits: q('[data-d-fits]'),
       label: q('[data-d-label]'),
@@ -149,9 +202,12 @@ export const details: SectionMotion = {
       const p = plinthPose(Math.max(0, u), ctx, L);
       const wpx = L.D * (0.92 * Math.abs(Math.cos(p.ry)) + 0.36 * Math.abs(Math.sin(p.ry)));
       el.shadow.style.width = `${wpx.toFixed(1)}px`;
+      const sh = L.D * 0.07;
+      el.shadow.style.height = `${sh.toFixed(1)}px`;
+      el.shadow.style.top = `${(L.face * 0.55 - sh / 2).toFixed(1)}px`;
       el.shadow.style.left = `${((p.x + 0.5) * L.W - wpx / 2 + L.W * 0.04).toFixed(1)}px`;
     }
-    put(el.head, { o: window4(u, ctx.reduced ? -0.5 : 0.45, 0.75, 3.05, 3.35), y: (1 - seg(u, 0.45, 0.75)) * 16 }, ctx);
+    put(el.head, { o: window4(u, ctx.reduced ? -0.5 : 0.55, 0.85, 3.05, 3.35), y: (1 - seg(u, 0.55, 0.85)) * 16 }, ctx);
     steps.forEach((s, i) => {
       const a = 1.4 + i;
       put(s, { o: window4(u, a, a + 0.35, a + 0.85, a + 1.15), y: (1 - seg(u, a, a + 0.35)) * 14 }, ctx);
@@ -162,31 +218,21 @@ export const details: SectionMotion = {
 
     // hand: fades in with the end of the plinth, slight rise
     const hand = seg(u, 3.1, 3.5);
-    if (el.ringed) el.ringed.style.opacity = seg(u, 3.88, 3.98).toFixed(3);
+    // D-093 r1: the polished 3D ring stays on the finger (D-085); A-1b only without WebGL / reduced motion
+    const live = document.documentElement.classList.contains('ring-ready');
+    if (el.ringed) el.ringed.style.opacity = live ? '0' : seg(u, 3.88, 3.98).toFixed(3);
+    put(el.seatShadow, { o: live ? seg(u, 3.75, 3.92) : 0 }, ctx);
     // 06 → 07 (Storyboard §3): the hand photo shrinks into a card with rounded corners, then fades
-    const shrink = seg(leave, 0, 0.55);
     if (el.card && root) {
-      // card = portrait box around the finger, centred on the screen when it is done
-      const cw = Math.min(L.W * (ctx.mobile ? 0.5 : 0.2), L.H * 0.36);
-      const ch = cw * 1.25;
-      const cx = L.seat.x;
-      const cy = L.hy + 300 * L.hs;
-      const k = shrink;
-      const t = lerp(0, cy - ch / 2, k);
-      const b = lerp(0, L.H - (cy + ch / 2), k);
-      const l = lerp(0, cx - cw / 2, k);
-      const r = lerp(0, L.W - (cx + cw / 2), k);
+      const c = cardLeave(leave, L, ctx);
       const cs = el.card.style;
-      cs.setProperty('--ct', `${t.toFixed(1)}px`);
-      cs.setProperty('--cb', `${b.toFixed(1)}px`);
-      cs.setProperty('--cl', `${l.toFixed(1)}px`);
-      cs.setProperty('--cr', `${r.toFixed(1)}px`);
-      cs.setProperty('--cr0', `${(14 * k).toFixed(1)}px`);
-      cs.setProperty('--cbg', k > 0.001 ? '1' : '0');
-      // move the card toward the centre of the screen (where S07's Night card appears)
-      const mx = (L.W / 2 - cx) * seg(leave, 0.15, 0.6);
-      const my = (L.H / 2 - cy) * seg(leave, 0.15, 0.6);
-      put(el.card, { o: hand * (1 - seg(leave, 0.5, 0.7)), x: mx, y: my, s: 1 - 0.35 * seg(leave, 0.2, 0.6) }, ctx);
+      cs.setProperty('--ct', `${c.t.toFixed(1)}px`);
+      cs.setProperty('--cb', `${c.b.toFixed(1)}px`);
+      cs.setProperty('--cl', `${c.l.toFixed(1)}px`);
+      cs.setProperty('--cr', `${c.r.toFixed(1)}px`);
+      cs.setProperty('--cr0', `${(14 * c.k).toFixed(1)}px`);
+      cs.setProperty('--cbg', c.k > 0.001 ? '1' : '0');
+      put(el.card, { o: hand * c.o, x: c.mx, y: c.my, s: c.s }, ctx);
       put(el.hand, { o: 1, y: (1 - hand) * 30 }, ctx);
     }
   },
@@ -203,7 +249,7 @@ export const details: SectionMotion = {
     }
     const slide = seg(u, 3.55, 3.9);
     // the 3D ring hands over to the photo ring (A-1b) at the seat
-    return fingerPose(slide, L, { alpha: 1 - seg(u, 3.92, 4.0), shadow: 0 });
+    return fingerPose(slide, L, { shadow: 0 });
   },
   // 05 → 06 (Storyboard §3): the camera backs out of the ring — it shrinks (geometric, so it reads
   // as distance) and drops to the plinth on the left; the cast shadow lands as it touches down

@@ -105,8 +105,8 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
     <div class="sp__everytext" data-s-etext data-a>
       <p class="sp__the">The</p>
       <p class="sp__evword">Everyday</p>
+      <p class="sp__caption" data-s-caption data-a>{d.everyday.caption}</p>
     </div>
-    <p class="sp__caption" data-s-caption data-a>{d.everyday.caption}</p>
   </div>
 </section>
 
@@ -390,7 +390,7 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
     left: 50%;
     top: 47%;
     translate: -50% -50%;
-    text-align: center;
+    text-align: left;
     color: var(--ink);
     line-height: 0.9;
   }
@@ -406,11 +406,13 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
     font-weight: var(--w-display);
     letter-spacing: var(--track-display);
   }
+  /* D-093 r1: under "Everyday", at its left edge, clear of the small card, on a Paper chip */
   .sp__caption {
-    position: absolute;
-    left: calc(50% + 6vw);
-    top: calc(47% + 8vw);
-    width: 9em;
+    display: inline-block;
+    margin: 0.9em 0 0 0.04em;
+    padding: 5px 10px;
+    border-radius: var(--radius-pill);
+    background: rgb(247 245 240 / 0.9);
     font-size: var(--fs-small);
     line-height: 1.25;
     color: var(--ink);
@@ -466,11 +468,6 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
       right: var(--margin);
       width: auto;
       bottom: 16px;
-    }
-    .sp__caption {
-      left: auto;
-      right: var(--margin);
-      top: calc(47% + 18vw);
     }
   }
 </style>
