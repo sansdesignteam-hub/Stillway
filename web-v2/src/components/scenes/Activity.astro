@@ -53,16 +53,12 @@ const first = d.frames[0];
 
     <div class="act__now" data-a-now data-a aria-hidden="true">
       <p class="act__time" data-a-time>{first.time}</p>
-      <p class="act__status">
-        <i class="act__key" data-a-key data-state={first.state.toLowerCase()}></i>
-        <span data-a-state>{first.state}</span>
-        <span class="act__sep">·</span>
-        <span data-a-detail>{first.detail}</span>
-      </p>
-      <p class="t-mono act__sim">{d.simulated}</p>
+      <p class="act__status"><i class="act__key" data-a-key data-state={first.state.toLowerCase()}></i><span data-a-state>{first.state}</span></p>
+      <p class="act__detail" data-a-detail>{first.detail}</p>
+      <p class="act__sim">{d.simulated}</p>
     </div>
 
-    <ol class="act__list t-mono" data-a-list data-a aria-hidden="true">
+    <ol class="act__list" data-a-list data-a aria-hidden="true">
       {d.frames.map((f, i) => <li data-a-tick class:list={[i === 0 && 'is-active']}>{f.time}</li>)}
     </ol>
     <p class="act__hint t-label" data-a-hint data-a aria-hidden="true">{hero.scroll}</p>
@@ -70,12 +66,16 @@ const first = d.frames[0];
 </section>
 
 <style>
+  /* D-092: heading, photo sizes and the strip follow V1 (web/src/styles/global.css, "activity and rest");
+     V2 keeps its colours, entry/exit and state 5 */
   .scene--activity {
     color: var(--paper);
     --stone: var(--stone-on-night);
-    --a: min(calc(70vh * 0.714), 34vw); /* active portrait width (1060 × 1484), ~70vh tall */
+    --paper-soft: rgb(247 245 240 / 0.62);
+    --oy: 5svh; /* the strip sits a little low so the copy above it stays clear */
+    --bh: min(74svh, 720px, 66vw);
+    --bw: calc(var(--bh) * 0.7);
   }
-  /* Oryzo's warm dark ground: Night with one low ochre glow from the lower left */
   .act__glow {
     position: absolute;
     left: -20vw;
@@ -87,66 +87,84 @@ const first = d.frames[0];
   }
   .act__head {
     position: absolute;
+    z-index: 3;
+    top: calc(var(--header-h) + 3svh);
     left: var(--margin);
-    top: calc(var(--header-h) + 56px); /* clear of the small photos beside the frame (ref 2) */
-    width: min(26rem, 24vw);
+    /* stays clear of the small frames waiting at the side (V1) */
+    width: calc((100vw - var(--bw)) / 2 - var(--bw) * 0.36 - 40px - var(--margin));
     display: grid;
-    gap: 16px;
+    gap: 18px;
   }
-  /* Oryzo "SO PORTABLE, / it's wearable": line 1 small dim caps, line 2 big, bright and heavier */
   .act__title {
     display: grid;
-    gap: 4px;
-    line-height: 1.05;
+    font-size: clamp(36px, 3.4vw, 56px);
+    font-weight: 600;
+    line-height: 0.98;
+    letter-spacing: -0.04em;
   }
   .act__caps {
-    font-size: clamp(15px, 1.25vw, 19px);
-    font-weight: var(--w-label);
-    letter-spacing: var(--track-label);
+    color: var(--paper-soft);
     text-transform: uppercase;
-    color: var(--stone);
+    letter-spacing: -0.03em;
   }
   .act__line {
-    font-size: clamp(28px, 2.6vw, 40px);
-    font-weight: var(--w-display);
-    letter-spacing: var(--track-tight);
     color: var(--paper);
   }
   .act__body {
-    font-size: var(--fs-small);
-    color: var(--stone);
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--paper);
+    max-width: 26em;
   }
   .act__strip {
     position: absolute;
-    left: 50%;
-    top: 47%;
-    width: var(--a);
-    aspect-ratio: 1060 / 1484;
-    translate: -50% -50%;
+    inset: 0;
   }
   .act__frame {
     position: absolute;
-    inset: -10px;
-    border: 1px dashed rgb(247 245 240 / 0.55);
+    z-index: 2;
+    left: 50%;
+    top: calc(50% + var(--oy));
+    width: calc(var(--bw) + 20px);
+    height: calc(var(--bh) + 20px);
+    translate: -50% -50%;
+    border: 1.5px dashed rgb(247 245 240 / 0.55);
+    border-radius: 2px;
+    pointer-events: none;
   }
   .act__items {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
     margin: 0;
     padding: 0;
     list-style: none;
   }
   .act__item {
     position: absolute;
-    inset: 0;
-    transform-origin: 50% 50%;
+    left: 50%;
+    top: calc(50% + var(--oy));
+    width: var(--bw);
+    height: var(--bh);
+    margin-left: calc(var(--bw) / -2);
+    margin-top: calc(var(--bh) / -2);
     overflow: hidden;
+    background: #2b241e;
+    transform-origin: 50% 50%;
+    will-change: transform;
     --dark: 0;
   }
+  .act__item :global(picture),
   .act__item :global(img) {
+    display: block;
     width: 100%;
     height: 100%;
+  }
+  .act__item :global(img) {
     object-fit: cover;
   }
   .act__item::after {
+    /* state 5 (V2): 15:30 darkens toward Dusk */
     content: '';
     position: absolute;
     inset: 0;
@@ -155,54 +173,66 @@ const first = d.frames[0];
   }
   .act__now {
     position: absolute;
+    z-index: 3;
     left: var(--margin);
-    bottom: clamp(28px, 7vh, 64px);
-    display: grid;
-    gap: 8px;
+    bottom: 40px;
+    width: calc((100vw - var(--bw)) / 2 - var(--bw) * 0.36 - 40px - var(--margin));
   }
   .act__time {
-    font-size: var(--fs-number);
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
+    font-size: clamp(56px, 6vw, 96px);
+    font-weight: 500;
     line-height: 0.9;
+    letter-spacing: -0.05em;
     font-variant-numeric: tabular-nums;
   }
   .act__status {
+    margin-top: 16px;
     display: flex;
-    gap: 8px;
     align-items: center;
-    font-size: var(--fs-body);
-  }
-  .act__sep {
-    color: var(--stone);
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 600;
   }
   .act__key {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    border: 1px solid var(--paper);
-  }
-  .act__key[data-state='moving'] {
     background: var(--paper);
   }
+  .act__key[data-state='resting'] {
+    background: #9aa883; /* V1 resting dot (D-092) */
+  }
+  .act__detail {
+    color: var(--paper-soft);
+  }
   .act__sim {
-    color: var(--stone);
+    margin-top: 10px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--paper-soft);
   }
   .act__list {
     position: absolute;
+    z-index: 3;
     right: var(--margin);
-    bottom: clamp(28px, 7vh, 64px);
+    bottom: 40px;
     margin: 0;
     padding: 0;
     list-style: none;
     display: grid;
-    gap: 6px;
+    gap: 4px;
     text-align: right;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
   }
   .act__list li {
-    color: var(--stone);
-    opacity: 0.6;
-    transition: color 0.3s ease, opacity 0.3s ease;
+    color: var(--paper-soft);
+    opacity: 0.55;
+    transition: opacity 0.4s, color 0.4s;
   }
   .act__list li:global(.is-active) {
     color: var(--paper);
@@ -210,40 +240,57 @@ const first = d.frames[0];
   }
   .act__hint {
     position: absolute;
+    z-index: 3;
     left: 50%;
-    bottom: 18px;
+    bottom: 14px;
     translate: -50% 0;
     color: var(--stone);
   }
-  @media (max-width: 719px) {
+  /* phones: V1 mobile block */
+  @media (max-width: 760px) {
     .scene--activity {
-      --a: 58vw;
+      --bh: min(50svh, 440px);
     }
     .act__head {
-      top: calc(var(--header-h) + 8px);
-      right: var(--margin);
       width: auto;
-      gap: 6px;
+      right: var(--margin);
+      top: calc(var(--header-h) + 16px);
+      gap: 8px;
+    }
+    .act__title {
+      font-size: 32px;
     }
     .act__body {
-      font-size: 0.8125rem;
+      display: none;
     }
-    .act__strip {
-      top: 50%;
+    .act__items {
+      top: 18px;
+    }
+    .act__now {
+      width: auto;
+      right: var(--margin);
+      bottom: 20px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      column-gap: 16px;
+      align-items: end;
+    }
+    .act__time {
+      grid-row: 1 / span 3;
+      font-size: 48px;
+    }
+    .act__status {
+      margin-top: 0;
+      font-size: 17px;
+    }
+    .act__detail,
+    .act__sim {
+      font-size: 14px;
+      margin-top: 0;
     }
     .act__list,
     .act__hint {
       display: none;
-    }
-    .act__now {
-      bottom: 20px;
-      gap: 4px;
-    }
-    .act__time {
-      font-size: 3rem;
-    }
-    .act__status {
-      font-size: 0.9375rem;
     }
   }
 </style>
