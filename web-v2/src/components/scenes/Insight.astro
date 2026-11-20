@@ -114,12 +114,16 @@ const c = d.card;
     color: var(--stone-on-night);
     justify-self: start;
   }
+  /* D-090 r2: inside the dark opening, under the card, never across the band */
   .ins__body {
     position: absolute;
-    right: var(--margin);
-    bottom: clamp(32px, 9vh, 88px);
-    width: min(22rem, 26vw);
+    left: 50%;
+    top: calc(50% + 190px);
+    translate: -50% 0;
+    width: min(340px, 74vw);
     font-size: var(--fs-small);
+    text-align: center;
+    color: var(--stone-on-night);
   }
   @media (max-width: 719px) {
     .ins__head {
@@ -129,9 +133,7 @@ const c = d.card;
       font-size: 2.5rem;
     }
     .ins__body {
-      left: var(--margin);
-      width: auto;
-      bottom: 24px;
+      top: calc(50% + 180px);
     }
   }
 </style>

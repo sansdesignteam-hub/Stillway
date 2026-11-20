@@ -196,7 +196,16 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   // LEDs (D-062): both off until a section asks (S08 colours, "off" = red dot)
   const ledMain = ring.getObjectByName(RING_MODEL.meshes.ledMain)?.material as THREE.MeshStandardMaterial | undefined;
   const ledPower = ring.getObjectByName(RING_MODEL.meshes.ledPower)?.material as THREE.MeshStandardMaterial | undefined;
-  for (const m of [ledMain, ledPower]) if (m) m.emissiveIntensity = 0;
+  // D-062 / D-090 r2: an unlit LED shows no colour at all (its base colour in the GLB is red/green,
+  // which read as lights in close-ups); keep the authored colour only for when it is lit
+  const LED_OFF = new THREE.Color(0x1c1c1e);
+  const ledBase = new Map<THREE.MeshStandardMaterial, THREE.Color>();
+  for (const m of [ledMain, ledPower]) {
+    if (!m) continue;
+    ledBase.set(m, m.color.clone());
+    m.color.copy(LED_OFF);
+    m.emissiveIntensity = 0;
+  }
   spinner.add(ring);
 
   let W = 0;
@@ -298,6 +307,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       if (c) m.emissive.set(c);
       m.emissiveIntensity = c ? intensity : 0;
       m.toneMapped = !c;
+      m.color.copy(c ? ledBase.get(m) ?? LED_OFF : LED_OFF);
     };
     lit(ledMain, color && color !== 'off' ? color : null);
     lit(ledPower, color === 'off' ? '#FF3B30' : null);
