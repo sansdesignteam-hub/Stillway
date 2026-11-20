@@ -1,0 +1,139 @@
+---
+/**
+ * S05 Daily insight (D-090). References (Figma sticky 40004118:101):
+ *  - Oryzo ochre gradient → the Dusk ground: Ochre → Night with a warm glow from the lower corner
+ *    (tokens --dusk, on the stage), never above the ring.
+ *  - Ultrahuman nudge card → one card with a thin outline on a dark translucent ground, a small
+ *    mono label, one sentence. Real HTML (selectable), sitting inside the ring's opening.
+ *  - Sensiq one calm number → one number in the middle of the card, nothing competing with it.
+ * Motion: scripts/sections/insight.ts.
+ */
+import { insight as d } from '../../content/copy';
+const c = d.card;
+---
+
+<section class="scene scene--insight" data-scene="insight" aria-labelledby="insight-title">
+  <div class="scene__front">
+    <h2 id="insight-title" class="ins__head" data-i-head data-a>
+      <span class="ins__l">{d.headline[0]}</span>
+      <span class="ins__l ins__l2" data-i-h2 data-a>{d.headline[1]}</span>
+    </h2>
+
+    <div class="ins__cardwrap">
+      <article class="ins__card" data-i-card data-a aria-label="App view, simulated">
+        <p class="t-mono ins__label">{c.label}</p>
+        <p class="ins__value" aria-label={c.sr}>7<span class="ins__unit">h</span> 12<span class="ins__unit">m</span></p>
+        <div class="ins__bar" data-i-bar style={`--target:${c.progress}`} aria-hidden="true"><span></span></div>
+        <p class="ins__line">{c.line}</p>
+        <p class="ins__insight">{c.insight}</p>
+        <p class="t-mono ins__sim">{c.simulated}</p>
+      </article>
+    </div>
+
+    <p class="ins__body" data-i-body data-a>{d.body}</p>
+  </div>
+</section>
+
+<style>
+  .scene--insight {
+    color: var(--paper);
+    --stone: var(--stone-on-night);
+  }
+  .ins__head {
+    position: absolute;
+    left: var(--margin);
+    bottom: clamp(32px, 9vh, 88px);
+    width: min(34rem, 38vw);
+    display: grid;
+    font-size: clamp(2.75rem, 1.4rem + 3.6vw, 5rem);
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
+    line-height: 0.98;
+  }
+  .ins__l {
+    display: block;
+  }
+  .ins__cardwrap {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+  }
+  /* Ultrahuman nudge card: thin outline, dark translucent ground; Sensiq: one number in the middle */
+  .ins__card {
+    width: min(340px, 74vw);
+    padding: 22px 22px 18px;
+    border-radius: var(--radius-m);
+    border: 1px solid var(--line-on-night);
+    background: rgb(23 18 15 / 0.62);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    display: grid;
+    gap: 10px;
+    text-align: center;
+    pointer-events: auto;
+    user-select: text;
+  }
+  .ins__label {
+    color: var(--ochre);
+    justify-self: start;
+  }
+  .ins__value {
+    margin: 10px 0 6px;
+    font-size: var(--fs-number);
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
+    line-height: 0.9;
+    font-variant-numeric: tabular-nums;
+  }
+  .ins__unit {
+    font-size: 0.34em;
+    vertical-align: 1.45em;
+    margin-left: 0.04em;
+  }
+  .ins__bar {
+    height: 2px;
+    background: var(--line-on-night);
+  }
+  .ins__bar span {
+    display: block;
+    height: 100%;
+    width: calc(var(--p, 0) * var(--target) * 100%);
+    background: var(--ochre);
+  }
+  .ins__line {
+    font-size: var(--fs-small);
+    font-variant-numeric: tabular-nums;
+  }
+  .ins__insight {
+    font-size: var(--fs-small);
+    color: var(--stone-on-night);
+    text-align: left;
+  }
+  .ins__sim {
+    color: var(--stone-on-night);
+    justify-self: start;
+  }
+  /* D-090 r2: inside the dark opening, under the card, never across the band */
+  .ins__body {
+    position: absolute;
+    left: 50%;
+    top: calc(50% + 190px);
+    translate: -50% 0;
+    width: min(340px, 74vw);
+    font-size: var(--fs-small);
+    text-align: center;
+    color: var(--stone-on-night);
+  }
+  @media (max-width: 719px) {
+    .ins__head {
+      width: auto;
+      right: var(--margin);
+      bottom: 28px;
+      font-size: 2.5rem;
+    }
+    .ins__body {
+      top: calc(50% + 180px);
+    }
+  }
+</style>

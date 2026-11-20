@@ -65,3 +65,33 @@ export const sleep = {
   line: 'A picture of the night, not a verdict on it.',
   simulated: 'Simulated data',
 };
+
+export const activity = {
+  status: 'title + body draft; states approved D-066',
+  heading: ['Activity', 'and rest.'], // shown as "ACTIVITY" caps + "and rest."
+  body: 'Through the day the ring keeps two quiet tallies: the time you spend moving and the moments you stop. Seen together they show the rhythm of a day.',
+  simulated: 'Simulated data',
+  // photos: 5 C-02 frames from V1, not retouched (D-073); alt text draft (home-copy-v2), adjusted to the frames
+  frames: [
+    { key: 's0740', time: '07:40', state: 'Moving', detail: '25 min walk', alt: '07:40 — A man walking outside in early light, the ring on his left index finger.' },
+    { key: 's0900', time: '09:00', state: 'Resting', detail: '40 min focus', alt: '09:00 — Reading with a coffee at a desk, the ring in view.' },
+    { key: 's1030', time: '10:30', state: 'Moving', detail: '15 min stretch', alt: '10:30 — A short stretch by the window, both arms out, the ring on his left index finger.' },
+    { key: 's1230', time: '12:30', state: 'Resting', detail: '30 min lunch', alt: '12:30 — Lunch at a table, the ring resting on the hand.' },
+    { key: 's1530', time: '15:30', state: 'Moving', detail: '20 min stairs', alt: '15:30 — Taking the stairs on an errand, his hand on the rail.' },
+  ],
+};
+
+export const insight = {
+  status: 'draft (numbers approved D-066)',
+  headline: ['Everything it noticed.', 'One calm view.'],
+  body: 'In the evening the app gathers the day into one view you can read and put down. It describes what happened. It does not tell you what to fix.',
+  card: {
+    label: 'Last night',
+    value: '7h 12m',
+    sr: 'Rested 7 hours 12 minutes',
+    progress: 0.9, // bar length only, rested against a personal target; no percent label (home-copy-v2)
+    line: 'Settled 23:10 · Up 06:22',
+    insight: 'You took more short pauses this afternoon than on most weekdays.',
+    simulated: 'Simulated data',
+  },
+};

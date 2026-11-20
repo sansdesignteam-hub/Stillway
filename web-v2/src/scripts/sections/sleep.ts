@@ -1,16 +1,17 @@
 /**
- * S03 Sleep summary — 23:10 · Night (HANDOFF-v2 §2 S03).
- * u: -1..0 connection from S02: text out (0–30%), Paper → Night and ring 0.36 → 0.50 of the
- *          viewport with the light turning to one cold rim (30–70%), clock 07:10 → 23:10 (70–100%)
- *  0 state 1  dark, kicker; ring centred, only its edge lit
- *  1 state 2  SETTLED 23:10 on the right; ring moves left, turning very slowly
- *  2 state 3  RESTED 7h 12m below; the first number dims
- *  3 state 4  BROKEN 2×, small line + Simulated data; ring faces the camera
- *  > 3.6      connection to S04: the three numbers fade out (0–30%)
- * Mobile: ring in the upper half, the numbers below it, left aligned.
+ * S03 Sleep summary — 23:10 · Night (D-090; flow from Storyboard §2, look from the Moodboard
+ * Layout references, see Sleep.astro).
+ * u: -1..0 connection from S02: text out (0–30%), Paper → Night, the env turns to night and the cold
+ *          rim light comes up (30–70%), clock 07:10 → 23:10 · Last night (70–100%)
+ *  0 state 1  dark (the navbar clock reads "23:10 · Last night"); ring centred, edge lit, slow turn
+ *  1 state 2  headline + [ SETTLED ] 23:10 big in the slot; ring moves right (ref 1 composition)
+ *  2 state 3  [ RESTED ] 7h 12m takes the slot; 23:10 shrinks upward and dims
+ *  3 state 4  [ BROKEN ] 2× takes the slot, small line + Simulated data; ring at the reference
+ *             pose, engraving readable (D-089 lesson)
+ *  > 3.6      connection to S04: everything fades out (0–30%)
  */
-import { put, seg, window4, type Ctx } from '../anim';
-import { along, pose, ANGLE } from '../ring/poses';
+import { put, seg, window4, clamp01, type Ctx } from '../anim';
+import { along, pose, ANGLE, lerpPose, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
 
 let el: Record<string, HTMLElement | null> = {};
@@ -18,34 +19,50 @@ let stats: HTMLElement[] = [];
 const END = 3.6;
 
 export const sleep: SectionMotion = {
-  init(root) {
-    const q = (s: string) => root.querySelector<HTMLElement>(s);
-    el = { kicker: q('[data-s-kicker]'), head: q('[data-s-head]'), foot: q('[data-s-foot]') };
-    stats = [...root.querySelectorAll<HTMLElement>('[data-s-stat]')];
+  init(r) {
+    const q = (s: string) => r.querySelector<HTMLElement>(s);
+    el = { head: q('[data-s-head]'), line: q('[data-s-line]'), sim: q('[data-s-sim]') };
+    stats = [...r.querySelectorAll<HTMLElement>('[data-s-stat]')];
   },
   update(u, ctx) {
     const out = 1 - seg(u, END, END + 0.3);
-    put(el.kicker, { o: window4(u, -0.25, 0.1, 0.6, 1) }, ctx);
-    put(el.head, { o: seg(u, 0.5, 1) * out, yv: 0.02 * (1 - seg(u, 0.5, 1)) }, ctx);
+    put(el.head, { o: seg(u, 0.45, 0.95) * out, yv: 0.02 * (1 - seg(u, 0.45, 0.95)) }, ctx);
     stats.forEach((s, i) => {
-      const a = 0.5 + i; // appears on the way to state i+2
-      const on = seg(u, a, a + 0.5);
-      // older numbers dim to .35 when the next one arrives
-      const dim = i < stats.length - 1 ? 1 - 0.65 * seg(u, a + 1, a + 1.5) : 1;
-      put(s, { o: on * dim * out, yv: 0.03 * (1 - on) }, ctx);
-      s.classList.toggle('is-active', u >= a + 0.25 && (i === stats.length - 1 || u < a + 1.25));
+      const a = 0.5 + i; // number i arrives on the way to state i + 2
+      const inn = seg(u, a, a + 0.45);
+      const back = seg(u, a + 1, a + 1.45); // the next number arrives: shrink upward, dim
+      const gone = seg(u, a + 2, a + 2.45); // two numbers later: out
+      const scale = 1 - 0.76 * back; // the previous number ends small (≈ a quarter) and dim
+      // the dimmed number moves up by the height of the block that replaces it, so they never overlap
+      const lift = (stats[i + 1]?.offsetHeight ?? s.offsetHeight) + 14;
+      const y = (1 - inn) * 40 - back * lift;
+      put(s, { o: inn * (1 - 0.72 * back) * (1 - gone) * out, y, s: scale }, ctx);
+      s.classList.toggle('is-active', u >= a + 0.2 && (i === stats.length - 1 || u < a + 1.2));
     });
-    put(el.foot, { o: seg(u, 2.5, 3) * out }, ctx);
+    put(el.sim, { o: seg(u, 0.6, 1) * out }, ctx);
+    put(el.line, { o: seg(u, 2.6, 3) * out }, ctx);
   },
   ring(u, ctx: Ctx) {
     const m = ctx.mobile;
-    const side = m ? { x: 0, y: 0.2, w: 0.6 } : { x: -0.25, y: 0, w: 0.4 };
     const tq = ANGLE.threeQuarter;
+    // ref 1: big ring on the right, may be cut by the edge; phones: upper half
+    // the number takes ~half the width (Ultrahuman big-number ref), so the ring sits further right
+    const side = m ? { x: 0, y: 0.22, w: 0.72 } : { x: 0.33, y: -0.03, w: 0.48 };
+    const night = { light: 1, rim: 1, uncap: 1 };
+    // slow continuous turn (no stops), ending at the reference pose where "Stillway" reads
+    const drift = (k: number) => tq.ry + 0.55 * (1 - k);
     return along(u, [
-      [0, pose({ x: 0, y: m ? 0.05 : 0, w: m ? 0.78 : 0.5, ...tq, ry: tq.ry - 0.1, light: 1 })],
-      [1, pose({ ...side, ...tq, ry: tq.ry + 0.1, light: 1 })],
-      [2, pose({ ...side, ...tq, ry: tq.ry + 0.3, rx: -0.22, light: 1 })],
-      [3, pose({ ...side, ...ANGLE.facing, light: 1 })],
+      [0, pose({ x: 0, y: m ? 0.05 : 0, w: m ? 0.72 : 0.46, ...tq, ry: drift(0), rx: -0.2, ...night })],
+      [1, pose({ ...side, ...tq, ry: drift(0.4), rx: -0.18, ...night })],
+      [2, pose({ ...side, ...tq, ry: drift(0.75), rx: -0.16, ...night })],
+      // state 4: a little further in and smaller so the engraving on the band is fully in view
+      [3, pose({ ...side, x: m ? 0 : 0.25, w: m ? side.w : 0.4, ...tq, ry: drift(1) - 0.05, rx: -0.15, ...night })],
     ]);
+  },
+  // 02 → 03: the cold rim comes up first (15–45%), the env turns to night after (45–75%), so the
+  // silver stays readable through the whole connection (D-090 r1)
+  ringIn(x, _ctx, from: Pose, to: Pose) {
+    const p = lerpPose(from, to, seg(x, 0.3, 0.7));
+    return { ...p, rim: seg(x, 0.15, 0.45), light: seg(x, 0.45, 0.75) };
   },
 };

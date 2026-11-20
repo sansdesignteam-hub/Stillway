@@ -25,6 +25,8 @@ import { hero } from './sections/hero';
 import { why } from './sections/why';
 import { sleep } from './sections/sleep';
 import { placeholder } from './sections/placeholder';
+import { activity } from './sections/activity';
+import { insight } from './sections/insight';
 
 export interface SectionMotion {
   init?: (root: HTMLElement) => void;
@@ -32,10 +34,12 @@ export interface SectionMotion {
   ring?: (u: number, ctx: Ctx) => Pose;
   /** navbar theme override for u (S01 over the photograph uses 'photo'); null = from the background */
   theme?: (u: number) => 'photo' | 'light' | 'dark' | null;
+  /** clock text (HH:MM) for u, when the section drives its own clock (S04 follows the photo) */
+  clock?: (u: number) => string;
   /** custom ring path across the incoming connection, x in [0, 1]; default = lerp in 30–70% */
   ringIn?: (x: number, ctx: Ctx, from: Pose, to: Pose) => Pose;
 }
-const motions: Record<string, SectionMotion> = { hero, why, sleep };
+const motions: Record<string, SectionMotion> = { hero, why, sleep, activity, insight };
 
 const BG: Record<string, [number, number, number]> = {
   paper: [0xf7, 0xf5, 0xf0],
@@ -154,12 +158,32 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
 
     /* background */
     const mid = inConn && prev ? seg(tinX, 0.3, 0.7) : 1;
-    const a = prev ? BG[prev.def.bg] : BG[cur.def.bg];
-    const b = BG[cur.def.bg];
+    // a Dusk side never lerps its base: the base is the other section's colour and the opaque Dusk
+    // layer cross-fades over it (D-090 r1: no muddy grey mix between Dusk and Paper)
+    let a = prev ? BG[prev.def.bg] : BG[cur.def.bg];
+    let b = BG[cur.def.bg];
+    if (prev && prev.def.bg === 'dusk') a = b;
+    if (prev && cur.def.bg === 'dusk') b = a;
     const k = inConn ? mid : 1;
     bgEl.style.backgroundColor = `rgb(${a.map((v, j) => Math.round(lerp(v, b[j], k))).join(' ')})`;
-    const duskW = (prev && inConn && prev.def.bg === 'dusk' ? 1 - k : 0) + (cur.def.bg === 'dusk' ? k : 0);
-    duskEl.style.opacity = duskW.toFixed(3);
+    // Dusk enters as a soft wipe rising from the bottom (Storyboard 04 → 05: "Dusk naik dari bawah")
+    // and leaves as Paper wiping down from the top — never a 50% dissolve, which reads as muddy grey
+    // (D-090 r1)
+    let duskO = cur.def.bg === 'dusk' ? 1 : 0;
+    let mask = 'none';
+    if (inConn && prev && prev.def.bg === 'dusk' && cur.def.bg !== 'dusk') {
+      duskO = 1;
+      const p = -20 + 140 * k; // paper edge moves down
+      mask = `linear-gradient(to bottom, transparent ${(p - 20).toFixed(1)}%, #000 ${(p + 20).toFixed(1)}%)`;
+    } else if (inConn && prev && cur.def.bg === 'dusk' && prev.def.bg !== 'dusk') {
+      const p = -20 + 140 * k; // dusk edge moves up
+      mask = `linear-gradient(to top, #000 ${(p - 20).toFixed(1)}%, transparent ${(p + 20).toFixed(1)}%)`;
+    }
+    duskEl.style.opacity = duskO.toFixed(3);
+    if (duskEl.style.maskImage !== mask) {
+      duskEl.style.maskImage = mask;
+      duskEl.style.webkitMaskImage = mask;
+    }
     const darkW = (prev && inConn && isDark(prev.def.bg) ? 1 - k : 0) + (isDark(cur.def.bg) ? k : 0);
     const theme = (!inConn && cur.m.theme?.(u)) || (darkW > 0.5 ? 'dark' : 'light');
     if (nav && nav.dataset.theme !== theme) nav.dataset.theme = theme;
@@ -173,8 +197,9 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       const span = clockFrom === cur ? clamp01(u / Math.max(0.001, cur.end)) : 1;
       min = lerp(toMin(d.time), toMin(d.timeEnd), span);
     }
-    const text = fmt(Math.floor(min / 5) * 5);
-    const part = d.part ?? partOf(min);
+    let text = fmt(Math.floor(min / 5) * 5);
+    if (clockFrom.m.clock) text = clockFrom.m.clock(clockFrom === cur ? u : clockFrom.end);
+    const part = d.part ?? partOf(toMin(text));
     clockTime.forEach((el) => el.textContent !== text && (el.textContent = text));
     clockPart.forEach((el) => el.textContent !== part && (el.textContent = part));
 

@@ -1,15 +1,23 @@
 /**
- * Sections not built yet (S04–S11): a dashed label, no ring.
- * The ring leaves through the default connection (shrinks and fades to the left in 30–70%,
- * matching 03 → 04 in Storyboard §3).
+ * Sections not built yet (S06–S11): a dashed label, no ring.
+ * The ring leaves as the camera backs out: it shrinks and fades in the first half of the
+ * connection (so it is gone before the Dusk → Paper change at 30–70%), in the paper env.
  */
-import { put, window4 } from '../anim';
-import { pose } from '../ring/poses';
+import { put, seg, lerp, window4 } from '../anim';
+import { pose, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
 
 export const placeholder: SectionMotion = {
   update(u, ctx, root) {
     put(root.querySelector<HTMLElement>('[data-ph]'), { o: window4(u, -0.3, 0, 0.6, 1.2) }, ctx);
   },
-  ring: () => pose({ x: -0.32, y: 0, w: 0.18, alpha: 0, light: 1 }),
+  // hidden; paper env so a ring leaving toward an unbuilt light section (S06) does not turn dark
+  ring: () => pose({ x: -0.32, y: 0, w: 0.18, alpha: 0, light: 0 }),
+  ringIn(x, _ctx, from) {
+    const t = seg(x, 0, 0.45);
+    const to: Pose = { ...from, w: from.w * 0.4, alpha: 0 };
+    const o = {} as Pose;
+    for (const k of Object.keys(from) as (keyof Pose)[]) o[k] = lerp(from[k], to[k], t);
+    return o;
+  },
 };

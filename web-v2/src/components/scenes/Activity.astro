@@ -1,0 +1,296 @@
+---
+/**
+ * S04 Activity & rest (D-090). References: the three Oryzo "So portable, it's wearable" frames
+ * (Figma sticky 40004118:92):
+ *  - ref 1 → state 1: small caps line + bigger line top-left, short paragraph; one large portrait
+ *    in a dashed frame in the centre, the others small beside it; scroll hint bottom centre.
+ *  - ref 2 → states 2–4: the strip moves left, the next photo takes the frame; big time + status
+ *    bottom-left, time list bottom-right.
+ *  - ref 3 → state 5: the others have left, the frame lines fade, one photo stays and darkens.
+ * Photos: the 5 C-02 frames from V1, read from ../design (not copied, not retouched — D-073).
+ * Motion: scripts/sections/activity.ts.
+ */
+import Img from '../Img.astro';
+import { activity as d, hero } from '../../content/copy';
+import s0740 from '../../../../design/assets/v1/home/S3p-0740-moving-walk.png';
+import s0900 from '../../../../design/assets/v1/home/S3p-0900-resting-focus.png';
+import s1030 from '../../../../design/assets/v1/home/S3p-1030-moving-stretch.png';
+import s1230 from '../../../../design/assets/v1/home/S3p-1230-resting-lunch.png';
+import s1530 from '../../../../design/assets/v1/home/S3p-1530-moving-stairs.png';
+
+const srcs = { s0740, s0900, s1030, s1230, s1530 } as const;
+const first = d.frames[0];
+---
+
+<section class="scene scene--activity" data-scene="activity" aria-labelledby="activity-title" data-active="0">
+  <div class="scene__back">
+    <div class="act__glow" data-a-glow data-a></div>
+  </div>
+  <div class="scene__front">
+    <div class="act__head" data-a-head data-a>
+      <h2 id="activity-title" class="act__title" aria-label={d.heading.join(' ')}>
+        <span class="act__caps" aria-hidden="true">{d.heading[0]}</span>
+        <span class="act__line" aria-hidden="true">{d.heading[1]}</span>
+      </h2>
+      <p class="act__body">{d.body}</p>
+    </div>
+
+    <div class="act__strip">
+      <div class="act__frame" data-a-frame data-a aria-hidden="true"></div>
+      <ol class="act__items">
+        {
+          d.frames.map((f) => (
+            <li class="act__item" data-a-item data-a data-time={f.time} data-state={f.state} data-detail={f.detail}>
+              <Img src={srcs[f.key as keyof typeof srcs]} alt={f.alt} sizes="(max-width: 719px) 58vw, 34vh" widths={[480, 768, 1060]} loading="eager" />
+              <span class="sr-only">
+                {f.time}, {f.state}, {f.detail} (simulated).
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+
+    <div class="act__now" data-a-now data-a aria-hidden="true">
+      <p class="act__time" data-a-time>{first.time}</p>
+      <p class="act__status"><i class="act__key" data-a-key data-state={first.state.toLowerCase()}></i><span data-a-state>{first.state}</span></p>
+      <p class="act__detail" data-a-detail>{first.detail}</p>
+      <p class="act__sim">{d.simulated}</p>
+    </div>
+
+    <ol class="act__list" data-a-list data-a aria-hidden="true">
+      {d.frames.map((f, i) => <li data-a-tick class:list={[i === 0 && 'is-active']}>{f.time}</li>)}
+    </ol>
+    <p class="act__hint t-label" data-a-hint data-a aria-hidden="true">{hero.scroll}</p>
+  </div>
+</section>
+
+<style>
+  /* D-092: heading, photo sizes and the strip follow V1 (web/src/styles/global.css, "activity and rest");
+     V2 keeps its colours, entry/exit and state 5 */
+  .scene--activity {
+    color: var(--paper);
+    --stone: var(--stone-on-night);
+    --paper-soft: rgb(247 245 240 / 0.62);
+    --oy: 5svh; /* the strip sits a little low so the copy above it stays clear */
+    --bh: min(74svh, 720px, 66vw);
+    --bw: calc(var(--bh) * 0.7);
+  }
+  .act__glow {
+    position: absolute;
+    left: -20vw;
+    bottom: -40vh;
+    width: 80vw;
+    aspect-ratio: 1;
+    background: radial-gradient(closest-side, rgb(183 111 32 / 0.28), rgb(183 111 32 / 0));
+    filter: blur(40px);
+  }
+  .act__head {
+    position: absolute;
+    z-index: 3;
+    top: calc(var(--header-h) + 3svh);
+    left: var(--margin);
+    /* stays clear of the small frames waiting at the side (V1) */
+    width: calc((100vw - var(--bw)) / 2 - var(--bw) * 0.36 - 40px - var(--margin));
+    display: grid;
+    gap: 18px;
+  }
+  .act__title {
+    display: grid;
+    font-size: clamp(36px, 3.4vw, 56px);
+    font-weight: 600;
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+  }
+  .act__caps {
+    color: var(--paper-soft);
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+  }
+  .act__line {
+    color: var(--paper);
+  }
+  .act__body {
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--paper);
+    max-width: 26em;
+  }
+  .act__strip {
+    position: absolute;
+    inset: 0;
+  }
+  .act__frame {
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    top: calc(50% + var(--oy));
+    width: calc(var(--bw) + 20px);
+    height: calc(var(--bh) + 20px);
+    translate: -50% -50%;
+    border: 1.5px dashed rgb(247 245 240 / 0.55);
+    border-radius: 2px;
+    pointer-events: none;
+  }
+  .act__items {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .act__item {
+    position: absolute;
+    left: 50%;
+    top: calc(50% + var(--oy));
+    width: var(--bw);
+    height: var(--bh);
+    margin-left: calc(var(--bw) / -2);
+    margin-top: calc(var(--bh) / -2);
+    overflow: hidden;
+    background: #2b241e;
+    transform-origin: 50% 50%;
+    will-change: transform;
+    --dark: 0;
+  }
+  .act__item :global(picture),
+  .act__item :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .act__item :global(img) {
+    object-fit: cover;
+  }
+  .act__item::after {
+    /* state 5 (V2): 15:30 darkens toward Dusk */
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--night);
+    opacity: calc(var(--dark) * 0.75);
+  }
+  .act__now {
+    position: absolute;
+    z-index: 3;
+    left: var(--margin);
+    bottom: 40px;
+    width: calc((100vw - var(--bw)) / 2 - var(--bw) * 0.36 - 40px - var(--margin));
+  }
+  .act__time {
+    font-size: clamp(56px, 6vw, 96px);
+    font-weight: 500;
+    line-height: 0.9;
+    letter-spacing: -0.05em;
+    font-variant-numeric: tabular-nums;
+  }
+  .act__status {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .act__key {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--paper);
+  }
+  .act__key[data-state='resting'] {
+    background: #9aa883; /* V1 resting dot (D-092) */
+  }
+  .act__detail {
+    color: var(--paper-soft);
+  }
+  .act__sim {
+    margin-top: 10px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--paper-soft);
+  }
+  .act__list {
+    position: absolute;
+    z-index: 3;
+    right: var(--margin);
+    bottom: 40px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 4px;
+    text-align: right;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .act__list li {
+    color: var(--paper-soft);
+    opacity: 0.55;
+    transition: opacity 0.4s, color 0.4s;
+  }
+  .act__list li:global(.is-active) {
+    color: var(--paper);
+    opacity: 1;
+  }
+  .act__hint {
+    position: absolute;
+    z-index: 3;
+    left: 50%;
+    bottom: 14px;
+    translate: -50% 0;
+    color: var(--stone);
+  }
+  /* phones: V1 mobile block */
+  @media (max-width: 760px) {
+    .scene--activity {
+      --bh: min(50svh, 440px);
+    }
+    .act__head {
+      width: auto;
+      right: var(--margin);
+      top: calc(var(--header-h) + 16px);
+      gap: 8px;
+    }
+    .act__title {
+      font-size: 32px;
+    }
+    .act__body {
+      display: none;
+    }
+    .act__items {
+      top: 18px;
+    }
+    .act__now {
+      width: auto;
+      right: var(--margin);
+      bottom: 20px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      column-gap: 16px;
+      align-items: end;
+    }
+    .act__time {
+      grid-row: 1 / span 3;
+      font-size: 48px;
+    }
+    .act__status {
+      margin-top: 0;
+      font-size: 17px;
+    }
+    .act__detail,
+    .act__sim {
+      font-size: 14px;
+      margin-top: 0;
+    }
+    .act__list,
+    .act__hint {
+      display: none;
+    }
+  }
+</style>
