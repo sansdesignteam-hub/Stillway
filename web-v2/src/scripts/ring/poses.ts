@@ -30,7 +30,8 @@
  *        band (S08, client LED reference).
  * custom: 0..1 how much of the visitor's finish choice shows (S10–S11; 0 = polished Silver as everywhere
  *         else). finA → finB by finT (0 silver, 1 black, 2 gold; finishes.json *_polished, D-085).
- * lamp: 0..1 Lamp light env (finishes.json envPresets.lamp), swapped at 0.5 with a dip (S10 toggle).
+ * lamp: 0..1 S10 Lamp light (D-100): one warm desk lamp from the side (amber edge highlight), env dimmed
+ *       a little; base colours unchanged.
  * alpha: canvas opacity (the ring is the only object, so fading the canvas fades the ring).
  */
 export interface Pose {

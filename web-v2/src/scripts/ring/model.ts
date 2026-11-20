@@ -28,7 +28,6 @@ export const RING_MODEL = {
     paper: '/env/v2-env-paper-polished.exr', // S02 (3D Designer 16cfbaf: made for the polished finish)
     night: '/env/v2-env-night-polished.exr', // S03
     dusk: '/env/v2-env-dusk.exr', // S05 (3D Designer: low ochre sun and glow, dark sky)
-    lamp: '/env/v2-env-lamp.exr', // S10 Lamp light toggle (D-079: neutral enough for Gold)
     photo: '/env/hero-env.jpg', // S01 over the moss photograph (V1 approach, D-080)
   },
 } as const;

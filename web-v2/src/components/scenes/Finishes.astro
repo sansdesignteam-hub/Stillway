@@ -14,6 +14,8 @@ import { finishes as d } from '../../content/copy';
 ---
 
 <section class="scene scene--finishes" data-scene="finishes" aria-labelledby="finishes-title" data-lamp="0">
+  <!-- Lamp light (D-100): Sand dims toward a warm evening tone, a low lamp glow on the lamp side -->
+  <div class="scene__back"><div class="fn__dim" aria-hidden="true"></div></div>
   <!-- reduced motion / no WebGL: the polished still of the chosen finish -->
   <img class="ring-fallback fn__fb" src={d.finishes[0].still} alt="" width="1024" height="1024" data-ring-fallback data-fn-still data-a loading="lazy" decoding="async" />
 
@@ -95,7 +97,26 @@ import { finishes as d } from '../../content/copy';
     --panel: rgb(247 245 240 / 0.6);
   }
   .scene--finishes[data-lamp='1'] {
-    --panel: color-mix(in srgb, var(--paper) 52%, var(--ochre) 8%);
+    --panel: color-mix(in srgb, var(--paper) 86%, var(--ochre) 14%);
+  }
+  .fn__dim {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    background:
+      radial-gradient(55% 70% at 4% 34%, rgb(183 111 32 / 0.2), rgb(183 111 32 / 0) 70%),
+      color-mix(in srgb, var(--night) 72%, var(--ochre) 28%);
+  }
+  .scene--finishes[data-lamp='1'] .fn__dim {
+    opacity: 0.17;
+  }
+  .scene--finishes .fn__panel {
+    transition: background 0.6s ease;
+  }
+  :global(html.reduced) .scene--finishes .fn__dim,
+  :global(html.reduced) .scene--finishes .fn__panel {
+    transition: none;
   }
   .fn__fb {
     left: 32%;

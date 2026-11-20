@@ -47,7 +47,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const camera = new THREE.PerspectiveCamera(FOV, 1, 1, 40000);
 
   const pmrem = new THREE.PMREMGenerator(renderer);
-  const envs: { paper?: THREE.Texture; night?: THREE.Texture; dusk?: THREE.Texture; lamp?: THREE.Texture } = {};
+  const envs: { paper?: THREE.Texture; night?: THREE.Texture; dusk?: THREE.Texture } = {};
   /** photo → paper blends, index 0 = photo env (S01), last = paper env (S02); see buildBlends */
   let blends: THREE.Texture[] = [];
   const BLEND_STEPS = 9;
@@ -105,7 +105,6 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   // night env after the first paint of the ring
   setTimeout(() => loadEnv(RING_MODEL.env.night).then((e) => ((envs.night = e), (lastEnv = ''))).catch(() => {}), 300);
   setTimeout(() => loadEnv(RING_MODEL.env.dusk).then((e) => ((envs.dusk = e), (lastEnv = ''))).catch(() => {}), 900);
-  setTimeout(() => loadEnv(RING_MODEL.env.lamp).then((e) => ((envs.lamp = e), (lastEnv = ''))).catch(() => {}), 1500);
   const loadEnv = (url: string) =>
     new EXRLoader().loadAsync(url).then((t) => {
       t.mapping = THREE.EquirectangularReflectionMapping;
@@ -132,6 +131,13 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const warmRim = new THREE.DirectionalLight(0xe0a35c, 0);
   warmRim.position.set(-900, -520, 260);
   scene.add(warmRim);
+  // S10 Lamp light (D-100): one warm desk lamp from the side — an amber highlight along the band edge
+  // facing it, readable on all three finishes (Black included); the env and base colours stay as in
+  // Daylight, so Gold keeps its 18K yellow (the Lamp env made it brownish)
+  const deskLamp = new THREE.DirectionalLight(0xffa451, 0);
+  deskLamp.position.set(-900, 300, 700);
+  const deskFill = new THREE.PointLight(0xff9a3c, 0, 0, 0);
+  scene.add(deskLamp, deskFill);
   // V1 live cast shadow on the stone (D-051): a shadow-only light and a transparent catcher plane
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -356,6 +362,12 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     rim.intensity = 14 * p.rim;
     rimFill.intensity = 3.2 * p.rim;
     warmRim.intensity = 7 * p.warm;
+    const lp = Math.min(1, Math.max(0, p.lamp));
+    deskLamp.intensity = 9 * lp;
+    // a soft close fill on the lamp side so the edge glows rather than shows one sharp line
+    deskFill.intensity = 2.2 * lp;
+    deskFill.position.set(pivot.position.x - w * 1.1, pivot.position.y + w * 0.45, w * 0.6);
+    deskFill.distance = w * 2.6;
     const sh = Math.max(0, p.shadow);
     catcher.visible = sh > 0.005;
     shadowSun.castShadow = catcher.visible;
@@ -380,18 +392,17 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     // photo ↔ paper: step through the prebuilt blends (no pop); paper ↔ night: dip and swap at 0.5
     const step = blends.length ? Math.round((1 - ph) * (blends.length - 1)) : -1;
     const dk = Math.min(1, Math.max(0, p.dusk));
-    const lp = Math.min(1, Math.max(0, p.lamp));
-    const key = dk >= 0.5 && envs.dusk ? 'dusk' : n >= 0.5 && envs.night ? 'night' : lp >= 0.5 && envs.lamp ? 'lamp' : step >= 0 ? `blend${step}` : 'paper';
+    const key = dk >= 0.5 && envs.dusk ? 'dusk' : n >= 0.5 && envs.night ? 'night' : step >= 0 ? `blend${step}` : 'paper';
     if (key !== lastEnv) {
       lastEnv = key;
-      scene.environment = key === 'dusk' ? envs.dusk! : key === 'night' ? envs.night! : key === 'lamp' ? envs.lamp! : step >= 0 ? blends[step] : envs.paper ?? null;
+      scene.environment = key === 'dusk' ? envs.dusk! : key === 'night' ? envs.night! : step >= 0 ? blends[step] : envs.paper ?? null;
     }
     renderer.toneMappingExposure = 1.0 + 0.15 * ph; // V1 hero exposure 1.15 → 1.0, continuous
-    const dip = Math.min(1, Math.abs(n - 0.5) * 2.5, Math.abs(dk - 0.5) * 2.5, Math.abs(lp - 0.5) * 2.5);
+    const dip = Math.min(1, Math.abs(n - 0.5) * 2.5, Math.abs(dk - 0.5) * 2.5);
     // on Night the polished env is almost black: lift it with the rim so the band keeps a silver gradient
     // the swap dip never goes below 0.45, so the ring is never a black shape in a connection (D-090 r1)
-    // the Lamp env is darker than the studio: lift it so finishes keep their brightness under it
-    scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim) * (1 + 0.7 * lp);
+    // under the desk lamp the room is a little dimmer (evening), so the amber edge reads (D-100)
+    scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim) * (1 - 0.12 * lp);
 
     const ledKey = p.led.toFixed(3) + '|' + p.ledc.toFixed(3);
     if (ledKey !== lastLedKey) {
