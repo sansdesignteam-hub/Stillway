@@ -19,6 +19,11 @@
  *        0 = brushed as authored in the GLB (kept only as an option).
  * shadow: 0..1 opacity of the real-time cast shadow on the stone (S01, V1 D-051);
  *         shadowX / shadowY = where the stone top is (fractions of the viewport from the centre, y up).
+ * pitch: turn about the screen X axis (radians), applied after rx/ry/rz and before roll; + tips the
+ *        top of the ring toward the viewer (S06: logo on the band reads from slightly above).
+ * fing: 0..1 finger proxy on (S06 state 4): a depth-only lathe along the index finger of the hand
+ *       photo hides the back of the ring (design/3d/v2/s06-pose.json); fx, fy = ring seat (fractions
+ *       of the viewport from the centre, y up), fs = CSS px per image px of the hand photo.
  * alpha: canvas opacity (the ring is the only object, so fading the canvas fades the ring).
  */
 export interface Pose {
@@ -41,6 +46,11 @@ export interface Pose {
   shadow: number;
   shadowX: number;
   shadowY: number;
+  pitch: number;
+  fing: number;
+  fx: number;
+  fy: number;
+  fs: number;
   alpha: number;
 }
 
@@ -87,4 +97,4 @@ export function along(u: number, frames: Array<[number, Pose]>): Pose {
   return frames[frames.length - 1][1];
 }
 
-export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, shadowX: 0, shadowY: -0.3, alpha: 1, ...p });
+export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, shadowX: 0, shadowY: -0.3, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, alpha: 1, ...p });

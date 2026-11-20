@@ -69,6 +69,21 @@ to the S02 start pose while the photo fades to Paper. The ring follows the mouse
 - Motion and poses: `src/scripts/sections/hero.ts`; scene: `src/components/scenes/Hero.astro`.
 - Review shots + transition sequence/video: `docs/screens/s01-d080/`.
 
+## S06 Product details · S07 Specs & benefits (D-093)
+
+- **S06** (`sections/details.ts`, `scenes/Details.astro`): the ring rolls in on a Sand plinth (roll angle =
+  distance / radius, overshoot and rock back, s06-pose.json), turns side-on (state 2) and to the edge at 45°
+  (state 3); in state 4 the plinth leaves, the cut-out hand A-1 comes in on the right, the 3D ring slides down
+  the index finger (depth-only finger proxy in `ring/stage.ts`, `Pose.fing`) and hands over to the ring in
+  A-1b (masked to the ring area). Contact shadow is CSS on the plinth. New pose field `pitch` (tip toward the
+  viewer). 05 → 06: Dusk → Paper is a light wipe (`.stage__wipe`: paper, sand, ochre edge), no grey band.
+- **S07** (`sections/specs.ts`, `scenes/Specs.astro`): Obsidian Assembly layout in Geist — split
+  "Through / the day.", four cards rise between the words, then one card in focus per viewport with (I)–(IV)
+  on a line, counter + progress circle, orbit lines, and a white panel with the one control (battery by day,
+  labelled Simulated data; size 6–13; weight / thickness; water rating). State 5: the card shrinks while
+  A-3 opens to full bleed; 07 → 08 darkens it to Night. No 3D ring in S07.
+- Review shots: `docs/screens/s06-s07-d093/`.
+
 ## Navbar (D-075)
 
 Logo = the word "Stillway" only, no ring mark (D-083). No scroll rail anywhere (D-083).

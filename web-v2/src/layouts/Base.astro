@@ -32,7 +32,7 @@ const { title = meta.title, description = meta.description } = Astro.props;
       (function () {
         var d = document.documentElement;
         d.classList.add('js');
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || (location.hostname === 'localhost' && location.search.indexOf('reduced-test') > -1)) {
           d.classList.add('reduced');
         } else {
           d.classList.add('motion-ready');

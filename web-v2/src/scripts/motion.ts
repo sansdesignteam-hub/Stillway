@@ -20,7 +20,8 @@ export let lenis: Lenis | null = null;
 
 export function initMotion() {
   window.__stillwayMotion = true;
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // dev only: ?reduced-test on localhost simulates prefers-reduced-motion (review screenshots)
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('reduced');
 
   if (!reduced) {
     lenis = new Lenis({ lerp: 0.09, smoothWheel: true, wheelMultiplier: 0.95 });
