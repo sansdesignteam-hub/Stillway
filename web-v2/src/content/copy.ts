@@ -95,3 +95,36 @@ export const insight = {
     simulated: 'Simulated data',
   },
 };
+
+export const details = {
+  status: 'draft (home-copy-v2 §06)',
+  headline: 'Made to be forgotten.',
+  steps: [
+    { title: 'One quiet band', body: 'A single band with nothing raised on its surface to catch on a sleeve or a keyboard. There is no front to remember and no wrong way to put it on.' },
+    { title: 'Softened edges', body: 'Both edges are bevelled where they meet the finger, so the ring sits easily at night and slides on without catching.' },
+  ],
+  fits: { title: 'Then, it just fits.', body: 'Slip it on in the morning and stop thinking about it.' },
+  label: '[ SILVER ]', // the photo ring (A-1b) is brushed, the 3D ring polished: no finish named (open question)
+  alt: {
+    ring: 'The Stillway ring rolling to a stop on a sand-coloured tile.',
+    hand: 'A hand on a plain cream background, the ring settling at the base of one raised finger.',
+  },
+};
+
+export const specs = {
+  status: 'draft (home-copy-v2 §07; facts D-067)',
+  headline: ['Through', 'the day.'],
+  pill: 'Made for every hour',
+  cards: [
+    { key: 'night', n: 'I', name: 'Night', title: "Sleeps with you. Charges while you don't.", tag: '[ BATTERY ]', fact: 'Up to 7 days on a charge. Top up on the dock while you shower.', alt: 'Night: asleep under a linen cover, the ring on the index finger of the resting hand.' },
+    { key: 'desk', n: 'II', name: 'Desk', title: 'Sized to forget.', tag: '[ SIZE ]', fact: 'Sizes 6–13. Try them on with the sizing kit before you choose.', alt: 'Desk: hands on a keyboard, the plain silver ring on the index finger.' },
+    { key: 'move', n: 'III', name: 'Move', title: 'Light enough to lose track of.', tag: '[ WEIGHT · THICKNESS ]', fact: 'About 4 g, 2.6 mm thin.', alt: 'Move: mid-stride on a plain studio floor, the ring on the left hand.' },
+    { key: 'rinse', n: 'IV', name: 'Rinse', title: 'Hands in water. Ring stays on.', tag: '[ WATER RATING ]', fact: 'Water resistant to 100 m. Washing up, rain, a swim.', alt: 'Rinse: hands under running water, the wet ring on the index finger.' },
+  ],
+  // panel values: battery per day is a display of use, so it is labelled (home-copy-v2); the rest are D-067 facts
+  battery: { days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], simulated: 'Simulated data' },
+  size: { min: 6, max: 13, value: 9 },
+  weight: { g: '4 g', mm: '2.6 mm' },
+  water: { rating: '100 m', uses: ['Washing up', 'Rain', 'A swim'] },
+  everyday: { title: 'The Everyday', caption: "Ring shown where it's worn.", alt: 'A man seated in a calm paper-and-sand studio, the ring small on his left hand.' },
+};

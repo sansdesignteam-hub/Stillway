@@ -147,6 +147,18 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   scene.add(catcher);
   const SHADOW_DIR = new THREE.Vector3(0.55, 1, 0.75).normalize(); // V1 value
 
+  /* S06 finger proxy (s06-pose.json fingerProxy): lathe around +Y in hand-photo px, y = 0 at the
+     ring seat; depth only, drawn before the ring so the back of the band hides behind the finger */
+  const PROFILE = [[0, 337], [15, 334], [28, 320], [35, 300], [38, 280], [40, 260], [42, 220], [44.6, 160], [48, 120], [47, 60], [46, 0], [48, -110], [0, -110]];
+  const finger = new THREE.Mesh(
+    new THREE.LatheGeometry(PROFILE.map(([r, y]) => new THREE.Vector2(r * 0.96, y)), 48),
+    new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: true }),
+  );
+  finger.renderOrder = -2;
+  finger.visible = false;
+  scene.add(finger);
+  const FINGER_TILT = THREE.MathUtils.degToRad(2.9);
+
   const pivot = new THREE.Group(); // position, scale, view rotation
   const spinner = new THREE.Group(); // spin about the ring's own axis (model Z)
   pivot.add(spinner);
@@ -223,6 +235,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
 
   const rollQ = new THREE.Quaternion();
   const Z_AXIS = new THREE.Vector3(0, 0, 1);
+  const X_AXIS = new THREE.Vector3(1, 0, 0);
   let lastAlpha = -1;
   let lastEnv = '';
   let lastLed = 0;
@@ -234,7 +247,14 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     pivot.position.set(p.x * W, p.y * H, 0);
     pivot.scale.setScalar(w / ringSize);
     pivot.rotation.set(p.rx, p.ry, p.rz, 'YXZ');
+    if (p.pitch) pivot.quaternion.premultiply(rollQ.setFromAxisAngle(X_AXIS, p.pitch));
     if (p.roll) pivot.quaternion.premultiply(rollQ.setFromAxisAngle(Z_AXIS, p.roll));
+    finger.visible = p.fing > 0.5;
+    if (finger.visible) {
+      finger.position.set(p.fx * W, p.fy * H, 0);
+      finger.scale.setScalar(p.fs);
+      finger.rotation.set(0, 0, FINGER_TILT);
+    }
     spinner.rotation.z = p.spin;
 
     // finish: brushed → polished (V1)

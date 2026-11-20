@@ -13,6 +13,7 @@
 <div class="stage">
   <div class="stage__bg" data-bg></div>
   <div class="stage__dusk" data-dusk></div>
+  <div class="stage__wipe" data-wipe></div>
   <canvas class="stage__ring" data-ring-canvas aria-hidden="true"></canvas>
   <main id="main" class="stage__scenes" tabindex="-1">
     <slot />
@@ -35,6 +36,26 @@
   .stage__dusk {
     background: var(--dusk);
     opacity: 0;
+  }
+  /* Dusk → Paper (D-093): light sweeps down — paper, sand, a warm ochre edge, then clear — so the
+     middle of the change is a sunset band, never a grey mix of Night and Paper */
+  .stage__wipe {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 250lvh;
+    background: linear-gradient(
+      to bottom,
+      var(--paper) 0%,
+      var(--paper) 56%,
+      var(--sand) 63%,
+      rgb(214 170 116 / 0.9) 69%,
+      rgb(183 111 32 / 0.45) 75%,
+      rgb(183 111 32 / 0) 84%
+    );
+    visibility: hidden;
+    will-change: transform;
   }
   .stage__ring {
     position: absolute;

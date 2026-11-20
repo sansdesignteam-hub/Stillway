@@ -1,0 +1,476 @@
+---
+/**
+ * S07 Specs & benefits — 21:00 · Sand → full-bleed photo (D-093). References (Figma sticky
+ * 40004118:121, Obsidian Assembly ×3), typography stays Geist (D-082), not the Obsidian serif:
+ *  - ref 1 → states 1–2: "Through the day." splits, four portrait cards rise between the words;
+ *    a small dark pill on a thin line at the bottom.
+ *  - ref 2 → states 3–4: one card in focus (the next one peeks behind), (I)–(IV) title on a thin
+ *    line across the card, an upper-case line top left and right, a counter with a progress circle,
+ *    thin orbit lines, and a small white panel bottom right holding the one spec you can touch.
+ *  - ref 3 → state 5: the card shrinks while the photo behind it opens to full bleed; "The Everyday"
+ *    across the middle (Ink on the light studio wall, the ref's white text would not read here).
+ * No 3D ring here (the ring is only in the card photos). Motion: scripts/sections/specs.ts.
+ */
+import Img from '../Img.astro';
+import { specs as d } from '../../content/copy';
+import night from '../../../../design/assets/v2/A-2-card-night.png';
+import desk from '../../../../design/assets/v2/A-2-card-desk.png';
+import move from '../../../../design/assets/v2/A-2-card-move.png';
+import rinse from '../../../../design/assets/v2/A-2-card-rinse.png';
+import everyday from '../../../../design/assets/v2/A-3-everyday.png';
+
+const img: Record<string, any> = { night, desk, move, rinse };
+const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }));
+---
+
+<section class="scene scene--specs" data-scene="specs" aria-labelledby="specs-title">
+  <div class="scene__front">
+    <!-- state 5: the place behind the cards -->
+    <div class="sp__every" data-s-every data-a>
+      <Img src={everyday} alt={d.everyday.alt} sizes="100vw" widths={[960, 1440, 1672]} ready class="sp__everyimg" />
+      <i class="sp__dark" data-s-dark></i>
+    </div>
+
+    <svg class="sp__orbit" data-s-orbit data-a viewBox="-100 -100 200 200" aria-hidden="true" preserveAspectRatio="none">
+      <ellipse cx="0" cy="0" rx="96" ry="40" transform="rotate(-32)"></ellipse>
+      <ellipse cx="0" cy="0" rx="92" ry="54" transform="rotate(24)"></ellipse>
+      <ellipse cx="0" cy="0" rx="99" ry="30" transform="rotate(-62)"></ellipse>
+    </svg>
+
+    {
+      d.cards.map((c, i) => (
+        <figure class="sp__card" data-s-card={i} data-a>
+          <Img src={img[c.key]} alt={c.alt} sizes="(max-width: 719px) 62vw, 28vw" widths={[480, 800, 1122]} ready class="sp__cardimg" />
+        </figure>
+      ))
+    }
+
+    <h2 id="specs-title" class="sp__words">
+      <span class="sp__w" data-s-w="0" data-a>{d.headline[0]}</span>
+      <span class="sp__w" data-s-w="1" data-a>{d.headline[1]}</span>
+    </h2>
+
+    <div class="sp__pillrow" data-s-pill data-a aria-hidden="true"><span class="sp__pill t-mono">{d.pill}</span></div>
+
+    <!-- states 3–4: one card in focus -->
+    <i class="sp__line" data-s-line data-a aria-hidden="true"></i>
+    {
+      d.cards.map((c, i) => (
+        <div class="sp__text" data-s-text={i} data-a>
+          <p class="sp__name">
+            ({c.n}) {c.name}
+          </p>
+          <p class="sp__ttl">{c.title}</p>
+          <p class="sp__fact">{c.fact}</p>
+        </div>
+      ))
+    }
+    <div class="sp__count" data-s-count data-a aria-hidden="true">
+      <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46"></circle><circle class="sp__arc" data-s-arc cx="50" cy="50" r="46" pathLength="100"></circle></svg>
+      {d.cards.map((_, i) => <span class="sp__num" data-s-num={i}>{i + 1}/4</span>)}
+    </div>
+
+    <!-- the one thing you can touch in S07: a small panel per card -->
+    <div class="sp__panel" data-s-panel="0" data-a role="group" aria-label="Battery through a week, simulated">
+      <div class="sp__ph"><span class="t-mono">{d.cards[0].tag}</span><output class="sp__out" data-bat-out>Wed · 58% left</output></div>
+      <div class="sp__bars" aria-hidden="true">
+        {battery.map((b, i) => <i data-bat-bar={i} style={`--h:${b.pct}%`}><b>{b.day[0]}</b></i>)}
+      </div>
+      <input class="sp__range" type="range" min="0" max="6" step="1" value="2" data-bat aria-label="Day of the week" data-days={JSON.stringify(battery)} />
+      <p class="t-mono sp__sim">{d.battery.simulated}</p>
+    </div>
+
+    <div class="sp__panel" data-s-panel="1" data-a role="group" aria-label="Ring size">
+      <div class="sp__ph"><span class="t-mono">{d.cards[1].tag}</span><output class="sp__out" data-size-out>Size {d.size.value}</output></div>
+      <input class="sp__range" type="range" min={d.size.min} max={d.size.max} step="1" value={d.size.value} data-size aria-label="Ring size, 6 to 13" />
+      <div class="sp__ticks t-mono" aria-hidden="true">{Array.from({ length: d.size.max - d.size.min + 1 }, (_, i) => <span>{d.size.min + i}</span>)}</div>
+    </div>
+
+    <div class="sp__panel" data-s-panel="2" data-a role="group" aria-label="Weight and thickness">
+      <div class="sp__ph"><span class="t-mono">{d.cards[2].tag}</span><output class="sp__out" data-wt-out>{d.weight.g}</output></div>
+      <div class="sp__seg">
+        <button type="button" aria-pressed="true" data-wt={d.weight.g}>Weight</button>
+        <button type="button" aria-pressed="false" data-wt={d.weight.mm}>Thickness</button>
+      </div>
+    </div>
+
+    <div class="sp__panel" data-s-panel="3" data-a role="group" aria-label="Water rating">
+      <div class="sp__ph"><span class="t-mono">{d.cards[3].tag}</span><output class="sp__out">{d.water.rating}</output></div>
+      <div class="sp__seg sp__seg--chips">
+        {d.water.uses.map((w, i) => <button type="button" aria-pressed={i === 2 ? 'true' : 'false'} data-water>{w}</button>)}
+      </div>
+    </div>
+
+    <!-- state 5 -->
+    <div class="sp__everytext" data-s-etext data-a>
+      <p class="sp__the">The</p>
+      <p class="sp__evword">Everyday</p>
+    </div>
+    <p class="sp__caption" data-s-caption data-a>{d.everyday.caption}</p>
+  </div>
+</section>
+
+<style>
+  .scene--specs {
+    color: var(--ink);
+    /* set by specs.ts: focused card size */
+    --fw: 396px;
+    --fh: 495px;
+  }
+  .scene--specs .scene__front {
+    pointer-events: none;
+  }
+  .sp__every {
+    position: absolute;
+    inset: 0;
+    clip-path: inset(var(--et, 50%) var(--er, 50%) var(--eb, 50%) var(--el, 50%) round var(--erad, 6px));
+  }
+  .sp__every :global(picture),
+  .sp__every :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 60% 50%;
+  }
+  .sp__dark {
+    position: absolute;
+    inset: 0;
+    background: var(--night);
+    opacity: 0;
+  }
+  .sp__orbit {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: calc(var(--fw) * 2.3);
+    height: calc(var(--fh) * 1.25);
+    margin: calc(var(--fh) * -0.625) 0 0 calc(var(--fw) * -1.15);
+    overflow: visible;
+  }
+  .sp__orbit ellipse {
+    fill: none;
+    stroke: rgb(35 31 32 / 0.28);
+    stroke-width: 1px;
+    vector-effect: non-scaling-stroke;
+  }
+  .sp__card {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--fw);
+    height: var(--fh);
+    margin: calc(var(--fh) / -2) 0 0 calc(var(--fw) / -2);
+    border-radius: 6px;
+    overflow: hidden;
+    background: #d9cbb9;
+    transform-origin: 50% 50%;
+  }
+  .sp__card :global(picture),
+  .sp__card :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* text sits in front of the cards, as in the refs ("Origin", "(V) The Fox Spirit", "The Connection") */
+  .sp__words,
+  .sp__pillrow,
+  .sp__line,
+  .sp__text,
+  .sp__count,
+  .sp__panel,
+  .sp__everytext,
+  .sp__caption {
+    z-index: 20;
+  }
+  .sp__words {
+    position: absolute;
+    inset: 0;
+    font-size: clamp(3rem, 5.6vw, 6.5rem);
+    font-weight: var(--w-display);
+    letter-spacing: var(--track-display);
+    line-height: 1;
+  }
+  .sp__w {
+    position: absolute;
+    left: 0;
+    top: 0;
+    white-space: nowrap;
+  }
+  /* ref 1: a thin line along the bottom with one dark mono pill in its middle */
+  .sp__pillrow {
+    position: absolute;
+    left: 27vw;
+    right: 27vw;
+    bottom: 4vh;
+    height: 1px;
+    background: rgb(35 31 32 / 0.22);
+    display: grid;
+    place-items: center;
+  }
+  .sp__pill {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 3px 8px;
+    border-radius: 2px;
+    font-size: 11px;
+    letter-spacing: var(--track-mono);
+    text-transform: uppercase;
+  }
+  .sp__line {
+    position: absolute;
+    left: calc(50% - var(--fw) / 2 - 12vw);
+    right: calc(50% - var(--fw) / 2 - 12vw);
+    top: calc(50% - 2svh);
+    height: 1px;
+    background: rgb(35 31 32 / 0.35);
+  }
+  .sp__text {
+    position: absolute;
+    inset: 0;
+  }
+  .sp__name {
+    position: absolute;
+    left: calc(50% - var(--fw) / 2 - 8.5vw);
+    bottom: calc(50% + 2svh + 6px);
+    font-size: clamp(28px, 2.5vw, 40px);
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .sp__ttl,
+  .sp__fact {
+    position: absolute;
+    font-size: clamp(15px, 1.3vw, 19px);
+    line-height: 1.3;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+  }
+  .sp__ttl {
+    left: var(--margin);
+    top: calc(var(--header-h) + 4vh);
+    width: min(24vw, 22em);
+  }
+  .sp__fact {
+    right: var(--margin);
+    top: 32vh;
+    width: min(23vw, 21em);
+    text-align: right;
+  }
+  .sp__count {
+    position: absolute;
+    left: calc(50% + var(--fw) / 2 + 6vw);
+    top: calc(50% + 6vh);
+    width: 86px;
+    height: 86px;
+    display: grid;
+    place-items: center;
+  }
+  .sp__count svg {
+    position: absolute;
+    inset: 0;
+    rotate: -90deg;
+  }
+  .sp__count circle {
+    fill: none;
+    stroke: rgb(35 31 32 / 0.16);
+    stroke-width: 1px;
+    vector-effect: non-scaling-stroke;
+  }
+  .sp__count .sp__arc {
+    stroke: var(--ink);
+    stroke-dasharray: var(--p, 25) 100;
+  }
+  .sp__num {
+    grid-area: 1 / 1;
+    font-size: 28px;
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
+    font-variant-numeric: tabular-nums;
+    opacity: 0;
+  }
+  .sp__panel {
+    position: absolute;
+    left: calc(50% + var(--fw) / 2 + 3vw);
+    bottom: 5vh;
+    width: 272px;
+    padding: 12px 14px 12px;
+    border-radius: 10px;
+    background: #fff;
+    display: grid;
+    gap: 10px;
+    pointer-events: auto;
+    box-shadow: 0 1px 0 rgb(35 31 32 / 0.04);
+  }
+  .sp__ph {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .sp__ph .t-mono {
+    color: var(--stone);
+  }
+  .sp__out {
+    font-size: 15px;
+    font-weight: var(--w-label);
+    font-variant-numeric: tabular-nums;
+  }
+  .sp__bars {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    height: 40px;
+    align-items: end;
+  }
+  .sp__bars i {
+    position: relative;
+    height: var(--h);
+    background: rgb(35 31 32 / 0.18);
+    border-radius: 2px;
+  }
+  .sp__bars i.is-on {
+    background: var(--ink);
+  }
+  .sp__bars b {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 2px);
+    font: 500 9px/1 var(--font-mono, monospace);
+    color: var(--stone);
+    text-align: center;
+  }
+  .sp__range {
+    width: 100%;
+    margin: 6px 0 0;
+    accent-color: var(--ink);
+    height: 18px;
+  }
+  .sp__ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--stone);
+    padding: 0 3px;
+  }
+  .sp__sim {
+    color: var(--stone);
+    font-size: 10px;
+  }
+  .sp__seg {
+    display: flex;
+    gap: 6px;
+  }
+  .sp__seg button {
+    flex: 1;
+    padding: 7px 8px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line);
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .sp__seg button[aria-pressed='true'] {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .sp__seg button:focus-visible,
+  .sp__range:focus-visible {
+    outline: 2px solid var(--ochre);
+    outline-offset: 2px;
+  }
+  .sp__everytext {
+    position: absolute;
+    left: 50%;
+    top: 47%;
+    translate: -50% -50%;
+    text-align: center;
+    color: var(--ink);
+    line-height: 0.9;
+  }
+  .sp__the {
+    font-size: clamp(2rem, 4.2vw, 4.5rem);
+    font-weight: var(--w-display);
+    letter-spacing: var(--track-display);
+    text-align: left;
+    margin-left: 0.6em;
+  }
+  .sp__evword {
+    font-size: clamp(4rem, 12vw, 13rem);
+    font-weight: var(--w-display);
+    letter-spacing: var(--track-display);
+  }
+  .sp__caption {
+    position: absolute;
+    left: calc(50% + 6vw);
+    top: calc(47% + 8vw);
+    width: 9em;
+    font-size: var(--fs-small);
+    line-height: 1.25;
+    color: var(--ink);
+  }
+  @media (max-width: 719px) {
+    .sp__every :global(img) {
+      object-position: 84% 50%;
+    }
+    .sp__words {
+      font-size: 15vw;
+    }
+    .sp__pillrow {
+      left: var(--margin);
+      right: var(--margin);
+    }
+    .sp__line {
+      left: var(--margin);
+      right: var(--margin);
+      top: calc(43% - 3svh);
+    }
+    .sp__name {
+      left: var(--margin);
+      bottom: calc(57% + 3svh + 6px);
+      font-size: 26px;
+    }
+    .sp__ttl {
+      top: calc(var(--header-h) + 2vh);
+      width: auto;
+      right: var(--margin);
+      font-size: 14px;
+    }
+    .sp__fact {
+      left: var(--margin);
+      right: var(--margin);
+      top: calc(43% + var(--fh) / 2 + 14px);
+      width: auto;
+      text-align: left;
+      font-size: 13px;
+      text-transform: none;
+    }
+    .sp__count {
+      left: auto;
+      right: var(--margin);
+      top: calc(43% - 3svh - 70px);
+      width: 56px;
+      height: 56px;
+    }
+    .sp__num {
+      font-size: 18px;
+    }
+    .sp__panel {
+      left: var(--margin);
+      right: var(--margin);
+      width: auto;
+      bottom: 16px;
+    }
+    .sp__caption {
+      left: auto;
+      right: var(--margin);
+      top: calc(47% + 18vw);
+    }
+  }
+</style>

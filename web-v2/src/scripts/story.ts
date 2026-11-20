@@ -27,6 +27,8 @@ import { sleep } from './sections/sleep';
 import { placeholder } from './sections/placeholder';
 import { activity } from './sections/activity';
 import { insight } from './sections/insight';
+import { details } from './sections/details';
+import { specs } from './sections/specs';
 
 export interface SectionMotion {
   init?: (root: HTMLElement) => void;
@@ -39,7 +41,7 @@ export interface SectionMotion {
   /** custom ring path across the incoming connection, x in [0, 1]; default = lerp in 30–70% */
   ringIn?: (x: number, ctx: Ctx, from: Pose, to: Pose) => Pose;
 }
-const motions: Record<string, SectionMotion> = { hero, why, sleep, activity, insight };
+const motions: Record<string, SectionMotion> = { hero, why, sleep, activity, insight, details, specs };
 
 const BG: Record<string, [number, number, number]> = {
   paper: [0xf7, 0xf5, 0xf0],
@@ -48,7 +50,6 @@ const BG: Record<string, [number, number, number]> = {
   dusk: [0x17, 0x12, 0x0f], // base under the dusk gradient overlay
 };
 const isDark = (b: string) => b === 'night' || b === 'dusk';
-
 const toMin = (s: string) => {
   const [h, m] = s.split(':').map(Number);
   return h * 60 + m;
@@ -80,6 +81,7 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
 
   const bgEl = document.querySelector<HTMLElement>('[data-bg]')!;
   const duskEl = document.querySelector<HTMLElement>('[data-dusk]')!;
+  const wipeEl = document.querySelector<HTMLElement>('[data-wipe]')!;
   const nav = document.querySelector<HTMLElement>('[data-nav]');
   const clockTime = document.querySelectorAll<HTMLElement>('[data-clock-time]');
   const clockPart = document.querySelectorAll<HTMLElement>('[data-clock-part]');
@@ -170,16 +172,21 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     // and leaves as Paper wiping down from the top — never a 50% dissolve, which reads as muddy grey
     // (D-090 r1)
     let duskO = cur.def.bg === 'dusk' ? 1 : 0;
+    let wipeY: number | null = null;
     let mask = 'none';
     if (inConn && prev && prev.def.bg === 'dusk' && cur.def.bg !== 'dusk') {
-      duskO = 1;
-      const p = -20 + 140 * k; // paper edge moves down
-      mask = `linear-gradient(to bottom, transparent ${(p - 20).toFixed(1)}%, #000 ${(p + 20).toFixed(1)}%)`;
+      // D-093: Dusk → Paper as light sweeping down (Stage .stage__wipe): Paper, Sand, a warm ochre
+      // edge over the Dusk glow. A masked dissolve or a straight mix passes through a grey band.
+      duskO = k < 0.999 ? 1 : 0;
+      wipeY = -250 + 250 * k;
     } else if (inConn && prev && cur.def.bg === 'dusk' && prev.def.bg !== 'dusk') {
       const p = -20 + 140 * k; // dusk edge moves up
       mask = `linear-gradient(to top, #000 ${(p - 20).toFixed(1)}%, transparent ${(p + 20).toFixed(1)}%)`;
     }
     duskEl.style.opacity = duskO.toFixed(3);
+    const wv = wipeY === null || wipeY >= -0.01 ? 'hidden' : 'visible';
+    if (wipeEl.style.visibility !== wv) wipeEl.style.visibility = wv;
+    if (wipeY !== null) wipeEl.style.transform = `translate3d(0, ${wipeY.toFixed(2)}lvh, 0)`;
     if (duskEl.style.maskImage !== mask) {
       duskEl.style.maskImage = mask;
       duskEl.style.webkitMaskImage = mask;

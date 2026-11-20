@@ -1,0 +1,211 @@
+---
+/**
+ * S06 Product details — 21:00 · Paper + Sand plinth (D-093). References (Figma sticky 40004118:112):
+ *  - Ultrahuman upright ring → state 1: the ring rolls in on its edge and stops front-on. The ref
+ *    writes one fact inside the opening; here the ring rolls on a plinth at ~30% of the viewport
+ *    height and turns side-on in states 2–3, so the headline sits on the left (Storyboard) instead.
+ *  - Sofi hand + Sensiq ring on finger → state 4: a cut-out hand (A-1, back of the hand, index
+ *    finger raised) on plain Paper, the headline on the left, one small label beside the hand.
+ *    The 3D ring slides down the finger and then becomes the ring in the photo (A-1b).
+ * Hand geometry and ring poses: design/3d/v2/s06-pose.json. Motion: scripts/sections/details.ts.
+ */
+import Img from '../Img.astro';
+import { details as d } from '../../content/copy';
+import hand from '../../../../design/assets/v2/A-1-hand-left-alpha.png';
+import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
+---
+
+<section class="scene scene--details" data-scene="details" aria-labelledby="details-title">
+  <div class="scene__back">
+    <div class="det__plinth" data-d-plinth data-a aria-hidden="true"><i class="det__top"></i><i class="det__shadow" data-d-shadow></i></div>
+    <div class="det__card" data-d-card data-a>
+      <div class="det__hand" data-d-hand>
+        <Img src={hand} alt={d.alt.hand} sizes="(max-width: 719px) 34vh, 50vh" widths={[400, 579]} ready fallbackFormat="png" class="det__img" />
+        <div class="det__ringed" data-d-ringed aria-hidden="true">
+          <Img src={ringed} alt="" sizes="(max-width: 719px) 70vh, 106vh" widths={[800, 1254]} ready class="det__img" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scene__front">
+    <p class="sr-only">{d.alt.ring}</p>
+    <h2 id="details-title" class="det__head" data-d-head data-a>{d.headline}</h2>
+    {
+      d.steps.map((s, i) => (
+        <div class="det__step" data-d-step={i} data-a>
+          <h3 class="det__stitle">{s.title}</h3>
+          <p class="det__body">{s.body}</p>
+        </div>
+      ))
+    }
+    <div class="det__fits" data-d-fits data-a>
+      <h3 class="det__fhead">{d.fits.title}</h3>
+      <p class="det__body">{d.fits.body}</p>
+    </div>
+    <p class="t-mono det__label" data-d-label data-a>{d.label}</p>
+  </div>
+</section>
+
+<style>
+  .scene--details {
+    color: var(--ink);
+    /* set by details.ts from the viewport: hand box (s06-pose.json image px × --hs) and plinth top */
+    --hx: 60vw;
+    --hy: 10vh;
+    --hs: 0.75;
+    --py: 74vh;
+  }
+  /* Sand plinth: a low slab seen slightly from above (top face lighter), fading into Paper below */
+  .det__plinth {
+    position: absolute;
+    left: -4vw;
+    width: 108vw;
+    top: var(--py);
+    height: calc(100lvh - var(--py) + 4vh);
+    background: linear-gradient(to bottom, var(--sand) 0%, var(--sand) 55%, rgb(239 230 219 / 0) 100%);
+  }
+  .det__shadow {
+    position: absolute;
+    top: calc(3.6vh * 0.55 - 0.9vh);
+    height: 1.8vh;
+    width: 200px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(35 31 32 / 0.32), rgb(35 31 32 / 0.12) 55%, rgb(35 31 32 / 0) 100%);
+    filter: blur(3px);
+  }
+  .det__top {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 3.6vh;
+    background: linear-gradient(to bottom, #f3ece3, var(--sand));
+    border-bottom: 1px solid rgb(35 31 32 / 0.06);
+  }
+  /* the hand lives in a card so 06 → 07 can shrink it into one (Storyboard §3); invisible until then */
+  .det__card {
+    position: absolute;
+    inset: 0;
+    clip-path: inset(var(--ct, 0px) var(--cr, 0px) var(--cb, 0px) var(--cl, 0px) round var(--cr0, 0px));
+    background: var(--paper);
+    background: rgb(247 245 240 / var(--cbg, 0));
+  }
+  .det__hand {
+    position: absolute;
+    left: var(--hx);
+    top: var(--hy);
+    width: calc(579px * var(--hs));
+    height: calc(1198px * var(--hs));
+  }
+  .det__hand :global(picture),
+  .det__hand :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  /* A-1b = the same hand with the ring (crop offset 50, 56 in the full frame); only the ring area
+     is shown, so the photo ring replaces the 3D ring without the rest of the hand changing */
+  .det__ringed {
+    position: absolute;
+    left: calc(-50px * var(--hs));
+    top: calc(-56px * var(--hs));
+    width: calc(1254px * var(--hs));
+    height: calc(1254px * var(--hs));
+    opacity: 0;
+    -webkit-mask-image: radial-gradient(ellipse 8% 5.2% at 31.3% 33.1%, #000 62%, transparent 100%);
+    mask-image: radial-gradient(ellipse 8% 5.2% at 31.3% 33.1%, #000 62%, transparent 100%);
+  }
+  .det__head,
+  .det__fhead {
+    position: absolute;
+    left: var(--margin);
+    font-size: var(--fs-display);
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
+    line-height: 0.98;
+  }
+  .det__head {
+    top: calc(var(--header-h) + 9vh);
+    width: min(9.5em, 40vw);
+  }
+  .det__step {
+    position: absolute;
+    left: var(--margin);
+    top: calc(var(--header-h) + 9vh + 2.2 * var(--fs-display));
+    width: min(24rem, 30vw);
+    display: grid;
+    gap: 10px;
+  }
+  .det__stitle {
+    font-size: var(--fs-h3);
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
+    line-height: 1.1;
+  }
+  .det__body {
+    font-size: var(--fs-body);
+    color: var(--stone);
+    line-height: 1.45;
+  }
+  /* Sensiq: headline centre-left, body under it */
+  .det__fits {
+    position: absolute;
+    left: var(--margin);
+    top: 50%;
+    translate: 0 -50%;
+    width: min(26rem, 38vw);
+    display: grid;
+    gap: 18px;
+  }
+  .det__fhead {
+    position: static;
+  }
+  /* one small label beside the hand, right of the finger above the thumb (Sensiq data chip) */
+  .det__label {
+    position: absolute;
+    left: calc(var(--hx) + 430px * var(--hs));
+    top: calc(var(--hy) + 330px * var(--hs));
+    color: var(--stone);
+    white-space: nowrap;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  @media (max-width: 719px) {
+    .det__head {
+      top: calc(var(--header-h) + 5vh);
+      width: auto;
+      right: var(--margin);
+      font-size: 2.5rem;
+    }
+    .det__step {
+      top: auto;
+      bottom: 6vh;
+      width: auto;
+      right: var(--margin);
+    }
+    .det__body {
+      font-size: 15px;
+    }
+    .det__fits {
+      top: calc(var(--header-h) + 4vh);
+      translate: none;
+      width: auto;
+      right: var(--margin);
+      gap: 10px;
+    }
+    .det__fhead {
+      font-size: 2.5rem;
+    }
+    .det__label {
+      left: auto;
+      right: var(--margin);
+      top: calc(var(--hy) + 300px * var(--hs));
+    }
+  }
+</style>
