@@ -128,3 +128,32 @@ export const specs = {
   water: { rating: '100 m', uses: ['Washing up', 'Rain', 'A swim'] },
   everyday: { title: 'The Everyday', caption: "Ring shown where it's worn.", alt: 'A man seated in a calm paper-and-sand studio, the ring small on his left hand.' },
 };
+
+export const features = {
+  status: 'draft (home-copy-v2 §08); claims D-062: colours are mode lights, red only means off',
+  heads: ['Inside the ring.', 'One light, tuned to the task.', 'Blue at night. Violet by morning.'],
+  sub: 'One small window, facing your skin.',
+  tag: '[ SENSOR · LIGHT ]',
+  legend: [
+    { key: 'green', label: 'Green · Heart rate', body: 'By day, a green light while the ring follows your heart rate.' },
+    { key: 'blue', label: 'Blue · Sleep', body: 'At night it dims to blue while the ring keeps track of your sleep.' },
+    { key: 'violet', label: 'Violet · Recovery', body: 'By morning it turns violet as the night is put together.' },
+  ],
+  off: "Red means it's off.",
+  alt: 'The inside of the Stillway ring, one small window lit green, then blue, then violet.',
+};
+
+export const app = {
+  status: 'draft (home-copy-v2 §09); numbers simulated (D-066), no score',
+  states: [
+    { key: 'green', chip: 'Green light · Heart rate', left: 'The green light, read back. Your heart rate through the day, at a glance.', right: 'Resting 58 bpm. Peak on the stairs, 15:30.', label: 'Heart rate' },
+    { key: 'blue', chip: 'Blue light · Sleep', left: 'The blue light, read back. Your night, in order: when you settled, how deep you went.', right: 'Deep, light and REM sleep, laid out across the night.', label: 'Sleep' },
+    { key: 'violet', chip: 'Violet light · Recovery', left: 'The violet light, read back. How the night sat against the rest of your week.', right: 'HRV across the week, with today in full colour.', label: 'Recovery' },
+  ],
+  scroll: 'Scroll down',
+  simulated: 'Simulated data',
+  heart: { label: 'Resting', value: '58', unit: 'bpm', peak: 'Peak 82 bpm · 15:30 stairs' },
+  // stage durations are simulated and add up to 7h 12m (D-066 set)
+  sleep: { line: 'Settled 23:10 · Up 06:22', h: '7', m: '12', stages: [{ name: 'Deep', d: '1h 24m', min: 84 }, { name: 'REM', d: '1h 36m', min: 96 }, { name: 'Light', d: '4h 12m', min: 252 }] },
+  recovery: { title: 'HRV · this week', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], bars: [0.62, 0.55, 0.7, 0.58, 0.66, 0.74, 0.8], line: 'Steady day, calm evening.' },
+};

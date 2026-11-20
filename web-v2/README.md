@@ -84,6 +84,20 @@ to the S02 start pose while the photo fades to Paper. The ring follows the mouse
   A-3 opens to full bleed; 07 → 08 darkens it to Night. No 3D ring in S07.
 - Review shots: `docs/screens/s06-s07-d093/`.
 
+## S08 Features · S09 The app (D-096)
+
+- **S08** (`sections/features.ts`, `scenes/Features.astro`): Shift composition (title top left, counter chip
+  and a small block bottom left) with the client LED reference: window A lit through `Pose.led / ledc /
+  flare` (`ring/stage.ts`: LED tokens green → blue → violet, an additive flare sprite and a coloured point
+  light that bounces on the inner band). Colour by scroll only; the legend is labels. Reduced motion: the
+  polished Night still (no lit window).
+- **S09** (`sections/app.ts`, `scenes/App.astro`): Sofi layout — the phone stays in the middle on Paper, its
+  HTML screen scrolls one page per state (Heart rate → Sleep → Recovery), texts top left and bottom
+  right, footer with label, Scroll down, progress and percent. No score (D-066); numbers simulated.
+- 07 → 08: the S07 photo now sits on the back layer so the ring can appear over it. 08 → 09: violet dims, a
+  brief green, the ring leaves upward, Night → Paper as the light wipe (plain Sand edge).
+- Review shots: `docs/screens/s08-s09-d096/`.
+
 ## Navbar (D-075)
 
 Logo = the word "Stillway" only, no ring mark (D-083). No scroll rail anywhere (D-083).

@@ -29,6 +29,8 @@ import { activity } from './sections/activity';
 import { insight } from './sections/insight';
 import { details } from './sections/details';
 import { specs } from './sections/specs';
+import { features } from './sections/features';
+import { app } from './sections/app';
 
 export interface SectionMotion {
   init?: (root: HTMLElement) => void;
@@ -41,7 +43,7 @@ export interface SectionMotion {
   /** custom ring path across the incoming connection, x in [0, 1]; default = lerp in 30–70% */
   ringIn?: (x: number, ctx: Ctx, from: Pose, to: Pose) => Pose;
 }
-const motions: Record<string, SectionMotion> = { hero, why, sleep, activity, insight, details, specs };
+const motions: Record<string, SectionMotion> = { hero, why, sleep, activity, insight, details, specs, features, app };
 
 const BG: Record<string, [number, number, number]> = {
   paper: [0xf7, 0xf5, 0xf0],
@@ -173,12 +175,19 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     // (D-090 r1)
     let duskO = cur.def.bg === 'dusk' ? 1 : 0;
     let wipeY: number | null = null;
+    let wipeTone = 'warm';
     let mask = 'none';
     if (inConn && prev && prev.def.bg === 'dusk' && cur.def.bg !== 'dusk') {
       // D-093: Dusk → Paper as light sweeping down (Stage .stage__wipe): Paper, Sand, a warm ochre
       // edge over the Dusk glow. A masked dissolve or a straight mix passes through a grey band.
       duskO = k < 0.999 ? 1 : 0;
       wipeY = -250 + 250 * k;
+      wipeTone = 'warm';
+    } else if (inConn && prev && prev.def.bg === 'night' && !isDark(cur.def.bg)) {
+      // D-096: Night → Paper (08 → 09) the same way, light sweeping down, with a plain Sand edge
+      if (k < 0.999) bgEl.style.backgroundColor = `rgb(${BG.night.join(' ')})`;
+      wipeY = -250 + 250 * k;
+      wipeTone = 'plain';
     } else if (inConn && prev && cur.def.bg === 'dusk' && prev.def.bg !== 'dusk') {
       const p = -20 + 140 * k; // dusk edge moves up
       mask = `linear-gradient(to top, #000 ${(p - 20).toFixed(1)}%, transparent ${(p + 20).toFixed(1)}%)`;
@@ -186,6 +195,7 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     duskEl.style.opacity = duskO.toFixed(3);
     const wv = wipeY === null || wipeY >= -0.01 ? 'hidden' : 'visible';
     if (wipeEl.style.visibility !== wv) wipeEl.style.visibility = wv;
+    if (wipeY !== null && wipeEl.dataset.tone !== wipeTone) wipeEl.dataset.tone = wipeTone;
     if (wipeY !== null) wipeEl.style.transform = `translate3d(0, ${wipeY.toFixed(2)}lvh, 0)`;
     if (duskEl.style.maskImage !== mask) {
       duskEl.style.maskImage = mask;

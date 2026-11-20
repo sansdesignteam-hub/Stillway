@@ -24,12 +24,15 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
 ---
 
 <section class="scene scene--specs" data-scene="specs" aria-labelledby="specs-title">
-  <div class="scene__front">
-    <!-- state 5: the place behind the cards -->
+  <!-- state 5: the place behind the cards; on the back layer so the S08 ring can appear over it (D-096) -->
+  <div class="scene__back">
     <div class="sp__every" data-s-every data-a>
       <Img src={everyday} alt={d.everyday.alt} sizes="100vw" widths={[960, 1440, 1672]} ready class="sp__everyimg" />
       <i class="sp__dark" data-s-dark></i>
     </div>
+  </div>
+  <div class="scene__front">
+
 
     <svg class="sp__orbit" data-s-orbit data-a viewBox="-100 -100 200 200" aria-hidden="true" preserveAspectRatio="none">
       <ellipse cx="0" cy="0" rx="96" ry="40" transform="rotate(-32)"></ellipse>

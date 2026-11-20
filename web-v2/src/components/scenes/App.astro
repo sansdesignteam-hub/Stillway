@@ -1,0 +1,539 @@
+---
+/**
+ * S09 The app — 21:00 · Paper (D-096). References (Figma sticky 40004185:54):
+ *  - Sofi → main layout: the phone still in the middle on Paper, one short text top left, one bottom
+ *    right; footer with the active label left and "Scroll down" + progress + percent right. No ring.
+ *  - Oura "Wake up knowing" → order only: the main number first, then the detail (sleep stages as
+ *    bars). No score (D-066).
+ *  - Dribbble sleep app → one big number per screen; the screen content scrolls, the phone stays.
+ * Screen style: Moodboard §5 / Figma Mobile App 40004128:58 — cream cards, Ink type, thin Ink line
+ * without a grid, an Ochre dot for "now", an Ochre outline on the active card; the small dot on each
+ * card uses the mode light colour (§2.3). Real HTML; every number is simulated data.
+ * Motion: scripts/sections/app.ts.
+ */
+import { app as d } from '../../content/copy';
+
+// simulated heart rate 00:00 → 21:00 (now), 30-minute steps; resting ≈ 58, peak 82 at 15:30 (copy)
+const HR = [57, 58.2, 56.7, 55.9, 57.6, 58, 56.2, 56.3, 58, 57.5, 55.8, 56.8, 57.2, 60.1, 62.5, 63.5, 63.6, 64.1, 63, 64.7, 68.3, 68.5, 65, 63, 65.4, 68.7, 68.1, 64.5, 63.1, 66, 74, 82, 67.1, 66.1, 66.7, 67.7, 67.6, 66, 64.1, 63.5, 64.4, 65.3, 64.7];
+const CW = 260;
+const CH = 92;
+const xOf = (i: number) => (i / 48) * CW;
+const yOf = (v: number) => CH - ((v - 50) / 38) * CH;
+const hrPath = HR.map((v, i) => `${i ? 'L' : 'M'}${xOf(i).toFixed(1)} ${yOf(v).toFixed(1)}`).join(' ');
+const peak = { x: xOf(31), y: yOf(82) };
+const now = { x: xOf(42), y: yOf(HR[42]) };
+const stageMax = Math.max(...d.sleep.stages.map((s) => s.min));
+---
+
+<section class="scene scene--app" data-scene="app" aria-labelledby="app-title">
+  <div class="scene__front">
+    <h2 id="app-title" class="sr-only">The app</h2>
+
+    <!-- Sofi: one short text top left (with the light chip), one bottom right -->
+    <div class="ap__left">
+      {
+        d.states.map((s, i) => (
+          <div class="ap__lstate" data-p-left={i} data-a>
+            <p class={`ap__chip t-mono ap__chip--${s.key}`}>
+              <i aria-hidden="true" />
+              {s.chip}
+            </p>
+            <p class="ap__ltext">{s.left}</p>
+          </div>
+        ))
+      }
+    </div>
+    <div class="ap__right">
+      {
+        d.states.map((s, i) => (
+          <p class="ap__rtext" data-p-right={i} data-a>
+            {s.right}
+          </p>
+        ))
+      }
+    </div>
+
+    <!-- the phone stays; only its screen content moves -->
+    <div class="ap__phone" data-p-phone data-a>
+      <div class="ap__screen">
+        <div class="ap__status t-mono" aria-hidden="true"><span>21:00</span><i class="ap__island"></i><span>●●●</span></div>
+        <div class="ap__viewport">
+          <div class="ap__scroll" data-p-scroll>
+            <!-- 1 · Heart rate -->
+            <section class="ap__page" aria-label="Heart rate, simulated">
+              <p class="ap__ptitle"><i class="ap__dot ap__dot--green" aria-hidden="true"></i>Heart rate</p>
+              <div class="ap__hero">
+                <p class="ap__label">{d.heart.label}</p>
+                <p class="ap__big">{d.heart.value}<span class="ap__unit">{d.heart.unit}</span></p>
+              </div>
+              <article class="ap__card" data-p-card="0">
+                <svg class="ap__chart" viewBox={`-4 -18 ${CW + 8} ${CH + 36}`} aria-hidden="true">
+                  <path d={hrPath} class="ap__line"></path>
+                  <circle cx={peak.x} cy={peak.y} r="3" class="ap__peak"></circle>
+                  <circle cx={now.x} cy={now.y} r="4" class="ap__now"></circle>
+                  <text x="0" y={CH + 16} class="ap__axis">00:00</text>
+                  <text x={CW / 2} y={CH + 16} class="ap__axis" text-anchor="middle">12:00</text>
+                  <text x={CW} y={CH + 16} class="ap__axis" text-anchor="end">24:00</text>
+                </svg>
+                <p class="ap__note">{d.heart.peak}</p>
+              </article>
+            </section>
+
+            <!-- 2 · Sleep: the number first, then the stages (Oura order, no score) -->
+            <section class="ap__page" aria-label="Sleep, simulated">
+              <p class="ap__ptitle"><i class="ap__dot ap__dot--blue" aria-hidden="true"></i>Sleep</p>
+              <div class="ap__hero">
+                <p class="ap__label t-mono">{d.sleep.line}</p>
+                <p class="ap__big">{d.sleep.h}<span class="ap__unit">h</span> {d.sleep.m}<span class="ap__unit">m</span></p>
+              </div>
+              <article class="ap__card" data-p-card="1">
+                <ul class="ap__stages">
+                  {
+                    d.sleep.stages.map((s) => (
+                      <li>
+                        <span class="ap__sname">{s.name}</span>
+                        <span class="ap__sbar" aria-hidden="true">
+                          <b style={`width:${((s.min / stageMax) * 100).toFixed(1)}%`} />
+                        </span>
+                        <span class="ap__sdur">{s.d}</span>
+                      </li>
+                    ))
+                  }
+                </ul>
+              </article>
+            </section>
+
+            <!-- 3 · Recovery: HRV across the week, today in full colour; no score (D-066) -->
+            <section class="ap__page" aria-label="Recovery, simulated">
+              <p class="ap__ptitle"><i class="ap__dot ap__dot--violet" aria-hidden="true"></i>Recovery</p>
+              <div class="ap__hero">
+                <p class="ap__label">{d.recovery.title}</p>
+                <p class="ap__say">{d.recovery.line}</p>
+              </div>
+              <article class="ap__card" data-p-card="2">
+                <div class="ap__week" aria-hidden="true">
+                  {
+                    d.recovery.bars.map((b, i) => (
+                      <span class={i === d.recovery.bars.length - 1 ? 'is-today' : ''}>
+                        <b style={`height:${(b * 100).toFixed(0)}%`} />
+                        <em>{d.recovery.days[i]}</em>
+                      </span>
+                    ))
+                  }
+                </div>
+              </article>
+            </section>
+          </div>
+        </div>
+        <nav class="ap__tabs" aria-hidden="true">
+          {
+            d.states.map((st, i) => (
+              <span data-p-tab={i}>
+                <i class={`ap__dot ap__dot--${st.key}`} />
+                {st.label}
+              </span>
+            ))
+          }
+        </nav>
+      </div>
+    </div>
+    <p class="ap__sim t-mono" data-p-sim data-a>{d.simulated}</p>
+
+    <!-- Sofi footer: active label left; Scroll down + progress + percent right -->
+    <div class="ap__foot" data-p-foot data-a>
+      <p class="ap__flabels">
+        {
+          d.states.map((s, i) => (
+            <span data-p-flabel={i}>{s.label}</span>
+          ))
+        }
+      </p>
+      <p class="ap__fright">
+        <span>{d.scroll}</span>
+        <i class="ap__prog" aria-hidden="true"><b data-p-prog></b></i>
+        <span class="ap__pct" data-p-pct>33%</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .scene--app {
+    color: var(--ink);
+    --ph: min(78svh, 760px);
+    --pw: calc(var(--ph) * 0.485);
+  }
+  .ap__left {
+    position: absolute;
+    left: 8vw;
+    top: 22vh;
+    width: min(22vw, 20rem);
+  }
+  .ap__lstate {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    display: grid;
+    gap: 14px;
+  }
+  .ap__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-self: start;
+    padding: 5px 10px;
+    border-radius: var(--radius-pill);
+    background: var(--sand);
+    text-transform: uppercase;
+  }
+  .ap__chip i,
+  .ap__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--c);
+    flex: none;
+  }
+  .ap__chip--green,
+  .ap__dot--green {
+    --c: var(--led-heart-rate);
+  }
+  .ap__chip--blue,
+  .ap__dot--blue {
+    --c: var(--led-sleep);
+  }
+  .ap__chip--violet,
+  .ap__dot--violet {
+    --c: var(--led-recovery);
+  }
+  .ap__ltext,
+  .ap__rtext {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .ap__right {
+    position: absolute;
+    left: 68vw;
+    top: 54vh;
+    width: min(22vw, 20rem);
+  }
+  .ap__rtext {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  /* the phone */
+  .ap__phone {
+    position: absolute;
+    left: 50%;
+    top: calc(50% + 1vh);
+    width: var(--pw);
+    height: var(--ph);
+    margin: calc(var(--ph) / -2) 0 0 calc(var(--pw) / -2);
+    padding: calc(var(--ph) * 0.014);
+    border-radius: calc(var(--ph) * 0.075);
+    background: var(--ink);
+    box-shadow: 0 30px 60px -30px rgb(35 31 32 / 0.45);
+  }
+  .ap__screen {
+    position: relative;
+    height: 100%;
+    border-radius: calc(var(--ph) * 0.062);
+    background: var(--paper);
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    font-size: calc(var(--ph) * 0.019);
+  }
+  .ap__status {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: calc(var(--ph) * 0.022) calc(var(--ph) * 0.04) calc(var(--ph) * 0.012);
+    font-size: max(9px, calc(var(--ph) * 0.016));
+    letter-spacing: 0.04em;
+  }
+  .ap__island {
+    position: absolute;
+    left: 50%;
+    top: calc(var(--ph) * 0.016);
+    width: 30%;
+    height: calc(var(--ph) * 0.036);
+    translate: -50% 0;
+    border-radius: 99px;
+    background: var(--ink);
+  }
+  .ap__viewport {
+    position: relative;
+    overflow: hidden;
+  }
+  .ap__scroll {
+    will-change: transform;
+  }
+  .ap__page {
+    height: var(--pageh, calc(var(--ph) * 0.8));
+    padding: calc(var(--ph) * 0.02) calc(var(--ph) * 0.03) 0;
+    display: grid;
+    align-content: start;
+    gap: calc(var(--ph) * 0.02);
+  }
+  .ap__ptitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: calc(var(--ph) * 0.03);
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
+  }
+  .ap__card {
+    border-radius: calc(var(--ph) * 0.026);
+    background: var(--sand);
+    border: 1.5px solid transparent;
+    padding: calc(var(--ph) * 0.026);
+    display: grid;
+    gap: calc(var(--ph) * 0.012);
+    transition: border-color 0.3s;
+  }
+  .ap__card.is-active {
+    border-color: var(--ochre);
+  }
+  .ap__label {
+    color: var(--stone);
+    font-size: calc(var(--ph) * 0.018);
+  }
+  .ap__hero {
+    display: grid;
+    gap: calc(var(--ph) * 0.008);
+    padding: calc(var(--ph) * 0.02) calc(var(--ph) * 0.004) calc(var(--ph) * 0.012);
+  }
+  .ap__say {
+    font-size: calc(var(--ph) * 0.05);
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
+    line-height: 1.05;
+  }
+  .ap__tabs {
+    display: flex;
+    justify-content: space-around;
+    padding: calc(var(--ph) * 0.016) calc(var(--ph) * 0.02) calc(var(--ph) * 0.03);
+    border-top: 1px solid var(--line);
+    background: var(--paper);
+    font-size: calc(var(--ph) * 0.016);
+    color: var(--stone);
+  }
+  .ap__tabs span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.3s;
+  }
+  .ap__tabs span.is-on {
+    color: var(--ink);
+  }
+  .ap__big {
+    font-size: calc(var(--ph) * 0.13);
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
+    line-height: 0.95;
+    font-variant-numeric: tabular-nums;
+  }
+  .ap__unit {
+    font-size: 0.32em;
+    margin-left: 0.12em;
+    letter-spacing: 0;
+    color: var(--stone);
+  }
+  .ap__chart {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .ap__line {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.2;
+    stroke-linejoin: round;
+  }
+  .ap__peak {
+    fill: var(--sand);
+    stroke: var(--ink);
+    stroke-width: 1.2;
+  }
+  .ap__now {
+    fill: var(--ochre);
+  }
+  .ap__axis {
+    font: 500 9px var(--font-mono, monospace);
+    fill: var(--stone);
+  }
+  .ap__note {
+    font-size: calc(var(--ph) * 0.018);
+  }
+  .ap__stages {
+    list-style: none;
+    margin: calc(var(--ph) * 0.01) 0 0;
+    padding: 0;
+    display: grid;
+    gap: calc(var(--ph) * 0.03);
+    padding: calc(var(--ph) * 0.012) 0;
+    font-size: calc(var(--ph) * 0.02);
+  }
+  .ap__stages li {
+    display: grid;
+    grid-template-columns: 3.4em 1fr 4em;
+    align-items: center;
+    gap: 8px;
+  }
+  .ap__sbar {
+    height: calc(var(--ph) * 0.018);
+    border-radius: 99px;
+    background: rgb(35 31 32 / 0.08);
+    overflow: hidden;
+  }
+  .ap__sbar b {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--ink);
+  }
+  .ap__sdur {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .ap__week {
+    height: calc(var(--ph) * 0.3);
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: calc(var(--ph) * 0.012);
+    align-items: end;
+    padding-bottom: 1.4em;
+  }
+  .ap__week span {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+  }
+  .ap__week b {
+    display: block;
+    width: 100%;
+    border-radius: 3px;
+    background: rgb(35 31 32 / 0.18);
+  }
+  .ap__week .is-today b {
+    background: var(--ink);
+  }
+  .ap__week em {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 0.4em);
+    font-style: normal;
+    text-align: center;
+    font-size: calc(var(--ph) * 0.015);
+    color: var(--stone);
+  }
+  .ap__week .is-today em {
+    color: var(--ink);
+  }
+  .ap__line2 {
+    font-size: calc(var(--ph) * 0.02);
+  }
+  .ap__sim {
+    position: absolute;
+    left: 50%;
+    top: calc(50% + 1vh + var(--ph) / 2 + 10px);
+    translate: -50% 0;
+    color: var(--stone);
+  }
+  .ap__foot {
+    position: absolute;
+    left: var(--margin);
+    right: var(--margin);
+    bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+  }
+  .ap__flabels {
+    position: relative;
+    min-width: 8em;
+    height: 1.4em;
+  }
+  .ap__flabels span {
+    position: absolute;
+    left: 0;
+    top: 0;
+    white-space: nowrap;
+  }
+  .ap__fright {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .ap__prog {
+    width: 120px;
+    height: 1px;
+    background: rgb(35 31 32 / 0.2);
+  }
+  .ap__prog b {
+    display: block;
+    height: 100%;
+    width: calc(var(--p, 0.33) * 100%);
+    background: var(--ink);
+  }
+  .ap__pct {
+    min-width: 3ch;
+    font-variant-numeric: tabular-nums;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  @media (max-width: 719px) {
+    .scene--app {
+      --ph: min(52svh, 460px);
+    }
+    .ap__left {
+      left: var(--margin);
+      right: var(--margin);
+      top: calc(var(--header-h) + 8px);
+      width: auto;
+    }
+    .ap__lstate {
+      gap: 8px;
+    }
+    .ap__ltext,
+    .ap__rtext {
+      font-size: 13.5px;
+      line-height: 1.4;
+    }
+    .ap__phone {
+      top: 50%;
+    }
+    .ap__sim {
+      top: calc(50% + var(--ph) / 2 + 6px);
+    }
+    .ap__right {
+      left: var(--margin);
+      right: var(--margin);
+      top: auto;
+      bottom: 52px;
+      width: auto;
+      height: 3em;
+    }
+    .ap__foot {
+      font-size: 12px;
+    }
+    .ap__prog {
+      width: 60px;
+    }
+  }
+</style>
