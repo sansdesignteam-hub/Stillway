@@ -9,7 +9,9 @@
  *  2 → 3      they go out; "keeps the" slides in from the left and "pattern." from the right to
  *             flank the ring (Oryzo "it's wearable"); "Stillway just keeps the pattern." small above,
  *             paragraph 3 bottom right
- *  > 3.6      connection to S03: text out in its first 30%
+ *  > 3.6      connection to S03 (D-136): plain scroll — text and the wall photo move up 1:1 with the
+ *             scroll and leave the screen in the first ≈ 40% (no fade, blur, scale or parallax); the
+ *             ring stays centred (sleep.ts ringIn). Reduced motion keeps the short fade.
  * The ring turns with the scroll the whole time (one continuous tumble, no stops between states).
  */
 import { put, seg, smooth, clamp01, type Ctx } from '../anim';
@@ -23,6 +25,9 @@ let smalls: HTMLElement[][] = [];
 let bigWraps: HTMLElement[] = [];
 let smallWraps: HTMLElement[] = [];
 const END = 3.6;
+/** 100svh in px, the scroll length of one u (story.ts measures the same probe) */
+let vhPx = 0;
+const measureVh = () => (vhPx = (document.querySelector('[data-vh]') as HTMLElement | null)?.offsetHeight || window.innerHeight);
 const cache = new WeakMap<HTMLElement, number>();
 
 /**
@@ -59,18 +64,22 @@ export const why: SectionMotion = {
     smallWraps = [...root.querySelectorAll<HTMLElement>('[data-w-small]')];
     bigs = bigWraps.map((b) => [...b.querySelectorAll<HTMLElement>('.c')]);
     smalls = smallWraps.map((b) => [...b.querySelectorAll<HTMLElement>('.c')]);
+    measureVh();
+    window.addEventListener('resize', measureVh);
   },
   update(u, ctx) {
-    const out = 1 - seg(u, END, END + 0.3); // connection to S03, first 30%
+    // connection to S03 (D-136): everything goes up exactly as far as the page scrolls. Reduced
+    // motion has no transforms, so there the old short fade stays (first 30%).
+    const out = ctx.reduced ? 1 - seg(u, END, END + 0.3) : 1;
+    const up = ctx.reduced ? 0 : -Math.max(0, u - END) * vhPx; // px
     // D-088 background: fades in from Paper while S01 hands over (the photo there has faded to
-    // Paper by u ≈ −0.6), drifts up slowly with the scroll (parallax), and leaves in the 30–70%
-    // middle of the connection to S03, together with Paper → Night.
-    // VD README: 01 → 02 fades in over Paper with scale 1.03 → 1; 02 → 03 the photo goes first
-    // (30–55% of the connection), then Paper → Night (story.ts, 30–70%).
+    // Paper by u ≈ −0.6) and drifts up slowly with the scroll (parallax) inside S02.
+    // VD README: 01 → 02 fades in over Paper with scale 1.03 → 1. D-136: to S03 the photo scrolls
+    // up with the page like the text (the parallax stops at END); reduced motion fades it.
     if (el.bg) {
       const inn = seg(u, -1.0, -0.2);
-      const leave = 1 - seg(u, END + 0.3, END + 0.55);
-      put(el.bg, { o: inn * leave, s: 1.03 - 0.03 * inn, yv: whyBg.parallax * (0.5 - clamp01((u + 1) / (END + 1))) }, ctx);
+      const leave = ctx.reduced ? 1 - seg(u, END + 0.3, END + 0.55) : 1;
+      put(el.bg, { o: inn * leave, s: 1.03 - 0.03 * inn, y: up, yv: whyBg.parallax * (0.5 - clamp01((Math.min(u, END) + 1) / (END + 1))) }, ctx);
     }
     // "rhythm": shows while the ring zooms out of S01 (u ≈ −1.1 … −0.4), gone on the way to state 2
     put(el.word, { o: seg(u, -1.1, -0.4) * (1 - seg(u, 0.25, 0.8)) }, ctx);
@@ -99,11 +108,11 @@ export const why: SectionMotion = {
     // end state: the big words move in from the sides and flank the ring
     const mv = seg(u, 2.35, 3);
     const off = (1 - mv) * window.innerWidth * 0.55;
-    put(el.wide, { o: Math.min(1, mv * 1.6) * out }, ctx);
+    put(el.wide, { o: Math.min(1, mv * 1.6) * out, y: up }, ctx);
     put(el.wideL, { x: -off }, ctx);
     put(el.wideR, { x: off }, ctx);
-    put(el.final, { o: seg(u, 2.55, 3) * out, yv: 0.02 * (1 - seg(u, 2.55, 3)) }, ctx);
-    put(el.end, { o: seg(u, 2.7, 3.1) * out, yv: 0.02 * (1 - seg(u, 2.7, 3.1)) }, ctx);
+    put(el.final, { o: seg(u, 2.55, 3) * out, y: up, yv: 0.02 * (1 - seg(u, 2.55, 3)) }, ctx);
+    put(el.end, { o: seg(u, 2.7, 3.1) * out, y: up, yv: 0.02 * (1 - seg(u, 2.7, 3.1)) }, ctx);
   },
   ring(u, ctx: Ctx): Pose {
     const m = ctx.mobile;

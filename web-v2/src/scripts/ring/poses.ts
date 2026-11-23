@@ -32,6 +32,8 @@
  *         else). finA → finB by finT (0 silver, 1 black, 2 gold; finishes.json *_polished, D-085).
  * lamp: 0..1 S10 Lamp light (D-100): one warm desk lamp from the side (amber edge highlight), env dimmed
  *       a little; base colours unchanged.
+ * corner: 0..1 S03 corner light (D-136): one soft warm light from the upper right corner that
+ *         grazes the band from above the side (Avoly ref); the body stays silver.
  * alpha: canvas opacity (the ring is the only object, so fading the canvas fades the ring).
  */
 export interface Pose {
@@ -66,6 +68,7 @@ export interface Pose {
   finB: number;
   finT: number;
   lamp: number;
+  corner: number;
   alpha: number;
 }
 
@@ -112,4 +115,4 @@ export function along(u: number, frames: Array<[number, Pose]>): Pose {
   return frames[frames.length - 1][1];
 }
 
-export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, shadowX: 0, shadowY: -0.3, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, ledc: 0, flare: 0, custom: 0, finA: 0, finB: 0, finT: 0, lamp: 0, alpha: 1, ...p });
+export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, shadowX: 0, shadowY: -0.3, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, ledc: 0, flare: 0, custom: 0, finA: 0, finB: 0, finT: 0, lamp: 0, corner: 0, alpha: 1, ...p });

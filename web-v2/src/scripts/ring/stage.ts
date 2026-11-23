@@ -138,6 +138,11 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   deskLamp.position.set(-900, 300, 700);
   const deskFill = new THREE.PointLight(0xff9a3c, 0, 0, 0);
   scene.add(deskLamp, deskFill);
+  // S03 corner light (D-136, Avoly ref): one soft warm light from the upper right corner, above and
+  // a little in front, so the band catches a warm sheen on its top edge; low, the silver stays silver
+  const cornerLight = new THREE.DirectionalLight(0xffd2a8, 0);
+  cornerLight.position.set(700, 900, 350);
+  scene.add(cornerLight);
   // V1 live cast shadow on the stone (D-051): a shadow-only light and a transparent catcher plane
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -368,6 +373,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     deskFill.intensity = 2.2 * lp;
     deskFill.position.set(pivot.position.x - w * 1.1, pivot.position.y + w * 0.45, w * 0.6);
     deskFill.distance = w * 2.6;
+    cornerLight.intensity = 9 * Math.min(1, Math.max(0, p.corner));
     const sh = Math.max(0, p.shadow);
     catcher.visible = sh > 0.005;
     shadowSun.castShadow = catcher.visible;

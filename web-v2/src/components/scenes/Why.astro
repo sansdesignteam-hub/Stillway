@@ -71,11 +71,17 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
 </section>
 
 <style>
+  /* D-136: the wall in the photo is a little greyer and darker than Paper (≈ 245 243 238, 242 at the
+     bottom, Paper is 249 245 239) and the photo had a hard bottom edge, which showed as a line once
+     the edge came into view (the 02 → 03 scroll, tall screens). The build lifts it to Paper and
+     melts its lower part into the Paper behind it; the photo file is untouched. */
   .why__bg {
     position: absolute;
     inset: 0;
     scale: var(--overscan, 1.08);
     will-change: transform, opacity;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 96%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 96%);
   }
   .why__bg picture,
   .why__bg img {
@@ -85,6 +91,7 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
   }
   .why__bg img {
     object-fit: cover;
+    filter: brightness(1.016);
     object-position: var(--pos-d, 50% 50%);
   }
   @media (max-width: 760px) {

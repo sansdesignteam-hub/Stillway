@@ -6,6 +6,8 @@
  *  - Sensiq label + number → states 2–4: small caps mono label above one big number, raised units.
  *  - Ultrahuman big number → one number per scroll step in ONE slot; the previous one dims and
  *    shrinks upward instead of vanishing. Our colours: Paper, ochre only on the active label.
+ *  - Avoly corner light (D-136) → after Night is in: one soft warm beam from the upper right corner,
+ *    behind the ring (back layer), with the green sensor light on the ring (ring stage).
  * Motion: scripts/sections/sleep.ts.
  */
 import { sleep } from '../../content/copy';
@@ -14,6 +16,9 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
 ---
 
 <section class="scene scene--sleep" data-scene="sleep" aria-labelledby="sleep-title">
+  <div class="scene__back">
+    <div class="sleep__light" data-s-light data-a aria-hidden="true"><i class="sleep__beam"></i></div>
+  </div>
   <img class="ring-fallback sleep__fb" src="/ring-fallback/fb-s03-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
   <div class="scene__front">
     <div class="sleep__col">
@@ -43,6 +48,29 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   .scene--sleep {
     color: var(--paper);
     --stone: var(--stone-on-night);
+  }
+  /* D-136 corner light: a soft warm beam falling from the upper right corner toward the ring,
+     blurred, behind the ring (scene back layer, never on top of it) */
+  .sleep__light {
+    position: absolute;
+    inset: 0;
+  }
+  .sleep__beam {
+    position: absolute;
+    inset: 0;
+    /* a soft wedge from the upper right corner toward the ring, fading with distance */
+    background:
+      radial-gradient(ellipse 30% 42% at 92% 0%, color-mix(in srgb, var(--cocoa-300) 42%, transparent), transparent 100%),
+      conic-gradient(
+        from 222deg at 94% -6%,
+        transparent 0deg,
+        color-mix(in srgb, var(--cocoa-300) 30%, transparent) 9deg,
+        color-mix(in srgb, var(--cocoa-300) 30%, transparent) 13deg,
+        transparent 24deg
+      );
+    -webkit-mask-image: radial-gradient(circle at 94% -6%, #000 0%, #000 35%, transparent 85%);
+    mask-image: radial-gradient(circle at 94% -6%, #000 0%, #000 35%, transparent 85%);
+    filter: blur(30px);
   }
   /* text column left (Ultrahuman ref 1 composition): kicker, headline, one number slot, foot */
   .sleep__col {
@@ -139,6 +167,18 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
     }
     .sleep__col {
       --n: 27vw;
+    }
+    .sleep__beam {
+      /* phones: the ring is higher, the wedge points further down */
+      background:
+        radial-gradient(ellipse 60% 30% at 92% 0%, color-mix(in srgb, var(--cocoa-300) 42%, transparent), transparent 100%),
+        conic-gradient(
+          from 196deg at 96% -4%,
+          transparent 0deg,
+          color-mix(in srgb, var(--cocoa-300) 30%, transparent) 8deg,
+          color-mix(in srgb, var(--cocoa-300) 30%, transparent) 12deg,
+          transparent 22deg
+        );
     }
     .sleep__fb {
       --rw: 80vw;
