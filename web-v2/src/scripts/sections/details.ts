@@ -7,12 +7,11 @@
  *                 rocks back and rests facing the camera; "Made to be forgotten." from 16%
  *  2     state 2  turned ±90° to the side; "One quiet band"
  *  3     state 3  seen from the edge at 45°, tipped 20°; "Softened edges"
- *  4     state 4  the plinth leaves, the hand rises on the right; the ring moves above the
- *                 fingertip and slides down to the seat (A-1b only without WebGL)
- *  > 4.6 to S07: the hand photo shrinks into a card, then card and ring leave upward while the Sand
- *        panel rises (no fade; the snapshot-to-card of D-123 P10 comes in phase 3)
+ *  4     state 4  the plinth leaves, the hand fades in on the right; the ring moves above the
+ *                 fingertip, slides down to the seat and becomes the ring in the photo (A-1b)
+ *  > 4.6 to S07 (specs.ts drives the card shrink through this module's update)
  */
-import { put, seg, lerp, clamp01, roll, PARALLAX, type Ctx } from '../anim';
+import { put, seg, lerp, clamp01, window4, type Ctx } from '../anim';
 import { lerpPose, pose, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
 
@@ -149,22 +148,19 @@ function cardLeave(leave: number, L: ReturnType<typeof layout>, ctx: Ctx) {
     mx: (L.W / 2 - cx) * mv,
     my: (L.H / 2 - cy) * mv,
     s: 1 - 0.35 * seg(leave, 0.2, 0.6),
-    up: seg(leave, 0.5, 0.95) * L.H * 1.15, // then up and off the screen (no fade, D-120)
+    o: 1 - seg(leave, 0.5, 0.7),
   };
 }
 
-/**
- * the 3D ring on the finger follows the card out (it is not part of the photo, D-093 r1); k = how far
- * the S07 panel has risen (the S06 layer moves up with it, story.ts)
- */
-export function detailsLeaveRing(x: number, ctx: Ctx, k = 0): Pose {
+/** the 3D ring on the finger follows the card out (it is not part of the photo, D-093 r1) */
+export function detailsLeaveRing(x: number, ctx: Ctx): Pose {
   const L = layout(ctx);
   const leave = seg(x, 0, 1);
   const c = cardLeave(leave, L, ctx);
   const p = fingerPose(1, L, { shadow: 0 });
   // card transform: translate(mx, my) scale(s) about the viewport centre
   const sx = L.W / 2 + (L.seat.x - L.W / 2) * c.s + c.mx;
-  const sy = L.H / 2 + (L.seat.y - L.H / 2) * c.s + c.my - c.up - PARALLAX * L.H * k;
+  const sy = L.H / 2 + (L.seat.y - L.H / 2) * c.s + c.my;
   return {
     ...p,
     x: fx(sx, L.W),
@@ -173,6 +169,7 @@ export function detailsLeaveRing(x: number, ctx: Ctx, k = 0): Pose {
     fx: fx(sx, L.W),
     fy: fy(sy, L.H),
     fs: p.fs * c.s,
+    alpha: c.o,
   };
 }
 
@@ -195,11 +192,11 @@ export const details: SectionMotion = {
   },
   update(u, ctx) {
     const L = setVars(ctx);
-    const H = L.H;
     const leave = seg(u, DETAILS_END, DETAILS_END + 1); // the 06 → 07 connection, 0..1
-    // the plinth rises with the panel (story.ts) and leaves downward before the hand comes in
+    // plinth rises with the end of the connection, leaves before the hand comes in
+    const plinthIn = ctx.reduced ? (u >= -0.5 ? 1 : 0) : seg(u, -0.35, -0.05);
     const plinthOut = seg(u, 3.05, 3.45);
-    put(el.plinth, { o: plinthOut < 0.999 ? 1 : 0, y: plinthOut * H * 0.5 }, ctx);
+    put(el.plinth, { o: plinthIn * (1 - plinthOut), y: (1 - plinthIn) * 40 + plinthOut * 60 }, ctx);
     // soft contact shadow under the ring on the top face; follows the roll, narrows side-on
     if (el.shadow && u < 3.2) {
       const p = plinthPose(Math.max(0, u), ctx, L);
@@ -210,23 +207,22 @@ export const details: SectionMotion = {
       el.shadow.style.top = `${(L.face * 0.55 - sh / 2).toFixed(1)}px`;
       el.shadow.style.left = `${((p.x + 0.5) * L.W - wpx / 2 + L.W * 0.04).toFixed(1)}px`;
     }
-    // headline: rises in state 1, moves up and out before state 4
-    const hin = ctx.reduced ? (u >= 0 ? 1 : 0) : seg(u, 0.55, 0.85);
-    const hout = seg(u, 3.05, 3.4);
-    put(el.head, { o: Math.min(1, hin * 5) * (hout < 0.999 ? 1 : 0), y: (1 - hin) * 48 - hout * H * 0.5 }, ctx);
-    // the two steps replace each other by moving up (G-03), and both have gone by state 4
-    roll(steps, -1 + seg(u, 1.4, 1.75) + seg(u, 2.4, 2.75) + 2 * seg(u, 3.05, 3.4), ctx, { origin: 'left', gap: 16 });
+    put(el.head, { o: window4(u, ctx.reduced ? -0.5 : 0.55, 0.85, 3.05, 3.35), y: (1 - seg(u, 0.55, 0.85)) * 16 }, ctx);
+    steps.forEach((s, i) => {
+      const a = 1.4 + i;
+      put(s, { o: window4(u, a, a + 0.35, a + 0.85, a + 1.15), y: (1 - seg(u, a, a + 0.35)) * 14 }, ctx);
+    });
     const fits = seg(u, 3.35, 3.75);
-    put(el.fits, { o: Math.min(1, fits * 5), y: (1 - fits) * 48 }, ctx);
-    put(el.label, { o: seg(u, 3.8, 3.98) }, ctx); // a small label: short fade
+    put(el.fits, { o: fits * (1 - seg(leave, 0, 0.3)), y: (1 - fits) * 16 }, ctx);
+    put(el.label, { o: seg(u, 3.8, 3.98) * (1 - seg(leave, 0, 0.3)) }, ctx);
 
-    // hand: rises from the bottom as the plinth leaves
+    // hand: fades in with the end of the plinth, slight rise
     const hand = seg(u, 3.1, 3.5);
     // D-093 r1: the polished 3D ring stays on the finger (D-085); A-1b only without WebGL / reduced motion
     const live = document.documentElement.classList.contains('ring-ready');
     if (el.ringed) el.ringed.style.opacity = live ? '0' : seg(u, 3.88, 3.98).toFixed(3);
     put(el.seatShadow, { o: live ? seg(u, 3.75, 3.92) : 0 }, ctx);
-    // 06 → 07 (Storyboard §3): the hand photo shrinks into a card with rounded corners, then leaves upward
+    // 06 → 07 (Storyboard §3): the hand photo shrinks into a card with rounded corners, then fades
     if (el.card && root) {
       const c = cardLeave(leave, L, ctx);
       const cs = el.card.style;
@@ -236,8 +232,8 @@ export const details: SectionMotion = {
       cs.setProperty('--cr', `${c.r.toFixed(1)}px`);
       cs.setProperty('--cr0', `${(14 * c.k).toFixed(1)}px`);
       cs.setProperty('--cbg', c.k > 0.001 ? '1' : '0');
-      put(el.card, { o: hand > 0.001 ? 1 : 0, x: c.mx, y: c.my - c.up, s: c.s }, ctx);
-      put(el.hand, { o: 1, y: (1 - hand) * H * 0.6 }, ctx);
+      put(el.card, { o: hand * c.o, x: c.mx, y: c.my, s: c.s }, ctx);
+      put(el.hand, { o: 1, y: (1 - hand) * 30 }, ctx);
     }
   },
   ring(u, ctx) {
@@ -263,7 +259,6 @@ export const details: SectionMotion = {
     p.w = from.w * Math.pow(to.w / from.w, t);
     p.shadow = to.shadow * seg(x, 0.7, 0.95);
     p.warm = from.warm * (1 - seg(x, 0.2, 0.6));
-    p.crim = from.crim * (1 - seg(x, 0.2, 0.6));
     return p;
   },
 };

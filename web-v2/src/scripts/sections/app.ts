@@ -1,15 +1,15 @@
 /**
  * S09 The app — 21:00 · Paper (D-096; flow Storyboard §2, look Figma sticky 40004185:54).
- * u: -1..0 connection from S08: the violet light dims, a brief green; the ring shrinks and leaves off
- *          the top; then the Paper panel rises with the phone in the middle (Heart rate screen); chip,
- *          texts and footer rise in during 70–100%
+ * u: -1..0 connection from S08 (the title fades; the violet light dims, a brief green; the ring shrinks
+ *          and leaves upward; Night → Paper; the phone rises to the middle on the Heart rate screen;
+ *          chip, texts and footer come in during 70–100%)
  *  0  state 1  Heart rate (green)
  *  1  state 2  Sleep (blue)
  *  2  state 3  Recovery (violet)
- *  > 2.6       to S10: the Sand panel rises, phone and texts move up and out with this panel
+ *  > 2.6       to S10 (placeholder): everything fades, Paper → Sand
  * The phone stays still; only its screen content scrolls (one page per state, with a dwell).
  */
-import { put, seg, lerp, clamp01, smooth, window4, roll, type Ctx } from '../anim';
+import { put, seg, lerp, clamp01, smooth, window4, type Ctx } from '../anim';
 import { pose, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
 
@@ -46,20 +46,22 @@ export const app: SectionMotion = {
     document.fonts?.ready.then(reset);
   },
   update(u, ctx) {
-    // the phone rises with the Paper panel (story.ts) and stays; nothing fades out — the Sand panel of
-    // S10 covers this one and its content moves up and out (D-120)
-    put(el.phone, { o: 1 }, ctx);
-    const inn = seg(u, -0.3, 0); // 70–100%: chip, texts, footer rise in
-    const rise = (1 - inn) * 40;
-    put(el.sim, { o: Math.min(1, inn * 5), y: rise }, ctx);
-    put(el.foot, { o: Math.min(1, inn * 5), y: rise }, ctx);
+    const H = window.innerHeight;
+    const out = 1 - seg(u, END, END + 0.4);
+    const rise = ctx.reduced ? (u >= -0.5 ? 1 : 0) : seg(u, -0.5, -0.05);
+    const inn = seg(u, -0.3, 0); // 70–100%: chip, texts, footer
+    // 09 → 10 (Storyboard §3): the screen content fades first, then the phone slides right and widens
+    // into the S10 panel (finishes.ts brings the panel in from the same side)
+    const go = seg(u, END + 0.25, END + 0.75);
+    put(el.phone, { o: Math.min(1, rise * 1.6) * (1 - seg(u, END + 0.5, END + 0.8)), y: (1 - rise) * H * 0.55, x: go * window.innerWidth * 0.26, s: 1 + 0.12 * go }, ctx);
+    if (el.scroll) el.scroll.style.opacity = (1 - seg(u, END, END + 0.3)).toFixed(3);
+    put(el.sim, { o: inn * out }, ctx);
+    put(el.foot, { o: inn * out }, ctx);
 
     const f = focusOf(u);
-    // left and right sentences replace each other by moving up (G-03)
-    const fr = -1 + inn + Math.max(0, f);
-    roll(lefts, fr, ctx, { origin: 'left', gap: 14 });
-    roll(rights, fr, ctx, { origin: 'right', gap: 14 });
     const near = (i: number) => clamp01(1 - Math.abs(f - i) * 2.2);
+    lefts.forEach((l, i) => put(l, { o: near(i) * inn * out, y: (1 - near(i)) * 10 }, ctx));
+    rights.forEach((l, i) => put(l, { o: near(i) * inn * out, y: (1 - near(i)) * 10 }, ctx));
     flabels.forEach((l, i) => (l.style.opacity = near(i).toFixed(3)));
 
     // the screen scrolls one page per state; pages are as tall as their content, so the head of the
@@ -87,10 +89,10 @@ export const app: SectionMotion = {
     }
     el.prog?.style.setProperty('--p', ((f + 1) / 3).toFixed(3));
   },
-  // no ring in S09: parked above the screen
-  ring: () => pose({ x: 0, y: 1.4, w: 0.12, light: 0 }),
+  // no ring in S09
+  ring: () => pose({ x: 0, y: 0.6, w: 0.12, alpha: 0, light: 0 }),
   // 08 → 09: the violet light dims, the light flashes green for a moment, then the ring shrinks and
-  // leaves off the top of the screen before the Paper panel is full — never faded (D-120)
+  // leaves upward before Night turns to Paper
   ringIn(x, _ctx, from): Pose {
     const flash = window4(x, 0.16, 0.22, 0.28, 0.36);
     const go = seg(x, 0.28, 0.62);
@@ -99,8 +101,9 @@ export const app: SectionMotion = {
       led: from.led * (1 - seg(x, 0, 0.16)) + flash,
       ledc: x < 0.16 ? from.ledc : 0,
       flare: from.flare * (1 - seg(x, 0, 0.16)) + flash * 0.8,
-      y: from.y + go * 1.3,
+      y: from.y + go * 0.75,
       w: from.w * lerp(1, 0.45, go),
+      alpha: 1 - seg(x, 0.42, 0.62),
     };
   },
 };

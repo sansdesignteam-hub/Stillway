@@ -1,216 +1,70 @@
 /*
- * Stillway V2 tokens — Figma Foundation (variables 🌈 Primitive Color, 🎨 Token Color, 🆃 Typography),
- * text copy in context/Visual Directions V2/Moodboard.md §2.7–2.8 and §3.1 (D-111, D-119).
- * Every colour in the site comes from here; every text uses one of the text styles below.
+ * Stillway V2 tokens — Moodboard.md §2–§3 (Figma "Website AI - 1 Ring", Moodboard).
+ * Five colours and nothing else. Derivatives are mixes of those five, not new colours.
+ * Page proportion: Paper ±45% · Night ±30% · Sand ±15% · Ink ±8% · Ochre ≤ 2%.
  */
 :root {
-  /* ---------- 🌈 Primitive Color ---------- */
-  --neutral-white: #ffffff;
-  --neutral-50: #f9f5ef;
-  --neutral-100: #f0e8dd;
-  --neutral-200: #dfd6ca;
-  --neutral-300: #c9bfb5;
-  --neutral-400: #a9a097;
-  --neutral-500: #867f78;
-  --neutral-600: #6b655f;
-  --neutral-700: #554e4a;
-  --neutral-800: #3c3733;
-  --neutral-900: #231f20;
-  --neutral-950: #17120f;
-  --ochre-50: #fef6e7;
-  --ochre-100: #fdeacc;
-  --ochre-200: #fbd6a1;
-  --ochre-300: #f3ba6d;
-  --ochre-400: #e89d3d;
-  --ochre-500: #d5851b;
-  --ochre-600: #b76f20;
-  --ochre-700: #97571c;
-  --ochre-800: #79451c;
-  --ochre-900: #62371c;
-  --ochre-950: #3a1e0e;
-  --cocoa-50: #fdf4ee;
-  --cocoa-100: #f7e6db;
-  --cocoa-200: #e9ccbb;
-  --cocoa-300: #d4aa94;
-  --cocoa-400: #ba886f;
-  --cocoa-500: #a16a50;
-  --cocoa-600: #83513a;
-  --cocoa-700: #653b29;
-  --cocoa-800: #49291b;
-  --cocoa-900: #341c12;
-  --cocoa-950: #1b0b06;
-  /* Accent: product sensor lights — ring render + small legend/chip dots only, never UI */
-  --green-base: #34e07a;
-  --blue-base: #3b8cff;
-  --violet-base: #a06bff;
-  --red-base: #ff3b30;
+  /* 2.1 palette */
+  --paper: #f7f5f0; /* light background */
+  --sand: #efe6db; /* second light background: tiles, cards, panels, chips */
+  --ink: #231f20; /* text + primary button on light */
+  --night: #17120f; /* dark background */
+  --ochre: #b76f20; /* the only accent: labels, [ tags ], active chip, progress, live data, glow. Never a full background, never the primary button */
 
-  /* ---------- 🎨 Token Color (Light Mode) ---------- */
-  --btn-primary: var(--neutral-900);
-  --btn-primary-hover: var(--neutral-800);
-  --btn-neutral: var(--neutral-50);
-  --btn-neutral-hover: var(--neutral-100);
-  --btn-white: var(--neutral-white);
-  --btn-disabled: var(--neutral-200);
-  --bg-black: var(--neutral-900);
-  --bg-cocoa-strong: var(--cocoa-950); /* Night */
-  --bg-cocoa-surface: var(--cocoa-900); /* Cocoa */
-  --bg-ochre-surface: var(--ochre-600);
-  --bg-neutral-soft: var(--neutral-100); /* Sand */
-  --bg-neutral-weak: var(--neutral-50); /* Paper */
-  --bg-line: color-mix(in srgb, var(--neutral-900) 12%, transparent);
-  --bg-white: var(--neutral-white);
-  --text-strong: var(--neutral-900); /* Ink */
-  --text-surface: var(--neutral-600); /* Stone, solid (23 Nov) */
-  --text-neutral-weak: var(--neutral-50); /* Paper on dark */
-  --text-disabled: var(--neutral-300);
-  --text-white: var(--neutral-white);
-  --text-ochre-surface: var(--ochre-600);
-  --text-cocoa-soft: var(--cocoa-300);
-  --stroke-strong: var(--neutral-900);
-  --stroke-surface: color-mix(in srgb, var(--neutral-900) 12%, transparent); /* Line */
-  --stroke-neutral-weak: var(--neutral-50);
-  --stroke-white: var(--neutral-white);
-  --icon-strong: var(--neutral-900);
-  --icon-surface: var(--neutral-600);
-  --icon-disabled: var(--neutral-300);
-  --icon-white: var(--neutral-white);
-  --logo-primary: var(--neutral-900);
-  --sensor-heart-rate: var(--green-base);
-  --sensor-sleep: var(--blue-base);
-  --sensor-recovery: var(--violet-base);
-  --sensor-off: var(--red-base);
-  /* 🎨 Token Color (Dark Mode) — the same roles on Night / Cocoa */
-  --text-strong-dark: var(--neutral-50);
-  --text-surface-dark: var(--neutral-400);
-  --text-ochre-surface-dark: var(--ochre-400);
-  --text-cocoa-soft-dark: var(--cocoa-600);
-  --stroke-surface-dark: color-mix(in srgb, var(--neutral-white) 12%, transparent);
-
-  /* main colours (Moodboard §2.1 names, aliases of the tokens above) */
-  --paper: var(--bg-neutral-weak);
-  --sand: var(--bg-neutral-soft);
-  --ink: var(--text-strong);
-  --night: var(--bg-cocoa-strong);
-  --cocoa: var(--bg-cocoa-surface);
-  --ochre: var(--text-ochre-surface);
-  --ochre-small: var(--ochre-700); /* ochre label < 24 px on Paper/Sand (5.2:1, Moodboard §2.2) */
-  --stone: var(--text-surface);
-  --line: var(--stroke-surface);
-  --stone-on-night: var(--text-surface-dark);
-  --line-on-night: var(--stroke-surface-dark);
-  --white: var(--neutral-white);
-  --led-heart-rate: var(--sensor-heart-rate);
-  --led-sleep: var(--sensor-sleep);
-  --led-recovery: var(--sensor-recovery);
-  --led-off: var(--sensor-off);
-
-  /* derivatives (Moodboard §2.3): glows behind the ring, never on top of it */
-  --dawn-glow: radial-gradient(closest-side, color-mix(in srgb, var(--ochre-600) 35%, transparent), transparent);
-  --ember-glow: radial-gradient(closest-side, color-mix(in srgb, var(--ochre-600) 40%, transparent), transparent);
+  /* 2.2 derivatives */
+  --stone: rgb(35 31 32 / 0.65); /* ink 65%: secondary text, captions (≈ #6B645C on paper) */
+  --line: rgb(35 31 32 / 0.12); /* ink 12%: dividers, card borders (≈ #DBD5CC on paper) */
+  --stone-on-night: rgb(247 245 240 / 0.65); /* paper 65% on night (same rule, flipped) */
+  --line-on-night: rgb(247 245 240 / 0.12);
+  /* glows: one shape per section, behind the ring, never on top of it */
+  --dawn-glow: radial-gradient(closest-side, rgb(183 111 32 / 0.35), rgb(183 111 32 / 0)); /* on paper */
+  --ember-glow: radial-gradient(closest-side, rgb(183 111 32 / 0.4), rgb(183 111 32 / 0)); /* on night, from above */
   --glow-blur: 60px;
-  /* Dusk (D-109): radial cocoa/600 → cocoa/700 → Night from the lower left — only Daily insight 17:30 */
-  --dusk: radial-gradient(130% 110% at 0% 100%, var(--cocoa-600) 0%, var(--cocoa-700) 34%, var(--night) 72%), var(--night);
-  /* S03 light (Figma Design · 02→03 / 03 layer fills; round 3): cocoa glow, spotlight cone, pool */
-  --s03-glow-in: #554339;
-  --s03-glow-mid: #2b201a;
-  --s03-cone-top: #decfc5;
-  --s03-cone-mid: #a79081;
-  --s03-cone-end: #6f5a4d;
-  --s03-pool: #f1e8e0;
-  /* S04 Activity & rest: cocoa/700 → Night from the lower left */
-  --cocoa-glow: radial-gradient(closest-side, color-mix(in srgb, var(--cocoa-700) 85%, transparent), transparent);
+  /* only Daily insight (17:30): Ochre → Night with a warm glow from the lower corner (Oryzo ref, D-090) */
+  --dusk: radial-gradient(120% 95% at 0% 100%, rgb(183 111 32 / 0.9) 0%, rgb(183 111 32 / 0.35) 38%, rgb(183 111 32 / 0) 70%),
+    linear-gradient(180deg, rgb(183 111 32 / 0.18) 0%, var(--night) 55%);
 
-  /* finish swatches (S10, product material colours — not UI) and the footer wordmark shine */
-  --finish-silver: radial-gradient(circle at 35% 30%, #f6f6f7, #b9b9bd 55%, #8c8c90);
-  --finish-black: radial-gradient(circle at 35% 30%, #4a4a4e, #141416 55%, #050506);
-  --finish-gold: radial-gradient(circle at 35% 30%, #fbe7b5, #e0b55e 55%, #a97a2a);
+  /* 2.3 product LED colours — ring render + small legend/chip dots only.
+     Never text, background, buttons or UI charts. */
+  --led-heart-rate: #34e07a; /* green · day · heart rate */
+  --led-sleep: #3b8cff; /* blue · night · sleep */
+  --led-recovery: #a06bff; /* violet · morning · recovery / HRV */
+  --led-off: #ff3b30; /* red · ring off (one line of copy) */
+
+  /* footer logo hover shine (Storyboard §2, Section 11) — a sweep, not a UI colour */
   --shine-cream: #e9dcc8;
   --shine-amber: #f4c98e;
 
-  /* ---------- 🆃 Typography ---------- */
+  /* 3 typography: Geist + Geist Mono (Option A) */
   --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
-  --w-regular: 400;
-  --w-medium: 500;
-  /* aliases kept for older rules: one weight per text style group (Moodboard §3.1) */
-  --w-display: var(--w-medium);
-  --w-heading: var(--w-medium);
-  --w-body: var(--w-regular);
-  --w-label: var(--w-medium);
+  /* weights per text role = S01 / Hero V1 (D-082). No Light/thin weights anywhere in V2. */
+  --w-display: 500; /* wordmark and giant words: STILLWAY, "rhythm", "keeps the pattern." */
+  --w-heading: 450; /* statements, section headlines, big sentences, big numbers (S01 statement) */
+  --w-body: 400; /* body copy, paragraphs, data rows (S01 tagline / features) */
+  --w-label: 500; /* labels, tags, nav, CTA, clock, scroll line (S01 foot) */
+  --w-regular: var(--w-body); /* aliases kept for older rules */
+  --w-medium: var(--w-label);
+  --track-tight: -0.03em; /* headings, statements, numbers (S01 statement) */
+  --track-display: -0.02em; /* giant words (wordmark itself is 0, set in Hero) */
+  --track-label: 0.06em; /* uppercase sans labels (S01 foot) */
+  --track-mono: 0.08em; /* [ tags ], clock, live values */
 
-  /*
-   * Text styles. Size / line height / letter spacing per style; Display and Heading interpolate from
-   * the Mobile value (390) to the Desktop value (1440) with clamp() (D-123 P8); Label, Paragraph,
-   * Buttons and Mono switch at 768 px (their Mobile values equal Desktop today).
-   * clamp(m, m − 390·(d−m)/1050 + (d−m)/10.5 vw, d)
-   */
-  --d1-fs: clamp(72px, calc(-3.55px + 19.371vw), 275.4px);
-  --d1-lh: 0.74;
-  --d2-fs: clamp(72px, calc(39.31px + 8.381vw), 160px);
-  --d2-lh: 0.95;
-  --d3-fs: 96px;
-  --d3-lh: 1.0834;
-  --d4-fs: clamp(48px, calc(39.09px + 2.286vw), 72px);
-  --d4-lh: 1;
-  --d-ls: -0.03em; /* Display: −3% */
-  --h1-fs: clamp(36px, calc(28.57px + 1.905vw), 56px);
-  --h1-lh: clamp(40px, calc(34.06px + 1.524vw), 56px);
-  --h1-ls: -0.03em;
-  --h2-fs: clamp(24px, calc(21.03px + 0.762vw), 32px);
-  --h2-lh: clamp(28px, calc(25.03px + 0.762vw), 36px);
-  --h2-ls: -0.02em;
-  --h3-fs: 24px;
-  --h3-lh: 26px;
-  --h3-ls: -0.02em;
-  --label-lg-fs: 20px;
-  --label-lg-lh: 28px;
-  --label-lg-ls: -0.2px;
-  --label-md-fs: 16px;
-  --label-md-lh: 24px;
-  --label-sm-fs: 15px;
-  --label-sm-lh: 22px;
-  --label-xs-fs: 12px;
-  --label-xs-lh: 16px;
-  --para-lg-fs: 20px;
-  --para-lg-lh: 28px;
-  --para-lg-ls: -0.2px;
-  --para-md-fs: 16px;
-  --para-md-lh: 24px;
-  --para-sm-fs: 14px;
-  --para-sm-lh: 20px;
-  --para-xs-fs: 12px;
-  --para-xs-lh: 16px;
-  --btn-md-fs: 16px;
-  --btn-md-lh: 24px;
-  --btn-sm-fs: 15px;
-  --btn-sm-lh: 22px;
-  --btn-sm-ls: -0.15px;
-  --mono-lg-fs: 16px;
-  --mono-lg-lh: 22px;
-  --mono-md-fs: 13px;
-  --mono-md-lh: 20px;
-  --mono-sm-fs: 13px;
-  --mono-sm-lh: 20px;
-  --mono-xs-fs: 11px;
-  --mono-xs-lh: 16px;
-  --mono-ls: 0.08em; /* +8% (1.28 / 1.04 / 0.88 px) */
+  /* type scale (HANDOFF-v2 §1.2 [U]; desktop 1440 → mobile 390) */
+  --fs-giant: clamp(7rem, 24vw, 23rem); /* hero wordmark, "rhythm", "keeps the pattern." */
+  --fs-display: clamp(2.75rem, 1.6rem + 4.6vw, 6rem); /* 44 → 96 px */
+  --fs-number: clamp(3.5rem, 2.2rem + 5.4vw, 7rem); /* 56 → 112 px */
+  --fs-h3: clamp(1.375rem, 1.1rem + 1vw, 2rem); /* 22 → 32 px */
+  --fs-h2m: 2.25rem; /* mobile big sentence in S02 */
+  --fs-body: clamp(1rem, 0.95rem + 0.15vw, 1.125rem); /* 16 → 18 px */
+  --fs-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem); /* 13 → 14 px */
+  --fs-mono: clamp(0.75rem, 0.73rem + 0.08vw, 0.8125rem); /* 12 → 13 px */
+  --fs-mono-lg: 0.875rem;
 
-  /* legacy names, mapped onto the text styles (kept so no rule falls back to a loose size) */
-  --fs-display: var(--h1-fs);
-  --fs-number: var(--d4-fs);
-  --fs-h3: var(--h2-fs);
-  --fs-body: var(--para-md-fs);
-  --fs-small: var(--para-sm-fs);
-  --fs-mono: var(--mono-md-fs);
-  --track-tight: -0.03em;
-  --track-display: -0.03em;
-  --track-mono: var(--mono-ls);
-
-  /* layout (Moodboard §6.0) */
+  /* layout (HANDOFF-v2 §1.3 [U]) */
   --margin: clamp(16px, 2.8vw, 40px);
-  --gutter: clamp(12px, 1.4vw, 32px);
-  --header-h: 76px; /* navbar 52 px bar + 12 px inset + 12 px air */
+  --gutter: clamp(12px, 1.4vw, 20px);
+  --header-h: 76px; /* V1 navbar (D-075): 52 px bar + 12 px inset */
   --radius-s: 8px;
   --radius-m: 16px;
   --radius-pill: 999px;
@@ -218,14 +72,10 @@
   /* motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-shine: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --fade-small: 250ms; /* the only fades: small elements (numbers, labels, glow), ≤ 250 ms */
-  --fade-reduced: 250ms; /* reduced motion: every state is a short fade */
+  --fade-reduced: 300ms; /* reduced motion: every state is a short fade (Storyboard §1) */
 }
 @media (max-width: 760px) {
   :root {
     --header-h: 60px;
   }
 }
-/* Label, Paragraph, Buttons, Mono switch at one breakpoint, 768 px (D-123 P8). The Figma Mobile mode
-   has the same values as Desktop for these groups today; put Mobile values in a
-   @media (max-width: 767px) block here when that changes. */

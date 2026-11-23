@@ -1,9 +1,8 @@
 /**
  * S11 Closing, FAQ & footer — 06:50 tomorrow · Night + Ember glow (D-098; flow Storyboard §2, look
  * Figma sticky 40004118:150, Oryzo).
- * u: -1..0 connection from S10: the Night panel (with the Ember glow) rises over Sand, headline and
- *          panel of S10 move up and out; the ring in the chosen finish moves to the middle and grows
- *          behind the text; navbar Light → Dark and clock 22:00 → 06:50 Tomorrow as the edge passes
+ * u: -1..0 connection from S10 (the panel leaves right, the ring in the chosen finish moves to the
+ *          middle, Sand → Night with the Ember glow rising; clock 22:00 → 06:50 Tomorrow)
  *  0  state 1  "TOMORROW MORNING, see your night." across the ring
  *  1  state 2  one button + one small line; the ring smaller, still in the middle
  *  2  state 3  the FAQ column; the ring and the glow have left upward with the canvas
@@ -110,19 +109,16 @@ export const close: SectionMotion = {
     }
     trackY = yOf(u);
     if (el.track) el.track.style.transform = `translate3d(0, ${(-trackY).toFixed(1)}px, 0)`;
-    const t = seg(u, -0.35, 0);
-    put(el.title, { o: Math.min(1, t * 5), y: (1 - t) * 48 }, ctx);
-    const c = seg(u, 0.35, 0.85);
-    put(el.cta, { o: Math.min(1, c * 5), y: (1 - c) * 40 }, ctx);
-    // the glow rises with the panel and leaves upward with the ring and the canvas
-    put(el.glow, { o: seg(u, -0.6, -0.2), y: -trackY }, ctx);
+    put(el.title, { o: seg(u, -0.3, 0), y: (1 - seg(u, -0.3, 0)) * 24 }, ctx);
+    put(el.cta, { o: seg(u, 0.35, 0.85), y: (1 - seg(u, 0.35, 0.85)) * 16 }, ctx);
+    // the glow rises with the end of the connection and leaves upward with the ring
+    put(el.glow, { o: seg(u, -0.5, 0) * (1 - seg(trackY / window.innerHeight, 0.6, 1)), y: -trackY }, ctx);
   },
   ring(u, ctx) {
     const m = ctx.mobile;
     const H = window.innerHeight;
     const w = lerp(m ? 0.78 : 0.42, m ? 0.56 : 0.3, seg(u, 0.3, 1));
-    // moves with the canvas and leaves off the top (never faded, D-120)
-    const up = yOf(u) / H + seg(yOf(u) / H, 0.4, 0.9) * 0.5;
+    const up = yOf(u) / H; // moves with the canvas
     return pose({
       x: 0,
       y: (m ? 0.02 : 0) + up,
@@ -134,6 +130,7 @@ export const close: SectionMotion = {
       rim: 0,
       warm: 0.7,
       ...finishPose(1),
+      alpha: 1 - seg(up, 0.55, 0.9),
     });
   },
   // 10 → 11: the ring in the chosen finish moves to the middle as Sand turns to Night

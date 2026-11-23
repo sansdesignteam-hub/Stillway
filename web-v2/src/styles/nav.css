@@ -5,25 +5,25 @@
  */
 .site-header {
   --header-ink: var(--ink);
-  --bar-bg: color-mix(in srgb, var(--white) 55%, transparent);
-  --bar-rule: var(--line);
+  --bar-bg: rgb(255 255 255 / 0.55);
+  --bar-rule: rgb(35 31 32 / 0.12);
   position: fixed;
   inset: 12px 0 auto 0;
   z-index: 50;
   color: var(--header-ink);
-  transition: color 0.2s ease; /* the theme changes as a panel edge passes (D-120) */
+  transition: color 0.5s var(--ease-out);
   pointer-events: none;
 }
 .site-header[data-theme='dark'] {
   --header-ink: var(--paper);
-  --bar-bg: color-mix(in srgb, var(--white) 8%, transparent);
-  --bar-rule: color-mix(in srgb, var(--white) 14%, transparent);
+  --bar-bg: rgb(255 255 255 / 0.08);
+  --bar-rule: rgb(255 255 255 / 0.14);
 }
 .site-header[data-theme='photo'] {
   /* over the S01 photograph (V1 'photo' theme) */
-  --header-ink: var(--white);
-  --bar-bg: color-mix(in srgb, var(--white) 14%, transparent);
-  --bar-rule: color-mix(in srgb, var(--white) 25%, transparent);
+  --header-ink: #fff;
+  --bar-bg: rgb(255 255 255 / 0.14);
+  --bar-rule: rgb(255 255 255 / 0.25);
 }
 .site-header__inner {
   padding-inline: var(--margin);
@@ -37,9 +37,7 @@
 }
 .wordmark {
   margin-right: clamp(8px, 2vw, 32px);
-  /* Label/Large (logo navbar, Moodboard §3.1) */
-  font: var(--w-medium) var(--label-lg-fs) / var(--label-lg-lh) var(--font-sans);
-  letter-spacing: var(--label-lg-ls);
+  font-size: 20px;
   text-decoration: none;
 }
 .nav-home,
@@ -48,7 +46,7 @@
   background: var(--bar-bg);
   -webkit-backdrop-filter: blur(18px) saturate(1.3);
   backdrop-filter: blur(18px) saturate(1.3);
-  transition: background-color 0.2s ease, transform 0.35s var(--ease-out);
+  transition: background-color 0.5s var(--ease-out), transform 0.35s var(--ease-out);
 }
 .nav-home {
   flex: none;
@@ -90,8 +88,8 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  /* Label/Small: navbar links */
-  font: var(--w-medium) var(--label-sm-fs) / var(--label-sm-lh) var(--font-sans);
+  font-size: 15px;
+  font-weight: var(--w-medium);
 }
 .site-nav li + li {
   border-left: 1px solid var(--bar-rule);
@@ -115,29 +113,24 @@
   display: flex;
   align-items: baseline;
   gap: 8px;
-  /* time = Mono/Medium, daypart = Mono/Small (Moodboard §3.1) */
   font-family: var(--font-mono);
-  font-size: var(--mono-md-fs);
-  line-height: var(--mono-md-lh);
-  letter-spacing: var(--mono-ls);
+  font-size: var(--fs-mono);
+  letter-spacing: var(--track-mono);
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .clock__time {
-  font-weight: var(--w-medium);
   color: var(--ochre); /* live value (Moodboard §2.1) */
   min-width: 3em;
 }
 .clock__part {
-  font-weight: var(--w-regular);
-  font-size: var(--mono-sm-fs);
   opacity: 0.7;
   min-width: 6.4em;
 }
 .site-header[data-theme='photo'] .clock__time {
   /* ochre is unreadable on the warm photo: the live value goes white there (D-081 review) */
-  color: var(--white);
+  color: #fff;
   font-weight: var(--w-medium);
 }
 .site-header[data-theme='photo'] .clock__part {
@@ -169,13 +162,12 @@
   border-radius: 999px;
   background: var(--btn-bg);
   color: var(--btn-ink);
-  /* Buttons/Medium */
-  font: var(--w-medium) var(--btn-md-fs) / 1 var(--font-sans);
-  letter-spacing: 0;
+  font: 500 16px/1 var(--font-sans);
+  letter-spacing: -0.01em;
   text-decoration: none;
   white-space: nowrap;
   pointer-events: auto;
-  transition: transform 0.4s var(--ease-out), background-color 0.2s ease, color 0.2s ease;
+  transition: transform 0.4s var(--ease-out), background-color 0.5s var(--ease-out), color 0.5s var(--ease-out);
 }
 .btn::before {
   content: '';
@@ -241,9 +233,7 @@
   min-height: 44px;
   gap: 14px;
   padding: 4px 4px 4px 18px;
-  /* Buttons/Small (navbar "Find your size") */
-  font-size: var(--btn-sm-fs);
-  letter-spacing: var(--btn-sm-ls);
+  font-size: 15px;
 }
 .btn--compact::before,
 .btn--compact .btn__icon {
@@ -285,6 +275,7 @@
     padding-left: 16px;
   }
   .wordmark {
+    font-size: 17px;
     margin-right: auto;
   }
 }
@@ -307,7 +298,7 @@
 .menu__backdrop {
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, var(--night) 28%, transparent);
+  background: rgb(23 18 15 / 0.28);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   opacity: 0;
@@ -360,11 +351,9 @@
 .menu__list a {
   display: block;
   padding: 10px 0;
-  /* Heading/Heading 2 (mobile 24) */
-  font-size: var(--h2-fs);
-  line-height: var(--h2-lh);
-  font-weight: var(--w-medium);
-  letter-spacing: var(--h2-ls);
+  font-size: 30px;
+  font-weight: var(--w-regular);
+  letter-spacing: -0.03em;
   text-decoration: none;
 }
 .menu__list li,

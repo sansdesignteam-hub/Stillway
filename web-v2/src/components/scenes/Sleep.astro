@@ -14,25 +14,6 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
 ---
 
 <section class="scene scene--sleep" data-scene="sleep" aria-labelledby="sleep-title">
-  <!-- 02 → 03 and S03 light, from Figma Design · 02→03 State A–C and 03 State 1–4 (round 3): a round
-       cocoa glow behind the ring, a wide spotlight cone from above the screen (screen blend, blur 24)
-       and a light pool. They live in the panel (story.ts, data-panel-bg) so they blend with Night and
-       pass behind the navbar with soft edges, as in Figma. Scrubbed by sleep.ts. -->
-  <div class="sleep__glow" data-s-glow data-panel-bg aria-hidden="true"></div>
-  <svg class="sleep__cone" data-s-cone data-panel-bg viewBox="0 0 1336 1056" preserveAspectRatio="none" aria-hidden="true">
-    <defs>
-      <filter id="sleep-cone-blur" x="0" y="0" width="1336" height="1056" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-        <feGaussianBlur stdDeviation="24" />
-      </filter>
-      <linearGradient id="sleep-cone-fill" x1="668" y1="48" x2="668" y2="1008" gradientUnits="userSpaceOnUse">
-        <stop style="stop-color: var(--s03-cone-top); stop-opacity: 0.3" />
-        <stop offset="0.55" style="stop-color: var(--s03-cone-mid); stop-opacity: 0.1" />
-        <stop offset="1" style="stop-color: var(--s03-cone-end); stop-opacity: 0" />
-      </linearGradient>
-    </defs>
-    <path d="M548 48H788L1288 1008H48L548 48Z" fill="url(#sleep-cone-fill)" filter="url(#sleep-cone-blur)" />
-  </svg>
-  <div class="sleep__pool" data-s-pool data-panel-bg aria-hidden="true"></div>
   <img class="ring-fallback sleep__fb" src="/ring-fallback/fb-s03-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
   <div class="scene__front">
     <div class="sleep__col">
@@ -65,6 +46,7 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   }
   /* text column left (Ultrahuman ref 1 composition): kicker, headline, one number slot, foot */
   .sleep__col {
+    --n: clamp(5rem, 18vw, 17rem); /* active number: ~half the width (Ultrahuman ref), ≈2× before */
     position: absolute;
     left: var(--margin);
     top: 50%;
@@ -73,55 +55,21 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
     display: grid;
     gap: 20px;
   }
-  /* Figma geometry is in the 1440 × 900 frame: x in % of the width, y in % of the height */
-  .sleep__glow,
-  .sleep__cone,
-  .sleep__pool {
-    position: absolute;
-    pointer-events: none;
-    opacity: 0;
-  }
-  /* Cocoa glow (cocoa/700 → 950) — position and size per state are set by sleep.ts */
-  .sleep__glow {
-    border-radius: 50%;
-    background: radial-gradient(closest-side, color-mix(in srgb, var(--s03-glow-in) 95%, transparent), color-mix(in srgb, var(--s03-glow-mid) 55%, transparent) 50%, transparent 100%);
-  }
-  /* Spotlight cone (cocoa/200, screen): the SVG box is the cone's 1240 × 960 box at (100, −60) plus
-     its blur margin (−48 px each side) */
-  .sleep__cone {
-    left: calc(52 / 1440 * 100%);
-    top: calc(-108 / 900 * 100%);
-    width: calc(1336 / 1440 * 100%);
-    height: calc(1056 / 900 * 100%);
-    mix-blend-mode: screen;
-    overflow: visible;
-  }
-  /* Light pool 760 × 300 at (340, 30), screen */
-  .sleep__pool {
-    left: calc(340 / 1440 * 100%);
-    top: calc(30 / 900 * 100%);
-    width: calc(760 / 1440 * 100%);
-    height: calc(300 / 900 * 100%);
-    border-radius: 50%;
-    background: radial-gradient(closest-side, color-mix(in srgb, var(--s03-pool) 16%, transparent), transparent);
-    mix-blend-mode: screen;
-  }
   .sleep__kicker {
     color: var(--stone);
   }
   .sleep__head {
-    /* Heading/Heading 2 (Figma S03 "Heading" 36) */
-    font-size: var(--h2-fs);
-    font-weight: var(--w-medium);
-    letter-spacing: var(--h2-ls);
-    line-height: var(--h2-lh);
+    font-size: clamp(22px, 2.3vw, 34px); /* = S01 statement */
+    font-weight: var(--w-display);
+    letter-spacing: var(--track-tight);
+    line-height: 1.15;
   }
   /* one slot: all three numbers share it; the active one is full size, older ones shrink upward */
   .sleep__slot {
     /* room above for the previous number, which shrinks upward when the next one arrives */
-    margin: calc(var(--d4-fs) * var(--d4-lh) + 24px) 0 0; /* room for the previous number (Display 4) above */
+    margin: calc(var(--n) * 0.32) 0 0;
     display: grid;
-    min-height: calc(var(--d2-lh) * var(--d2-fs) + 28px);
+    min-height: calc(var(--fs-number) * 1.6);
     align-items: end;
   }
   .stat {
@@ -140,18 +88,16 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   }
   .stat__value {
     margin: 0;
-    /* Display/Display 2 (Figma Design · 03 "Value" 152) */
-    font-size: var(--d2-fs);
+    font-size: var(--n);
     white-space: nowrap;
-    font-weight: var(--w-medium);
-    letter-spacing: var(--d-ls);
-    line-height: var(--d2-lh);
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
+    line-height: 0.9;
     font-variant-numeric: tabular-nums;
   }
   .stat__unit {
-    /* Display/Display 4 (Figma S03 "Unit" 72) */
-    font-size: var(--d4-fs);
-    vertical-align: calc((var(--d2-fs) - var(--d4-fs)) * 0.7); /* tops aligned, as Figma */
+    font-size: 0.34em;
+    vertical-align: 1.45em;
     margin-left: 0.04em;
     letter-spacing: 0;
   }
@@ -161,8 +107,7 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
     min-height: 3.2em;
   }
   .sleep__line {
-    font-size: var(--para-md-fs);
-    line-height: var(--para-md-lh);
+    font-size: var(--fs-small);
   }
   .sleep__sim {
     color: var(--stone);
@@ -186,6 +131,9 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
     }
     .sleep__slot {
       margin-top: 52px;
+    }
+    .sleep__col {
+      --n: 27vw;
     }
     .sleep__fb {
       --rw: 80vw;

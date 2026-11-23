@@ -1,35 +1,24 @@
 /**
- * The scroll story of V2 (D-063; panel model of Storyboard v3 §1 "Aturan gerak", D-120).
+ * The scroll story of V2 (D-063).
  *
- * Layout: one fixed stage (WebGL ring canvas + one scene per section) and a row of empty "tracks"
- * in normal flow, one per section, that only give the page its scroll length and the anchors
- * (#hero … #close). Scroll position drives every state.
- *
- * Panels (D-120): every section is a panel — its own background (`.scene__panel`, injected here)
- * plus its layers (`.scene__back` z 1, `.scene__front` z 3). Moving on = the next panel rises from
- * the bottom with a straight edge and covers the previous one; the old content moves up and out
- * (half speed) and is clipped at the rising edge; the new content rises with its panel. There is no
- * background cross-fade anywhere. The ring is one sticky layer (canvas z 2) above every panel and
- * back layer and below the front text; it is never faded — it only moves, turns, scales and changes
- * light. Sections without a 3D ring (04, 07, 09) send it off the top of the screen before their panel
- * is full; the next section brings it in from the bottom with its panel.
- *
- * Scenes never get opacity/transform/clip themselves (that would make a stacking context and pull
- * their back text in front of the ring). The panel motion is written as CSS variables on the scene
- * (--ly offset, --ct/--cb clip, --py panel edge) and applied to its children in global.css.
+ * Layout: one fixed stage (background layer, scene back layers, the WebGL canvas, scene front
+ * layers) and a row of empty "tracks" in normal flow, one per section, that only give the page
+ * its scroll length and the anchors (#hero … #close). Sections are "pinned" because their
+ * content lives on the fixed stage; scroll position drives every state. Pinning with
+ * ScrollTrigger would put each section in its own stacking context, and the ring has to sit
+ * between a section's back text ("Stillway", "rhythm", "keeps the pattern.") and its front text.
  *
  * For section i with local position u (in viewport heights):
- *   u in [-tin, 0)        incoming connection from section i-1 (Storyboard §3); x = (u + tin) / tin
+ *   u in [-tin, 0)        incoming connection from section i-1 (Storyboard §3)
  *   u in [0, states-1]     state 1 … last state (1 state = 1 viewport)
  *   u in (states-1, end]   hold on the last state
- * The panel of section i rises over the local window `panel` (default: the first 40% of its
- * connection). The navbar theme and the clock follow the panel that covers the navbar, so both
- * change exactly when a panel edge passes it (Storyboard §1).
- * Reduced motion: content u is snapped to whole states (elements fade ≤ 250 ms, CSS); panels still
- * move with the scroll like a normal page; no WebGL (still posters), no loops.
+ * Each section module (sections/*.ts) gets its own u and writes its DOM; it may also return the
+ * ring pose for that u. Mobile uses the same model (D-069: pinned + scrubbed, ring stays 3D).
+ * Reduced motion: u is snapped to whole states; elements fade over 300 ms; the ring jumps to the
+ * pose of the state; no breathing loop.
  */
 import { sections, dayparts, type SectionDef } from '../content/sections';
-import { clamp01, seg, lerp, put, window4, PARALLAX, type Ctx } from './anim';
+import { clamp01, seg, lerp, put, window4, type Ctx } from './anim';
 import { lerpPose, type Pose } from './ring/poses';
 import type { RingStage } from './ring/stage';
 import { hero } from './sections/hero';
@@ -45,24 +34,25 @@ import { app } from './sections/app';
 import { finishes } from './sections/finishes';
 import { close } from './sections/close';
 
-export type Theme = 'photo' | 'light' | 'dark';
-
 export interface SectionMotion {
   init?: (root: HTMLElement) => void;
   update?: (u: number, ctx: Ctx, root: HTMLElement) => void;
   ring?: (u: number, ctx: Ctx) => Pose;
   /** navbar theme override for u (S01 over the photograph uses 'photo'); null = from the background */
-  theme?: (u: number) => Theme | null;
-  /** clock text (HH:MM) for u ≥ 0, when the section drives its own clock (S04 follows the photo) */
+  theme?: (u: number) => 'photo' | 'light' | 'dark' | null;
+  /** clock text (HH:MM) for u, when the section drives its own clock (S04 follows the photo) */
   clock?: (u: number) => string;
-  /**
-   * custom ring path across the incoming connection, x in [0, 1]; k = how far this section's panel
-   * has risen (0..1). Default = lerp in 30–70%.
-   */
-  ringIn?: (x: number, ctx: Ctx, from: Pose, to: Pose, k: number) => Pose;
+  /** custom ring path across the incoming connection, x in [0, 1]; default = lerp in 30–70% */
+  ringIn?: (x: number, ctx: Ctx, from: Pose, to: Pose) => Pose;
 }
 const motions: Record<string, SectionMotion> = { hero, why, sleep, activity, insight, details, specs, features, app, finishes, close };
 
+const BG: Record<string, [number, number, number]> = {
+  paper: [0xf7, 0xf5, 0xf0],
+  sand: [0xef, 0xe6, 0xdb],
+  night: [0x17, 0x12, 0x0f],
+  dusk: [0x17, 0x12, 0x0f], // base under the dusk gradient overlay
+};
 const isDark = (b: string) => b === 'night' || b === 'dusk';
 const toMin = (s: string) => {
   const [h, m] = s.split(':').map(Number);
@@ -77,12 +67,6 @@ const partOf = (min: number) => {
   for (const [start, l] of dayparts) if (min >= start) label = l;
   return label;
 };
-/** last keyframe at or before x */
-const keyAt = (keys: Array<[number, string]>, x: number) => {
-  let v = keys[0][1];
-  for (const [at, t] of keys) if (x >= at) v = t;
-  return v;
-};
 
 interface Item {
   def: SectionDef;
@@ -91,11 +75,7 @@ interface Item {
   scene: HTMLElement;
   top: number; // px
   end: number; // states-1+hold
-  win: [number, number]; // panel window in local u
   visible: boolean;
-  k: number; // panel risen 0..1
-  edge: number; // px from the top of the viewport
-  vars: string; // last written CSS vars
 }
 
 export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) => void }) {
@@ -103,53 +83,34 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
   const mq = window.matchMedia('(max-width: 719px)');
   const ctx: Ctx = { mobile: mq.matches, reduced };
 
+  const bgEl = document.querySelector<HTMLElement>('[data-bg]')!;
+  const duskEl = document.querySelector<HTMLElement>('[data-dusk]')!;
+  const wipeEl = document.querySelector<HTMLElement>('[data-wipe]')!;
   const nav = document.querySelector<HTMLElement>('[data-nav]');
   const clockTime = document.querySelectorAll<HTMLElement>('[data-clock-time]');
   const clockPart = document.querySelectorAll<HTMLElement>('[data-clock-part]');
   const vhProbe = document.querySelector<HTMLElement>('[data-vh]')!;
 
-  const items: Item[] = sections.map((def, i) => {
+  const items: Item[] = sections.map((def) => {
     const m = motions[def.id] ?? placeholder;
     const scene = document.querySelector<HTMLElement>(`[data-scene="${def.id}"]`)!;
-    // the panel (background) of the section, first in the scene so it paints under its layers
-    const panel = document.createElement('div');
-    panel.className = 'scene__panel';
-    panel.dataset.bg = def.bg;
-    panel.setAttribute('aria-hidden', 'true');
-    scene.prepend(panel);
-    // the ring stills (no WebGL / reduced motion) live on the back layer, above the back words:
-    // same order as the canvas, and they move and clip with the panel
-    let back = scene.querySelector<HTMLElement>(':scope > .scene__back');
-    const stills = scene.querySelectorAll<HTMLElement>(':scope > [data-ring-fallback]');
-    if (stills.length && !back) {
-      back = document.createElement('div');
-      back.className = 'scene__back';
-      panel.after(back);
-    }
-    stills.forEach((s) => back!.append(s));
-    // full-bleed backgrounds (hero photo, S02 wall) belong to the panel: they never pass under the
-    // navbar as content does, so they are not clipped there (round 1)
-    scene.querySelectorAll<HTMLElement>('[data-panel-bg]').forEach((b) => panel.append(b));
     m.init?.(scene);
-    const tin = def.tin;
-    const win: [number, number] = i === 0 ? [-1e9, -1e9 + 1] : def.panel ?? [-tin, -tin + 0.4 * tin];
-    return { def, m, track: document.getElementById(def.id)!, scene, top: 0, end: def.states - 1 + def.hold, win, visible: true, k: i === 0 ? 1 : 0, edge: 0, vars: '' };
+    return {
+      def,
+      m,
+      track: document.getElementById(def.id)!,
+      scene,
+      top: 0,
+      end: def.states - 1 + def.hold,
+      visible: true,
+    };
   });
 
   let vh = window.innerHeight;
-  let navY = 38;
-  let navBottom = 64;
   const measure = () => {
     vh = vhProbe.offsetHeight || window.innerHeight;
     ctx.mobile = mq.matches;
     for (const it of items) it.top = it.track.getBoundingClientRect().top + window.scrollY;
-    if (nav) {
-      const bar = nav.querySelector<HTMLElement>('.nav-bar') ?? nav;
-      const r = bar.getBoundingClientRect();
-      navY = r.height ? r.top + r.height / 2 : 38;
-      const hr = nav.getBoundingClientRect();
-      navBottom = Math.max(r.bottom, hr.bottom) || 64;
-    }
   };
 
   let ring: RingStage | null = null;
@@ -165,68 +126,23 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     return Math.min(it.def.states - 1, Math.round(u));
   };
 
-  const t0 = performance.now();
+  let t0 = performance.now();
   const frame = () => {
     const y = window.scrollY;
-    const H = window.innerHeight;
     // current section = last whose track top is above the scroll position
     let ci = 0;
     for (let i = 0; i < items.length; i++) if (y >= items[i].top - 0.5) ci = i;
     const cur = items[ci];
-    const uOf = (it: Item) => (y - it.top) / vh - it.def.tin;
-    const uRaw = uOf(cur);
+    const uRaw = (y - cur.top) / vh - cur.def.tin;
     const u = snap(cur, uRaw);
     const tinX = cur.def.tin ? clamp01((u + cur.def.tin) / cur.def.tin) : 1; // 0..1 inside the connection
     const inConn = u < 0;
     const prev = items[ci - 1];
 
-    /* panels: how far each has risen (with the plain scroll, also for reduced motion) */
-    for (let i = 1; i < items.length; i++) {
-      const it = items[i];
-      const [a, b] = it.win;
-      it.k = clamp01((uOf(it) - a) / (b - a));
-      // a soft start and stop, but tied to the scroll (no easing that runs on after the scroll stops)
-      it.k = it.k * it.k * (3 - 2 * it.k) * 0.5 + it.k * 0.5;
-      it.edge = H * (1 - it.k);
-    }
-
-    /* scenes: a panel shows from the moment it starts to rise until the next one covers it */
-    items.forEach((it, i) => {
-      const next = items[i + 1];
-      const kn = next ? next.k : 0;
-      const show = it.k > 0 && kn < 1;
-      if (show !== it.visible) {
-        it.visible = show;
-        it.scene.style.visibility = show ? '' : 'hidden';
-      }
-      if (!show) return;
-      const top = it.edge; // own panel edge
-      const bottom = next ? next.edge : H; // the next panel's edge
-      const ly = top - PARALLAX * H * kn; // rises with its panel, then moves up while covered
-      // content never passes under the navbar (the logo has no background, round 1): the front layer
-      // is always cut at the bottom of the header, the back layer while it moves up and out
-      const ctBase = Math.max(0, top - ly);
-      const ctNav = Math.max(ctBase, navBottom - ly);
-      const ct = kn > 0 ? ctNav : ctBase;
-      const ctf = ctNav;
-      const cb = Math.max(0, H - (bottom - ly));
-      const vars = `${ly.toFixed(1)}|${ct.toFixed(1)}|${ctf.toFixed(1)}|${cb.toFixed(1)}|${top.toFixed(1)}`;
-      if (vars !== it.vars) {
-        it.vars = vars;
-        const s = it.scene.style;
-        s.setProperty('--ly', `${ly.toFixed(1)}px`);
-        s.setProperty('--ct', `${ct.toFixed(1)}px`);
-        s.setProperty('--ctf', `${ctf.toFixed(1)}px`);
-        s.setProperty('--cb', `${cb.toFixed(1)}px`);
-        s.setProperty('--py', `${top.toFixed(1)}px`);
-      }
-    });
-
     /* still poster of the ring (3D fallback/): while WebGL loads, if it fails, and for reduced motion */
     if (!ring) {
       items.forEach((it) => {
-        if (!it.visible) return;
-        const uu = snap(it, uOf(it));
+        const uu = snap(it, (y - it.top) / vh - it.def.tin);
         it.scene.querySelectorAll<HTMLElement>('[data-ring-fallback]').forEach((f) => {
           // optional data-fb-range="a,b": the still shows only for states a..b (S01 has three)
           const r = f.dataset.fbRange?.split(',').map(Number);
@@ -236,41 +152,88 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       });
     }
 
-    /* scene content: every visible scene and the next one (so it is in place when it rises) */
+    /* scenes: the current one, the previous one while it fades out, the next one (for back words) */
     items.forEach((it, i) => {
-      if (!it.m.update) return;
-      if (it.visible || i === ci + 1) it.m.update(snap(it, uOf(it)), ctx, it.scene);
+      const show = i === ci || i === ci - 1 || i === ci + 1;
+      if (show !== it.visible) {
+        it.visible = show;
+        it.scene.style.visibility = show ? '' : 'hidden';
+      }
+      if (show && it.m.update) it.m.update(snap(it, (y - it.top) / vh - it.def.tin), ctx, it.scene);
     });
 
-    /* navbar: the panel under it decides theme, clock and daypart */
-    let ni = 0;
-    for (let i = 0; i < items.length; i++) if (items[i].k > 0 && items[i].edge <= navY) ni = i;
-    const top = items[ni];
-    const uTop = snap(top, uOf(top));
-    const theme: Theme = top.m.theme?.(uTop) ?? (isDark(top.def.bg) ? 'dark' : 'light');
+    /* background */
+    const mid = inConn && prev ? seg(tinX, 0.3, 0.7) : 1;
+    // a Dusk side never lerps its base: the base is the other section's colour and the opaque Dusk
+    // layer cross-fades over it (D-090 r1: no muddy grey mix between Dusk and Paper)
+    let a = prev ? BG[prev.def.bg] : BG[cur.def.bg];
+    let b = BG[cur.def.bg];
+    if (prev && prev.def.bg === 'dusk') a = b;
+    if (prev && cur.def.bg === 'dusk') b = a;
+    const k = inConn ? mid : 1;
+    bgEl.style.backgroundColor = `rgb(${a.map((v, j) => Math.round(lerp(v, b[j], k))).join(' ')})`;
+    // Dusk enters as a soft wipe rising from the bottom (Storyboard 04 → 05: "Dusk naik dari bawah")
+    // and leaves as Paper wiping down from the top — never a 50% dissolve, which reads as muddy grey
+    // (D-090 r1)
+    let duskO = cur.def.bg === 'dusk' ? 1 : 0;
+    let wipeY: number | null = null;
+    let wipeTone = 'warm';
+    let mask = 'none';
+    if (inConn && prev && prev.def.bg === 'dusk' && cur.def.bg !== 'dusk') {
+      // D-093: Dusk → Paper as light sweeping down (Stage .stage__wipe): Paper, Sand, a warm ochre
+      // edge over the Dusk glow. A masked dissolve or a straight mix passes through a grey band.
+      duskO = k < 0.999 ? 1 : 0;
+      wipeY = -250 + 250 * k;
+      wipeTone = 'warm';
+    } else if (inConn && prev && cur.def.id === 'close' && !isDark(prev.def.bg)) {
+      // D-098: Sand → Night for the closing canvas: night rises from below with a warm Ember edge
+      if (k < 0.999) bgEl.style.backgroundColor = `rgb(${BG[prev.def.bg].join(' ')})`;
+      wipeY = 100 - 250 * k;
+      wipeTone = 'rise';
+    } else if (inConn && prev && prev.def.bg === 'night' && !isDark(cur.def.bg)) {
+      // D-096: Night → Paper (08 → 09) the same way, light sweeping down, with a plain Sand edge
+      if (k < 0.999) bgEl.style.backgroundColor = `rgb(${BG.night.join(' ')})`;
+      wipeY = -250 + 250 * k;
+      wipeTone = 'plain';
+    } else if (inConn && prev && cur.def.bg === 'dusk' && prev.def.bg !== 'dusk') {
+      const p = -20 + 140 * k; // dusk edge moves up
+      mask = `linear-gradient(to top, #000 ${(p - 20).toFixed(1)}%, transparent ${(p + 20).toFixed(1)}%)`;
+    }
+    duskEl.style.opacity = duskO.toFixed(3);
+    const wv = wipeY === null || (wipeTone === 'rise' ? wipeY <= -149.99 : wipeY >= -0.01) ? 'hidden' : 'visible';
+    if (wipeEl.style.visibility !== wv) wipeEl.style.visibility = wv;
+    if (wipeY !== null && wipeEl.dataset.tone !== wipeTone) wipeEl.dataset.tone = wipeTone;
+    if (wipeY !== null) wipeEl.style.transform = `translate3d(0, ${wipeY.toFixed(2)}lvh, 0)`;
+    if (duskEl.style.maskImage !== mask) {
+      duskEl.style.maskImage = mask;
+      duskEl.style.webkitMaskImage = mask;
+    }
+    const darkW = (prev && inConn && isDark(prev.def.bg) ? 1 - k : 0) + (isDark(cur.def.bg) ? k : 0);
+    const theme = (!inConn && cur.m.theme?.(u)) || (darkW > 0.5 ? 'dark' : 'light');
     if (nav && nav.dataset.theme !== theme) nav.dataset.theme = theme;
-    if (document.documentElement.dataset.surface !== theme) document.documentElement.dataset.surface = theme;
+    document.documentElement.dataset.surface = theme;
 
-    const d = top.def;
-    let text: string;
-    if (uTop < 0) {
-      // in the connection: Storyboard §3 keyframes, else the section's first time
-      const x = d.tin ? clamp01((uTop + d.tin) / d.tin) : 1;
-      text = d.clockIn ? keyAt(d.clockIn, x) : top.m.clock ? top.m.clock(0) : d.time;
-    } else if (top.m.clock) text = top.m.clock(uTop);
-    else if (d.timeEnd) text = fmt(Math.floor(lerp(toMin(d.time), toMin(d.timeEnd), clamp01(uTop / Math.max(0.001, top.end))) / 5) * 5);
-    else text = d.time;
-    const part = d.part && text === d.time ? d.part : partOf(toMin(text));
+    /* clock: changes in the last 30% of a connection (Storyboard §3) */
+    const clockFrom = inConn && tinX < 0.7 && prev ? prev : cur;
+    const d = clockFrom.def;
+    let min = toMin(d.time);
+    if (d.timeEnd) {
+      const span = clockFrom === cur ? clamp01(u / Math.max(0.001, cur.end)) : 1;
+      min = lerp(toMin(d.time), toMin(d.timeEnd), span);
+    }
+    let text = fmt(Math.floor(min / 5) * 5);
+    if (clockFrom.m.clock) text = clockFrom.m.clock(clockFrom === cur ? u : clockFrom.end);
+    const part = d.part ?? partOf(toMin(text));
     clockTime.forEach((el) => el.textContent !== text && (el.textContent = text));
     clockPart.forEach((el) => el.textContent !== part && (el.textContent = part));
 
-    /* ring: sticky, never faded (pose.alpha stays 1) */
+    /* ring */
     if (ring) {
       let pose: Pose;
       if (inConn && prev) {
         const from = poseOf(prev, prev.end);
         const to = poseOf(cur, 0);
-        pose = cur.m.ringIn ? cur.m.ringIn(tinX, ctx, from, to, cur.k) : lerpPose(from, to, seg(tinX, 0.3, 0.7));
+        pose = cur.m.ringIn ? cur.m.ringIn(tinX, ctx, from, to) : lerpPose(from, to, seg(tinX, 0.3, 0.7));
       } else pose = poseOf(cur, u);
       // dev only: window.__ringOverride = { w: 0.9, x: 0 } merges into the pose (stripped from builds)
       if (import.meta.env.DEV && (window as any).__ringOverride) pose = { ...pose, ...(window as any).__ringOverride };
@@ -294,7 +257,6 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
   const onResize = () => {
     measure();
     lastPoseKey = '';
-    items.forEach((it) => (it.vars = ''));
     frame();
   };
   window.addEventListener('resize', onResize);
@@ -310,27 +272,6 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       frame(); // first frame with the real pose, finish and env; the canvas fades in over 0.9 s
       document.documentElement.classList.add('ring-ready');
       setTimeout(() => document.documentElement.classList.add('ring-live'), 1000);
-      // round 1: compile every shader variant ahead of time, while idle after load (no stutter when a
-      // section, a finish or the Lamp light is reached for the first time)
-      const start = () => {
-        const poses: Pose[] = [];
-        items.forEach((it) => {
-          for (let u = -it.def.tin; u <= it.end + 0.001; u += 0.5) {
-            const prev = items[items.indexOf(it) - 1];
-            if (u < 0 && prev && it.m.ringIn) poses.push(it.m.ringIn(clamp01((u + it.def.tin) / it.def.tin), ctx, poseOf(prev, prev.end), poseOf(it, 0), 0.5));
-            else if (u >= 0) poses.push(poseOf(it, u));
-          }
-        });
-        const base = poseOf(items[items.length - 2], 0);
-        for (const f of [0, 1, 2]) for (const lamp of [0, 1]) poses.push({ ...base, custom: 1, finA: f, finB: f, finT: 1, lamp });
-        // a pose for the cast shadow on and off (hero) is already in the list; end on the current one
-        r.warm(poses).then(() => {
-          lastPoseKey = '';
-          frame();
-        });
-      };
-      if ('requestIdleCallback' in window) (window as any).requestIdleCallback(start, { timeout: 2500 });
-      else setTimeout(start, 1500);
     },
   };
 }

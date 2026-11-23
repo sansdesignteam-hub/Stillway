@@ -26,8 +26,6 @@ export interface RingStage {
   canvas: HTMLCanvasElement;
   three: typeof THREE;
   pivot: THREE.Group;
-  /** compile the shaders for each pose ahead of time (no first-use stutter), off screen, async */
-  warm: (poses: Pose[]) => Promise<void>;
 }
 
 export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingStage | null> {
@@ -105,21 +103,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   };
   buildBlends();
   // night env after the first paint of the ring
-  const later = (url: string, ms: number, set: (e: THREE.Texture) => void) =>
-    new Promise<void>((res) =>
-      setTimeout(
-        () =>
-          loadEnv(url)
-            .then((e) => (set(e), (lastEnv = '')))
-            .catch(() => {})
-            .finally(res),
-        ms,
-      ),
-    );
-  const envsReady = Promise.all([
-    later(RING_MODEL.env.night, 300, (e) => (envs.night = e)),
-    later(RING_MODEL.env.dusk, 900, (e) => (envs.dusk = e)),
-  ]);
+  setTimeout(() => loadEnv(RING_MODEL.env.night).then((e) => ((envs.night = e), (lastEnv = ''))).catch(() => {}), 300);
+  setTimeout(() => loadEnv(RING_MODEL.env.dusk).then((e) => ((envs.dusk = e), (lastEnv = ''))).catch(() => {}), 900);
   const loadEnv = (url: string) =>
     new EXRLoader().loadAsync(url).then((t) => {
       t.mapping = THREE.EquirectangularReflectionMapping;
@@ -153,18 +138,6 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   deskLamp.position.set(-900, 300, 700);
   const deskFill = new THREE.PointLight(0xff9a3c, 0, 0, 0);
   scene.add(deskLamp, deskFill);
-  // 02 → 03 / S03 (D-108, D-120): the warm cocoa/200 light from above, and one white glint that
-  // runs across the band (a directional light whose direction sweeps left → right with the scroll)
-  const spotTop = new THREE.DirectionalLight(0xe9ccbb, 0);
-  spotTop.position.set(-120, 1000, 380);
-  const glint = new THREE.DirectionalLight(0xffffff, 0);
-  scene.add(spotTop, glint);
-  // S05 / 04 → 05: a cocoa/300 rim from behind the lower left (Dusk from Cocoa, D-109)
-  const cocoaRim = new THREE.DirectionalLight(0xd4aa94, 0);
-  cocoaRim.position.set(-850, -480, -420);
-  const cocoaFill = new THREE.DirectionalLight(0xd4aa94, 0);
-  cocoaFill.position.set(-700, -200, 600);
-  scene.add(cocoaRim, cocoaFill);
   // V1 live cast shadow on the stone (D-051): a shadow-only light and a transparent catcher plane
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -282,13 +255,6 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     m.emissiveIntensity = 0;
   }
   spinner.add(ring);
-  // the two small dots between the windows (Contact_1/2) glow green with the windows in 02 → 03
-  const contacts: THREE.MeshStandardMaterial[] = [];
-  ring.traverse((o) => {
-    if (o.isMesh && /^Contact/i.test(o.name) && !contacts.includes(o.material)) contacts.push(o.material);
-  });
-  const contactBase = contacts.map((m) => ({ color: m.color.clone(), metal: m.metalness, rough: m.roughness }));
-  const SENSOR_GREEN = new THREE.Color('#34E07A');
 
   /* S08: window A lit in the three mode colours (D-062), a soft flare sprite and the coloured bounce
      on the inner band (point light). Placed at the LED mesh centre, nudged toward the ring axis. */
@@ -340,51 +306,6 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     ring.add(flare, bounce);
   }
 
-  /* 02 → 03 / S03 (D-120 State C): both windows glow green and their light falls on the band — a soft
-     glow sprite (no streak) and a small green bounce light at each window; the lights stay the only
-     glowing parts of the ring */
-  const glowTex = (() => {
-    const cv = document.createElement('canvas');
-    cv.width = cv.height = 128;
-    const g = cv.getContext('2d')!;
-    const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
-    gr.addColorStop(0, 'rgba(255,255,255,1)');
-    gr.addColorStop(0.18, 'rgba(255,255,255,0.55)');
-    gr.addColorStop(0.5, 'rgba(255,255,255,0.12)');
-    gr.addColorStop(1, 'rgba(255,255,255,0)');
-    g.fillStyle = gr;
-    g.fillRect(0, 0, 128, 128);
-    const t = new THREE.CanvasTexture(cv);
-    t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  })();
-  // Figma 02→03 State C: a halo on window A (150 × 190 px on a 680 px ring, 60%) and on each of the
-  // two dots (70 px, 45%); window B stays dark; a green bounce falls on the band beside window A
-  const SENSOR_SPOTS: Array<[string, number, number, number]> = [
-    [RING_MODEL.meshes.ledMain, 0.34, 0.85, 7],
-    ['Contact_1', 0.1, 0.45, 0],
-    ['Contact_2', 0.1, 0.45, 0],
-  ];
-  const sensorGlows: { sprite: THREE.Sprite; light: THREE.PointLight; size: number; op: number; li: number }[] = [];
-  for (const [name, size, op, li] of SENSOR_SPOTS) {
-    const mesh = ring.getObjectByName(name) as THREE.Mesh | undefined;
-    if (!mesh) continue;
-    ring.updateMatrixWorld(true);
-    const c = new THREE.Box3().setFromObject(mesh).getCenter(new THREE.Vector3());
-    const local = ring.worldToLocal(c.clone());
-    const inward = new THREE.Vector3(-local.x, -local.y, 0).normalize().multiplyScalar(ringSize * 0.05);
-    const sprite = new THREE.Sprite(
-      new THREE.SpriteMaterial({ map: glowTex, color: 0x34e07a, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false, transparent: true, toneMapped: false, opacity: 0 }),
-    );
-    sprite.position.copy(local).add(inward);
-    sprite.renderOrder = 9;
-    sprite.visible = false;
-    const light = new THREE.PointLight(0x34e07a, 0, 0, 1.4);
-    light.position.copy(local).add(inward.clone().multiplyScalar(2.2));
-    ring.add(sprite, light);
-    sensorGlows.push({ sprite, light, size, op, li });
-  }
-
   let W = 0;
   let H = 0;
   const resize = () => {
@@ -401,6 +322,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const rollQ = new THREE.Quaternion();
   const Z_AXIS = new THREE.Vector3(0, 0, 1);
   const X_AXIS = new THREE.Vector3(1, 0, 0);
+  let lastAlpha = -1;
   let lastEnv = '';
   let lastLedKey = '';
   const apply = (p: Pose, extra: { breathe?: number } = {}) => {
@@ -440,8 +362,6 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     rim.intensity = 14 * p.rim;
     rimFill.intensity = 3.2 * p.rim;
     warmRim.intensity = 7 * p.warm;
-    cocoaRim.intensity = 12 * Math.max(0, p.crim);
-    cocoaFill.intensity = 2.2 * Math.max(0, p.crim);
     const lp = Math.min(1, Math.max(0, p.lamp));
     deskLamp.intensity = 9 * lp;
     // a soft close fill on the lamp side so the edge glows rather than shows one sharp line
@@ -482,41 +402,12 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     // on Night the polished env is almost black: lift it with the rim so the band keeps a silver gradient
     // the swap dip never goes below 0.45, so the ring is never a black shape in a connection (D-090 r1)
     // under the desk lamp the room is a little dimmer (evening), so the amber edge reads (D-100)
-    // 02 → 03: lights out to an almost-silhouette (D-120), then the warm light from above (D-108)
-    const dim = Math.min(1, Math.max(0, p.dim));
-    // the warm light from above brings part of the room back (the ring reads silver, not black)
-    const spot = Math.max(0, p.spot);
-    scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim) * (1 - 0.12 * lp) * (1 - 0.97 * dim * (1 - 0.42 * spot));
-    spotTop.intensity = 9 * spot;
-    glint.intensity = 16 * Math.max(0, p.sweepI);
-    if (p.sweepI > 0.001) {
-      // the light swings from the left of the ring to its right, a little above and in front
-      const a = (p.sweep - 0.5) * 2.4;
-      glint.position.set(Math.sin(a) * 1000, 420, Math.cos(a) * 1000);
-    }
-    const sens = Math.min(1, Math.max(0, p.sensor));
-    for (const gl of sensorGlows) {
-      gl.sprite.visible = sens > 0.005;
-      gl.sprite.material.opacity = gl.op * sens;
-      gl.sprite.scale.set(ringSize * gl.size, ringSize * gl.size * 1.2, 1);
-      gl.light.intensity = gl.li * sens;
-      gl.light.distance = w * 0.8;
-    }
+    scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim) * (1 - 0.12 * lp);
 
-    const ledKey = p.led.toFixed(3) + '|' + p.ledc.toFixed(3) + '|' + sens.toFixed(3);
+    const ledKey = p.led.toFixed(3) + '|' + p.ledc.toFixed(3);
     if (ledKey !== lastLedKey) {
       lastLedKey = ledKey;
-      if (sens > 0.01 && p.led <= 0.01) {
-        // both windows green (window B uses the power LED mesh), and the two dots
-        // window A only (Figma 02→03 State C); the two dots glow below
-        setLed('#34E07A', RING_MODEL.ledIntensity * 0.62 * sens);
-      } else setLed(p.led > 0.01 ? '#' + ledColor(p.ledc).getHexString() : null, RING_MODEL.ledIntensity * p.led);
-      contacts.forEach((m, i) => {
-        const b = contactBase[i];
-        m.emissive.copy(SENSOR_GREEN);
-        m.emissiveIntensity = 1.6 * sens;
-        m.color.copy(b.color).lerp(SENSOR_GREEN, 0.6 * sens);
-      });
+      setLed(p.led > 0.01 ? '#' + ledColor(p.ledc).getHexString() : null, RING_MODEL.ledIntensity * p.led);
     }
     const fl = Math.max(0, p.flare);
     flare.visible = fl > 0.005;
@@ -530,66 +421,29 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       bounce.distance = w * 0.9;
       bounce.intensity = 2.4 * fl;
     }
-    // the ring is never faded (D-120); off screen it is simply not drawn (one clear frame first)
-    const off = Math.abs(pivot.position.y) - w * 0.6 > H / 2 || Math.abs(pivot.position.x) - w * 0.6 > W / 2;
-    offscreen = off;
+    if (p.alpha !== lastAlpha) {
+      lastAlpha = p.alpha;
+      canvas.style.opacity = String(p.alpha);
+    }
   };
 
-  let offscreen = false;
-  let clearedOff = false;
   const render = () => {
-    if (!W) return;
-    if (offscreen) {
-      if (clearedOff) return;
-      renderer.clear();
-      clearedOff = true;
-      return;
-    }
-    clearedOff = false;
+    if (lastAlpha <= 0.001 || !W) return;
     renderer.render(scene, camera);
   };
 
   /** colour for window A, or 'off' to light only the red dot, or null for both dark */
-  function lit(m: THREE.MeshStandardMaterial | undefined, c: string | null, intensity: number) {
-    if (!m) return;
-    if (c) m.emissive.set(c);
-    m.emissiveIntensity = c ? intensity : 0;
-    m.toneMapped = !c;
-    m.color.copy(c ? ledBase.get(m) ?? LED_OFF : LED_OFF);
-  }
-  function setLed(color: string | 'off' | null, intensity: number = RING_MODEL.ledIntensity) {
-    lit(ledMain, color && color !== 'off' ? color : null, intensity);
-    lit(ledPower, color === 'off' ? '#FF3B30' : null, intensity);
-  }
-
-  /**
-   * Round 1 (10 → 11 stutter): compile every shader variant the story will need — each section's
-   * env and light, the hero shadow, the LED / sensor sprites, every finish with and without the Lamp
-   * — once, after load, while the page is idle. compileAsync uses parallel shader compilation where
-   * the browser has it, so the page keeps scrolling while it works.
-   */
-  const warm = async (poses: Pose[]) => {
-    await envsReady;
-    for (const p of poses) {
-      apply(p);
-      // invisible objects are skipped by compile: show the sprites for this pass
-      const hidden = [flare, ...sensorGlows.map((g) => g.sprite)].filter((o) => !o.visible);
-      hidden.forEach((o) => (o.visible = true));
-      try {
-        if ((renderer as any).compileAsync) await (renderer as any).compileAsync(scene, camera);
-        else renderer.compile(scene, camera);
-      } catch {
-        /* a failed warm-up only means the first use compiles, as before */
-      }
-      hidden.forEach((o) => (o.visible = false));
-      await new Promise((r) => setTimeout(r, 0));
-    }
-    lastEnv = '';
-    lastFin = '';
-    lastLedKey = '';
+  const setLed = (color: string | 'off' | null, intensity: number = RING_MODEL.ledIntensity) => {
+    const lit = (m: THREE.MeshStandardMaterial | undefined, c: string | null) => {
+      if (!m) return;
+      if (c) m.emissive.set(c);
+      m.emissiveIntensity = c ? intensity : 0;
+      m.toneMapped = !c;
+      m.color.copy(c ? ledBase.get(m) ?? LED_OFF : LED_OFF);
+    };
+    lit(ledMain, color && color !== 'off' ? color : null);
+    lit(ledPower, color === 'off' ? '#FF3B30' : null);
   };
 
-  // dev only: shader program count for performance checks (stripped from builds)
-  if (import.meta.env.DEV) (window as any).__ringInfo = () => ({ programs: renderer.info.programs?.length ?? 0 });
-  return { apply, render, setLed, canvas, three: THREE, pivot, warm };
+  return { apply, render, setLed, canvas, three: THREE, pivot };
 }

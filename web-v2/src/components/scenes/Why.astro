@@ -21,7 +21,7 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
     {
       /* D-088 slot: soft shadow-wall photo behind everything; empty (plain Paper) until the files arrive */
       D && (
-        <div class="why__bg" data-w-bg data-a data-panel-bg style={`--pos-d:${D.position}; --pos-m:${M?.position ?? D.position}; --overscan:${whyBg.overscan}`}>
+        <div class="why__bg" data-w-bg data-a style={`--pos-d:${D.position}; --pos-m:${M?.position ?? D.position}; --overscan:${whyBg.overscan}`}>
           <picture>
             {M && <source media={M.media} srcset={M.srcset ?? M.src} sizes="100vw" />}
             <img src={D.src} srcset={D.srcset} sizes="100vw" width={D.width} height={D.height} alt="" decoding="async" />
@@ -98,9 +98,6 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
     display: grid;
     place-items: center;
     --giant-o: 0.1;
-    /* Display/Display 1 (Figma "BG word · rhythm") */
-    font-size: var(--d1-fs);
-    line-height: var(--d1-lh);
   }
   .why__wide {
     position: absolute;
@@ -111,8 +108,7 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
     display: flex;
     justify-content: center;
     align-items: baseline;
-    /* Display/Display 2: Sofi / Oryzo "it's wearable", edge to edge behind the ring */
-    font-size: var(--d2-fs);
+    font-size: 12vw; /* Sofi / Oryzo "it's wearable": edge to edge behind the ring (weight 500, D-082) */
     white-space: nowrap;
     --giant-o: 1;
   }
@@ -127,12 +123,11 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
   .why__final {
     position: absolute;
     left: var(--margin);
-    top: calc(50% - var(--d2-fs) * 0.95);
-    /* Heading/Heading 2 */
-    font-size: var(--h2-fs);
-    font-weight: var(--w-medium);
-    letter-spacing: var(--h2-ls);
-    line-height: var(--h2-lh);
+    top: calc(50% - 12vw * 0.82);
+    font-size: var(--fs-h3);
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-tight);
+    line-height: 1.15;
   }
   .why__left {
     position: absolute;
@@ -147,10 +142,8 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
     grid-area: 1 / 1;
   }
   .why__big {
-    /* Heading/Heading 1 */
-    font-size: var(--h1-fs);
-    line-height: var(--h1-lh);
-    letter-spacing: var(--h1-ls);
+    font-size: clamp(2.5rem, 1.2rem + 3.4vw, 4.25rem);
+    line-height: 1;
   }
   .why__right {
     position: absolute;
@@ -162,11 +155,10 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
   }
   .why__small {
     color: var(--ink);
-    /* Paragraph/Large */
-    font-size: var(--para-lg-fs);
-    font-weight: var(--w-regular);
-    line-height: var(--para-lg-lh);
-    letter-spacing: var(--para-lg-ls);
+    font-size: clamp(1.0625rem, 0.9rem + 0.45vw, 1.375rem);
+    font-weight: var(--w-heading);
+    line-height: 1.3;
+    letter-spacing: -0.01em;
   }
   .why__end {
     position: absolute;
@@ -200,7 +192,8 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
       flex-direction: column;
       align-items: center;
       white-space: nowrap;
-      line-height: var(--d2-lh);
+      font-size: 15vw;
+      line-height: 0.9;
     }
     .why__wide-gap {
       width: 0;
@@ -208,12 +201,16 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
     }
     .why__final {
       top: calc(var(--header-h) + 40px);
+      font-size: 1.25rem;
     }
     .why__left {
       top: calc(var(--header-h) + 40px);
       translate: none;
       right: var(--margin);
       width: auto;
+    }
+    .why__left .why__big {
+      font-size: var(--fs-h2m);
     }
     .why__right,
     .why__end {

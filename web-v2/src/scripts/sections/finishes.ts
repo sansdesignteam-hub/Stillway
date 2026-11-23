@@ -1,16 +1,14 @@
 /**
  * S10 Finishes & pricing — 22:00 · Sand (D-098; flow Storyboard §2, look Figma sticky 40004118:141).
- * u: -1..0 connection from S09: the Sand panel rises with the headline, the ring (riding on the panel
- *          from the bottom edge, left column) and the choice panel; S09 moves up and out; clock
- *          21:00 → 22:00 when the edge passes the navbar
+ * u: -1..0 connection from S09 (the phone slides right and widens into the panel — app.ts — Paper →
+ *          Sand, the ring comes in on the left, the panel content appears; clock 21:00 → 22:00)
  *  0  state 1  "Turn it yourself." — the ring turns by drag / swipe / ‹ ›, finish swatches + light
  *  1  state 4  "Find your size and finish." — size, trial, box, the button and its inline note
- *  > 2         to S11: the Night panel rises, headline and panel move up and out with this panel; the
- *              ring moves to the middle (close.ts ringIn)
+ *  > 2         to S11: the panel leaves right, the ring moves to the middle (close.ts ringIn)
  * States 2–3 of the Storyboard (Black, Gold + Lamp) are the visitor's own clicks, not scroll (D-069).
  */
 import gsap from 'gsap';
-import { put, seg, lerp, window4, roll, type Ctx } from '../anim';
+import { put, seg, lerp, window4, type Ctx } from '../anim';
 import { pose, ANGLE, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
 import { choice, setFinish, setLamp, finishPose, onChoice, FINISHES } from '../finish';
@@ -131,10 +129,12 @@ export const finishes: SectionMotion = {
     initControls(r);
   },
   update(u, ctx) {
-    // "Turn it yourself." → "Find your size and finish.": one replaces the other by moving up (G-03)
-    roll(heads, -1 + seg(u, -0.6, -0.3) + seg(u, 0.45, 0.9), ctx, { origin: 'left', gap: 16 });
-    // the choice panel rises with the Sand panel (story.ts) and leaves with it — no fade, no slide
-    put(el.panel, { o: 1 }, ctx);
+    const W = window.innerWidth;
+    const inn = seg(u, -0.35, 0);
+    const out = seg(u, FINISHES_END, FINISHES_END + 0.45); // 10 → 11: the panel leaves right
+    put(heads[0], { o: window4(u, -0.25, 0.05, 0.45, 0.7) }, ctx);
+    put(heads[1], { o: seg(u, 0.55, 0.9) * (1 - out) }, ctx);
+    put(el.panel, { o: inn * (1 - out), x: (1 - inn) * W * 0.12 + out * W * 0.4 }, ctx);
     // desktop: the whole panel from state 1 (Shift PDP); phone: size, box and button join at state 4
     const more = ctx.mobile ? seg(u, 0.5, 0.95) : 1;
     put(el.more, { o: more }, ctx);
@@ -159,9 +159,9 @@ export const finishes: SectionMotion = {
       lamp: choice.lamp,
     });
   },
-  // 09 → 10 (Storyboard §3): the ring comes in from the bottom with the Sand panel and stops in the
-  // middle of the left column — never faded (D-120)
-  ringIn(_x, _ctx, _from, to, k): Pose {
-    return { ...to, y: to.y - (1 - k) };
+  // 09 → 10: the ring comes in on the left as the phone becomes the panel
+  ringIn(x, _ctx, _from, to): Pose {
+    const t = seg(x, 0.35, 0.85);
+    return { ...to, w: to.w * lerp(0.85, 1, t), alpha: t };
   },
 };
