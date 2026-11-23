@@ -85,7 +85,6 @@ const digits = Array.from({ length: 20 }, (_, i) => i % 10); // 0–9 twice: a d
           }
         </span>
       </p>
-      <p class="act__sim">{d.simulated}</p>
     </div>
 
     <ol class="sr-only">
@@ -259,17 +258,6 @@ const digits = Array.from({ length: 20 }, (_, i) => i % 10); // 0–9 twice: a d
     grid-area: 1 / 1;
     white-space: nowrap;
     will-change: transform, opacity;
-  }
-  /* not in the Figma frame: kept so the simulated data stays labelled (Mono/X-Small) */
-  .act__sim {
-    margin-top: 4px;
-    font-family: var(--font-mono);
-    font-weight: var(--w-mono);
-    font-size: var(--t-mono-xs-size);
-    line-height: var(--t-mono-xs-lh);
-    letter-spacing: var(--t-mono-xs-ls);
-    text-transform: uppercase;
-    color: var(--stone-on-night);
   }
   .sr-only {
     position: absolute;
