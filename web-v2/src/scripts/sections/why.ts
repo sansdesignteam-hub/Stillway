@@ -64,11 +64,16 @@ export const why: SectionMotion = {
   },
   update(u, ctx) {
     const H = window.innerHeight;
-    // D-088/D-124 wall photo: rises with the S02 panel (story.ts), drifts up slowly with the scroll
-    // (parallax), and is covered by the Night panel in 02 → 03. No fades.
-    if (el.bg) put(el.bg, { yv: whyBg.parallax * (0.5 - clamp01((u + 2) / (END + 2))) }, ctx);
-    // "rhythm": rises with the panel behind the ring, then moves up and out on the way to state 2
-    put(el.word, { y: -H * 0.7 * seg(u, 0.15, 0.85), o: u < 0.85 ? 1 : 0 }, ctx);
+    // D-088/D-124 wall photo. D-128: 01 → 02 as live — it fades in over Paper with scale 1.03 → 1 after
+    // the hero photo has faded; it drifts up slowly with the scroll (parallax) and is covered by the
+    // Night panel in 02 → 03 (no fade there).
+    if (el.bg) {
+      const inn = seg(u, -1.0, -0.2);
+      put(el.bg, { o: inn, s: 1.03 - 0.03 * inn, yv: whyBg.parallax * (0.5 - clamp01((u + 1) / (END + 1))) }, ctx);
+    }
+    // "rhythm": fades in while the ring zooms out of S01 (as live), then moves up and out on the way
+    // to state 2
+    put(el.word, { y: -H * 0.7 * seg(u, 0.15, 0.85), o: u < 0.85 ? seg(u, -1.1, -0.4) : 0 }, ctx);
 
     // statements (left) and paragraphs (right): one replaces the other by moving up (G-03); the
     // characters still light up with the scroll as each one arrives (Oryzo, D-084)

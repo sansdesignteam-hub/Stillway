@@ -27,14 +27,21 @@ export interface SectionDef {
   built: boolean; // false = placeholder until its handoff/copy is built
   /** panel rise window in local u (story.ts); default = the first 40% of the incoming connection */
   panel?: [number, number];
+  /**
+   * 'rise' (default, D-120): the panel rises from the bottom with a straight edge. 'swap' (D-128,
+   * 01 → 02 only): the panel appears in place at the end of its window, under a fade the section
+   * modules make themselves (the previous section's content is not moved or cut).
+   */
+  panelMode?: 'rise' | 'swap';
   /** navbar clock keyframes across the incoming connection, x 0..1 (Storyboard v3 §3) */
   clockIn?: Array<[number, string]>;
 }
 
 export const sections: SectionDef[] = [
   { n: '01', id: 'hero', name: 'Hero', act: 1, time: '06:50', bg: 'paper', states: 4, tin: 0, hold: 0.5, built: true },
-  // 01 → 02: the Paper / wall panel rises over the photo while the ring backs out of its opening (hero u 2.0–2.9)
-  { n: '02', id: 'why', name: 'Why Stillway', act: 1, time: '07:10', bg: 'paper', states: 4, tin: 0.6, hold: 0.6, built: true, panel: [-2.1, -1.2] },
+  // 01 → 02 (D-128): the old fade, as live 81318d9 — the hero photo fades to Paper (hero u 2.05–2.8),
+  // then the S02 panel is simply there (Paper over Paper, hero u 2.8) and its wall fades in. No rising edge.
+  { n: '02', id: 'why', name: 'Why Stillway', act: 1, time: '07:10', bg: 'paper', states: 4, tin: 0.6, hold: 0.6, built: true, panel: [-1.3, -1.29], panelMode: 'swap', clockIn: [[0, '06:50'], [0.7, '07:10']] },
   // 02 → 03 (D-120): the Night panel rises in 0–35%
   { n: '03', id: 'sleep', name: 'Sleep summary', act: 2, time: '23:10', part: 'Last night', bg: 'night', states: 4, tin: 1, hold: 0.6, built: true, panel: [-1, -0.65] },
   { n: '04', id: 'activity', name: 'Activity & rest', act: 2, time: '07:40', timeEnd: '15:30', bg: 'night', states: 5, tin: 1, hold: 0.6, built: true, clockIn: [[0, '05:30'], [0.62, '07:40']] },
