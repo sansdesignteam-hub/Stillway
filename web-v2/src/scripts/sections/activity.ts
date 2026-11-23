@@ -13,8 +13,10 @@
  *  0..4  State 1–5: the arc turns left 12° per photo (scrub; centre 720 / 1758, R 1340 at 1440 × 900);
  *        the next photo rises to the top and grows, the last one goes down left and dims; the big
  *        time rolls digit by digit, the status and the navbar clock change with an upward move
- *  > END connection to S05: the arc goes down out of the screen, then the ring rises from below
- *        (insight.ts ringIn)
+ *  > END connection to S05 (D-142, the user's transition card): 0–30% the active card's frame, the
+ *        big time, status, the other photos, labels and the orbit fade; 30–70% the 15:30 photo
+ *        darkens and fades while the Dusk rises from below (story.ts); 70–100% the ring fades in
+ *        right-centre (insight.ts ringIn)
  * Phones (no Figma frame, proposal): the same arc, smaller (active card 200 wide, R 860 at 390),
  * active card centred a little above the middle, big time under it; the paragraph is hidden.
  */
@@ -132,12 +134,14 @@ export const activity: SectionMotion = {
     if (L.mobile !== ctx.mobile) measure(ctx.mobile);
     const x = u < 0 ? clamp01((u + TIN) / TIN) : 1; // incoming connection progress
     const xo = Math.max(0, u - END); // outgoing connection (u past the end)
-    const down = seg(xo, 0, 0.55) * L.H * 0.95; // the arc goes down out of the screen
-    const uiOut = 1 - seg(xo, 0, 0.3);
+    const down = 0; // D-142: the arc stays where it is
+    const uiOut = 1 - seg(xo, 0, 0.3); // frame, time, status, other photos and labels: 0–30%
+    const lastDark = seg(xo, 0.3, 0.6); // the 15:30 photo darkens …
+    const lastOut = 1 - seg(xo, 0.45, 0.7); // … and fades: 30–70%
 
     // glows: Dawn rises from below in A–B and hands over to the S04 Ember glow + night shade
     put(el.dawn, { o: seg(x, 0.08, 0.32) * (1 - seg(x, 0.62, 0.95)), y: (1 - seg(x, 0.05, 0.42)) * L.H * 0.5 }, ctx);
-    put(el.glow, { o: seg(x, 0.5, 0.9) * (1 - seg(xo, 0.25, 0.7)) }, ctx);
+    put(el.glow, { o: seg(x, 0.5, 0.9) * (1 - seg(xo, 0.3, 0.7)) }, ctx);
 
     // arc position: in the lens the waiting cards come in along the arc (from further round)
     const p = u < 0 ? -1.6 * (1 - seg(x, 0.62, 1)) : arcP(u);
@@ -185,6 +189,14 @@ export const activity: SectionMotion = {
       } else {
         rad = rad / sc;
       }
+      if (xo > 0) {
+        // 04 → 05: the last photo stays alone and its frame fades; then it darkens and goes
+        const last = k === cards.length - 1;
+        o *= last ? lastOut : uiOut;
+        border *= uiOut;
+        const f = last && lastDark > 0.001 ? `brightness(${(1 - 0.75 * lastDark).toFixed(3)})` : '';
+        if (c.style.filter !== f) c.style.filter = f;
+      } else if (c.style.filter) c.style.filter = '';
       place(c, cxk, cyk, rot, sc, o, rad, border);
 
       // the time label under each waiting card, along its radius
@@ -193,7 +205,7 @@ export const activity: SectionMotion = {
         const lx = cxk - L.labelOff * Math.sin(th);
         const ly = cyk + L.labelOff * Math.cos(th);
         lb.style.transform = `translate3d(${lx.toFixed(1)}px, ${ly.toFixed(1)}px, 0) translate(-50%, -50%) rotate(${th.toFixed(4)}rad)`;
-        setO(lb, k === 0 && x < 1 ? 0 : cardO(d) * ad * (k === 0 ? 1 : enter));
+        setO(lb, (k === 0 && x < 1 ? 0 : cardO(d) * ad * (k === 0 ? 1 : enter)) * uiOut);
       }
     });
 

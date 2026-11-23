@@ -101,9 +101,16 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
 
   const bgEl = document.querySelector<HTMLElement>('[data-bg]')!;
   const duskEl = document.querySelector<HTMLElement>('[data-dusk]')!;
-  // S05 Dusk light (D-139): --cocoa-300 from the lower left, where the ochre sunset glow was
+  // S05 Dusk light (D-139): --cocoa-300 from the lower left, where the ochre sunset glow was, and the
+  // Figma "Top shade" upper right (D-142: Night 75%)
   const duskLight = duskEl.querySelector<HTMLCanvasElement>('[data-dusk-light]');
-  if (duskLight) keepLit(duskLight, () => ({ ellipses: [{ token: LIGHT, cx: 0, cy: 900, rx: 1210, ry: 640, stops: [[0, 0.45]], power: 1.8 }] }));
+  if (duskLight)
+    keepLit(duskLight, () => ({
+      ellipses: [
+        { token: LIGHT, cx: 0, cy: 900, rx: 1210, ry: 640, stops: [[0, 0.45]], power: 1.8 },
+        { token: '--night', cx: 1300, cy: 80, rx: 700, ry: 450, stops: [[0, 0.75], [1, 0]], smooth: true },
+      ],
+    }));
   const wipeEl = document.querySelector<HTMLElement>('[data-wipe]')!;
   const nav = document.querySelector<HTMLElement>('[data-nav]');
   const clockTime = document.querySelectorAll<HTMLElement>('[data-clock-time]');

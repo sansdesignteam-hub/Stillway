@@ -83,6 +83,7 @@ export const activity = {
 
 export const insight = {
   status: 'draft (numbers approved D-066)',
+  eyebrow: '17:30 · Daily insight', // Figma S05 (D-142), shown as [ 17:30 · DAILY INSIGHT ]
   headline: ['Everything it noticed.', 'One calm view.'],
   body: 'In the evening the app gathers the day into one view you can read and put down. It describes what happened. It does not tell you what to fix.',
   card: {
