@@ -17,6 +17,7 @@ import { put, seg, window4, clamp01, type Ctx } from '../anim';
 import { along, pose, ANGLE, lerpPose, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
 import { sections } from '../../content/sections';
+import { paintCornerLight } from './sleepLight';
 
 let el: Record<string, HTMLElement | null> = {};
 let stats: HTMLElement[] = [];
@@ -31,6 +32,25 @@ export const sleep: SectionMotion = {
     const q = (s: string) => r.querySelector<HTMLElement>(s);
     el = { head: q('[data-s-head]'), line: q('[data-s-line]'), sim: q('[data-s-sim]'), light: q('[data-s-light]') };
     stats = [...r.querySelectorAll<HTMLElement>('[data-s-stat]')];
+    // corner light canvas: painted once per size (same breakpoint as the stage, 719 px)
+    const beam = r.querySelector<HTMLCanvasElement>('[data-s-beam]');
+    if (beam) {
+      const mq = window.matchMedia('(max-width: 719px)');
+      let key = '';
+      let t = 0;
+      const paint = () => {
+        const k = `${beam.clientWidth}x${beam.clientHeight}|${mq.matches}`;
+        if (k === key) return;
+        key = k;
+        paintCornerLight(beam, mq.matches);
+      };
+      const later = () => {
+        clearTimeout(t);
+        t = window.setTimeout(paint, 150);
+      };
+      ('requestIdleCallback' in window ? (window as any).requestIdleCallback : setTimeout)(paint);
+      window.addEventListener('resize', later);
+    }
   },
   update(u, ctx) {
     const out = 1 - seg(u, END, END + 0.3);
