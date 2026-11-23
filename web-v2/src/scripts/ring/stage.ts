@@ -328,6 +328,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const Z_AXIS = new THREE.Vector3(0, 0, 1);
   const X_AXIS = new THREE.Vector3(1, 0, 0);
   let lastAlpha = -1;
+  let lastBlur = 0;
   let lastEnv = '';
   let lastLedKey = '';
   const apply = (p: Pose, extra: { breathe?: number } = {}) => {
@@ -408,7 +409,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     // on Night the polished env is almost black: lift it with the rim so the band keeps a silver gradient
     // the swap dip never goes below 0.45, so the ring is never a black shape in a connection (D-090 r1)
     // under the desk lamp the room is a little dimmer (evening), so the amber edge reads (D-100)
-    scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim) * (1 - 0.12 * lp);
+    scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim) * (1 - 0.12 * lp) * (1 - 0.7 * Math.min(1, Math.max(0, p.envDim)));
 
     const ledKey = p.led.toFixed(3) + '|' + p.ledc.toFixed(3);
     if (ledKey !== lastLedKey) {
@@ -430,6 +431,12 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     if (p.alpha !== lastAlpha) {
       lastAlpha = p.alpha;
       canvas.style.opacity = String(p.alpha);
+    }
+    // 03 → 04 lens (D-138): the camera passes through the hole, the ring goes soft
+    const bl = Math.round(Math.max(0, p.blur) * 10) / 10;
+    if (bl !== lastBlur) {
+      lastBlur = bl;
+      canvas.style.filter = bl > 0.05 ? `blur(${bl}px)` : '';
     }
   };
 

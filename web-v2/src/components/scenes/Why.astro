@@ -35,6 +35,9 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
       <span class="why__wide-gap"></span>
       <span class="why__wide-r" data-w-wide-r>{wide.slice(split).join(' ')}</span>
     </p>
+    <!-- D-137: the last small sentence sits behind the ring like the big words, so on phones it passes
+         behind the ring when the page scrolls up to S03 (it never meets the ring on desktop) -->
+    <p class="why__small why__end" data-w-end data-a>{last.small}</p>
   </div>
   <img class="ring-fallback why__fb" src="/ring-fallback/fb-s02-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
   <div class="scene__front">
@@ -66,7 +69,6 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
         ))
       }
     </div>
-    <p class="why__small why__end" data-w-end data-a>{last.small}</p>
   </div>
 </section>
 

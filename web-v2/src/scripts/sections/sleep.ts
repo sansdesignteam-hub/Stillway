@@ -3,7 +3,7 @@
  * Layout references, see Sleep.astro).
  * u: -2.5..0 connection from S02 (D-136, x = 0..1 of it): S02 scrolls out 1:1 (≈ 0–42%, why.ts) while
  *          a warm Cocoa → Night gradient rises from below (15–60%, story.ts); the ring stays centred
- *          and keeps turning; env to night with the cold rim (30–62%); then one soft light from the
+ *          and keeps turning; it warms as it gets dark (D-137, 30–62%); then one soft light from the
  *          upper right corner (62–80%) and the green sensor light (75–92%); clock 07:10 → 23:10 · Last
  *          night (70–100%). The green stays on to the end of S03.
  *  0 state 1  dark (the navbar clock reads "23:10 · Last night"); ring centred, edge lit, slow turn
@@ -26,6 +26,8 @@ const TIN = sections.find((d) => d.id === 'sleep')!.tin;
 /** D-136 timing inside the 02 → 03 connection (x 0..1) */
 const CORNER: [number, number] = [0.62, 0.8];
 const GREEN: [number, number] = [0.75, 0.92];
+/** D-137 warm S03 ring: Paper env dimmed, ochre rim; no night env, no cold rim */
+export const S03_WARM = { light: 0, rim: 0, warm: 1, envDim: 0.45 };
 
 export const sleep: SectionMotion = {
   init(r) {
@@ -79,8 +81,10 @@ export const sleep: SectionMotion = {
     // ref 1: big ring on the right, may be cut by the edge; phones: upper half
     // the number takes ~half the width (Ultrahuman big-number ref), so the ring sits further right
     const side = m ? { x: 0, y: 0.22, w: 0.72 } : { x: 0.33, y: -0.03, w: 0.48 };
-    // D-136: corner light and the green sensor light (heart-rate LED, ledc 0) stay on through S03
-    const night = { light: 1, rim: 1, uncap: 1, corner: 1, led: 1, ledc: 0, flare: 0.22 };
+    // D-136: corner light and the green sensor light (heart-rate LED, ledc 0) stay on through S03.
+    // D-137: a warm ring — the warm Paper studio env kept (dimmed on Night) with the ochre rim and the
+    // corner light, instead of the night env and the cold rim; still silver_polished, never Gold
+    const night = { ...S03_WARM, uncap: 1, corner: 1, led: 1, ledc: 0, flare: 0.22 };
     // slow continuous turn (no stops), ending at the reference pose where "Stillway" reads
     const drift = (k: number) => tq.ry + 0.55 * (1 - k);
     return along(u, [
@@ -93,15 +97,18 @@ export const sleep: SectionMotion = {
   },
   // 02 → 03 (D-136): the ring stays centred and moves to the S03 state 1 pose over the whole
   // connection (no jump), turning on as a turntable with the scroll (one full turn, ends where S03
-  // starts). Cold rim first, env to night after, so the silver stays readable (D-090 r1); then the
-  // warm corner light and the green sensor light.
+  // starts). D-137: it warms as it gets dark (dimmed studio env, ochre rim), then the warm corner
+  // light and the green sensor light.
   ringIn(x, _ctx, from: Pose, to: Pose) {
     const p = lerpPose(from, to, seg(x, 0.08, 0.95));
     return {
       ...p,
       ry: p.ry + Math.PI * 2 * x,
-      rim: seg(x, 0.3, 0.55),
-      light: seg(x, 0.4, 0.62),
+      // D-137: no swap to the night env; the room dims and the warm rim comes up as it gets dark
+      rim: 0,
+      light: 0,
+      warm: seg(x, 0.3, 0.62),
+      envDim: S03_WARM.envDim * seg(x, 0.3, 0.62),
       corner: seg(x, CORNER[0], CORNER[1]),
       led: seg(x, GREEN[0], GREEN[1]),
       ledc: 0,
