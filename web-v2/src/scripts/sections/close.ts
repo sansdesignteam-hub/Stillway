@@ -13,6 +13,7 @@ import { put, seg, lerp, clamp01, type Ctx } from '../anim';
 import { pose, ANGLE, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
 import { finishPose } from '../finish';
+import { keepLit, LIGHT } from '../glow';
 
 let root: HTMLElement | null = null;
 let el: Record<string, HTMLElement | null> = {};
@@ -97,6 +98,13 @@ export const close: SectionMotion = {
       glow: q('[data-cl-glow]'),
       word: q('[data-cl-word]'),
     };
+    // the light from above (D-139, --cocoa-300): where the ochre Ember glow was — centre 17% down,
+    // 1500 px (120vw on phones) wide, 110vh tall — softer, since the colour is lighter
+    const light = r.querySelector<HTMLCanvasElement>('[data-cl-light]');
+    if (light)
+      keepLit(light, () => ({
+        ellipses: [{ token: LIGHT, cx: 720, cy: 153, rx: window.matchMedia('(max-width: 719px)').matches ? 864 : Math.min(1.2 * window.innerWidth, 1500) / 2 * (1440 / window.innerWidth), ry: 495, stops: [[0, 0.42]], power: 1.8 }],
+      }));
     initFaq(r);
     window.addEventListener('resize', () => (measured = ''));
     document.fonts?.ready.then(() => (measured = ''));

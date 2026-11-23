@@ -11,6 +11,7 @@
 import { put, seg, lerp, clamp01, window4, type Ctx } from '../anim';
 import { along, pose, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
+import { keepLit, LIGHT } from '../glow';
 
 export const FEATURES_END = 2.6;
 let heads: HTMLElement[] = [];
@@ -38,7 +39,16 @@ export const features: SectionMotion = {
     legs = all('[data-f-leg]');
     bodies = all('[data-f-body]');
     const q = (s: string) => r.querySelector<HTMLElement>(s);
-    el = { sub: q('[data-f-sub]'), legend: q('[data-f-legendwrap]'), off: q('[data-f-off]') };
+    el = { sub: q('[data-f-sub]'), legend: q('[data-f-legendwrap]'), off: q('[data-f-off]'), light: q('[data-f-light]') };
+    // D-139: a weak light from above, behind the ring (the ring sits centre → right), kept low so the
+    // green / blue / violet sensor light leads; phones: centred over the ring
+    const light = el.light as HTMLCanvasElement | null;
+    if (light)
+      keepLit(light, () =>
+        window.matchMedia('(max-width: 719px)').matches
+          ? { ellipses: [{ token: LIGHT, cx: 720, cy: -60, rx: 1300, ry: 430, stops: [[0, 0.2]], power: 1.8 }] }
+          : { ellipses: [{ token: LIGHT, cx: 860, cy: -120, rx: 760, ry: 560, stops: [[0, 0.2]], power: 1.8 }] },
+      );
   },
   update(u, ctx) {
     const out = 1 - seg(u, FEATURES_END, FEATURES_END + 0.3); // the title fades first in 08 → 09
@@ -51,6 +61,8 @@ export const features: SectionMotion = {
     legs.forEach((l, i) => l.style.setProperty('--on', (0.68 + 0.32 * clamp01(1 - Math.abs(c - i))).toFixed(3)));
     bodies.forEach((b, i) => put(b, { o: clamp01(1 - Math.abs(c - i) * 1.8) }, ctx));
     put(el.off, { o: seg(u, 1.6, 1.9) }, ctx);
+    // the light comes with the Night ground and leaves before the Paper sweeps in (08 → 09)
+    put(el.light, { o: window4(u, -0.5, 0, FEATURES_END, FEATURES_END + 0.45) }, ctx);
   },
   ring(u, ctx) {
     const p = along(u, [

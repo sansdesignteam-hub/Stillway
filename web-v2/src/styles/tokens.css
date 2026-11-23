@@ -60,18 +60,10 @@
   --line-on-night: color-mix(in srgb, var(--paper) 12%, transparent);
   --ochre-on-cocoa: var(--ochre-400); /* small ochre labels on a Cocoa panel (7.06:1; Ochre itself is 4.02:1) */
   --btn-primary-hover: var(--neutral-800);
-  /* glows: one shape per section, behind the ring, never on top of it */
-  --dawn-glow: radial-gradient(closest-side, color-mix(in srgb, var(--ochre) 35%, transparent), transparent); /* on paper */
-  --ember-glow: radial-gradient(closest-side, color-mix(in srgb, var(--ochre) 40%, transparent), transparent); /* on night, from above */
+  /* D-139: the lights of the dark sections (S03–S05, S08, S11) are one colour, --cocoa-300, painted
+     with dither by scripts/glow.ts (no CSS gradients: they band on Night). S05 "Dusk" = Night with
+     that light from the lower left (the old Ochre → Night gradient is gone). */
   --glow-blur: 60px;
-  /* only Daily insight (17:30): Ochre → Night with a warm glow from the lower corner (Oryzo ref, D-090) */
-  --dusk: radial-gradient(
-      120% 95% at 0% 100%,
-      color-mix(in srgb, var(--ochre) 90%, transparent) 0%,
-      color-mix(in srgb, var(--ochre) 35%, transparent) 38%,
-      color-mix(in srgb, var(--ochre) 0%, transparent) 70%
-    ),
-    linear-gradient(180deg, color-mix(in srgb, var(--ochre) 18%, transparent) 0%, var(--night) 55%);
 
   /* 2.3 product LED colours (Accent / sensor-*) — ring render + small legend/chip dots only.
      Never text, background, buttons or UI charts. */

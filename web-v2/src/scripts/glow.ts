@@ -22,6 +22,11 @@ export interface GlowEllipse {
   stops: Array<[number, number]>;
   /** ease the fall-off with smoothstep (no visible kink where it reaches 0) */
   smooth?: boolean;
+  /**
+   * one curve instead of linear stops: alpha = stops[0] alpha × smoothstep(1 − d)^power. No slope
+   * break anywhere (a middle stop leaves a faint ring you can see on a good screen)
+   */
+  power?: number;
 }
 export interface GlowWedge {
   token: string;
@@ -153,7 +158,7 @@ export function paintLight(canvas: HTMLCanvasElement, spec: LightSpec) {
       ells.forEach((e, n) => {
         const d = Math.hypot((X - e.cx * sx) / (e.rx * sx), (Y - e.cy * sy) / (e.ry * sy));
         if (d >= 1) return;
-        const al = alphaAt(e.stops, e.smooth ? 1 - ss(1 - d) : d);
+        const al = e.power ? e.stops[0][1] * Math.pow(ss(1 - d), e.power) : alphaAt(e.stops, e.smooth ? 1 - ss(1 - d) : d);
         if (al > 0) over(cols[n], al);
       });
       const o = (j * w + i) * 4;
@@ -188,11 +193,12 @@ export function paintLight(canvas: HTMLCanvasElement, spec: LightSpec) {
         px[o + 3] = 0;
         continue;
       }
-      // un-premultiply for ImageData; triangular dither on the alpha, where the steps would show
+      // un-premultiply for ImageData; triangular dither on the alpha, ±2 alpha steps: over Night one
+      // alpha step is only ≈ 0.7 of an output level, so ±1 left faint contour rings
       px[o] = Math.round(at(0) / a);
       px[o + 1] = Math.round(at(1) / a);
       px[o + 2] = Math.round(at(2) / a);
-      px[o + 3] = Math.max(0, Math.min(255, Math.round(a * 255 + Math.random() - Math.random())));
+      px[o + 3] = Math.max(0, Math.min(255, Math.round(a * 255 + 2 * (Math.random() - Math.random()))));
     }
   }
   ctx.putImageData(img, 0, 0);

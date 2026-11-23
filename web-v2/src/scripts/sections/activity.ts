@@ -83,10 +83,10 @@ const arcP = (u: number) => {
  * --cocoa-300, no wedge); the Figma night shade (upper right) stays.
  */
 const EMBER: GlowEllipse[] = [
-  { token: LIGHT, cx: 250, cy: 900, rx: 950, ry: 650, stops: [[0, 0.3], [0.5, 0.1], [1, 0]], smooth: true },
+  { token: LIGHT, cx: 250, cy: 900, rx: 950, ry: 650, stops: [[0, 0.3]], power: 1.8 },
   { token: '--night', cx: 1500, cy: 100, rx: 600, ry: 400, stops: [[0, 0.8], [1, 0]], smooth: true },
 ];
-const DAWN: GlowEllipse[] = [{ token: LIGHT, cx: 720, cy: 1060, rx: 950, ry: 500, stops: [[0, 0.28], [0.5, 0.09], [1, 0]], smooth: true }];
+const DAWN: GlowEllipse[] = [{ token: LIGHT, cx: 720, cy: 1060, rx: 950, ry: 500, stops: [[0, 0.28]], power: 1.8 }];
 
 /** the lens pill relative to the screen centre, in 1440 frame px (Figma B and C) */
 const LENS = {

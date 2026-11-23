@@ -17,6 +17,7 @@
  * Reduced motion: u is snapped to whole states; elements fade over 300 ms; the ring jumps to the
  * pose of the state; no breathing loop.
  */
+import { keepLit, LIGHT } from './glow';
 import { sections, dayparts, type SectionDef } from '../content/sections';
 import { clamp01, seg, lerp, put, window4, type Ctx } from './anim';
 import { lerpPose, type Pose } from './ring/poses';
@@ -100,6 +101,9 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
 
   const bgEl = document.querySelector<HTMLElement>('[data-bg]')!;
   const duskEl = document.querySelector<HTMLElement>('[data-dusk]')!;
+  // S05 Dusk light (D-139): --cocoa-300 from the lower left, where the ochre sunset glow was
+  const duskLight = duskEl.querySelector<HTMLCanvasElement>('[data-dusk-light]');
+  if (duskLight) keepLit(duskLight, () => ({ ellipses: [{ token: LIGHT, cx: 0, cy: 900, rx: 1210, ry: 640, stops: [[0, 0.45]], power: 1.8 }] }));
   const wipeEl = document.querySelector<HTMLElement>('[data-wipe]')!;
   const nav = document.querySelector<HTMLElement>('[data-nav]');
   const clockTime = document.querySelectorAll<HTMLElement>('[data-clock-time]');
