@@ -187,26 +187,21 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       it.k = clamp01((uOf(it) - a) / (b - a));
       // a soft start and stop, but tied to the scroll (no easing that runs on after the scroll stops)
       it.k = it.k * it.k * (3 - 2 * it.k) * 0.5 + it.k * 0.5;
-      // D-128 swap: no rising edge — the panel is either not there or fully there
-      if (it.def.panelMode === 'swap') it.k = it.k >= 1 ? 1 : 0;
       it.edge = H * (1 - it.k);
     }
 
     /* scenes: a panel shows from the moment it starts to rise until the next one covers it */
     items.forEach((it, i) => {
       const next = items[i + 1];
-      // under a 'swap' panel (D-128) the previous section is not pushed up or cut: it stays until the
-      // story has moved on to the next section (its own modules fade what has to go)
-      const swapNext = next?.def.panelMode === 'swap';
-      const kn = next && !swapNext ? next.k : 0;
-      const show = it.k > 0 && (swapNext ? ci <= i : kn < 1);
+      const kn = next ? next.k : 0;
+      const show = it.k > 0 && kn < 1;
       if (show !== it.visible) {
         it.visible = show;
         it.scene.style.visibility = show ? '' : 'hidden';
       }
       if (!show) return;
       const top = it.edge; // own panel edge
-      const bottom = next && !swapNext ? next.edge : H; // the next panel's edge
+      const bottom = next ? next.edge : H; // the next panel's edge
       const ly = top - PARALLAX * H * kn; // rises with its panel, then moves up while covered
       // content never passes under the navbar (the logo has no background, round 1): the front layer
       // is always cut at the bottom of the header, the back layer while it moves up and out

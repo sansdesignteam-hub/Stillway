@@ -358,8 +358,15 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     t.colorSpace = THREE.SRGBColorSpace;
     return t;
   })();
-  const sensorGlows: { sprite: THREE.Sprite; light: THREE.PointLight }[] = [];
-  for (const name of [RING_MODEL.meshes.ledMain, RING_MODEL.meshes.ledPower]) {
+  // Figma 02→03 State C: a halo on window A (150 × 190 px on a 680 px ring, 60%) and on each of the
+  // two dots (70 px, 45%); window B stays dark; a green bounce falls on the band beside window A
+  const SENSOR_SPOTS: Array<[string, number, number, number]> = [
+    [RING_MODEL.meshes.ledMain, 0.34, 0.85, 7],
+    ['Contact_1', 0.1, 0.45, 0],
+    ['Contact_2', 0.1, 0.45, 0],
+  ];
+  const sensorGlows: { sprite: THREE.Sprite; light: THREE.PointLight; size: number; op: number; li: number }[] = [];
+  for (const [name, size, op, li] of SENSOR_SPOTS) {
     const mesh = ring.getObjectByName(name) as THREE.Mesh | undefined;
     if (!mesh) continue;
     ring.updateMatrixWorld(true);
@@ -367,7 +374,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     const local = ring.worldToLocal(c.clone());
     const inward = new THREE.Vector3(-local.x, -local.y, 0).normalize().multiplyScalar(ringSize * 0.05);
     const sprite = new THREE.Sprite(
-      new THREE.SpriteMaterial({ map: glowTex, color: 0x34e07a, blending: THREE.AdditiveBlending, depthTest: true, depthWrite: false, transparent: true, toneMapped: false, opacity: 0 }),
+      new THREE.SpriteMaterial({ map: glowTex, color: 0x34e07a, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false, transparent: true, toneMapped: false, opacity: 0 }),
     );
     sprite.position.copy(local).add(inward);
     sprite.renderOrder = 9;
@@ -375,7 +382,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     const light = new THREE.PointLight(0x34e07a, 0, 0, 1.4);
     light.position.copy(local).add(inward.clone().multiplyScalar(2.2));
     ring.add(sprite, light);
-    sensorGlows.push({ sprite, light });
+    sensorGlows.push({ sprite, light, size, op, li });
   }
 
   let W = 0;
@@ -479,7 +486,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     const dim = Math.min(1, Math.max(0, p.dim));
     // the warm light from above brings part of the room back (the ring reads silver, not black)
     const spot = Math.max(0, p.spot);
-    scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim) * (1 - 0.12 * lp) * (1 - 0.92 * dim * (1 - 0.42 * spot));
+    scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim) * (1 - 0.12 * lp) * (1 - 0.97 * dim * (1 - 0.42 * spot));
     spotTop.intensity = 9 * spot;
     glint.intensity = 16 * Math.max(0, p.sweepI);
     if (p.sweepI > 0.001) {
@@ -490,10 +497,10 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     const sens = Math.min(1, Math.max(0, p.sensor));
     for (const gl of sensorGlows) {
       gl.sprite.visible = sens > 0.005;
-      gl.sprite.material.opacity = 0.55 * sens;
-      gl.sprite.scale.set(ringSize * 0.32, ringSize * 0.32, 1);
-      gl.light.intensity = 2.6 * sens;
-      gl.light.distance = w * 0.75;
+      gl.sprite.material.opacity = gl.op * sens;
+      gl.sprite.scale.set(ringSize * gl.size, ringSize * gl.size * 1.2, 1);
+      gl.light.intensity = gl.li * sens;
+      gl.light.distance = w * 0.8;
     }
 
     const ledKey = p.led.toFixed(3) + '|' + p.ledc.toFixed(3) + '|' + sens.toFixed(3);
@@ -501,8 +508,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       lastLedKey = ledKey;
       if (sens > 0.01 && p.led <= 0.01) {
         // both windows green (window B uses the power LED mesh), and the two dots
+        // window A only (Figma 02→03 State C); the two dots glow below
         setLed('#34E07A', RING_MODEL.ledIntensity * 0.62 * sens);
-        lit(ledPower, '#34E07A', RING_MODEL.ledIntensity * 0.62 * sens);
       } else setLed(p.led > 0.01 ? '#' + ledColor(p.ledc).getHexString() : null, RING_MODEL.ledIntensity * p.led);
       contacts.forEach((m, i) => {
         const b = contactBase[i];

@@ -111,6 +111,13 @@
   --glow-blur: 60px;
   /* Dusk (D-109): radial cocoa/600 → cocoa/700 → Night from the lower left — only Daily insight 17:30 */
   --dusk: radial-gradient(130% 110% at 0% 100%, var(--cocoa-600) 0%, var(--cocoa-700) 34%, var(--night) 72%), var(--night);
+  /* S03 light (Figma Design · 02→03 / 03 layer fills; round 3): cocoa glow, spotlight cone, pool */
+  --s03-glow-in: #554339;
+  --s03-glow-mid: #2b201a;
+  --s03-cone-top: #decfc5;
+  --s03-cone-mid: #a79081;
+  --s03-cone-end: #6f5a4d;
+  --s03-pool: #f1e8e0;
   /* S04 Activity & rest: cocoa/700 → Night from the lower left */
   --cocoa-glow: radial-gradient(closest-side, color-mix(in srgb, var(--cocoa-700) 85%, transparent), transparent);
 
