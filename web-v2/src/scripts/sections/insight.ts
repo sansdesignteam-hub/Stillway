@@ -1,7 +1,7 @@
 /**
  * S05 Daily insight — 17:30 · Dusk (D-090; flow Storyboard §2, look Oryzo / Ultrahuman / Sensiq).
- * u: -1..0 connection from S04 (15:30 darkens, Dusk rises; the ring fades in right-centre, scale
- *          0.9 → 1, in 70–100%; clock 15:30 → 17:30)
+ * u: -1..0 connection from S04 (D-138: the Day arc goes down out of the screen, Dusk rises; the
+ *          ring rises from below into its right-centre place, 40–100%; clock 15:30 → 17:30)
  *  0 state 1  "Everything it noticed." bottom-left; ring large right-centre, Dusk env
  *  1 state 2  "One calm view." joins, text slides to the edge; ring grows, the edge highlight moves
  *  2 state 3  the card appears inside the ring's opening; the ring fills the screen (camera inside)
@@ -51,9 +51,9 @@ export const insight: SectionMotion = {
       [3, inside],
     ]);
   },
-  // 04 → 05: fade in on the right-centre with scale 0.9 → 1 during 70–100%
+  // 04 → 05 (D-138): after the Day arc has gone down, the ring rises from below into its S05 place
   ringIn(x, _ctx, _from, to) {
-    const t = seg(x, 0.7, 1);
-    return { ...to, w: to.w * (0.9 + 0.1 * t), alpha: t };
+    const t = seg(x, 0.4, 1);
+    return { ...to, y: to.y - 1.15 * (1 - t), alpha: seg(x, 0.38, 0.5) };
   },
 };

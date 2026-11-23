@@ -42,6 +42,8 @@ export interface SectionMotion {
   theme?: (u: number) => 'photo' | 'light' | 'dark' | null;
   /** clock text (HH:MM) for u, when the section drives its own clock (S04 follows the photo) */
   clock?: (u: number) => string;
+  /** clock text inside the incoming connection, x in [0, 1]; null = the default rule (D-138 lens) */
+  clockIn?: (x: number) => string | null;
   /** custom ring path across the incoming connection, x in [0, 1]; default = lerp in 30–70% */
   ringIn?: (x: number, ctx: Ctx, from: Pose, to: Pose) => Pose;
 }
@@ -245,9 +247,24 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     }
     let text = fmt(Math.floor(min / 5) * 5);
     if (clockFrom.m.clock) text = clockFrom.m.clock(clockFrom === cur ? u : clockFrom.end);
-    const part = d.part ?? partOf(toMin(text));
-    clockTime.forEach((el) => el.textContent !== text && (el.textContent = text));
-    clockPart.forEach((el) => el.textContent !== part && (el.textContent = part));
+    let part = d.part ?? partOf(toMin(text));
+    const own = inConn ? cur.m.clockIn?.(tinX) : null;
+    if (own) {
+      text = own;
+      part = partOf(toMin(own));
+    }
+    // D-138: in S04 and its lens the navbar time and daypart change with a short upward move
+    const rollClock = !reduced && (cur.def.id === 'activity' || (prev?.def.id === 'activity' && inConn));
+    clockTime.forEach((el) => {
+      if (el.textContent === text) return;
+      el.textContent = text;
+      if (rollClock) el.animate([{ transform: 'translateY(60%)', opacity: 0 }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
+    });
+    clockPart.forEach((el) => {
+      if (el.textContent === part) return;
+      el.textContent = part;
+      if (rollClock) el.animate([{ transform: 'translateY(60%)', opacity: 0 }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
+    });
 
     /* ring */
     if (ring) {

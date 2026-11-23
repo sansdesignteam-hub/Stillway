@@ -1,17 +1,18 @@
 ---
 /**
- * S04 Activity & rest (D-090). References: the three Oryzo "So portable, it's wearable" frames
- * (Figma sticky 40004118:92):
- *  - ref 1 → state 1: small caps line + bigger line top-left, short paragraph; one large portrait
- *    in a dashed frame in the centre, the others small beside it; scroll hint bottom centre.
- *  - ref 2 → states 2–4: the strip moves left, the next photo takes the frame; big time + status
- *    bottom-left, time list bottom-right.
- *  - ref 3 → state 5: the others have left, the frame lines fade, one photo stays and darkens.
+ * S04 Activity & rest — Day arc (D-138, Figma Design 40004245:50: 04 State 1–5 40004410:3751 …:3847,
+ * 03→04 Lensa 40004471:5860 …:6529).
+ *  - the 03 → 04 "lens": the 07:40 photo shows inside the ring's opening, the ring opens past the
+ *    screen and the photo becomes the active card at the top of the arc (scripts/sections/activity.ts)
+ *  - Day arc: the active card (264 × 352) at the top of a circle (centre 720 / 1758, R 1340 in the
+ *    1440 × 900 frame), the others along it every 12°, dimmer with distance (past dimmer than future);
+ *    big time + status under the active card; scroll turns the arc to the left, one photo per state
+ *  - Night with a soft --cocoa-300 light lower left (Figma "Ember glow" place, colour D-139) and a
+ *    night shade (upper right), painted with dither (scripts/glow.ts)
  * Photos: the 5 C-02 frames from V1, read from ../design (not copied, not retouched — D-073).
- * Motion: scripts/sections/activity.ts.
  */
 import Img from '../Img.astro';
-import { activity as d, hero } from '../../content/copy';
+import { activity as d } from '../../content/copy';
 import s0740 from '../../../../design/assets/v1/home/S3p-0740-moving-walk.png';
 import s0900 from '../../../../design/assets/v1/home/S3p-0900-resting-focus.png';
 import s1030 from '../../../../design/assets/v1/home/S3p-1030-moving-stretch.png';
@@ -20,281 +21,269 @@ import s1530 from '../../../../design/assets/v1/home/S3p-1530-moving-stairs.png'
 
 const srcs = { s0740, s0900, s1030, s1230, s1530 } as const;
 const first = d.frames[0];
+const digits = Array.from({ length: 20 }, (_, i) => i % 10); // 0–9 twice: a digit always rolls forward
 ---
 
-<section class="scene scene--activity" data-scene="activity" aria-labelledby="activity-title" data-active="0">
+<section class="scene scene--activity" data-scene="activity" aria-labelledby="activity-title">
   <div class="scene__back">
-    <div class="act__glow" data-a-glow data-a></div>
+    <canvas class="act__glow" data-a-glow data-a aria-hidden="true"></canvas>
+    <canvas class="act__dawn" data-a-dawn data-a aria-hidden="true"></canvas>
+    <div class="act__arc" aria-hidden="true">
+      <i class="act__orbit" data-a-orbit data-a></i>
+      {
+        d.frames.map((f) => (
+          <div class="act__card" data-a-card data-a data-time={f.time}>
+            <Img src={srcs[f.key as keyof typeof srcs]} alt="" sizes="(max-width: 719px) 200px, 264px" widths={[400, 560, 800]} ready />
+          </div>
+        ))
+      }
+      {
+        d.frames.map((f) => (
+          <span class="act__label" data-a-label data-a>
+            {f.time}
+          </span>
+        ))
+      }
+    </div>
   </div>
   <div class="scene__front">
-    <div class="act__head" data-a-head data-a>
-      <h2 id="activity-title" class="act__title" aria-label={d.heading.join(' ')}>
-        <span class="act__caps" aria-hidden="true">{d.heading[0]}</span>
-        <span class="act__line" aria-hidden="true">{d.heading[1]}</span>
+    <div class="act__intro" data-a-intro data-a>
+      <h2 id="activity-title" class="act__title">
+        <span class="act__t1">{d.heading[0]}</span>
+        <span>{d.heading[1]}</span>
       </h2>
       <p class="act__body">{d.body}</p>
     </div>
 
-    <div class="act__strip">
-      <div class="act__frame" data-a-frame data-a aria-hidden="true"></div>
-      <ol class="act__items">
-        {
-          d.frames.map((f) => (
-            <li class="act__item" data-a-item data-a data-time={f.time} data-state={f.state} data-detail={f.detail}>
-              <Img src={srcs[f.key as keyof typeof srcs]} alt={f.alt} sizes="(max-width: 719px) 58vw, 34vh" widths={[480, 768, 1060]} loading="eager" />
-              <span class="sr-only">
-                {f.time}, {f.state}, {f.detail} (simulated).
-              </span>
-            </li>
-          ))
-        }
-      </ol>
-    </div>
-
     <div class="act__now" data-a-now data-a aria-hidden="true">
-      <p class="act__time" data-a-time>{first.time}</p>
-      <p class="act__status"><i class="act__key" data-a-key data-state={first.state.toLowerCase()}></i><span data-a-state>{first.state}</span></p>
-      <p class="act__detail" data-a-detail>{first.detail}</p>
+      <p class="act__time">
+        {
+          first.time.split('').map((c) =>
+            c === ':' ? (
+              <span class="act__colon">:</span>
+            ) : (
+              <span class="dg">
+                <span class="dg__s" data-a-dg>
+                  {digits.map((n) => (
+                    <span>{n}</span>
+                  ))}
+                </span>
+              </span>
+            ),
+          )
+        }
+      </p>
+      <p class="act__status">
+        <i class="act__dot"></i>
+        <span class="act__lines">
+          {
+            d.frames.map((f) => (
+              <span class="act__line" data-a-sline>
+                {f.state} · {f.detail}
+              </span>
+            ))
+          }
+        </span>
+      </p>
       <p class="act__sim">{d.simulated}</p>
     </div>
 
-    <ol class="act__list" data-a-list data-a aria-hidden="true">
-      {d.frames.map((f, i) => <li data-a-tick class:list={[i === 0 && 'is-active']}>{f.time}</li>)}
+    <ol class="sr-only">
+      {
+        d.frames.map((f) => (
+          <li>
+            {f.time}, {f.state}, {f.detail} (simulated). {f.alt}
+          </li>
+        ))
+      }
     </ol>
-    <p class="act__hint t-label" data-a-hint data-a aria-hidden="true">{hero.scroll}</p>
   </div>
 </section>
 
 <style>
-  /* D-092: heading, photo sizes and the strip follow V1 (web/src/styles/global.css, "activity and rest");
-     V2 keeps its colours, entry/exit and state 5 */
   .scene--activity {
     color: var(--paper);
-    --stone: var(--stone-on-night);
-    --paper-soft: color-mix(in srgb, var(--paper) 62%, transparent);
-    --oy: 5svh; /* the strip sits a little low so the copy above it stays clear */
-    --bh: min(74svh, 720px, 66vw);
-    --bw: calc(var(--bh) * 0.7);
+    /* active card size, set by activity.ts from the viewport (264 × 352 at 1440 × 900) */
+    --cw: 264px;
+    --ch: 352px;
   }
-  .act__glow {
+  .act__glow,
+  .act__dawn {
     position: absolute;
-    left: -20vw;
-    bottom: -40vh;
-    width: 80vw;
-    aspect-ratio: 1;
-    background: radial-gradient(closest-side, color-mix(in srgb, var(--ochre) 28%, transparent), transparent);
-    filter: blur(40px);
+    inset: 0;
+    width: 100%;
+    height: 100%;
   }
-  .act__head {
-    position: absolute;
-    z-index: 3;
-    top: calc(var(--header-h) + 3svh);
-    left: var(--margin);
-    /* stays clear of the small frames waiting at the side (V1) */
-    width: calc((100vw - var(--bw)) / 2 - var(--bw) * 0.36 - 40px - var(--margin));
-    display: grid;
-    gap: 18px;
-  }
-  /* Heading/Heading 1 */
-  .act__title {
-    display: grid;
-    font-weight: var(--w-heading);
-    font-size: var(--t-heading-1-size);
-    line-height: var(--t-heading-1-lh);
-    letter-spacing: var(--t-heading-1-ls);
-  }
-  .act__caps {
-    color: var(--paper-soft);
-    text-transform: uppercase;
-  }
-  .act__line {
-    color: var(--paper);
-  }
-  /* Paragraph/Medium */
-  .act__body {
-    font-size: var(--t-para-md-size);
-    line-height: var(--t-para-md-lh);
-    letter-spacing: var(--t-para-md-ls);
-    color: var(--paper);
-    max-width: 26em;
-  }
-  .act__strip {
+  .act__arc {
     position: absolute;
     inset: 0;
   }
-  .act__frame {
+  /* the orbit: Figma "Orbit", white 14%, 1 px */
+  .act__orbit {
     position: absolute;
-    z-index: 2;
-    left: 50%;
-    top: calc(50% + var(--oy));
-    width: calc(var(--bw) + 20px);
-    height: calc(var(--bh) + 20px);
-    translate: -50% -50%;
-    border: 1.5px dashed color-mix(in srgb, var(--paper) 55%, transparent);
-    border-radius: 2px;
+    left: 0;
+    top: 0;
+    border: 1px solid color-mix(in srgb, var(--white) 14%, transparent);
+    border-radius: 50%;
+    will-change: transform;
+  }
+  .act__card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--cw);
+    height: var(--ch);
+    overflow: hidden;
+    border-radius: 12px;
+    transform-origin: 50% 50%;
+    will-change: transform, opacity;
+  }
+  /* the active card carries a white 50% line (Figma stroke-white), drawn over the photo */
+  .act__card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--white) calc(var(--b, 0) * 50%), transparent);
     pointer-events: none;
   }
-  .act__items {
-    position: absolute;
-    z-index: 1;
-    inset: 0;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .act__item {
-    position: absolute;
-    left: 50%;
-    top: calc(50% + var(--oy));
-    width: var(--bw);
-    height: var(--bh);
-    margin-left: calc(var(--bw) / -2);
-    margin-top: calc(var(--bh) / -2);
-    overflow: hidden;
-    background: var(--cocoa); /* D-135: tile ground on Night = Cocoa (shows while a photo loads) */
-    transform-origin: 50% 50%;
-    will-change: transform;
-    --dark: 0;
-  }
-  .act__item :global(picture),
-  .act__item :global(img) {
+  .act__card :global(picture),
+  .act__card :global(img) {
     display: block;
     width: 100%;
     height: 100%;
   }
-  .act__item :global(img) {
+  .act__card :global(img) {
     object-fit: cover;
   }
-  .act__item::after {
-    /* state 5 (V2): 15:30 darkens toward Dusk */
-    content: '';
+  /* Mono/Small, under each waiting card along its radius */
+  .act__label {
     position: absolute;
-    inset: 0;
-    background: var(--night);
-    opacity: calc(var(--dark) * 0.75);
+    left: 0;
+    top: 0;
+    font-family: var(--font-mono);
+    font-weight: var(--w-mono);
+    font-size: var(--t-mono-sm-size);
+    line-height: var(--t-mono-sm-lh);
+    letter-spacing: var(--t-mono-sm-ls);
+    color: var(--white);
+    white-space: nowrap;
+    will-change: transform, opacity;
+  }
+  .act__intro {
+    position: absolute;
+    left: var(--margin);
+    top: calc(var(--header-h) + 68px);
+    width: min(416px, calc(100vw - 2 * var(--margin)));
+    display: grid;
+    gap: 18px;
+  }
+  /* Heading/Heading 1: "Activity" neutral/400, "and rest." Paper */
+  .act__title {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 0.21em;
+    font-weight: var(--w-heading);
+    font-size: var(--t-heading-1-size);
+    line-height: var(--t-heading-1-lh);
+    letter-spacing: var(--t-heading-1-ls);
+    color: var(--paper);
+  }
+  .act__t1 {
+    color: var(--neutral-400);
+  }
+  /* Paragraph/Medium, white 78% */
+  .act__body {
+    font-size: var(--t-para-md-size);
+    line-height: var(--t-para-md-lh);
+    letter-spacing: var(--t-para-md-ls);
+    color: color-mix(in srgb, var(--white) 78%, transparent);
   }
   .act__now {
     position: absolute;
-    z-index: 3;
-    left: var(--margin);
-    bottom: 40px;
-    width: calc((100vw - var(--bw)) / 2 - var(--bw) * 0.36 - 40px - var(--margin));
+    left: 0;
+    top: 0;
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    will-change: transform, opacity;
   }
-  /* Display/Display 4 */
+  /* Display/Display 4; each digit rolls on its own strip (line height = size for Display 4) */
   .act__time {
+    display: flex;
     font-weight: var(--w-display);
     font-size: var(--t-display-4-size);
     line-height: var(--t-display-4-lh);
     letter-spacing: var(--t-display-4-ls);
+    color: var(--white);
     font-variant-numeric: tabular-nums;
   }
+  .dg {
+    display: block;
+    height: var(--t-display-4-lh);
+    overflow: hidden;
+  }
+  .dg__s {
+    display: flex;
+    flex-direction: column;
+    will-change: transform;
+  }
+  .dg__s > span {
+    display: block;
+    height: var(--t-display-4-lh);
+  }
+  /* Label/Large; the status lines change with an upward move */
   .act__status {
-    margin-top: 16px;
     display: flex;
     align-items: center;
     gap: 10px;
-    /* Label/Large */
     font-weight: var(--w-label);
     font-size: var(--t-label-lg-size);
     line-height: var(--t-label-lg-lh);
     letter-spacing: var(--t-label-lg-ls);
+    color: var(--white);
   }
-  .act__key {
-    width: 10px;
-    height: 10px;
+  .act__dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: var(--paper);
+    background: var(--white);
   }
-  .act__key[data-state='resting'] {
-    background: var(--rest-dot); /* V1 resting dot (D-092) */
-  }
-  /* Paragraph/Medium (body) */
-  .act__detail {
-    color: var(--paper-soft);
-  }
-  /* Paragraph/Small */
-  .act__sim {
-    margin-top: 10px;
-    font-family: var(--font-sans);
-    font-size: var(--t-para-sm-size);
-    line-height: var(--t-para-sm-lh);
-    letter-spacing: var(--t-para-sm-ls);
-    text-transform: none;
-    color: var(--paper-soft);
-  }
-  .act__list {
-    position: absolute;
-    z-index: 3;
-    right: var(--margin);
-    bottom: 40px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
+  .act__lines {
     display: grid;
-    gap: 4px;
-    text-align: right;
-    font-family: var(--font-sans);
-    /* Paragraph/Medium */
-    font-size: var(--t-para-md-size);
-    line-height: var(--t-para-md-lh);
-    letter-spacing: var(--t-para-md-ls);
-    font-variant-numeric: tabular-nums;
+    height: var(--t-label-lg-lh);
+    overflow: hidden;
   }
-  .act__list li {
-    color: var(--paper-soft);
-    opacity: 0.55;
-    transition: opacity 0.4s, color 0.4s;
+  .act__line {
+    grid-area: 1 / 1;
+    white-space: nowrap;
+    will-change: transform, opacity;
   }
-  .act__list li:global(.is-active) {
-    color: var(--paper);
-    opacity: 1;
+  /* not in the Figma frame: kept so the simulated data stays labelled (Mono/X-Small) */
+  .act__sim {
+    margin-top: 4px;
+    font-family: var(--font-mono);
+    font-weight: var(--w-mono);
+    font-size: var(--t-mono-xs-size);
+    line-height: var(--t-mono-xs-lh);
+    letter-spacing: var(--t-mono-xs-ls);
+    text-transform: uppercase;
+    color: var(--stone-on-night);
   }
-  .act__hint {
+  .sr-only {
     position: absolute;
-    z-index: 3;
-    left: 50%;
-    bottom: 14px;
-    translate: -50% 0;
-    color: var(--stone);
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
-  /* phones: V1 mobile block */
-  @media (max-width: 760px) {
-    .scene--activity {
-      --bh: min(50svh, 440px);
-    }
-    .act__head {
-      width: auto;
-      right: var(--margin);
+  @media (max-width: 719px) {
+    .act__intro {
       top: calc(var(--header-h) + 16px);
       gap: 8px;
     }
     .act__body {
-      display: none;
-    }
-    .act__items {
-      top: 18px;
-    }
-    .act__now {
-      width: auto;
-      right: var(--margin);
-      bottom: 20px;
-      display: grid;
-      grid-template-columns: auto 1fr;
-      column-gap: 16px;
-      align-items: end;
-    }
-    .act__time {
-      grid-row: 1 / span 3;
-    }
-    .act__status {
-      margin-top: 0;
-    }
-    .act__detail,
-    .act__sim {
-      margin-top: 0;
-    }
-    .act__list,
-    .act__hint {
       display: none;
     }
   }
