@@ -98,8 +98,14 @@ def setup_scene():
     spinner = empty("SPINNER", pivot)
     model = empty("RING_MODEL", spinner)
 
-    if not bpy.data.objects.get("Ring_Shell.001") and not bpy.data.objects.get("Ring_Shell"):
+    if not any(o.name.startswith("Ring_Shell") for o in sc.objects):
+        # orphans of an earlier import would push the new materials to ".001" names
+        for m in list(bpy.data.materials):
+            if m.users == 0 and m.name.split(".")[0] in ("Ring_Silver", "Ring_Silver_Engrave", "LED_Main", "LED_Power"):
+                bpy.data.materials.remove(m)
         bpy.ops.import_scene.gltf(filepath=GLB)
+    for mn in ("Ring_Silver", "Ring_Silver_Engrave", "LED_Main", "LED_Power"):
+        assert bpy.data.materials.get(mn), mn
     # re-parent the imported meshes (their local transforms are three.js model coordinates)
     for o in list(sc.objects):
         if o.type == "EMPTY" and o.name.startswith("Stillway_Ring_Root"):
@@ -184,7 +190,7 @@ def render_settings(sc, res=(1024, 1024), samples=384):
     sc.render.image_settings.color_depth = "16"
 
 
-def world(env_file, strength, rot_z_deg=0.0):
+def world(env_file, strength, rot_z_deg=0.0, saturation=1.0):
     sc = bpy.data.scenes[SCENE]
     w = bpy.data.worlds.get("FB_V3_World") or bpy.data.worlds.new("FB_V3_World")
     sc.world = w
@@ -202,7 +208,13 @@ def world(env_file, strength, rot_z_deg=0.0):
     b = nt.nodes.new("ShaderNodeBackground")
     b.inputs["Strength"].default_value = strength
     o = nt.nodes.new("ShaderNodeOutputWorld")
-    nt.links.new(t.outputs[0], b.inputs[0]); nt.links.new(b.outputs[0], o.inputs[0])
+    src = t.outputs[0]
+    if saturation != 1.0:  # neutralise a warm env so silver stays silver (D-112)
+        hs = nt.nodes.new("ShaderNodeHueSaturation")
+        hs.inputs["Saturation"].default_value = saturation
+        nt.links.new(src, hs.inputs["Color"])
+        src = hs.outputs[0]
+    nt.links.new(src, b.inputs[0]); nt.links.new(b.outputs[0], o.inputs[0])
 
 
 def sun(name, pos_px, color_hex, strength):
@@ -377,7 +389,39 @@ def add_flare(rgba, anchor, hx, opacity=1.0, size_scale=1.0, rotation=-0.42):
 
 
 # ---------------------------------------------------------------- S08
-def s08_setup():
+# S08 light. v1 (3f5de60) = web stage.ts night: env night polished x1.77 + rim suns -> ring read gunmetal.
+# v2 (D-127): brighter so the band reads silver; see README "S08 v2 pencahayaan".
+S08_LIGHT_V1 = dict(env="v2-env-night-polished.exr", env_strength=1.77, env_rot=0.0, env_sat=1.0,
+                    rim=7.7, rim_fill=1.76, key=0.0, key_pos=(-600, 700, 900), key_size=600,
+                    key2=0.0, key2_pos=(900, -500, 1100), key2_size=1000)
+# v2 = v1 + two soft white disk keys aimed at the screen centre (positions in CSS px, three space)
+S08_LIGHT_V2 = dict(S08_LIGHT_V1, key=120.0, key_pos=(-300, 900, 1200), key_size=1000,
+                    key2=40.0, key2_pos=(900, -500, 1100), key2_size=1000)
+S08_LIGHT = dict(S08_LIGHT_V2)
+
+
+def s08_key(power, pos_px, size_px, name="S08_KEY"):
+    """soft area key (D-127): gives the outer band a broad silver gradient."""
+    sc = bpy.data.scenes[SCENE]
+    o = bpy.data.objects.get(name)
+    if not o:
+        o = bpy.data.objects.new(name, bpy.data.lights.new(name, "AREA"))
+        sc.collection.objects.link(o)
+    o.parent = bpy.data.objects["THREE_ROOT"]
+    o.matrix_parent_inverse = Matrix.Identity(4)
+    o.rotation_mode = "QUATERNION"
+    o.location = Vector(pos_px) * K
+    o.rotation_quaternion = (-Vector(pos_px)).normalized().to_track_quat("-Z", "Y")
+    o.data.shape = "DISK"
+    o.data.size = size_px * K
+    o.data.energy = power
+    o.data.color = (1.0, 1.0, 1.0)
+    o.hide_render = power <= 0
+    return o
+
+
+def s08_setup(light=None):
+    L = dict(S08_LIGHT, **(light or {}))
     sc = bpy.data.scenes[SCENE]
     P = S08_CLOSE
     x_px, y_px, w_px = P["x"] * VW, P["y"] * VH, P["w"] * VW
@@ -385,10 +429,11 @@ def s08_setup():
     camera("CAM_S08", cam_z, S08_FRAME_CSS, (x_px, y_px), (1024, 1024))
     set_pose(x_px, y_px, w_px, three_quat(P["rx"], P["ry"], P["rz"], P["pitch"], P["roll"]), P["spin"])
     # light 1, rim 0.55 (features.ts NIGHT): env night polished x (1 + 1.4 rim), rim + rim fill suns
-    rim = 0.55
-    world("v2-env-night-polished.exr", 1.0 * (1 + 1.4 * rim))
-    sun("SUN_rim", (900, 420, -650), "#dfe8ff", 14 * rim)
-    sun("SUN_rimFill", (-700, 260, 900), "#dfe8ff", 3.2 * rim)
+    world(L["env"], L["env_strength"], L["env_rot"], L["env_sat"])
+    sun("SUN_rim", (900, 420, -650), "#dfe8ff", L["rim"])
+    sun("SUN_rimFill", (-700, 260, 900), "#dfe8ff", L["rim_fill"])
+    s08_key(L["key"], L["key_pos"], L["key_size"])
+    s08_key(L["key2"], L["key2_pos"], L["key2_size"], "S08_KEY2")
     for n in ("SUN_lamp", "S06_KEY"):
         if n in bpy.data.objects:
             bpy.data.objects[n].hide_render = True
@@ -408,7 +453,7 @@ S08_RED = dict(flare_size=0.85)  # "one small red light": same sprite, a little 
 def s08(color, tune=None):
     t = dict(S08_TUNE, **(S08_RED if color == "red" else {}), **(tune or {}))
     sc = bpy.data.scenes[SCENE]
-    info = s08_setup()
+    info = s08_setup(t.get("light"))
     hx = LED[color]
     lin = tuple(srgb_to_lin(hex_rgb(hx)))
     red = color == "red"
@@ -507,7 +552,7 @@ def s06(tune=None):
     info = s06_pose()
     world("v2-env-paper-polished.exr", t["env_strength"], t["env_rot"])
     key_light(t["key_power"], t["key_pos"], t["key_size"])
-    for n in ("SUN_rim", "SUN_rimFill"):
+    for n in ("SUN_rim", "SUN_rimFill", "S08_KEY", "S08_KEY2"):
         if n in bpy.data.objects:
             bpy.data.objects[n].hide_render = True
     if "PT_bounce" in bpy.data.objects:
