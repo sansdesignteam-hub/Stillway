@@ -1,11 +1,14 @@
 /**
  * S04 Activity & rest — 07:40 → 15:30 · Night (D-090; flow Storyboard §2, look Oryzo refs).
- * u: -1..0 connection from S03: numbers out (S03), ring shrinks and fades out (30–70%), then the
- *          title and the strip come in from the right with 07:40 in the frame (70–100%)
+ * u: -1..0 connection from S03: the S04 panel rises and S03 moves up and out (0–40%); the ring
+ *          shrinks and leaves off the top of the screen (no fade); the title and the strip rise in
+ *          with 07:40 in the frame; clock 23:10 → 05:30 → 07:40. (The lens of Storyboard v3 / D-117
+ *          replaces this in phase 2.)
  *  0..4  state 1..5: the strip moves left one photo per state; the photo entering the frame grows,
  *        the one leaving shrinks to the left; big time, status, list and navbar clock follow it
  *  4     state 5: the others have left, the frame lines fade, 15:30 stays
- *  > 4.6 connection to S05: text and list out (0–30%), 15:30 darkens toward Dusk and fades (30–70%)
+ *  > 4.6 connection to S05 (Viture, A-06): the Dusk panel rises and S04 moves up and out until the
+ *        screen is dark and empty; then the ring rises from the bottom edge (insight.ts)
  * The 3D ring is not drawn here (only on the finger in the photos).
  */
 import { gsap } from 'gsap';
@@ -43,16 +46,16 @@ export const activity: SectionMotion = {
     };
   },
   update(u, ctx) {
-    const inn = seg(u, -0.3, 0); // 70–100% of the incoming connection
-    const x = u - END; // outgoing connection progress
-    const uiOut = 1 - seg(x, 0, 0.3);
+    const H = window.innerHeight;
+    const inn = seg(u, -0.6, -0.05); // rises in after the panel (40–95% of the connection)
+    const rise = (1 - inn) * H * 0.3;
 
-    put(el.glow, { o: seg(u, -0.6, 0) * (1 - seg(x, 0.3, 0.7)) }, ctx);
-    put(el.head, { o: inn * uiOut, x: 60 * (1 - inn) }, ctx);
-    put(el.frame, { o: inn * (1 - seg(u, 3.5, 4)) }, ctx); // ref 3: the frame lines fade at state 5
-    put(el.now, { o: inn * uiOut }, ctx);
-    put(el.list, { o: inn * uiOut }, ctx);
-    put(el.hint, { o: inn * (1 - seg(u, 0.2, 0.8)) }, ctx);
+    put(el.glow, { o: seg(u, -0.6, -0.2) }, ctx); // a glow: the only fade here
+    put(el.head, { o: Math.min(1, inn * 5), y: rise }, ctx);
+    put(el.frame, { o: inn > 0.001 && u < 3.75 ? 1 : 0, y: rise }, ctx); // ref 3: the frame lines go at state 5
+    put(el.now, { o: Math.min(1, inn * 5), y: rise }, ctx);
+    put(el.list, { o: Math.min(1, inn * 5), y: rise }, ctx);
+    put(el.hint, { o: Math.min(1, inn * 5) * (u < 0.5 ? 1 : 0), y: rise }, ctx);
 
     // D-092: the strip moves exactly like V1 (web/src/scripts/motion.ts, "activity and rest: the
     // strip"): it dwells on each photo, then slides; the previous photo stays small on the left of
@@ -67,7 +70,6 @@ export const activity: SectionMotion = {
     const sw = bw * sc;
     const gap = ctx.mobile ? 12 : 22;
     const near = bw / 2 + gap + sw / 2;
-    const darken = seg(x, 0.2, 0.6);
     const enter = (1 - inn) * W * 0.5; // V2: the strip comes in from the right
     const leave = seg(u, 3.3, 4); // V2 state 5: the others leave to the left
     items.forEach((it, i) => {
@@ -77,10 +79,9 @@ export const activity: SectionMotion = {
       let px = Math.sign(d) * (ad <= 1 ? k * near : near + (ad - 1) * (sw + gap));
       const last = i === 4;
       if (!last) px -= leave * W * 0.6;
-      const o = inn * (ad > 4 ? 0 : 1) * (last ? 1 - seg(x, 0.45, 0.8) : 1 - leave * 0.999);
-      put(it, { o, x: px + enter, s: lerp(1, sc, k) }, ctx);
+      const o = (inn > 0.001 ? 1 : 0) * (ad > 4 ? 0 : 1) * (last || leave < 0.999 ? 1 : 0);
+      put(it, { o, x: px + enter, y: rise, s: lerp(1, sc, k) }, ctx);
       it.style.zIndex = String(100 - Math.round(ad * 10));
-      if (last) it.style.setProperty('--dark', darken.toFixed(3));
     });
 
     const idx = Math.round(f);
@@ -95,7 +96,7 @@ export const activity: SectionMotion = {
       root.dataset.active = String(idx);
       // V1 setActive: the new values fade up
       if (!ctx.reduced && el.time)
-        gsap.fromTo([el.time, el.state?.parentElement, el.detail], { y: 10, opacity: 0.2 }, { y: 0, opacity: 1, duration: 0.5, stagger: 0.04, overwrite: true });
+        gsap.fromTo([el.time, el.state?.parentElement, el.detail], { y: 10, opacity: 0.2 }, { y: 0, opacity: 1, duration: 0.25, stagger: 0.03, overwrite: true });
     }
   },
   clock(u) {
@@ -103,19 +104,19 @@ export const activity: SectionMotion = {
     const b = Math.floor(raw);
     return times[Math.round(Math.min(4, b + smooth(smooth(raw - b))))] ?? '07:40';
   },
-  // hidden; parked where S05 brings it back so 04 → 05 only needs a fade and scale 0.9 → 1
+  // no 3D ring in S04: parked below the screen where S05 brings it in from the bottom edge
   ring(_u, ctx: Ctx) {
     const p = insightStart(ctx);
-    return { ...p, w: p.w * 0.9, alpha: 0 };
+    return { ...p, y: p.y - 1.4 };
   },
-  // 03 → 04: the ring shrinks where it is at full opacity (stays silver, never a half-transparent dark
-  // shape on Night), then goes quickly at the end of the middle stretch (D-090 r1)
+  // 03 → 04 (until the lens of phase 2): the sensor goes out, the ring shrinks a little and leaves off
+  // the top of the screen before the S04 panel is full — never faded (D-120)
   ringIn(x, _ctx, from) {
-    const t = seg(x, 0.3, 0.68);
-    const to: Pose = { ...from, w: from.w * 0.5 };
+    const t = seg(x, 0.05, 0.4);
+    const to: Pose = { ...from, w: from.w * 0.6, y: from.y + 1.25 };
     const o = {} as Pose;
     for (const key of Object.keys(from) as (keyof Pose)[]) o[key] = lerp(from[key], to[key], t);
-    o.alpha = 1 - seg(x, 0.56, 0.72);
+    o.sensor = from.sensor * (1 - seg(x, 0, 0.2));
     return o;
   },
 };

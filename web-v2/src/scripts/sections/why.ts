@@ -3,16 +3,16 @@
  * u: -0.6..0  connection from S01 (same frame). "rhythm" is already behind the ring as it zooms
  *             out (no Dawn glow), clock 06:50 → 07:10
  *  0 state 1  "rhythm" behind the ring
- *  0 → 1      "rhythm" fades; statement 1 (left) and paragraph 1 (right) light up character by
- *             character with the scroll
- *  1 → 2      they go out the same way, statement 2 / paragraph 2 light up
- *  2 → 3      they go out; "keeps the" slides in from the left and "pattern." from the right to
- *             flank the ring (Oryzo "it's wearable"); "Stillway just keeps the pattern." small above,
- *             paragraph 3 bottom right
- *  > 3.6      connection to S03: text out in its first 30%
+ *  0 → 1      "rhythm" moves up and out; statement 1 (left) and paragraph 1 (right) rise and light
+ *             up character by character with the scroll
+ *  1 → 2      they move up and shrink to a small dim line; statement 2 / paragraph 2 rise (G-03)
+ *  2 → 3      they move on up and out; "keeps the" slides in from the left and "pattern." from the
+ *             right to flank the ring (Oryzo "it's wearable"); "Stillway just keeps the pattern."
+ *             small above, paragraph 3 bottom right
+ *  > 3.6      connection to S03 (D-120): the Night panel rises, this content moves up with it
  * The ring turns with the scroll the whole time (one continuous tumble, no stops between states).
  */
-import { put, seg, smooth, clamp01, type Ctx } from '../anim';
+import { put, seg, smooth, clamp01, roll, type Ctx } from '../anim';
 import { pose, ANGLE, type Pose } from '../ring/poses';
 import { whyBg } from '../../content/whyBg';
 import type { SectionMotion } from '../story';
@@ -23,6 +23,8 @@ let smalls: HTMLElement[][] = [];
 let bigWraps: HTMLElement[] = [];
 let smallWraps: HTMLElement[] = [];
 const END = 3.6;
+/** S02's last pose (the ring stays there through 02 → 03) */
+export const WHY_END = END;
 const cache = new WeakMap<HTMLElement, number>();
 
 /**
@@ -61,49 +63,39 @@ export const why: SectionMotion = {
     smalls = smallWraps.map((b) => [...b.querySelectorAll<HTMLElement>('.c')]);
   },
   update(u, ctx) {
-    const out = 1 - seg(u, END, END + 0.3); // connection to S03, first 30%
-    // D-088 background: fades in from Paper while S01 hands over (the photo there has faded to
-    // Paper by u ≈ −0.6), drifts up slowly with the scroll (parallax), and leaves in the 30–70%
-    // middle of the connection to S03, together with Paper → Night.
-    // VD README: 01 → 02 fades in over Paper with scale 1.03 → 1; 02 → 03 the photo goes first
-    // (30–55% of the connection), then Paper → Night (story.ts, 30–70%).
-    if (el.bg) {
-      const inn = seg(u, -1.0, -0.2);
-      const leave = 1 - seg(u, END + 0.3, END + 0.55);
-      put(el.bg, { o: inn * leave, s: 1.03 - 0.03 * inn, yv: whyBg.parallax * (0.5 - clamp01((u + 1) / (END + 1))) }, ctx);
-    }
-    // "rhythm": shows while the ring zooms out of S01 (u ≈ −1.1 … −0.4), gone on the way to state 2
-    put(el.word, { o: seg(u, -1.1, -0.4) * (1 - seg(u, 0.25, 0.8)) }, ctx);
+    const H = window.innerHeight;
+    // D-088/D-124 wall photo: rises with the S02 panel (story.ts), drifts up slowly with the scroll
+    // (parallax), and is covered by the Night panel in 02 → 03. No fades.
+    if (el.bg) put(el.bg, { yv: whyBg.parallax * (0.5 - clamp01((u + 2) / (END + 2))) }, ctx);
+    // "rhythm": rises with the panel behind the ring, then moves up and out on the way to state 2
+    put(el.word, { y: -H * 0.7 * seg(u, 0.15, 0.85), o: u < 0.85 ? 1 : 0 }, ctx);
 
-    // statements and paragraphs: light up / go out per character (reduced: whole-block fades)
-    const steps: Array<[number, number]> = [
-      [0.15, 1.35], // statement 1 lit over 0.15 → 0.85, out over 1.35 → 1.85
-      [1.4, 2.35],
-    ];
-    steps.forEach(([a, b], i) => {
-      const inP = seg(u, a, a + 0.7);
-      const outP = seg(u, b, b + 0.5);
-      const vis = u > a - 0.05 && u < b + 0.55;
+    // statements (left) and paragraphs (right): one replaces the other by moving up (G-03); the
+    // characters still light up with the scroll as each one arrives (Oryzo, D-084)
+    const f = -1 + seg(u, 0.15, 0.85) + seg(u, 1.35, 2.0) + 2 * seg(u, 2.3, 2.85);
+    roll(bigWraps, f, ctx, { origin: 'left', gap: 18 });
+    roll(smallWraps, f, ctx, { origin: 'right', gap: 14 });
+    const steps = [0.15, 1.35];
+    steps.forEach((a, i) => {
       if (ctx.reduced) {
-        put(bigWraps[i], { o: vis && u >= a + 0.35 && u < b + 0.25 ? 1 : 0 }, ctx);
-        put(smallWraps[i], { o: vis && u >= a + 0.35 && u < b + 0.25 ? 1 : 0 }, ctx);
         bigs[i].concat(smalls[i]).forEach((c) => c.style.setProperty('--o', '1'));
         return;
       }
-      put(bigWraps[i], { o: vis ? 1 : 0 }, ctx);
-      put(smallWraps[i], { o: vis ? 1 : 0 }, ctx);
-      reveal(bigs[i], inP, outP, 6);
-      reveal(smalls[i], seg(u, a + 0.1, a + 0.85), seg(u, b + 0.05, b + 0.55), 10);
+      reveal(bigs[i], seg(u, a, a + 0.7), 0, 6);
+      reveal(smalls[i], seg(u, a + 0.1, a + 0.85), 0, 10);
     });
 
-    // end state: the big words move in from the sides and flank the ring
+    // end state: the big words move in from the sides and flank the ring; the small line and the
+    // last paragraph rise from below once the statements have gone
     const mv = seg(u, 2.35, 3);
     const off = (1 - mv) * window.innerWidth * 0.55;
-    put(el.wide, { o: Math.min(1, mv * 1.6) * out }, ctx);
+    put(el.wide, { o: mv > 0.001 ? 1 : 0 }, ctx);
     put(el.wideL, { x: -off }, ctx);
     put(el.wideR, { x: off }, ctx);
-    put(el.final, { o: seg(u, 2.55, 3) * out, yv: 0.02 * (1 - seg(u, 2.55, 3)) }, ctx);
-    put(el.end, { o: seg(u, 2.7, 3.1) * out, yv: 0.02 * (1 - seg(u, 2.7, 3.1)) }, ctx);
+    const fin = seg(u, 2.8, 3.15);
+    put(el.final, { o: Math.min(1, fin * 5), y: (1 - fin) * 48 }, ctx);
+    const end = seg(u, 2.9, 3.25);
+    put(el.end, { o: Math.min(1, end * 5), y: (1 - end) * 48 }, ctx);
   },
   ring(u, ctx: Ctx): Pose {
     const m = ctx.mobile;

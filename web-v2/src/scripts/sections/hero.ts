@@ -7,7 +7,8 @@
  *  1 → 2 state 3  the ring zooms in close, turning smoothly until the sensors show; the photo zooms
  *               OUT behind it (content/heroBg.ts)
  *  2 → 3 state 4  the ring zooms out, turning back to the centre at the size and pose of S02 state 1;
- *               the photo fades to Paper, the env swaps from the photo to the paper studio
+ *               the S02 panel (Paper + wall) rises over the photo with a straight edge (story.ts,
+ *               sections.ts why.panel); the env changes from the photo to the paper studio in steps
  *  3 → 3.5      hold; "rhythm" (S02) starts to show
  */
 import { gsap } from 'gsap';
@@ -85,20 +86,23 @@ export const hero: SectionMotion = {
     }
   },
   update(u, ctx) {
-    // 0 → 1: the text slides out
+    // 0 → 1 (Storyboard 01 State 2): wordmark, list and intro move up and out of the screen
     const k = seg(u, 0.05, 0.9);
-    put(el.word, { o: 1 - k, yv: -0.16 * k }, ctx);
-    put(el.tag, { o: 1 - k, x: -90 * k }, ctx);
-    put(el.features, { o: 1 - k, x: 90 * k }, ctx);
-    put(el.price, { o: 1 - k, x: 90 * k }, ctx);
-    put(el.statement, { o: 1 - k, x: -120 * k }, ctx);
-    put(el.foot, { o: 1 - seg(u, 0.05, 0.5) }, ctx);
+    const H = window.innerHeight;
+    const up = (f: number) => ({ y: -H * f * k });
+    put(el.word, { o: k < 0.999 ? 1 : 0, ...up(0.75) }, ctx);
+    put(el.tag, { o: k < 0.999 ? 1 : 0, ...up(0.9) }, ctx);
+    put(el.features, { o: k < 0.999 ? 1 : 0, ...up(0.9) }, ctx);
+    put(el.price, { o: k < 0.999 ? 1 : 0, ...up(0.9) }, ctx);
+    put(el.statement, { o: k < 0.999 ? 1 : 0, ...up(1.05) }, ctx);
+    put(el.foot, { o: k < 0.999 ? 1 : 0, ...up(1.05) }, ctx);
 
-    // 1 → 2: the photo zooms out behind the ring; 2 → 3: it fades to Paper
+    // 1 → 2: the photo zooms out behind the ring; 2 → 3: the S02 panel covers it (no fade)
     const z = lerp(1, ctx.mobile ? heroBg.mobile.zoomTo : heroBg.desktop.zoomTo, seg(u, 0.9, 2.2));
-    put(el.photo, { o: 1 - seg(u, 2.05, 2.8), s: z }, ctx);
+    put(el.photo, { s: z }, ctx);
   },
-  theme: (u) => (u < 2.45 ? 'photo' : null),
+  // over the photograph until the S02 panel covers the navbar (story.ts)
+  theme: () => 'photo',
   ring(u, ctx: Ctx) {
     const m = ctx.mobile;
     const end = why.ring!(0, ctx); // = S02 state 1 (frame end = frame start)

@@ -12,10 +12,10 @@ export const placeholder: SectionMotion = {
     put(root.querySelector<HTMLElement>('[data-ph]'), { o: window4(u, -0.3, 0, 0.6, 1.2) }, ctx);
   },
   // hidden; paper env so a ring leaving toward an unbuilt light section (S06) does not turn dark
-  ring: () => pose({ x: -0.32, y: 0, w: 0.18, alpha: 0, light: 0 }),
+  ring: () => pose({ x: -0.32, y: 1.4, w: 0.18, light: 0 }),
   ringIn(x, _ctx, from) {
     const t = seg(x, 0, 0.45);
-    const to: Pose = { ...from, w: from.w * 0.4, alpha: 0 };
+    const to: Pose = { ...from, w: from.w * 0.4, y: from.y + 1.3 };
     const o = {} as Pose;
     for (const k of Object.keys(from) as (keyof Pose)[]) o[k] = lerp(from[k], to[k], t);
     return o;

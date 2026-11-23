@@ -8,7 +8,7 @@
  *  - Ultrahuman PDP → a swatch changes the real material (finishes.json *_polished, D-085), with a
  *    Daylight / Lamp light toggle; the panel warms a little under Lamp light.
  * Finish changes only by click (D-069). The button shows an inline note (role="status"), no cart
- * (D-074). CTA Ink #1C1B1A (sticky). Motion and controls: scripts/sections/finishes.ts.
+ * (D-074). CTA = token btn-primary (Ink). Motion and controls: scripts/sections/finishes.ts.
  */
 import { finishes as d } from '../../content/copy';
 ---
@@ -94,7 +94,7 @@ import { finishes as d } from '../../content/copy';
 <style>
   .scene--finishes {
     color: var(--ink);
-    --panel: rgb(247 245 240 / 0.6);
+    --panel: color-mix(in srgb, var(--paper) 60%, transparent);
   }
   .scene--finishes[data-lamp='1'] {
     --panel: color-mix(in srgb, var(--paper) 86%, var(--ochre) 14%);
@@ -105,7 +105,7 @@ import { finishes as d } from '../../content/copy';
     opacity: 0;
     transition: opacity 0.6s ease;
     background:
-      radial-gradient(55% 70% at 4% 34%, rgb(183 111 32 / 0.2), rgb(183 111 32 / 0) 70%),
+      radial-gradient(55% 70% at 4% 34%, color-mix(in srgb, var(--ochre) 20%, transparent), transparent 70%),
       color-mix(in srgb, var(--night) 72%, var(--ochre) 28%);
   }
   .scene--finishes[data-lamp='1'] .fn__dim {
@@ -127,10 +127,11 @@ import { finishes as d } from '../../content/copy';
     left: var(--margin);
     top: calc(var(--header-h) + 4vh);
     width: min(46rem, 58vw);
-    font-size: clamp(2.25rem, 1.2rem + 2.2vw, 3.25rem);
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
-    line-height: 1;
+    /* Heading/Heading 1 (G-09: 52 → 56) */
+    font-size: var(--h1-fs);
+    font-weight: var(--w-medium);
+    letter-spacing: var(--h1-ls);
+    line-height: var(--h1-lh);
   }
   .fn__head {
     position: absolute;
@@ -160,23 +161,22 @@ import { finishes as d } from '../../content/copy';
     display: flex;
     align-items: center;
     gap: 14px;
-    font-size: 14px;
+    font-size: var(--para-sm-fs);
+    line-height: var(--para-sm-lh);
   }
   .fn__arrow {
     width: 40px;
     height: 40px;
     border-radius: 50%;
     border: 0;
-    background: rgb(35 31 32 / 0.08);
+    background: color-mix(in srgb, var(--ink) 8%, transparent);
     color: var(--ink);
-    font: inherit;
-    font-size: 20px;
-    line-height: 1;
+    font: var(--w-medium) var(--label-lg-fs) / 1 var(--font-sans);
     cursor: pointer;
     transition: background 0.2s;
   }
   .fn__arrow:hover {
-    background: rgb(35 31 32 / 0.16);
+    background: color-mix(in srgb, var(--ink) 16%, transparent);
   }
   .fn__hint-m {
     display: none;
@@ -203,30 +203,39 @@ import { finishes as d } from '../../content/copy';
     align-items: baseline;
   }
   .fn__name {
-    font-size: clamp(1.375rem, 1.1rem + 0.8vw, 1.875rem);
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
+    /* Heading/Heading 2 (product name) */
+    font-size: var(--h2-fs);
+    line-height: var(--h2-lh);
+    font-weight: var(--w-medium);
+    letter-spacing: var(--h2-ls);
   }
   .fn__price {
-    font-size: clamp(1.25rem, 1rem + 0.6vw, 1.625rem);
-    font-weight: var(--w-heading);
+    /* Heading/Heading 2 (price) */
+    font-size: var(--h2-fs);
+    line-height: var(--h2-lh);
+    letter-spacing: var(--h2-ls);
+    font-weight: var(--w-medium);
     font-variant-numeric: tabular-nums;
   }
   /* D-098 r1: readable at desktop — 15px, Stone darkened toward Ink */
   .fn__muted {
-    font-size: 15px;
-    line-height: 1.45;
-    color: rgb(35 31 32 / 0.78);
+    /* Paragraph/Small */
+    font-size: var(--para-sm-fs);
+    line-height: var(--para-sm-lh);
+    color: color-mix(in srgb, var(--ink) 78%, transparent);
   }
   .fn__group {
     display: grid;
     gap: 10px;
   }
   .fn__label {
-    font-size: 15px;
+    /* Label/Small */
+    font-size: var(--label-sm-fs);
+    line-height: var(--label-sm-lh);
+    font-weight: var(--w-medium);
   }
   .fn__label b {
-    font-weight: 600;
+    font-weight: var(--w-medium);
   }
   .fn__swatches {
     display: flex;
@@ -239,9 +248,9 @@ import { finishes as d } from '../../content/copy';
     padding: 0;
     border: 0;
     background: none;
-    font: inherit;
-    font-size: 14px;
-    color: rgb(35 31 32 / 0.78);
+    /* Paragraph/Small */
+    font: var(--w-regular) var(--para-sm-fs) / var(--para-sm-lh) var(--font-sans);
+    color: color-mix(in srgb, var(--ink) 78%, transparent);
     cursor: pointer;
   }
   .fn__swatch i {
@@ -249,7 +258,7 @@ import { finishes as d } from '../../content/copy';
     height: 40px;
     border-radius: 50%;
     background: var(--sw);
-    box-shadow: inset 0 0 0 1px rgb(35 31 32 / 0.12);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent);
     outline: 1.5px solid transparent;
     outline-offset: 3px;
     transition: outline-color 0.2s;
@@ -262,20 +271,20 @@ import { finishes as d } from '../../content/copy';
   }
   /* product finishes (material, not UI colour) */
   .fn__swatch--silver {
-    --sw: radial-gradient(circle at 35% 30%, #f6f6f7, #b9b9bd 55%, #8c8c90);
+    --sw: var(--finish-silver);
   }
   .fn__swatch--black {
-    --sw: radial-gradient(circle at 35% 30%, #4a4a4e, #141416 55%, #050506);
+    --sw: var(--finish-black);
   }
   .fn__swatch--gold {
-    --sw: radial-gradient(circle at 35% 30%, #fbe7b5, #e0b55e 55%, #a97a2a);
+    --sw: var(--finish-gold);
   }
   .fn__seg {
     display: flex;
     gap: 6px;
     padding: 4px;
     border-radius: var(--radius-pill);
-    background: rgb(35 31 32 / 0.06);
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
     justify-self: start;
   }
   .fn__seg button {
@@ -283,9 +292,10 @@ import { finishes as d } from '../../content/copy';
     border-radius: var(--radius-pill);
     border: 0;
     background: transparent;
-    font: inherit;
-    font-size: 14px;
-    color: rgb(35 31 32 / 0.78);
+    /* Buttons/Small */
+    font: var(--w-medium) var(--btn-sm-fs) / var(--btn-sm-lh) var(--font-sans);
+    letter-spacing: var(--btn-sm-ls);
+    color: color-mix(in srgb, var(--ink) 78%, transparent);
     cursor: pointer;
   }
   .fn__seg button[aria-pressed='true'] {
@@ -304,10 +314,10 @@ import { finishes as d } from '../../content/copy';
   .fn__sizes button {
     height: 40px;
     border-radius: 8px;
-    border: 1px solid rgb(35 31 32 / 0.14);
+    border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
     background: transparent;
-    font: inherit;
-    font-size: 14px;
+    /* Label/Small */
+    font: var(--w-medium) var(--label-sm-fs) / var(--label-sm-lh) var(--font-sans);
     color: var(--ink);
     font-variant-numeric: tabular-nums;
     cursor: pointer;
@@ -321,23 +331,24 @@ import { finishes as d } from '../../content/copy';
     height: 52px;
     border-radius: var(--radius-pill);
     border: 0;
-    background: #1c1b1a;
+    background: var(--btn-primary);
     color: var(--paper);
-    font: inherit;
-    font-size: 16px;
-    font-weight: var(--w-label);
+    /* Buttons/Medium */
+    font: var(--w-medium) var(--btn-md-fs) / var(--btn-md-lh) var(--font-sans);
     cursor: pointer;
     transition: transform 0.15s ease, background 0.2s;
   }
   .fn__cta:hover {
-    background: #000;
+    background: var(--btn-primary-hover);
   }
   .fn__cta:active {
     transform: scale(0.99);
   }
   .fn__note {
     min-height: 1.4em;
-    font-size: 15px;
+    /* Paragraph/Small */
+    font-size: var(--para-sm-fs);
+    line-height: var(--para-sm-lh);
     text-align: center;
     color: var(--ink);
   }
@@ -362,7 +373,6 @@ import { finishes as d } from '../../content/copy';
       top: calc(var(--header-h) + 2vh);
       width: auto;
       right: var(--margin);
-      font-size: 2rem;
     }
     .fn__drag {
       top: calc(var(--header-h) + 8vh);
@@ -374,7 +384,6 @@ import { finishes as d } from '../../content/copy';
       left: 50%;
       bottom: auto;
       top: calc(var(--header-h) + 40vh);
-      font-size: 13px;
     }
     .fn__hint-d {
       display: none;

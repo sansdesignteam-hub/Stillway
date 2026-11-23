@@ -153,7 +153,7 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
   }
   .sp__orbit ellipse {
     fill: none;
-    stroke: rgb(35 31 32 / 0.28);
+    stroke: color-mix(in srgb, var(--ink) 28%, transparent);
     stroke-width: 1px;
     vector-effect: non-scaling-stroke;
   }
@@ -166,7 +166,7 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
     margin: calc(var(--fh) / -2) 0 0 calc(var(--fw) / -2);
     border-radius: 6px;
     overflow: hidden;
-    background: #d9cbb9;
+    background: var(--neutral-200);
     transform-origin: 50% 50%;
   }
   .sp__card :global(picture),
@@ -187,13 +187,17 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
   .sp__caption {
     z-index: 20;
   }
+  .scene--specs .sp__words {
+    z-index: 1; /* behind the row of cards (Storyboard 07 State 2) */
+  }
   .sp__words {
     position: absolute;
     inset: 0;
-    font-size: clamp(3rem, 5.6vw, 6.5rem);
-    font-weight: var(--w-display);
-    letter-spacing: var(--track-display);
-    line-height: 1;
+    /* Display/Display 2 */
+    font-size: var(--d2-fs);
+    font-weight: var(--w-medium);
+    letter-spacing: var(--d-ls);
+    line-height: var(--d2-lh);
   }
   .sp__w {
     position: absolute;
@@ -208,7 +212,7 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
     right: 27vw;
     bottom: 4vh;
     height: 1px;
-    background: rgb(35 31 32 / 0.22);
+    background: color-mix(in srgb, var(--ink) 22%, transparent);
     display: grid;
     place-items: center;
   }
@@ -217,8 +221,10 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
     color: var(--paper);
     padding: 3px 8px;
     border-radius: 2px;
-    font-size: 11px;
-    letter-spacing: var(--track-mono);
+    /* Mono/X-Small */
+    font-size: var(--mono-xs-fs);
+    line-height: var(--mono-xs-lh);
+    letter-spacing: var(--mono-ls);
     text-transform: uppercase;
   }
   .sp__line {
@@ -227,7 +233,7 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
     right: calc(50% - var(--fw) / 2 - 12vw);
     top: calc(50% - 2svh);
     height: 1px;
-    background: rgb(35 31 32 / 0.35);
+    background: color-mix(in srgb, var(--ink) 35%, transparent);
   }
   .sp__text {
     position: absolute;
@@ -237,19 +243,20 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
     position: absolute;
     left: calc(50% - var(--fw) / 2 - 8.5vw);
     bottom: calc(50% + 2svh + 6px);
-    font-size: clamp(28px, 2.5vw, 40px);
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
-    line-height: 1;
+    /* Heading/Heading 2 (Figma "(I) Night" 36) */
+    font-size: var(--h2-fs);
+    font-weight: var(--w-medium);
+    letter-spacing: var(--h2-ls);
+    line-height: var(--h2-lh);
     white-space: nowrap;
   }
   .sp__ttl,
   .sp__fact {
     position: absolute;
-    font-size: clamp(15px, 1.3vw, 19px);
-    line-height: 1.3;
-    text-transform: uppercase;
-    letter-spacing: 0.01em;
+    /* Paragraph/Large, sentence case (D-119: captions are not capitalised) */
+    font-size: var(--para-lg-fs);
+    line-height: var(--para-lg-lh);
+    letter-spacing: var(--para-lg-ls);
   }
   .sp__ttl {
     left: var(--margin);
@@ -278,7 +285,7 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
   }
   .sp__count circle {
     fill: none;
-    stroke: rgb(35 31 32 / 0.16);
+    stroke: color-mix(in srgb, var(--ink) 16%, transparent);
     stroke-width: 1px;
     vector-effect: non-scaling-stroke;
   }
@@ -288,9 +295,11 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
   }
   .sp__num {
     grid-area: 1 / 1;
-    font-size: 28px;
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
+    /* Label/Large (counter) */
+    font-size: var(--label-lg-fs);
+    line-height: var(--label-lg-lh);
+    font-weight: var(--w-medium);
+    letter-spacing: var(--label-lg-ls);
     font-variant-numeric: tabular-nums;
     opacity: 0;
   }
@@ -301,11 +310,11 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
     width: 272px;
     padding: 12px 14px 12px;
     border-radius: 10px;
-    background: #fff;
+    background: var(--white);
     display: grid;
     gap: 10px;
     pointer-events: auto;
-    box-shadow: 0 1px 0 rgb(35 31 32 / 0.04);
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 4%, transparent);
   }
   .sp__ph {
     display: flex;
@@ -317,8 +326,10 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
     color: var(--stone);
   }
   .sp__out {
-    font-size: 15px;
-    font-weight: var(--w-label);
+    /* Label/Small */
+    font-size: var(--label-sm-fs);
+    line-height: var(--label-sm-lh);
+    font-weight: var(--w-medium);
     font-variant-numeric: tabular-nums;
   }
   .sp__bars {
@@ -331,7 +342,7 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
   .sp__bars i {
     position: relative;
     height: var(--h);
-    background: rgb(35 31 32 / 0.18);
+    background: color-mix(in srgb, var(--ink) 18%, transparent);
     border-radius: 2px;
   }
   .sp__bars i.is-on {
@@ -342,7 +353,8 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
     left: 0;
     right: 0;
     top: calc(100% + 2px);
-    font: 500 9px/1 var(--font-mono, monospace);
+    font: var(--w-regular) var(--mono-xs-fs) / 1 var(--font-mono);
+    letter-spacing: var(--mono-ls);
     color: var(--stone);
     text-align: center;
   }
@@ -355,13 +367,15 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
   .sp__ticks {
     display: flex;
     justify-content: space-between;
-    font-size: 10px;
+    font: var(--w-regular) var(--mono-xs-fs) / var(--mono-xs-lh) var(--font-mono);
+    letter-spacing: var(--mono-ls);
     color: var(--stone);
     padding: 0 3px;
   }
   .sp__sim {
     color: var(--stone);
-    font-size: 10px;
+    font-size: var(--mono-xs-fs);
+    line-height: var(--mono-xs-lh);
   }
   .sp__seg {
     display: flex;
@@ -373,8 +387,9 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
     border-radius: var(--radius-pill);
     border: 1px solid var(--line);
     background: transparent;
-    font: inherit;
-    font-size: 13px;
+    /* Buttons/Small */
+    font: var(--w-medium) var(--btn-sm-fs) / var(--btn-sm-lh) var(--font-sans);
+    letter-spacing: var(--btn-sm-ls);
     color: var(--ink);
     cursor: pointer;
   }
@@ -398,16 +413,18 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
     line-height: 0.9;
   }
   .sp__the {
-    font-size: clamp(2rem, 4.2vw, 4.5rem);
-    font-weight: var(--w-display);
-    letter-spacing: var(--track-display);
+    /* Heading/Heading 1 (until the one-line "The everyday." of phase 3) */
+    font-size: var(--h1-fs);
+    font-weight: var(--w-medium);
+    letter-spacing: var(--h1-ls);
     text-align: left;
     margin-left: 0.6em;
   }
   .sp__evword {
-    font-size: clamp(4rem, 12vw, 13rem);
-    font-weight: var(--w-display);
-    letter-spacing: var(--track-display);
+    /* Display/Display 2 */
+    font-size: var(--d2-fs);
+    font-weight: var(--w-medium);
+    letter-spacing: var(--d-ls);
   }
   /* D-093 r1: under "Everyday", at its left edge, clear of the small card, on a Paper chip */
   .sp__caption {
@@ -415,17 +432,16 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
     margin: 0.9em 0 0 0.04em;
     padding: 5px 10px;
     border-radius: var(--radius-pill);
-    background: rgb(247 245 240 / 0.9);
-    font-size: var(--fs-small);
-    line-height: 1.25;
+    background: color-mix(in srgb, var(--paper) 90%, transparent);
+    /* Paragraph/Large (Figma S07 caption) */
+    font-size: var(--para-lg-fs);
+    line-height: var(--para-lg-lh);
+    letter-spacing: var(--para-lg-ls);
     color: var(--ink);
   }
   @media (max-width: 719px) {
     .sp__every :global(img) {
       object-position: 84% 50%;
-    }
-    .sp__words {
-      font-size: 15vw;
     }
     .sp__pillrow {
       left: var(--margin);
@@ -439,13 +455,11 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
     .sp__name {
       left: var(--margin);
       bottom: calc(57% + 3svh + 6px);
-      font-size: 26px;
     }
     .sp__ttl {
       top: calc(var(--header-h) + 2vh);
       width: auto;
       right: var(--margin);
-      font-size: 14px;
     }
     .sp__fact {
       left: var(--margin);
@@ -453,8 +467,6 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
       top: calc(43% + var(--fh) / 2 + 14px);
       width: auto;
       text-align: left;
-      font-size: 13px;
-      text-transform: none;
     }
     .sp__count {
       left: auto;
@@ -462,9 +474,6 @@ const battery = d.battery.days.map((day, i) => ({ day, pct: 100 - 14 * (i + 1) }
       top: calc(43% - 3svh - 70px);
       width: 56px;
       height: 56px;
-    }
-    .sp__num {
-      font-size: 18px;
     }
     .sp__panel {
       left: var(--margin);

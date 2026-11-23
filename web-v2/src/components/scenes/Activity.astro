@@ -71,7 +71,7 @@ const first = d.frames[0];
   .scene--activity {
     color: var(--paper);
     --stone: var(--stone-on-night);
-    --paper-soft: rgb(247 245 240 / 0.62);
+    --paper-soft: color-mix(in srgb, var(--paper) 62%, transparent);
     --oy: 5svh; /* the strip sits a little low so the copy above it stays clear */
     --bh: min(74svh, 720px, 66vw);
     --bw: calc(var(--bh) * 0.7);
@@ -82,7 +82,7 @@ const first = d.frames[0];
     bottom: -40vh;
     width: 80vw;
     aspect-ratio: 1;
-    background: radial-gradient(closest-side, rgb(183 111 32 / 0.28), rgb(183 111 32 / 0));
+    background: var(--cocoa-glow); /* cocoa/700 → Night from the lower left (Moodboard §2.2) */
     filter: blur(40px);
   }
   .act__head {
@@ -97,22 +97,23 @@ const first = d.frames[0];
   }
   .act__title {
     display: grid;
-    font-size: clamp(36px, 3.4vw, 56px);
-    font-weight: 600;
-    line-height: 0.98;
-    letter-spacing: -0.04em;
+    /* Heading/Heading 1 */
+    font-size: var(--h1-fs);
+    font-weight: var(--w-medium);
+    line-height: var(--h1-lh);
+    letter-spacing: var(--h1-ls);
   }
   .act__caps {
-    color: var(--paper-soft);
-    text-transform: uppercase;
-    letter-spacing: -0.03em;
+    /* sentence case (D-119); the first word in the soft cocoa tone, as the Figma frame */
+    color: var(--text-cocoa-soft);
   }
   .act__line {
     color: var(--paper);
   }
   .act__body {
-    font-size: 15px;
-    line-height: 1.45;
+    /* Paragraph/Medium */
+    font-size: var(--para-md-fs);
+    line-height: var(--para-md-lh);
     color: var(--paper);
     max-width: 26em;
   }
@@ -128,7 +129,7 @@ const first = d.frames[0];
     width: calc(var(--bw) + 20px);
     height: calc(var(--bh) + 20px);
     translate: -50% -50%;
-    border: 1.5px dashed rgb(247 245 240 / 0.55);
+    border: 1.5px dashed color-mix(in srgb, var(--paper) 55%, transparent);
     border-radius: 2px;
     pointer-events: none;
   }
@@ -149,7 +150,7 @@ const first = d.frames[0];
     margin-left: calc(var(--bw) / -2);
     margin-top: calc(var(--bh) / -2);
     overflow: hidden;
-    background: #2b241e;
+    background: var(--cocoa-900);
     transform-origin: 50% 50%;
     will-change: transform;
     --dark: 0;
@@ -179,10 +180,11 @@ const first = d.frames[0];
     width: calc((100vw - var(--bw)) / 2 - var(--bw) * 0.36 - 40px - var(--margin));
   }
   .act__time {
-    font-size: clamp(56px, 6vw, 96px);
-    font-weight: 500;
-    line-height: 0.9;
-    letter-spacing: -0.05em;
+    /* Display/Display 4 */
+    font-size: var(--d4-fs);
+    font-weight: var(--w-medium);
+    line-height: var(--d4-lh);
+    letter-spacing: var(--d-ls);
     font-variant-numeric: tabular-nums;
   }
   .act__status {
@@ -190,8 +192,11 @@ const first = d.frames[0];
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 20px;
-    font-weight: 600;
+    /* Label/Large */
+    font-size: var(--label-lg-fs);
+    line-height: var(--label-lg-lh);
+    letter-spacing: var(--label-lg-ls);
+    font-weight: var(--w-medium);
   }
   .act__key {
     width: 10px;
@@ -200,16 +205,19 @@ const first = d.frames[0];
     background: var(--paper);
   }
   .act__key[data-state='resting'] {
-    background: #9aa883; /* V1 resting dot (D-092) */
+    background: var(--stone-on-night); /* resting dot: a neutral token, no extra UI colour (Moodboard §2.6) */
   }
   .act__detail {
     color: var(--paper-soft);
   }
   .act__sim {
     margin-top: 10px;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    letter-spacing: 0;
+    /* Mono/X-Small ("Simulated data") */
+    font-family: var(--font-mono);
+    font-size: var(--mono-xs-fs);
+    line-height: var(--mono-xs-lh);
+    letter-spacing: var(--mono-ls);
+    text-transform: uppercase;
     text-transform: none;
     color: var(--paper-soft);
   }
@@ -224,9 +232,11 @@ const first = d.frames[0];
     display: grid;
     gap: 4px;
     text-align: right;
-    font-family: var(--font-sans);
-    font-size: 15px;
-    letter-spacing: 0;
+    /* Mono/Small (times) */
+    font-family: var(--font-mono);
+    font-size: var(--mono-sm-fs);
+    line-height: var(--mono-sm-lh);
+    letter-spacing: var(--mono-ls);
     font-variant-numeric: tabular-nums;
   }
   .act__list li {
@@ -257,9 +267,6 @@ const first = d.frames[0];
       top: calc(var(--header-h) + 16px);
       gap: 8px;
     }
-    .act__title {
-      font-size: 32px;
-    }
     .act__body {
       display: none;
     }
@@ -277,15 +284,12 @@ const first = d.frames[0];
     }
     .act__time {
       grid-row: 1 / span 3;
-      font-size: 48px;
     }
     .act__status {
       margin-top: 0;
-      font-size: 17px;
     }
     .act__detail,
     .act__sim {
-      font-size: 14px;
       margin-top: 0;
     }
     .act__list,

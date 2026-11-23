@@ -14,6 +14,8 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
 ---
 
 <section class="scene scene--sleep" data-scene="sleep" aria-labelledby="sleep-title">
+  <!-- 02 → 03 (D-108, D-120): the warm cocoa/200 light from above, a glow behind the ring -->
+  <div class="scene__back"><div class="sleep__beam" data-s-beam data-a aria-hidden="true"></div></div>
   <img class="ring-fallback sleep__fb" src="/ring-fallback/fb-s03-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
   <div class="scene__front">
     <div class="sleep__col">
@@ -46,7 +48,7 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   }
   /* text column left (Ultrahuman ref 1 composition): kicker, headline, one number slot, foot */
   .sleep__col {
-    --n: clamp(5rem, 18vw, 17rem); /* active number: ~half the width (Ultrahuman ref), ≈2× before */
+    --n: var(--d2-fs); /* active number: Display/Display 2 (Figma S03 "Value" 152) */
     position: absolute;
     left: var(--margin);
     top: 50%;
@@ -55,21 +57,36 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
     display: grid;
     gap: 20px;
   }
+  /* a soft cone of warm light from the top edge onto the ring (behind it, never over it) */
+  .sleep__beam {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: min(70vw, 900px);
+    height: 92%;
+    translate: -50% 0;
+    background:
+      radial-gradient(60% 42% at 50% 0%, color-mix(in srgb, var(--cocoa-200) 48%, transparent), transparent 72%),
+      conic-gradient(from 180deg at 50% -8%, transparent 157deg, color-mix(in srgb, var(--cocoa-200) 22%, transparent) 172deg, color-mix(in srgb, var(--cocoa-200) 30%, transparent) 180deg, color-mix(in srgb, var(--cocoa-200) 22%, transparent) 188deg, transparent 203deg);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%);
+    filter: blur(18px);
+  }
   .sleep__kicker {
     color: var(--stone);
   }
   .sleep__head {
-    font-size: clamp(22px, 2.3vw, 34px); /* = S01 statement */
-    font-weight: var(--w-display);
-    letter-spacing: var(--track-tight);
-    line-height: 1.15;
+    /* Heading/Heading 2 (Figma S03 "Heading" 36) */
+    font-size: var(--h2-fs);
+    font-weight: var(--w-medium);
+    letter-spacing: var(--h2-ls);
+    line-height: var(--h2-lh);
   }
   /* one slot: all three numbers share it; the active one is full size, older ones shrink upward */
   .sleep__slot {
     /* room above for the previous number, which shrinks upward when the next one arrives */
-    margin: calc(var(--n) * 0.32) 0 0;
+    margin: calc(var(--n) * 0.62) 0 0; /* room for the previous number (Display 4 size) above */
     display: grid;
-    min-height: calc(var(--fs-number) * 1.6);
+    min-height: calc(var(--n) * 1.1);
     align-items: end;
   }
   .stat {
@@ -90,14 +107,15 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
     margin: 0;
     font-size: var(--n);
     white-space: nowrap;
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
-    line-height: 0.9;
+    font-weight: var(--w-medium);
+    letter-spacing: var(--d-ls);
+    line-height: var(--d2-lh);
     font-variant-numeric: tabular-nums;
   }
   .stat__unit {
-    font-size: 0.34em;
-    vertical-align: 1.45em;
+    /* Display/Display 4 (Figma S03 "Unit" 72) */
+    font-size: var(--d4-fs);
+    vertical-align: calc((var(--n) - var(--d4-fs)) * 0.7); /* tops aligned, as Figma */
     margin-left: 0.04em;
     letter-spacing: 0;
   }
@@ -107,7 +125,8 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
     min-height: 3.2em;
   }
   .sleep__line {
-    font-size: var(--fs-small);
+    font-size: var(--para-md-fs);
+    line-height: var(--para-md-lh);
   }
   .sleep__sim {
     color: var(--stone);
@@ -131,9 +150,6 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
     }
     .sleep__slot {
       margin-top: 52px;
-    }
-    .sleep__col {
-      --n: 27vw;
     }
     .sleep__fb {
       --rw: 80vw;

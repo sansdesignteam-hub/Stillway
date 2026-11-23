@@ -8,7 +8,7 @@
  *  2  state 3  (I) Night in focus: title on a line, counter 1/4, orbit lines, battery panel
  *  3–5 state 4 (II) Desk → (III) Move → (IV) Rinse, one per viewport
  *  6  state 5  the card shrinks, The Everyday opens to full bleed behind it
- *  > 6.6       to S08 (placeholder): the photo darkens to Night, the text fades
+ *  > 6.6       to S08: the Night panel rises over the photo, everything moves up with it
  * The panels are the only things to touch (range / buttons, keyboard and screen-reader labelled);
  * they never stop the page from scrolling.
  */
@@ -135,8 +135,8 @@ export const specs: SectionMotion = {
   update(u, ctx) {
     const L = measure(ctx);
     const { W, H, m } = L;
-    const out = seg(u, END, END + 0.3); // leaving for S08
-    const inn = seg(u, -0.3, 0); // 70–100% of the incoming connection
+    const inn = seg(u, -0.35, 0); // 65–100% of the incoming connection: rises in (after the panel)
+    const rise = (1 - inn) * H * 0.3;
 
     /* words: one line in the middle (state 1) → split around the row of cards (state 2) → out */
     const split = seg(u, 0.3, 1);
@@ -155,16 +155,20 @@ export const specs: SectionMotion = {
       p0y = lerp(H * 0.5 - wordH, L.rowY - L.ch / 2 - wordH - 10, split);
       p1y = lerp(H * 0.5, L.rowY + L.ch / 2 + 6, split);
     } else {
+      // Storyboard 07 State 2: "Through" from the left margin and "the day." to the right margin,
+      // behind the row of cards (Display 2)
       const total = w0 + space + w1;
       const s0 = W / 2 - total / 2;
-      p0x = lerp(s0, rowL - w0 + L.cw * 0.06, split);
-      p1x = lerp(s0 + w0 + space, rowL + rowW - L.cw * 0.12, split);
+      const mg = Math.min(40, W * 0.028);
+      p0x = lerp(s0, Math.min(mg, rowL - w0 + L.cw * 0.06), split);
+      p1x = lerp(s0 + w0 + space, Math.max(W - mg - w1, rowL + rowW - L.cw * 0.12), split);
       p0y = p1y = L.rowY - wordH / 2;
     }
-    const wo = inn * (1 - focusIn);
-    put(words[0], { o: wo, x: p0x - (m ? 0 : 60 * focusIn), y: p0y + (1 - inn) * 20 }, ctx);
-    put(words[1], { o: wo, x: p1x + (m ? 0 : 60 * focusIn), y: p1y + (1 - inn) * 20 }, ctx);
-    put(el.pill, { o: inn * (1 - focusIn) }, ctx);
+    // "Through" / "the day." leave to the sides as the cards gather (moving, not fading)
+    const wo = inn > 0.001 && focusIn < 0.999 ? 1 : 0;
+    put(words[0], { o: wo, x: p0x - (m ? 0 : W * 0.6 * focusIn), y: p0y + rise }, ctx);
+    put(words[1], { o: wo, x: p1x + (m ? 0 : W * 0.6 * focusIn), y: p1y + rise }, ctx);
+    put(el.pill, { o: wo, y: rise + focusIn * H * 0.5 }, ctx);
 
     /* cards: rise into the row, then one comes into focus, the next peeks behind it */
     const f = focusOf(u);
@@ -197,21 +201,24 @@ export const specs: SectionMotion = {
       const x = lerp(rx, fx, focusIn);
       const y = lerp(ry, fy, focusIn);
       const s = lerp(rs, fs, focusIn);
-      const o = lerp(rise, fo, focusIn) * (i === 3 ? 1 : 1 - every) * (1 - out);
+      const o = lerp(rise, fo, focusIn) * (i === 3 ? 1 : 1 - every);
       put(c, { o, x, y: y + (L.cy - H / 2), s }, ctx);
       c.style.zIndex = String(10 - Math.round(Math.abs(d) * 2) + (d < 0 ? -5 : 0));
     });
 
     /* focus furniture: line, (n) name, text, counter, orbit, panel */
-    const furn = focusIn * (1 - seg(u, 5.15, 5.5)) * (1 - out);
+    const furn = focusIn * (1 - seg(u, 5.15, 5.5));
     put(el.line, { o: furn }, ctx);
     put(el.orbit, { o: furn, y: L.cy - H / 2 }, ctx);
     if (el.orbit) el.orbit.style.rotate = `${(f * 16 + u * 3).toFixed(2)}deg`;
     put(el.count, { o: furn }, ctx);
     if (el.arc) el.arc.style.setProperty('--p', (((f + 1) / 4) * 100).toFixed(2));
+    // one card's text replaces the other by moving up (G-03): the old one leaves upward before the
+    // new one rises from below, so two never overlap (the S07 layout itself is redone in phase 3)
     texts.forEach((t, i) => {
-      const k = clamp01(1 - Math.abs(f - i) * 2.4);
-      put(t, { o: k * furn, y: (1 - k) * 12 * Math.sign(i - f || 1) }, ctx);
+      const d = f - i;
+      const k = clamp01((0.42 - Math.abs(d)) / 0.12);
+      put(t, { o: k * (furn > 0.5 ? 1 : furn * 2), y: -d * 140 }, ctx);
     });
     nums.forEach((n, i) => (n.style.opacity = (clamp01(1 - Math.abs(f - i) * 2.4) * 1).toFixed(3)));
     panels.forEach((p, i) => {
@@ -235,15 +242,18 @@ export const specs: SectionMotion = {
       es.setProperty('--er', `${lft.toFixed(1)}px`);
       es.setProperty('--erad', `${(lerp(6, 14, every) * shut).toFixed(1)}px`);
       put(el.every, { o: u > 5 ? 1 : 0 }, ctx);
-      if (el.dark) el.dark.style.opacity = seg(u, END, END + 0.75).toFixed(3);
+      // no darkening toward S08: the Night panel covers the photo with a straight edge (D-120)
+      if (el.dark) el.dark.style.opacity = '0';
     }
     const et = seg(u, 5.6, 6);
-    put(el.etext, { o: et * (1 - out), y: (1 - et) * 18 }, ctx);
-    put(el.caption, { o: seg(u, 5.75, 6.05) * (1 - out) }, ctx);
+    put(el.etext, { o: Math.min(1, et * 5), y: (1 - et) * 48 }, ctx);
+    const cap = seg(u, 5.75, 6.05);
+    put(el.caption, { o: Math.min(1, cap * 5), y: (1 - cap) * 32 }, ctx);
   },
-  // no 3D ring in S07 (it is only in the card photos)
-  ring: () => pose({ x: 0.2, y: 0, w: 0.1, alpha: 0 }),
-  // 06 → 07: the polished ring stays on the finger while the hand photo shrinks into a card
-  ringIn: (x, ctx) => detailsLeaveRing(x, ctx),
+  // no 3D ring in S07 (it is only in the card photos): parked above the screen
+  ring: () => pose({ x: 0, y: 1.4, w: 0.1 }),
+  // 06 → 07: the polished ring stays on the finger while the hand photo shrinks into a card and
+  // leaves upward with it (no fade; phase 3 replaces this with the snapshot card of D-123 P10)
+  ringIn: (x, ctx, _from, _to, k) => detailsLeaveRing(x, ctx, k),
 };
 

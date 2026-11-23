@@ -66,7 +66,7 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     width: 108vw;
     top: var(--py);
     height: calc(100lvh - var(--py) + 4vh);
-    background: linear-gradient(to bottom, var(--sand) 0%, var(--sand) 55%, rgb(239 230 219 / 0) 100%);
+    background: linear-gradient(to bottom, var(--sand) 0%, var(--sand) 55%, transparent 100%);
   }
   .det__shadow {
     position: absolute;
@@ -74,7 +74,7 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     height: 1.8vh;
     width: 200px;
     border-radius: 50%;
-    background: radial-gradient(closest-side, rgb(35 31 32 / 0.32), rgb(35 31 32 / 0.12) 55%, rgb(35 31 32 / 0) 100%);
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--ink) 32%, transparent), color-mix(in srgb, var(--ink) 12%, transparent) 55%, transparent 100%);
     filter: blur(3px);
   }
   .det__top {
@@ -83,8 +83,8 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     right: 0;
     top: 0;
     height: 3.6vh;
-    background: linear-gradient(to bottom, #f3ece3, var(--sand));
-    border-bottom: 1px solid rgb(35 31 32 / 0.06);
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--paper) 55%, var(--sand)), var(--sand));
+    border-bottom: 1px solid color-mix(in srgb, var(--ink) 6%, transparent);
   }
   /* the hand lives in a card so 06 → 07 can shrink it into one (Storyboard §3); invisible until then */
   .det__card {
@@ -92,7 +92,7 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     inset: 0;
     clip-path: inset(var(--ct, 0px) var(--cr, 0px) var(--cb, 0px) var(--cl, 0px) round var(--cr0, 0px));
     background: var(--paper);
-    background: rgb(247 245 240 / var(--cbg, 0));
+    background: color-mix(in srgb, var(--paper) calc(var(--cbg, 0) * 100%), transparent);
   }
   .det__hand {
     position: absolute;
@@ -127,7 +127,7 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     width: calc(124px * var(--hs));
     height: calc(26px * var(--hs));
     border-radius: 50%;
-    background: radial-gradient(closest-side, rgb(60 32 16 / 0.42), rgb(60 32 16 / 0.16) 60%, rgb(60 32 16 / 0) 100%);
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--cocoa-900) 42%, transparent), color-mix(in srgb, var(--cocoa-900) 16%, transparent) 60%, transparent 100%);
     filter: blur(calc(3px * var(--hs)));
     opacity: 0;
   }
@@ -142,10 +142,11 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
   .det__fhead {
     position: absolute;
     left: var(--margin);
-    font-size: var(--fs-display);
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
-    line-height: 0.98;
+    /* Heading/Heading 1 */
+    font-size: var(--h1-fs);
+    font-weight: var(--w-medium);
+    letter-spacing: var(--h1-ls);
+    line-height: var(--h1-lh);
   }
   .det__head {
     top: calc(var(--header-h) + 9vh);
@@ -154,22 +155,24 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
   .det__step {
     position: absolute;
     left: var(--margin);
-    top: calc(var(--header-h) + 9vh + 2.2 * var(--fs-display));
+    top: calc(var(--header-h) + 9vh + 2.2 * var(--h1-lh));
     width: min(24rem, 30vw);
     display: grid;
     gap: 10px;
   }
   .det__stitle {
-    font-size: var(--fs-h3);
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
-    line-height: 1.1;
+    /* Heading/Heading 1 (Figma S06 step heading 56) */
+    font-size: var(--h1-fs);
+    font-weight: var(--w-medium);
+    letter-spacing: var(--h1-ls);
+    line-height: var(--h1-lh);
   }
   /* D-093 r1: same as the S04 body — 15px, full Ink, readable */
   .det__body {
-    font-size: 15px;
+    /* Paragraph/Medium */
+    font-size: var(--para-md-fs);
     color: var(--ink);
-    line-height: 1.5;
+    line-height: var(--para-md-lh);
     max-width: 26em;
   }
   /* Sensiq: headline centre-left, body under it */
@@ -205,7 +208,6 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
       top: calc(var(--header-h) + 5vh);
       width: auto;
       right: var(--margin);
-      font-size: 2.5rem;
     }
     .det__step {
       top: auto;
@@ -221,7 +223,6 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
       gap: 10px;
     }
     .det__fhead {
-      font-size: 2.5rem;
     }
     .det__label {
       left: auto;

@@ -136,7 +136,7 @@ const nudge = { time: '23:10', what: 'Settled' }; // = "Settled 23:10" (copy), s
     padding: calc(var(--u) * 1.4);
     border-radius: calc(var(--u) * 7.5);
     background: var(--ink);
-    box-shadow: 0 6px 16px rgb(35 31 32 / 0.07);
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--ink) 7%, transparent);
   }
   .ap__screen {
     position: relative;
@@ -334,7 +334,7 @@ const nudge = { time: '23:10', what: 'Settled' }; // = "Settled 23:10" (copy), s
   /* the time in Ink (Ochre on Sand is 3.2:1); the Ochre stays as the one small "now" mark */
   .ap__stamp b {
     color: var(--ink);
-    font-weight: 600;
+    font-weight: var(--w-medium);
   }
   .ap__stamp b::before {
     content: '';
@@ -372,7 +372,7 @@ const nudge = { time: '23:10', what: 'Settled' }; // = "Settled 23:10" (copy), s
     grid-column: 1 / -1;
     height: calc(var(--u) * 1.1);
     border-radius: 99px;
-    background: rgb(247 245 240 / 0.16);
+    background: color-mix(in srgb, var(--paper) 16%, transparent);
     overflow: hidden;
   }
   .ap__sbar b {
@@ -400,7 +400,7 @@ const nudge = { time: '23:10', what: 'Settled' }; // = "Settled 23:10" (copy), s
     display: block;
     width: 100%;
     border-radius: 3px 3px 0 0;
-    background: rgb(35 31 32 / 0.16);
+    background: color-mix(in srgb, var(--ink) 16%, transparent);
   }
   .ap__week .is-today b {
     background: var(--ink);

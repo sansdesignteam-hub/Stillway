@@ -119,8 +119,9 @@ import AppPhone from '../AppPhone.astro';
   /* D-096 r1: body size as S04/S06, full Ink */
   .ap__ltext,
   .ap__rtext {
-    font-size: 16px;
-    line-height: 1.5;
+    /* Paragraph/Medium */
+    font-size: var(--para-md-fs);
+    line-height: var(--para-md-lh);
     color: var(--ink);
   }
   .ap__right {
@@ -150,7 +151,9 @@ import AppPhone from '../AppPhone.astro';
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 14px;
+    /* Paragraph/Small */
+    font-size: var(--para-sm-fs);
+    line-height: var(--para-sm-lh);
   }
   .ap__flabels {
     position: relative;
@@ -171,7 +174,7 @@ import AppPhone from '../AppPhone.astro';
   .ap__prog {
     width: 120px;
     height: 1px;
-    background: rgb(35 31 32 / 0.2);
+    background: color-mix(in srgb, var(--ink) 20%, transparent);
   }
   .ap__prog b {
     display: block;
@@ -205,8 +208,6 @@ import AppPhone from '../AppPhone.astro';
     }
     .ap__ltext,
     .ap__rtext {
-      font-size: 15px;
-      line-height: 1.4;
     }
     .scene--app :global(.ap__phone) {
       top: 50%;
@@ -223,7 +224,6 @@ import AppPhone from '../AppPhone.astro';
       height: 2.8em;
     }
     .ap__foot {
-      font-size: 12px;
     }
     .ap__prog {
       width: 60px;

@@ -138,6 +138,12 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   deskLamp.position.set(-900, 300, 700);
   const deskFill = new THREE.PointLight(0xff9a3c, 0, 0, 0);
   scene.add(deskLamp, deskFill);
+  // 02 → 03 / S03 (D-108, D-120): the warm cocoa/200 light from above, and one white glint that
+  // runs across the band (a directional light whose direction sweeps left → right with the scroll)
+  const spotTop = new THREE.DirectionalLight(0xe9ccbb, 0);
+  spotTop.position.set(-120, 1000, 380);
+  const glint = new THREE.DirectionalLight(0xffffff, 0);
+  scene.add(spotTop, glint);
   // V1 live cast shadow on the stone (D-051): a shadow-only light and a transparent catcher plane
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -255,6 +261,13 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     m.emissiveIntensity = 0;
   }
   spinner.add(ring);
+  // the two small dots between the windows (Contact_1/2) glow green with the windows in 02 → 03
+  const contacts: THREE.MeshStandardMaterial[] = [];
+  ring.traverse((o) => {
+    if (o.isMesh && /^Contact/i.test(o.name) && !contacts.includes(o.material)) contacts.push(o.material);
+  });
+  const contactBase = contacts.map((m) => ({ color: m.color.clone(), metal: m.metalness, rough: m.roughness }));
+  const SENSOR_GREEN = new THREE.Color('#34E07A');
 
   /* S08: window A lit in the three mode colours (D-062), a soft flare sprite and the coloured bounce
      on the inner band (point light). Placed at the LED mesh centre, nudged toward the ring axis. */
@@ -322,7 +335,6 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const rollQ = new THREE.Quaternion();
   const Z_AXIS = new THREE.Vector3(0, 0, 1);
   const X_AXIS = new THREE.Vector3(1, 0, 0);
-  let lastAlpha = -1;
   let lastEnv = '';
   let lastLedKey = '';
   const apply = (p: Pose, extra: { breathe?: number } = {}) => {
@@ -402,12 +414,34 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     // on Night the polished env is almost black: lift it with the rim so the band keeps a silver gradient
     // the swap dip never goes below 0.45, so the ring is never a black shape in a connection (D-090 r1)
     // under the desk lamp the room is a little dimmer (evening), so the amber edge reads (D-100)
-    scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim) * (1 - 0.12 * lp);
+    // 02 → 03: lights out to an almost-silhouette (D-120), then the warm light from above (D-108)
+    const dim = Math.min(1, Math.max(0, p.dim));
+    // the warm light from above brings part of the room back (the ring reads silver, not black)
+    const spot = Math.max(0, p.spot);
+    scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim) * (1 - 0.12 * lp) * (1 - 0.92 * dim * (1 - 0.42 * spot));
+    spotTop.intensity = 9 * spot;
+    glint.intensity = 16 * Math.max(0, p.sweepI);
+    if (p.sweepI > 0.001) {
+      // the light swings from the left of the ring to its right, a little above and in front
+      const a = (p.sweep - 0.5) * 2.4;
+      glint.position.set(Math.sin(a) * 1000, 420, Math.cos(a) * 1000);
+    }
+    const sens = Math.min(1, Math.max(0, p.sensor));
 
-    const ledKey = p.led.toFixed(3) + '|' + p.ledc.toFixed(3);
+    const ledKey = p.led.toFixed(3) + '|' + p.ledc.toFixed(3) + '|' + sens.toFixed(3);
     if (ledKey !== lastLedKey) {
       lastLedKey = ledKey;
-      setLed(p.led > 0.01 ? '#' + ledColor(p.ledc).getHexString() : null, RING_MODEL.ledIntensity * p.led);
+      if (sens > 0.01 && p.led <= 0.01) {
+        // both windows green (window B uses the power LED mesh), and the two dots
+        setLed('#34E07A', RING_MODEL.ledIntensity * 0.62 * sens);
+        lit(ledPower, '#34E07A', RING_MODEL.ledIntensity * 0.62 * sens);
+      } else setLed(p.led > 0.01 ? '#' + ledColor(p.ledc).getHexString() : null, RING_MODEL.ledIntensity * p.led);
+      contacts.forEach((m, i) => {
+        const b = contactBase[i];
+        m.emissive.copy(SENSOR_GREEN);
+        m.emissiveIntensity = 1.6 * sens;
+        m.color.copy(b.color).lerp(SENSOR_GREEN, 0.6 * sens);
+      });
     }
     const fl = Math.max(0, p.flare);
     flare.visible = fl > 0.005;
@@ -421,29 +455,37 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       bounce.distance = w * 0.9;
       bounce.intensity = 2.4 * fl;
     }
-    if (p.alpha !== lastAlpha) {
-      lastAlpha = p.alpha;
-      canvas.style.opacity = String(p.alpha);
-    }
+    // the ring is never faded (D-120); off screen it is simply not drawn (one clear frame first)
+    const off = Math.abs(pivot.position.y) - w * 0.6 > H / 2 || Math.abs(pivot.position.x) - w * 0.6 > W / 2;
+    offscreen = off;
   };
 
+  let offscreen = false;
+  let clearedOff = false;
   const render = () => {
-    if (lastAlpha <= 0.001 || !W) return;
+    if (!W) return;
+    if (offscreen) {
+      if (clearedOff) return;
+      renderer.clear();
+      clearedOff = true;
+      return;
+    }
+    clearedOff = false;
     renderer.render(scene, camera);
   };
 
   /** colour for window A, or 'off' to light only the red dot, or null for both dark */
-  const setLed = (color: string | 'off' | null, intensity: number = RING_MODEL.ledIntensity) => {
-    const lit = (m: THREE.MeshStandardMaterial | undefined, c: string | null) => {
-      if (!m) return;
-      if (c) m.emissive.set(c);
-      m.emissiveIntensity = c ? intensity : 0;
-      m.toneMapped = !c;
-      m.color.copy(c ? ledBase.get(m) ?? LED_OFF : LED_OFF);
-    };
-    lit(ledMain, color && color !== 'off' ? color : null);
-    lit(ledPower, color === 'off' ? '#FF3B30' : null);
-  };
+  function lit(m: THREE.MeshStandardMaterial | undefined, c: string | null, intensity: number) {
+    if (!m) return;
+    if (c) m.emissive.set(c);
+    m.emissiveIntensity = c ? intensity : 0;
+    m.toneMapped = !c;
+    m.color.copy(c ? ledBase.get(m) ?? LED_OFF : LED_OFF);
+  }
+  function setLed(color: string | 'off' | null, intensity: number = RING_MODEL.ledIntensity) {
+    lit(ledMain, color && color !== 'off' ? color : null, intensity);
+    lit(ledPower, color === 'off' ? '#FF3B30' : null, intensity);
+  }
 
   return { apply, render, setLed, canvas, three: THREE, pivot };
 }

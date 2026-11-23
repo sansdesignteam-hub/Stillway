@@ -16,8 +16,8 @@ body {
   color: var(--ink);
   font-family: var(--font-sans);
   font-weight: var(--w-body);
-  font-size: var(--fs-body);
-  line-height: 1.5;
+  font-size: var(--para-md-fs);
+  line-height: var(--para-md-lh);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: clip;
@@ -70,28 +70,71 @@ button {
   white-space: nowrap;
 }
 
-/* ---------- type roles (Moodboard §3) ---------- */
-.t-display {
-  font-weight: var(--w-heading);
-  letter-spacing: var(--track-tight);
-  line-height: 0.98;
+/* ---------- text styles (Moodboard §3.1, D-119): one class per Figma text style ---------- */
+.ts-display-1,
+.ts-display-2,
+.ts-display-3,
+.ts-display-4,
+.ts-heading-1,
+.ts-heading-2,
+.ts-heading-3 {
+  font-family: var(--font-sans);
+  font-weight: var(--w-medium);
 }
+.ts-display-1 { font-size: var(--d1-fs); line-height: var(--d1-lh); letter-spacing: var(--d-ls); }
+.ts-display-2 { font-size: var(--d2-fs); line-height: var(--d2-lh); letter-spacing: var(--d-ls); }
+.ts-display-3 { font-size: var(--d3-fs); line-height: var(--d3-lh); letter-spacing: var(--d-ls); }
+.ts-display-4 { font-size: var(--d4-fs); line-height: var(--d4-lh); letter-spacing: var(--d-ls); }
+.ts-heading-1 { font-size: var(--h1-fs); line-height: var(--h1-lh); letter-spacing: var(--h1-ls); }
+.ts-heading-2 { font-size: var(--h2-fs); line-height: var(--h2-lh); letter-spacing: var(--h2-ls); }
+.ts-heading-3 { font-size: var(--h3-fs); line-height: var(--h3-lh); letter-spacing: var(--h3-ls); }
+.ts-label-lg { font: var(--w-medium) var(--label-lg-fs) / var(--label-lg-lh) var(--font-sans); letter-spacing: var(--label-lg-ls); }
+.ts-label-md { font: var(--w-medium) var(--label-md-fs) / var(--label-md-lh) var(--font-sans); letter-spacing: 0; }
+.ts-label-sm { font: var(--w-medium) var(--label-sm-fs) / var(--label-sm-lh) var(--font-sans); letter-spacing: 0; }
+.ts-label-xs { font: var(--w-medium) var(--label-xs-fs) / var(--label-xs-lh) var(--font-sans); letter-spacing: 0; }
+.ts-para-lg { font: var(--w-regular) var(--para-lg-fs) / var(--para-lg-lh) var(--font-sans); letter-spacing: var(--para-lg-ls); }
+.ts-para-md { font: var(--w-regular) var(--para-md-fs) / var(--para-md-lh) var(--font-sans); letter-spacing: 0; }
+.ts-para-sm { font: var(--w-regular) var(--para-sm-fs) / var(--para-sm-lh) var(--font-sans); letter-spacing: 0; }
+.ts-para-xs { font: var(--w-regular) var(--para-xs-fs) / var(--para-xs-lh) var(--font-sans); letter-spacing: 0; }
+.ts-btn-md { font: var(--w-medium) var(--btn-md-fs) / var(--btn-md-lh) var(--font-sans); letter-spacing: 0; }
+.ts-btn-sm { font: var(--w-medium) var(--btn-sm-fs) / var(--btn-sm-lh) var(--font-sans); letter-spacing: var(--btn-sm-ls); }
+/* Mono: the only uppercase text besides the wordmark */
+.ts-mono-lg,
+.ts-mono-md,
+.ts-mono-sm,
+.ts-mono-xs {
+  font-family: var(--font-mono);
+  letter-spacing: var(--mono-ls);
+  text-transform: uppercase;
+}
+.ts-mono-lg { font-size: var(--mono-lg-fs); line-height: var(--mono-lg-lh); font-weight: var(--w-regular); }
+.ts-mono-md { font-size: var(--mono-md-fs); line-height: var(--mono-md-lh); font-weight: var(--w-medium); }
+.ts-mono-sm { font-size: var(--mono-sm-fs); line-height: var(--mono-sm-lh); font-weight: var(--w-regular); }
+.ts-mono-xs { font-size: var(--mono-xs-fs); line-height: var(--mono-xs-lh); font-weight: var(--w-regular); }
+
+/* older role classes = the text styles above */
 .t-display {
-  font-size: var(--fs-display);
+  font-weight: var(--w-medium);
+  font-size: var(--h1-fs);
+  line-height: var(--h1-lh);
+  letter-spacing: var(--h1-ls);
 }
 .t-mono {
+  /* Mono/Medium: eyebrow, tag, chip */
   font-family: var(--font-mono);
-  font-weight: var(--w-label);
-  font-size: var(--fs-mono);
-  letter-spacing: var(--track-mono);
+  font-weight: var(--w-medium);
+  font-size: var(--mono-md-fs);
+  line-height: var(--mono-md-lh);
+  letter-spacing: var(--mono-ls);
   text-transform: uppercase;
 }
 .t-tag {
-  /* [ TAG ] */
+  /* [ TAG ] — Mono/Medium in ochre */
   font-family: var(--font-mono);
-  font-weight: var(--w-label);
-  font-size: var(--fs-mono);
-  letter-spacing: var(--track-mono);
+  font-weight: var(--w-medium);
+  font-size: var(--mono-md-fs);
+  line-height: var(--mono-md-lh);
+  letter-spacing: var(--mono-ls);
   text-transform: uppercase;
   color: var(--ochre);
 }
@@ -102,26 +145,30 @@ button {
   content: ' ]';
 }
 .t-caption {
-  font-size: var(--fs-small);
+  font-size: var(--para-sm-fs);
+  line-height: var(--para-sm-lh);
   color: var(--stone);
 }
 
-/* S01 label style (uppercase sans, Hero foot) */
+/* small uppercase label (S01 foot "Scroll down"): Mono/Small — uppercase is Mono only (D-119) */
 .t-label {
-  font-size: 13px;
-  font-weight: var(--w-label);
-  letter-spacing: var(--track-label);
+  font-family: var(--font-mono);
+  font-weight: var(--w-regular);
+  font-size: var(--mono-sm-fs);
+  line-height: var(--mono-sm-lh);
+  letter-spacing: var(--mono-ls);
   text-transform: uppercase;
 }
 
 /* ---------- shared bits ---------- */
 .giant {
-  font-size: var(--fs-giant);
-  font-weight: var(--w-display);
-  letter-spacing: var(--track-display);
-  line-height: 0.85;
+  /* Display 2: big words behind the ring */
+  font-size: var(--d2-fs);
+  font-weight: var(--w-medium);
+  letter-spacing: var(--d-ls);
+  line-height: var(--d2-lh);
   white-space: nowrap;
-  color: rgb(35 31 32 / var(--giant-o, 0.1));
+  color: color-mix(in srgb, var(--ink) calc(var(--giant-o, 0.1) * 100%), transparent);
   user-select: none;
 }
 .link-arrow {
@@ -136,17 +183,42 @@ button {
   text-decoration-color: currentColor;
 }
 
-/* ---------- stage scenes (see Stage.astro for the layer order) ---------- */
+/* ---------- stage scenes (see Stage.astro for the layer order) ----------
+   One panel per section (D-120): .scene__panel (z 0, the background) rises from the bottom with a
+   straight edge (--py); the layers (z 1 back, z 3 front; the ring canvas is z 2) rise with it
+   (--ly) and are clipped where the next panel covers them (--ct / --cb). story.ts writes the vars. */
 .scene {
   position: absolute;
   inset: 0;
-  /* no z-index, opacity or transform here: the ring must be able to sit between the layers */
+  /* no z-index, opacity, transform or clip here: the ring must be able to sit between the layers */
+}
+.scene__panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 100lvh;
+  z-index: 0;
+  translate: 0 var(--py, 0px);
+  background: var(--paper);
+  pointer-events: none;
+}
+.scene__panel[data-bg='sand'] {
+  background: var(--sand);
+}
+.scene__panel[data-bg='night'] {
+  background: var(--night);
+}
+.scene__panel[data-bg='dusk'] {
+  background: var(--dusk);
 }
 .scene__back,
 .scene__front {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  translate: 0 var(--ly, 0px);
+  clip-path: inset(var(--ct, 0px) 0 var(--cb, 0px) 0);
 }
 .scene__back {
   z-index: 1;
@@ -166,7 +238,7 @@ html.js .scene--hero [data-a] {
   opacity: 1;
 }
 
-/* ---------- ring stills (3D fallback/): between the back and front layers ---------- */
+/* ---------- ring stills (3D fallback/): moved onto the back layer by story.ts, above its words ---------- */
 .ring-fallback {
   position: absolute;
   z-index: 2;
@@ -196,8 +268,8 @@ html.ring-ready .ring-fallback {
 }
 
 /* ---------- reduced motion ----------
-   Every state appears with a short fade instead of movement (Storyboard §1). story.ts snaps
-   opacity to 0/1 and never writes transforms; this transition makes the fade. */
+   Panels still move with the scroll; inside a section every state appears at once with a short
+   fade (≤ 250 ms, Storyboard §1). story.ts snaps opacity to 0/1 and never writes transforms. */
 html.reduced .scene [data-a] {
   transition: opacity var(--fade-reduced) ease, visibility var(--fade-reduced);
 }
