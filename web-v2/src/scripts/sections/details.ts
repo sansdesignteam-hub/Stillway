@@ -263,6 +263,7 @@ export const details: SectionMotion = {
     p.w = from.w * Math.pow(to.w / from.w, t);
     p.shadow = to.shadow * seg(x, 0.7, 0.95);
     p.warm = from.warm * (1 - seg(x, 0.2, 0.6));
+    p.crim = from.crim * (1 - seg(x, 0.2, 0.6));
     return p;
   },
 };

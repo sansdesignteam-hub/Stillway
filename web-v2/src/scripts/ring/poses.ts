@@ -36,6 +36,7 @@
  * spot: 0..1 the warm cocoa/200 light from above (S03, D-108).
  * sweep: 0..1 position of the one white glint that runs across the band left → right (02 → 03,
  *        scrubbed, D-116); sweepI 0..1 its strength.
+ * crim: 0..1 the cocoa rim light from the lower left behind the ring (S05 Dusk, 04 → 05 Viture, D-109).
  * sensor: 0..1 both windows and the two dots glow green (02 → 03 State C, S03 state 1).
  * alpha: kept for old poses only; the ring is never faded (D-120) and story.ts never changes it.
  */
@@ -76,6 +77,7 @@ export interface Pose {
   sweep: number;
   sweepI: number;
   sensor: number;
+  crim: number;
   alpha: number;
 }
 
@@ -122,4 +124,4 @@ export function along(u: number, frames: Array<[number, Pose]>): Pose {
   return frames[frames.length - 1][1];
 }
 
-export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, shadowX: 0, shadowY: -0.3, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, ledc: 0, flare: 0, custom: 0, finA: 0, finB: 0, finT: 0, lamp: 0, dim: 0, spot: 0, sweep: 0, sweepI: 0, sensor: 0, alpha: 1, ...p });
+export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, shadowX: 0, shadowY: -0.3, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, ledc: 0, flare: 0, custom: 0, finA: 0, finB: 0, finT: 0, lamp: 0, dim: 0, spot: 0, sweep: 0, sweepI: 0, sensor: 0, crim: 0, alpha: 1, ...p });

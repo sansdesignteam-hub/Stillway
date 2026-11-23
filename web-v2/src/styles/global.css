@@ -225,6 +225,12 @@ button {
 }
 .scene__front {
   z-index: 3;
+  /* the front layer is always cut at the bottom of the navbar (--ctf ≥ header bottom) */
+  clip-path: inset(var(--ctf, 0px) 0 var(--cb, 0px) 0);
+}
+/* full-bleed backgrounds moved into the panel by story.ts (data-panel-bg) */
+.scene__panel > [data-panel-bg] {
+  position: absolute;
 }
 .scene a,
 .scene button {

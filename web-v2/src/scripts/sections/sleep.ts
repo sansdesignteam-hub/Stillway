@@ -30,6 +30,24 @@ const END = 3.6;
  */
 const LIT = { light: 0, rim: 0, dim: 1, spot: 1, sensor: 1, uncap: 1 };
 
+/** Display 4 / Display 2 for the current viewport, read from the rendered unit and number */
+let ratioKey = '';
+let ratio = 0.45;
+const prevScale = () => {
+  const key = `${window.innerWidth}`;
+  if (key !== ratioKey && stats.length) {
+    const unit = stats.map((s) => s.querySelector<HTMLElement>('.stat__unit')).find(Boolean);
+    const value = stats[0].querySelector<HTMLElement>('.stat__value');
+    const a = unit ? parseFloat(getComputedStyle(unit).fontSize) : 0;
+    const b = value ? parseFloat(getComputedStyle(value).fontSize) : 0;
+    if (a && b) {
+      ratio = a / b;
+      ratioKey = key;
+    }
+  }
+  return ratio;
+};
+
 export const sleep: SectionMotion = {
   init(r) {
     const q = (s: string) => r.querySelector<HTMLElement>(s);
@@ -48,7 +66,8 @@ export const sleep: SectionMotion = {
       const inn = seg(u, a, a + 0.45);
       const back = seg(u, a + 1, a + 1.45); // the next number arrives: shrink upward, dim
       const gone = seg(u, a + 2, a + 2.45); // two numbers later: up and out
-      const scale = 1 - 0.55 * back; // the previous number ends small and dim
+      // the previous number ends small and dim, at the Display 4 size (Figma "Previous value" 72)
+      const scale = 1 - (1 - prevScale()) * back;
       // the dimmed number moves up by the height of the block that replaces it, so they never overlap
       const lift = (stats[i + 1]?.offsetHeight ?? s.offsetHeight) + 14;
       const y = (1 - inn) * (s.offsetHeight + 24) - back * lift - gone * lift;

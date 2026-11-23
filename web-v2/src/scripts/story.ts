@@ -127,6 +127,9 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       panel.after(back);
     }
     stills.forEach((s) => back!.append(s));
+    // full-bleed backgrounds (hero photo, S02 wall) belong to the panel: they never pass under the
+    // navbar as content does, so they are not clipped there (round 1)
+    scene.querySelectorAll<HTMLElement>('[data-panel-bg]').forEach((b) => panel.append(b));
     m.init?.(scene);
     const tin = def.tin;
     const win: [number, number] = i === 0 ? [-1e9, -1e9 + 1] : def.panel ?? [-tin, -tin + 0.4 * tin];
@@ -135,6 +138,7 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
 
   let vh = window.innerHeight;
   let navY = 38;
+  let navBottom = 64;
   const measure = () => {
     vh = vhProbe.offsetHeight || window.innerHeight;
     ctx.mobile = mq.matches;
@@ -143,6 +147,8 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       const bar = nav.querySelector<HTMLElement>('.nav-bar') ?? nav;
       const r = bar.getBoundingClientRect();
       navY = r.height ? r.top + r.height / 2 : 38;
+      const hr = nav.getBoundingClientRect();
+      navBottom = Math.max(r.bottom, hr.bottom) || 64;
     }
   };
 
@@ -197,14 +203,20 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       const top = it.edge; // own panel edge
       const bottom = next ? next.edge : H; // the next panel's edge
       const ly = top - PARALLAX * H * kn; // rises with its panel, then moves up while covered
-      const ct = Math.max(0, top - ly);
+      // content never passes under the navbar (the logo has no background, round 1): the front layer
+      // is always cut at the bottom of the header, the back layer while it moves up and out
+      const ctBase = Math.max(0, top - ly);
+      const ctNav = Math.max(ctBase, navBottom - ly);
+      const ct = kn > 0 ? ctNav : ctBase;
+      const ctf = ctNav;
       const cb = Math.max(0, H - (bottom - ly));
-      const vars = `${ly.toFixed(1)}|${ct.toFixed(1)}|${cb.toFixed(1)}|${top.toFixed(1)}`;
+      const vars = `${ly.toFixed(1)}|${ct.toFixed(1)}|${ctf.toFixed(1)}|${cb.toFixed(1)}|${top.toFixed(1)}`;
       if (vars !== it.vars) {
         it.vars = vars;
         const s = it.scene.style;
         s.setProperty('--ly', `${ly.toFixed(1)}px`);
         s.setProperty('--ct', `${ct.toFixed(1)}px`);
+        s.setProperty('--ctf', `${ctf.toFixed(1)}px`);
         s.setProperty('--cb', `${cb.toFixed(1)}px`);
         s.setProperty('--py', `${top.toFixed(1)}px`);
       }
@@ -298,6 +310,27 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       frame(); // first frame with the real pose, finish and env; the canvas fades in over 0.9 s
       document.documentElement.classList.add('ring-ready');
       setTimeout(() => document.documentElement.classList.add('ring-live'), 1000);
+      // round 1: compile every shader variant ahead of time, while idle after load (no stutter when a
+      // section, a finish or the Lamp light is reached for the first time)
+      const start = () => {
+        const poses: Pose[] = [];
+        items.forEach((it) => {
+          for (let u = -it.def.tin; u <= it.end + 0.001; u += 0.5) {
+            const prev = items[items.indexOf(it) - 1];
+            if (u < 0 && prev && it.m.ringIn) poses.push(it.m.ringIn(clamp01((u + it.def.tin) / it.def.tin), ctx, poseOf(prev, prev.end), poseOf(it, 0), 0.5));
+            else if (u >= 0) poses.push(poseOf(it, u));
+          }
+        });
+        const base = poseOf(items[items.length - 2], 0);
+        for (const f of [0, 1, 2]) for (const lamp of [0, 1]) poses.push({ ...base, custom: 1, finA: f, finB: f, finT: 1, lamp });
+        // a pose for the cast shadow on and off (hero) is already in the list; end on the current one
+        r.warm(poses).then(() => {
+          lastPoseKey = '';
+          frame();
+        });
+      };
+      if ('requestIdleCallback' in window) (window as any).requestIdleCallback(start, { timeout: 2500 });
+      else setTimeout(start, 1500);
     },
   };
 }

@@ -125,8 +125,10 @@ const nudge = { time: '23:10', what: 'Settled' }; // = "Settled 23:10" (copy), s
   /* the phone: a still object; a small shadow only (it is the one thing that floats) */
   .ap__phone {
     --u: calc(var(--ph) / 100); /* 1% of the phone height */
-    --t-s: max(11px, calc(var(--u) * 1.8)); /* small text */
-    --t-m: max(12px, calc(var(--u) * 2.15)); /* body text */
+    /* text styles (Moodboard §3.1) scaled with the phone: the Figma phone is 618 px high, so a style
+       of N px is N / 6.18 u here (D-119); floors keep the smallest text readable on short screens */
+    --t-s: max(11px, calc(var(--u) * 1.942)); /* Paragraph/X-Small, Label/X-Small 12 */
+    --t-m: max(12px, calc(var(--u) * 2.265)); /* Paragraph/Small 14 */
     position: absolute;
     left: 50%;
     top: calc(50% + 1vh);
@@ -191,9 +193,10 @@ const nudge = { time: '23:10', what: 'Settled' }; // = "Settled 23:10" (copy), s
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: max(14px, calc(var(--u) * 2.8));
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
+    /* Label/Medium 16 */
+    font-size: max(14px, calc(var(--u) * 2.589));
+    font-weight: var(--w-medium);
+    letter-spacing: 0;
     padding: 0 calc(var(--u) * 0.6);
   }
   .ap__dot {
@@ -241,18 +244,21 @@ const nudge = { time: '23:10', what: 'Settled' }; // = "Settled 23:10" (copy), s
   /* metric detail: the value very large, the unit small */
   .ap__big {
     white-space: nowrap;
-    font-size: calc(var(--u) * 16);
-    font-weight: var(--w-heading);
-    letter-spacing: -0.045em;
-    line-height: 0.9;
+    /* Display/Display 3 (96, big number on the app screen) */
+    font-size: calc(var(--u) * 15.534);
+    font-weight: var(--w-medium);
+    letter-spacing: var(--d-ls);
+    line-height: var(--d3-lh);
     font-variant-numeric: tabular-nums;
     margin-top: calc(var(--u) * 0.6);
   }
   .ap__big--hm {
-    font-size: calc(var(--u) * 11.5);
+    /* Display/Display 4 (72) */
+    font-size: calc(var(--u) * 11.65);
+    line-height: var(--d4-lh);
   }
   .ap__unit {
-    font-size: 0.24em;
+    font-size: calc(var(--u) * 3.883); /* Heading/Heading 3 (Figma "bpm" 26 high) */
     margin-left: 0.14em;
     letter-spacing: 0;
     opacity: 0.8;
@@ -262,10 +268,11 @@ const nudge = { time: '23:10', what: 'Settled' }; // = "Settled 23:10" (copy), s
     line-height: 1.35;
   }
   .ap__say {
-    font-size: max(15px, calc(var(--u) * 3.6));
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
-    line-height: 1.1;
+    /* Heading/Heading 3 (24, card title on the app screen) */
+    font-size: max(15px, calc(var(--u) * 3.883));
+    font-weight: var(--w-medium);
+    letter-spacing: var(--h3-ls);
+    line-height: 1.083;
     max-width: 11em;
     margin-top: calc(var(--u) * 0.4);
   }

@@ -24,7 +24,7 @@ const icons = [
   style={`--ph-d:url(${D.placeholder}); --ph-m:url(${M.placeholder}); --v1-ratio:${heroBg.v1Ratio}; --d-ratio:${D.width / D.height}; --d-orig:${D.origW}; --m-ratio:${M.width / M.height}; --m-orig:${M.origW}`}
 >
   <div class="scene__back">
-    <div class="hero__photo" data-h-photo data-a>
+    <div class="hero__photo" data-h-photo data-a data-panel-bg>
       <picture>
         <source media={M.media} type="image/webp" srcset={M.srcset} sizes="max(85vw, 150lvh)" />
         <img src={D.src} srcset={D.srcset} sizes="max(226vw, 400lvh)" width={D.width} height={D.height} alt="" fetchpriority="low" decoding="async" data-h-img />

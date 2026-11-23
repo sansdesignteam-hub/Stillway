@@ -48,7 +48,6 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   }
   /* text column left (Ultrahuman ref 1 composition): kicker, headline, one number slot, foot */
   .sleep__col {
-    --n: var(--d2-fs); /* active number: Display/Display 2 (Figma S03 "Value" 152) */
     position: absolute;
     left: var(--margin);
     top: 50%;
@@ -61,9 +60,10 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   .sleep__beam {
     position: absolute;
     left: 50%;
-    top: 0;
+    /* starts under the navbar so the warm light never tints the navbar pill (round 1) */
+    top: calc(var(--header-h) - 12px);
     width: min(70vw, 900px);
-    height: 92%;
+    height: calc(92% - var(--header-h) + 12px);
     translate: -50% 0;
     background:
       radial-gradient(60% 42% at 50% 0%, color-mix(in srgb, var(--cocoa-200) 48%, transparent), transparent 72%),
@@ -84,9 +84,9 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   /* one slot: all three numbers share it; the active one is full size, older ones shrink upward */
   .sleep__slot {
     /* room above for the previous number, which shrinks upward when the next one arrives */
-    margin: calc(var(--n) * 0.62) 0 0; /* room for the previous number (Display 4 size) above */
+    margin: calc(var(--d4-fs) * var(--d4-lh) + 24px) 0 0; /* room for the previous number (Display 4) above */
     display: grid;
-    min-height: calc(var(--n) * 1.1);
+    min-height: calc(var(--d2-lh) * var(--d2-fs) + 28px);
     align-items: end;
   }
   .stat {
@@ -105,7 +105,8 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   }
   .stat__value {
     margin: 0;
-    font-size: var(--n);
+    /* Display/Display 2 (Figma Design · 03 "Value" 152) */
+    font-size: var(--d2-fs);
     white-space: nowrap;
     font-weight: var(--w-medium);
     letter-spacing: var(--d-ls);
@@ -115,7 +116,7 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   .stat__unit {
     /* Display/Display 4 (Figma S03 "Unit" 72) */
     font-size: var(--d4-fs);
-    vertical-align: calc((var(--n) - var(--d4-fs)) * 0.7); /* tops aligned, as Figma */
+    vertical-align: calc((var(--d2-fs) - var(--d4-fs)) * 0.7); /* tops aligned, as Figma */
     margin-left: 0.04em;
     letter-spacing: 0;
   }

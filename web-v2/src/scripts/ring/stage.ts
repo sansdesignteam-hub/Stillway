@@ -26,6 +26,8 @@ export interface RingStage {
   canvas: HTMLCanvasElement;
   three: typeof THREE;
   pivot: THREE.Group;
+  /** compile the shaders for each pose ahead of time (no first-use stutter), off screen, async */
+  warm: (poses: Pose[]) => Promise<void>;
 }
 
 export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingStage | null> {
@@ -103,8 +105,21 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   };
   buildBlends();
   // night env after the first paint of the ring
-  setTimeout(() => loadEnv(RING_MODEL.env.night).then((e) => ((envs.night = e), (lastEnv = ''))).catch(() => {}), 300);
-  setTimeout(() => loadEnv(RING_MODEL.env.dusk).then((e) => ((envs.dusk = e), (lastEnv = ''))).catch(() => {}), 900);
+  const later = (url: string, ms: number, set: (e: THREE.Texture) => void) =>
+    new Promise<void>((res) =>
+      setTimeout(
+        () =>
+          loadEnv(url)
+            .then((e) => (set(e), (lastEnv = '')))
+            .catch(() => {})
+            .finally(res),
+        ms,
+      ),
+    );
+  const envsReady = Promise.all([
+    later(RING_MODEL.env.night, 300, (e) => (envs.night = e)),
+    later(RING_MODEL.env.dusk, 900, (e) => (envs.dusk = e)),
+  ]);
   const loadEnv = (url: string) =>
     new EXRLoader().loadAsync(url).then((t) => {
       t.mapping = THREE.EquirectangularReflectionMapping;
@@ -144,6 +159,12 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   spotTop.position.set(-120, 1000, 380);
   const glint = new THREE.DirectionalLight(0xffffff, 0);
   scene.add(spotTop, glint);
+  // S05 / 04 → 05: a cocoa/300 rim from behind the lower left (Dusk from Cocoa, D-109)
+  const cocoaRim = new THREE.DirectionalLight(0xd4aa94, 0);
+  cocoaRim.position.set(-850, -480, -420);
+  const cocoaFill = new THREE.DirectionalLight(0xd4aa94, 0);
+  cocoaFill.position.set(-700, -200, 600);
+  scene.add(cocoaRim, cocoaFill);
   // V1 live cast shadow on the stone (D-051): a shadow-only light and a transparent catcher plane
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -319,6 +340,44 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     ring.add(flare, bounce);
   }
 
+  /* 02 → 03 / S03 (D-120 State C): both windows glow green and their light falls on the band — a soft
+     glow sprite (no streak) and a small green bounce light at each window; the lights stay the only
+     glowing parts of the ring */
+  const glowTex = (() => {
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = 128;
+    const g = cv.getContext('2d')!;
+    const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    gr.addColorStop(0, 'rgba(255,255,255,1)');
+    gr.addColorStop(0.18, 'rgba(255,255,255,0.55)');
+    gr.addColorStop(0.5, 'rgba(255,255,255,0.12)');
+    gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr;
+    g.fillRect(0, 0, 128, 128);
+    const t = new THREE.CanvasTexture(cv);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  })();
+  const sensorGlows: { sprite: THREE.Sprite; light: THREE.PointLight }[] = [];
+  for (const name of [RING_MODEL.meshes.ledMain, RING_MODEL.meshes.ledPower]) {
+    const mesh = ring.getObjectByName(name) as THREE.Mesh | undefined;
+    if (!mesh) continue;
+    ring.updateMatrixWorld(true);
+    const c = new THREE.Box3().setFromObject(mesh).getCenter(new THREE.Vector3());
+    const local = ring.worldToLocal(c.clone());
+    const inward = new THREE.Vector3(-local.x, -local.y, 0).normalize().multiplyScalar(ringSize * 0.05);
+    const sprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({ map: glowTex, color: 0x34e07a, blending: THREE.AdditiveBlending, depthTest: true, depthWrite: false, transparent: true, toneMapped: false, opacity: 0 }),
+    );
+    sprite.position.copy(local).add(inward);
+    sprite.renderOrder = 9;
+    sprite.visible = false;
+    const light = new THREE.PointLight(0x34e07a, 0, 0, 1.4);
+    light.position.copy(local).add(inward.clone().multiplyScalar(2.2));
+    ring.add(sprite, light);
+    sensorGlows.push({ sprite, light });
+  }
+
   let W = 0;
   let H = 0;
   const resize = () => {
@@ -374,6 +433,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     rim.intensity = 14 * p.rim;
     rimFill.intensity = 3.2 * p.rim;
     warmRim.intensity = 7 * p.warm;
+    cocoaRim.intensity = 12 * Math.max(0, p.crim);
+    cocoaFill.intensity = 2.2 * Math.max(0, p.crim);
     const lp = Math.min(1, Math.max(0, p.lamp));
     deskLamp.intensity = 9 * lp;
     // a soft close fill on the lamp side so the edge glows rather than shows one sharp line
@@ -427,6 +488,13 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       glint.position.set(Math.sin(a) * 1000, 420, Math.cos(a) * 1000);
     }
     const sens = Math.min(1, Math.max(0, p.sensor));
+    for (const gl of sensorGlows) {
+      gl.sprite.visible = sens > 0.005;
+      gl.sprite.material.opacity = 0.55 * sens;
+      gl.sprite.scale.set(ringSize * 0.32, ringSize * 0.32, 1);
+      gl.light.intensity = 2.6 * sens;
+      gl.light.distance = w * 0.75;
+    }
 
     const ledKey = p.led.toFixed(3) + '|' + p.ledc.toFixed(3) + '|' + sens.toFixed(3);
     if (ledKey !== lastLedKey) {
@@ -487,5 +555,34 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     lit(ledPower, color === 'off' ? '#FF3B30' : null, intensity);
   }
 
-  return { apply, render, setLed, canvas, three: THREE, pivot };
+  /**
+   * Round 1 (10 → 11 stutter): compile every shader variant the story will need — each section's
+   * env and light, the hero shadow, the LED / sensor sprites, every finish with and without the Lamp
+   * — once, after load, while the page is idle. compileAsync uses parallel shader compilation where
+   * the browser has it, so the page keeps scrolling while it works.
+   */
+  const warm = async (poses: Pose[]) => {
+    await envsReady;
+    for (const p of poses) {
+      apply(p);
+      // invisible objects are skipped by compile: show the sprites for this pass
+      const hidden = [flare, ...sensorGlows.map((g) => g.sprite)].filter((o) => !o.visible);
+      hidden.forEach((o) => (o.visible = true));
+      try {
+        if ((renderer as any).compileAsync) await (renderer as any).compileAsync(scene, camera);
+        else renderer.compile(scene, camera);
+      } catch {
+        /* a failed warm-up only means the first use compiles, as before */
+      }
+      hidden.forEach((o) => (o.visible = false));
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    lastEnv = '';
+    lastFin = '';
+    lastLedKey = '';
+  };
+
+  // dev only: shader program count for performance checks (stripped from builds)
+  if (import.meta.env.DEV) (window as any).__ringInfo = () => ({ programs: renderer.info.programs?.length ?? 0 });
+  return { apply, render, setLed, canvas, three: THREE, pivot, warm };
 }

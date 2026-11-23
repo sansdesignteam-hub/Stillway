@@ -10,7 +10,7 @@
  *  3 state 4  card fully legible, optional body at the edge; ring still
  *  > 3.6      to S06: the camera backs out of the ring, the Paper panel rises (no fade)
  */
-import { put, seg, type Ctx } from '../anim';
+import { put, seg, lerp, clamp01, type Ctx } from '../anim';
 import { along, pose, ANGLE, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
 
@@ -18,7 +18,7 @@ let el: Record<string, HTMLElement | null> = {};
 const END = 3.6;
 // D-090 r1: the ring must read neutral silver (not copper) — neutral paper-polished env, no Dusk
 // env, plus one weak ochre rim from the glow side (lower left)
-const DUSK = { dusk: 0, light: 0, rim: 0, warm: 1 };
+const DUSK = { dusk: 0, light: 0, rim: 0, warm: 0, crim: 1 }; // the rim is cocoa now (D-109)
 
 export const insightStart = (ctx: Ctx): Pose =>
   pose({ x: ctx.mobile ? 0.14 : 0.2, y: ctx.mobile ? 0.12 : 0.04, w: ctx.mobile ? 0.8 : 0.42, ...ANGLE.threeQuarter, ...DUSK });
@@ -56,10 +56,26 @@ export const insight: SectionMotion = {
       [3, inside],
     ]);
   },
-  // 04 → 05 (Viture): the ring rises from below the bottom edge into the empty dark screen with a
-  // warm rim, after S04 has left (40–90%), and stops right-centre — never faded (D-120)
-  ringIn(x, _ctx, _from, to) {
-    const t = seg(x, 0.4, 0.9);
-    return { ...to, y: to.y - 1.35 * (1 - t), ry: to.ry + 0.5 * (1 - t), warm: to.warm * (0.6 + 0.4 * t) };
+  // 04 → 05 (Viture Mobile Dock Mini; Storyboard v3 §3, round 1): 0–35% the screen is dark and only
+  // the top of the ring shows at the bottom edge; 35–70% it rises to right-centre with the cocoa rim;
+  // 70–100% it slows down and stops — never faded (D-120)
+  ringIn(x, ctx, _from, to) {
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    // the ring's half height in viewport heights (width capped at 82% of the height, as stage.ts)
+    const half = (Math.min(to.w * W, to.uncap ? Infinity : H * 0.82) / H) * 0.5 * 0.92;
+    // centre so that only ~6% of the screen height of the ring shows above the bottom edge
+    const peekY = -0.5 - half + 0.06;
+    const startY = peekY - 0.08;
+    let y: number;
+    if (x < 0.35) y = lerp(startY, peekY, seg(x, 0, 0.35));
+    else {
+      const t = clamp01((x - 0.35) / 0.65);
+      const e = 1 - Math.pow(1 - t, 3); // fast through 35–70%, slow to a stop by 100%
+      y = lerp(peekY, to.y, e);
+    }
+    const k = clamp01((x - 0.35) / 0.65);
+    return { ...to, y, ry: to.ry + 0.45 * (1 - k), crim: to.crim * (0.5 + 0.5 * seg(x, 0, 0.6)) };
   },
+
 };
