@@ -17,6 +17,19 @@ import { keepLit, LIGHT } from '../glow';
 import type { SectionMotion } from '../story';
 
 let el: Record<string, HTMLElement | null> = {};
+let words: HTMLElement[] = [];
+let stages: HTMLElement[] = [];
+let halos: HTMLElement[] = [];
+let dots: HTMLElement[] = [];
+let line: SVGPathElement | null = null;
+/** where the two awake dots sit along the chart (Figma x 140 / 268 of 368) */
+const DOT_AT = [0.38, 0.73];
+/** a small step of the card's sequence: fade + a short rise, eased, no overshoot */
+function step(it: HTMLElement | null | undefined, t: number, rise = 10) {
+  if (!it) return;
+  it.style.opacity = t.toFixed(3);
+  it.style.transform = t >= 0.999 ? '' : `translate3d(0, ${(rise * (1 - t)).toFixed(2)}px, 0)`;
+}
 const END = 3.6;
 // D-090 r1: the ring must read neutral silver (not copper) — neutral paper-polished env, no Dusk
 // env, plus one weak ochre rim from the glow side (lower left)
@@ -28,7 +41,12 @@ export const insightStart = (ctx: Ctx): Pose =>
 export const insight: SectionMotion = {
   init(r) {
     const q = (s: string) => r.querySelector<HTMLElement>(s);
-    el = { text: q('[data-i-text]'), head: q('[data-i-head]'), h2: q('[data-i-h2]'), group: q('[data-i-group]'), body: q('[data-i-body]'), glow: q('[data-i-glow]') };
+    el = { text: q('[data-i-text]'), head: q('[data-i-head]'), group: q('[data-i-group]'), body: q('[data-i-body]'), glow: q('[data-i-glow]'), inner: q('[data-i-in]'), area: q('[data-i-area]'), div: q('[data-i-div]') };
+    words = [...r.querySelectorAll<HTMLElement>('[data-i-w]')];
+    stages = [...r.querySelectorAll<HTMLElement>('[data-i-st]')];
+    halos = [...r.querySelectorAll<HTMLElement>('[data-i-halo]')];
+    dots = [...r.querySelectorAll<HTMLElement>('[data-i-dot]')];
+    line = r.querySelector<SVGPathElement>('[data-i-line]');
     // Figma "Glass light" behind the card (centre 820 / 580, 490 × 340, blur 70), in the D-139 colour
     const glow = el.glow as HTMLCanvasElement | null;
     if (glow) keepLit(glow, () => ({ ellipses: [{ token: LIGHT, cx: 820, cy: 580, rx: 560, ry: 410, stops: [[0, 0.42]], power: 4 }], blur: 40 }));
@@ -36,28 +54,51 @@ export const insight: SectionMotion = {
   update(u, ctx) {
     const H = window.innerHeight;
     const out = 1 - seg(u, END, END + 0.3);
-    // text: in with the ring (end of the connection), down to the edge and dimmer in State 2, gone
-    // before the camera enters the ring (State 3)
+    // text (D-143): one fixed box, three lines, never reflowed. State 1 shows "Everything it /
+    // noticed."; in State 2 the block moves down to the edge and dims (transform + opacity on the
+    // whole block) while "One calm view." comes in word by word in its place; gone before State 3
     const t2 = seg(u, 0.25, 1);
     const textIn = seg(u, -0.2, 0.1);
     const down = ctx.mobile ? 0 : (200 / 900) * H; // State 1 sits 250 px up, State 2 50 px (at 900)
     put(el.text, { o: textIn * (1 - seg(u, 1.3, 1.75)), y: -down * (1 - t2) }, ctx);
-    if (el.head) {
-      el.head.style.opacity = String(lerp(1, 0.5, t2).toFixed(3));
-      // State 1 on one line (Figma 520 px box; Geist here runs a little wider), State 2 400 px
-      el.head.style.setProperty('--hw', t2 > 0.3 ? '400px' : '600px');
+    if (el.head) el.head.style.opacity = lerp(1, 0.5, t2).toFixed(3);
+    words.forEach((w, i) => step(w, ctx.reduced ? (u >= 0.7 ? 1 : 0) : seg(u, 0.45 + i * 0.12, 0.8 + i * 0.12), 12));
+
+    // the glass card (D-143), tied to the scroll, done at State 4 (u = 3): it rises, fades in and
+    // grows 0.96 → 1 while its content sharpens (the glass blur is there from the start); then, one
+    // after another with a short rise: chip + SIMULATED DATA → 7h 12m → the line drawn left → right
+    // (the area under it follows, each awake dot lights as the line reaches it) → settled / up and
+    // the divider → the sentence → the paragraph under the card
+    const R = ctx.reduced;
+    const cardIn = R ? (u >= 1.5 ? 1 : 0) : seg(u, 1.5, 2.4);
+    put(el.group, { o: cardIn * out, y: 28 * (1 - seg(u, 1.5, 2.5)), s: 0.96 + 0.04 * seg(u, 1.5, 2.6) }, ctx);
+    if (el.inner) {
+      const b = R ? 0 : 8 * (1 - seg(u, 1.6, 2.4));
+      const f = b > 0.05 ? `blur(${b.toFixed(2)}px)` : '';
+      if (el.inner.style.filter !== f) el.inner.style.filter = f;
     }
-    if (el.h2) {
-      const o2 = seg(u, 0.4, 1);
-      el.h2.style.setProperty('--o2', o2.toFixed(3));
-      // not there at all in State 1, so the headline sits where Figma has it (one line)
-      const disp = o2 > 0.001 ? '' : 'none';
-      if (el.h2.style.display !== disp) el.h2.style.display = disp;
+    const at = (a: number, len = 0.3) => (R ? (u >= a ? 1 : 0) : seg(u, a, a + len));
+    step(stages[0], at(1.85)); // chip + simulated
+    step(stages[1], at(1.95)); // 7h 12m
+    const draw = at(2.05, 0.55);
+    if (line) line.style.setProperty('--draw', (1 - draw).toFixed(4));
+    if (el.area) {
+      const a = at(2.15, 0.55);
+      el.area.style.opacity = a.toFixed(3);
+      el.area.style.clipPath = a >= 0.999 ? '' : `inset(0 ${((1 - a) * 100).toFixed(2)}% 0 0)`;
     }
-    // the glass card: starts to show in State 3 (≈ 45%), full in State 4, with the paragraph
-    const show = 0.45 * seg(u, 1.45, 2) + 0.55 * seg(u, 2.2, 2.85);
-    put(el.group, { o: show * out, s: 0.95 + 0.05 * seg(u, 1.45, 2.85) }, ctx);
-    if (el.body) el.body.style.opacity = String(seg(u, 2.45, 3).toFixed(3));
+    DOT_AT.forEach((x, i) => {
+      const lit = R ? (draw >= 1 ? 1 : 0) : seg(draw, x - 0.02, x + 0.1);
+      [halos[i], dots[i]].forEach((d, k) => {
+        if (!d) return;
+        d.style.opacity = lit.toFixed(3);
+        d.style.transform = lit >= 0.999 ? '' : `scale(${(k === 0 ? 0.4 : 0.6) + (k === 0 ? 0.6 : 0.4) * lit})`;
+      });
+    });
+    step(stages[2], at(2.35)); // settled / up
+    step(el.div, at(2.35), 0);
+    step(stages[3], at(2.45)); // the sentence
+    step(el.body, at(2.6, 0.35), 12); // the paragraph under the card
     put(el.glow, { o: seg(u, 1.5, 2.6) * out }, ctx);
   },
   ring(u, ctx: Ctx) {

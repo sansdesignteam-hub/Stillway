@@ -26,32 +26,49 @@ const [settled, up] = c.line.split(' · ');
     <div class="ins__text" data-i-text data-a>
       <p class="ins__eyebrow">[ {d.eyebrow} ]</p>
       <h2 id="insight-title" class="ins__head" data-i-head>
-        <span>{d.headline[0]}</span>{' '}<span class="ins__l2" data-i-h2>{d.headline[1]}</span>
+        <span>{d.headline[0]}</span>{' '}
+        {
+          /* D-143: "One calm view." word by word (inline-block), always in the layout so the three lines
+             never reflow; each word fades and rises a little in State 2 */
+          d.headline[1].split(' ').map((w, i) => (
+            <>
+              {i > 0 && ' '}
+              <span class="ins__w" data-i-w>
+                {w}
+              </span>
+            </>
+          ))
+        }
       </h2>
     </div>
 
     <div class="ins__group" data-i-group data-a>
       <article class="ins__card" data-i-card aria-label="App view, simulated">
-        <div class="ins__top">
+        <div class="ins__in" data-i-in>
+        <div class="ins__top" data-i-st>
           <p class="ins__chip">{c.label}</p>
           <p class="ins__sim">{c.simulated}</p>
         </div>
-        <p class="ins__value" aria-label={c.sr}>
+        <p class="ins__value" aria-label={c.sr} data-i-st>
           <span>7</span><span class="ins__unit">h</span><span>12</span><span class="ins__unit">m</span>
         </p>
         <div class="ins__rhythm">
           <div class="ins__chart" aria-hidden="true">
-            <img class="ins__area" src="/insight/chart-area.svg" alt="" width="368" height="79" />
-            <img class="ins__line" src="/insight/chart-line.svg" alt="" width="370" height="59" />
-            <img class="ins__halo ins__halo--1" src="/insight/awake-halo.svg" alt="" width="20" height="20" />
-            <img class="ins__dot ins__dot--1" src="/insight/awake-dot.svg" alt="" width="11" height="11" />
-            <img class="ins__halo ins__halo--2" src="/insight/awake-halo.svg" alt="" width="20" height="20" />
-            <img class="ins__dot ins__dot--2" src="/insight/awake-dot.svg" alt="" width="11" height="11" />
+            <img class="ins__area" data-i-area src="/insight/chart-area.svg" alt="" width="368" height="79" />
+            <!-- the Figma line (chart-line.svg), inline so it can be drawn left → right (D-143) -->
+            <svg class="ins__line" viewBox="0 0 370 59.247" preserveAspectRatio="none" aria-hidden="true">
+              <path data-i-line pathLength="1" d="M1.00008 54.4469C3.67008 50.6469 11.6701 39.2469 17.0001 31.6469C22.3301 24.0469 27.6701 13.9169 33.0001 8.8469C38.3301 3.7769 43.6701 -0.023095 49.0001 1.24691C54.3301 2.5169 59.6701 12.0169 65.0001 16.4469C70.3301 20.8769 75.6701 26.5769 81.0001 27.8469C86.3301 29.1169 91.6701 27.8469 97.0001 24.0469C102.33 20.2469 107.67 6.94691 113 5.04691C118.33 3.14691 123.67 7.5769 129 12.6469C134.33 17.7169 139.67 29.7469 145 35.4469C150.33 41.1469 155.67 48.1169 161 46.8469C166.33 45.5769 171.67 32.9169 177 27.8469C182.33 22.7769 187.67 15.8169 193 16.4469C198.33 17.0769 203.67 27.8469 209 31.6469C214.33 35.4469 219.67 40.5169 225 39.2469C230.33 37.9769 235.67 25.3169 241 24.0469C246.33 22.7769 251.67 28.4769 257 31.6469C262.33 34.8169 267.67 42.4169 273 43.0469C278.33 43.6769 283.67 34.8169 289 35.4469C294.33 36.0769 299.67 44.3169 305 46.8469C310.33 49.3769 315.67 51.9169 321 50.6469C326.33 49.3769 331.67 39.8769 337 39.2469C342.33 38.6169 347.67 43.6769 353 46.8469C358.33 50.0169 366.33 56.3469 369 58.2469" />
+            </svg>
+            <img class="ins__halo ins__halo--1" data-i-halo src="/insight/awake-halo.svg" alt="" width="20" height="20" />
+            <img class="ins__dot ins__dot--1" data-i-dot src="/insight/awake-dot.svg" alt="" width="11" height="11" />
+            <img class="ins__halo ins__halo--2" data-i-halo src="/insight/awake-halo.svg" alt="" width="20" height="20" />
+            <img class="ins__dot ins__dot--2" data-i-dot src="/insight/awake-dot.svg" alt="" width="11" height="11" />
           </div>
-          <p class="ins__times"><span>{settled}</span><span>{up}</span></p>
+          <p class="ins__times" data-i-st><span>{settled}</span><span>{up}</span></p>
         </div>
-        <i class="ins__divider" aria-hidden="true"></i>
-        <p class="ins__insight">{c.insight}</p>
+        <i class="ins__divider" data-i-div aria-hidden="true"></i>
+        <p class="ins__insight" data-i-st>{c.insight}</p>
+        </div>
       </article>
       <p class="ins__body" data-i-body>{d.body}</p>
     </div>
@@ -87,17 +104,20 @@ const [settled, up] = c.line.split(' · ');
     text-transform: uppercase;
     color: var(--neutral-400);
   }
-  /* Heading/Heading 1; 520 px wide in State 1, 400 px in State 2 (set by insight.ts) */
+  /* Heading/Heading 1 in a fixed box: 400 px at 56 px (7.15em), so the full line is always three lines
+     "Everything it / noticed. One / calm view." at every width (D-143: no reflow while scrolling) */
   .ins__head {
-    width: min(var(--hw, 520px), calc(100vw - 2 * var(--margin)));
+    width: 7.15em;
     font-weight: var(--w-heading);
     font-size: var(--t-heading-1-size);
     line-height: var(--t-heading-1-lh);
     letter-spacing: var(--t-heading-1-ls);
     color: var(--white);
   }
-  .ins__l2 {
-    opacity: var(--o2, 0);
+  .ins__w {
+    display: inline-block;
+    opacity: 0;
+    will-change: transform, opacity;
   }
 
   /* State 4 content: the card and the paragraph, centred in the space under the navbar */
@@ -113,8 +133,6 @@ const [settled, up] = c.line.split(' · ');
   }
   /* the glass card (Figma: white 14%, blur 30, line white 38%, radius 40, shadow 0 32 80 −16 black 28%) */
   .ins__card {
-    display: grid;
-    gap: 24px;
     padding: 32px;
     border-radius: 40px;
     border: 1px solid color-mix(in srgb, var(--white) 38%, transparent);
@@ -124,6 +142,11 @@ const [settled, up] = c.line.split(' · ');
     box-shadow: 0 32px 80px -16px color-mix(in srgb, var(--neutral-950) 28%, transparent);
     pointer-events: auto;
     user-select: text;
+  }
+  /* the card's content (blurred while the card comes in, D-143; the glass blur stays on the card) */
+  .ins__in {
+    display: grid;
+    gap: 24px;
   }
   .ins__top {
     display: flex;
@@ -195,10 +218,26 @@ const [settled, up] = c.line.split(' · ');
     height: 81.92%;
   }
   .ins__line {
+    position: absolute;
     left: -0.27%;
     top: 17.03%;
     width: 100.54%;
     height: 61.72%;
+    overflow: visible;
+  }
+  .ins__line path {
+    fill: none;
+    stroke: color-mix(in srgb, var(--white) 92%, transparent);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    /* drawn with a normalised dash (pathLength 1); no non-scaling-stroke, which breaks that dash */
+    stroke-dasharray: 1 1;
+    stroke-dashoffset: var(--draw, 0);
+  }
+  .ins__halo,
+  .ins__dot {
+    transform-origin: 50% 50%;
   }
   .ins__halo {
     width: 20px;
@@ -260,9 +299,11 @@ const [settled, up] = c.line.split(' · ');
   }
   @media (max-width: 719px) {
     .ins__card {
-      gap: 18px;
       padding: 24px;
       border-radius: 32px;
+    }
+    .ins__in {
+      gap: 18px;
     }
     .ins__group {
       top: calc((100svh + var(--header-h) - 16px) / 2);
