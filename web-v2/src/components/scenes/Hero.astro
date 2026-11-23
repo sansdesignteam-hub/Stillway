@@ -72,7 +72,7 @@ const icons = [
 
 <style>
   .scene--hero {
-    color: #fff;
+    color: var(--white);
   }
   /* the ORIGINAL photo inside the extended canvas covers the viewport like V1's .hero__stage;
      the canvas around it is what the zoom-out reveals (content/heroBg.ts) */
@@ -100,9 +100,11 @@ const icons = [
   .hero__dim {
     position: absolute;
     inset: 0;
-    background: #2a1f14;
+    background: var(--photo-dim); /* photo tint, unchanged */
   }
-  /* V1 wordmark: Geist Medium, justified across the width, behind the ring */
+  /* V1 wordmark: Geist Medium, justified across the width, behind the ring.
+     Display/Display 1 size and line height; its letter spacing does not apply (the letters are
+     spread with space-between, a negative tracking would only push the last letter out). */
   .hero__word {
     position: absolute;
     top: var(--header-h);
@@ -111,10 +113,10 @@ const icons = [
     margin: 0;
     padding: 1.6vw var(--margin) 1.2vw;
     font-weight: var(--w-display);
-    font-size: 19.4vw;
-    line-height: 0.74;
+    font-size: var(--t-display-1-size);
+    line-height: var(--t-display-1-lh);
     letter-spacing: 0;
-    color: #fff;
+    color: var(--white);
   }
   .hero__word-inner {
     display: flex;
@@ -127,12 +129,15 @@ const icons = [
     position: absolute;
     left: 0;
     right: 0;
-    top: calc(var(--header-h) + 19.4vw * 0.74 + 2.8vw + 18px);
+    top: calc(var(--header-h) + var(--t-display-1-lh) + 2.8vw + 18px);
     padding-inline: var(--margin);
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     gap: clamp(16px, 1.6vw, 24px);
-    font-size: 15px;
+    /* Paragraph/Small */
+    font-size: var(--t-para-sm-size);
+    line-height: var(--t-para-sm-lh);
+    letter-spacing: var(--t-para-sm-ls);
   }
   .hero__tag {
     grid-column: 1 / span 5;
@@ -169,11 +174,13 @@ const icons = [
     /* exactly 3 balanced lines at 1440 (D-087): ~27 characters per line, no orphan */
     max-width: 14.6em;
     text-wrap: balance;
-    font-size: clamp(22px, 2.3vw, 34px);
+    /* Heading/Heading 2 */
     font-weight: var(--w-heading);
-    line-height: 1.12;
-    letter-spacing: var(--track-tight);
+    font-size: var(--t-heading-2-size);
+    line-height: var(--t-heading-2-lh);
+    letter-spacing: var(--t-heading-2-ls);
   }
+  /* matches no text style (uppercase sans label): kept, reported (D-134) */
   .hero__foot {
     flex: none;
     font-size: 13px;
@@ -233,12 +240,10 @@ const icons = [
     }
     .hero__word {
       top: calc(var(--header-h) + 18px);
-      font-size: 18.2vw;
     }
     .hero__meta {
-      top: calc(var(--header-h) + 18px + 18.2vw * 0.74 + 2.8vw + 14px);
+      top: calc(var(--header-h) + 18px + var(--t-display-1-lh) + 2.8vw + 14px);
       grid-template-columns: 1fr auto;
-      font-size: 14px;
     }
     .hero__tag {
       grid-column: 1;
@@ -250,7 +255,6 @@ const icons = [
       grid-column: 2;
     }
     .hero__statement {
-      font-size: 22px;
       max-width: 11.5em;
     }
     .hero__fb--float {

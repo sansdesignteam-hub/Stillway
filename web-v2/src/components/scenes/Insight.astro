@@ -45,10 +45,11 @@ const c = d.card;
     bottom: clamp(32px, 9vh, 88px);
     width: min(34rem, 38vw);
     display: grid;
-    font-size: clamp(2.75rem, 1.4rem + 3.6vw, 5rem);
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
-    line-height: 0.98;
+    /* Display/Display 4 */
+    font-weight: var(--w-display);
+    font-size: var(--t-display-4-size);
+    line-height: var(--t-display-4-lh);
+    letter-spacing: var(--t-display-4-ls);
   }
   .ins__l {
     display: block;
@@ -59,13 +60,14 @@ const c = d.card;
     display: grid;
     place-items: center;
   }
-  /* Ultrahuman nudge card: thin outline, dark translucent ground; Sensiq: one number in the middle */
+  /* Ultrahuman nudge card: thin outline; Sensiq: one number in the middle. D-135: Cocoa ground
+     (bg-cocoa-surface) instead of the old translucent Night; solid, nothing behind it must show */
   .ins__card {
     width: min(340px, 74vw);
     padding: 22px 22px 18px;
     border-radius: var(--radius-m);
     border: 1px solid var(--line-on-night);
-    background: rgb(23 18 15 / 0.62);
+    background: var(--cocoa);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     display: grid;
@@ -75,15 +77,16 @@ const c = d.card;
     user-select: text;
   }
   .ins__label {
-    color: var(--ochre);
+    color: var(--ochre-on-cocoa);
     justify-self: start;
   }
+  /* Display/Display 4 (metric number, "7h 12m") */
   .ins__value {
     margin: 10px 0 6px;
-    font-size: var(--fs-number);
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
-    line-height: 0.9;
+    font-weight: var(--w-display);
+    font-size: var(--t-display-4-size);
+    line-height: var(--t-display-4-lh);
+    letter-spacing: var(--t-display-4-ls);
     font-variant-numeric: tabular-nums;
   }
   .ins__unit {
@@ -101,12 +104,18 @@ const c = d.card;
     width: calc(var(--p, 0) * var(--target) * 100%);
     background: var(--ochre);
   }
+  /* Paragraph/Small */
   .ins__line {
-    font-size: var(--fs-small);
+    font-size: var(--t-para-sm-size);
+    line-height: var(--t-para-sm-lh);
+    letter-spacing: var(--t-para-sm-ls);
     font-variant-numeric: tabular-nums;
   }
+  /* Paragraph/Small */
   .ins__insight {
-    font-size: var(--fs-small);
+    font-size: var(--t-para-sm-size);
+    line-height: var(--t-para-sm-lh);
+    letter-spacing: var(--t-para-sm-ls);
     color: var(--stone-on-night);
     text-align: left;
   }
@@ -121,7 +130,10 @@ const c = d.card;
     top: calc(50% + 190px);
     translate: -50% 0;
     width: min(340px, 74vw);
-    font-size: var(--fs-small);
+    /* Paragraph/Small */
+    font-size: var(--t-para-sm-size);
+    line-height: var(--t-para-sm-lh);
+    letter-spacing: var(--t-para-sm-ls);
     text-align: center;
     color: var(--stone-on-night);
   }
@@ -130,7 +142,6 @@ const c = d.card;
       width: auto;
       right: var(--margin);
       bottom: 28px;
-      font-size: 2.5rem;
     }
     .ins__body {
       top: calc(50% + 180px);

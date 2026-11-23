@@ -47,12 +47,24 @@ export interface SectionMotion {
 }
 const motions: Record<string, SectionMotion> = { hero, why, sleep, activity, insight, details, specs, features, app, finishes, close };
 
-const BG: Record<string, [number, number, number]> = {
-  paper: [0xf7, 0xf5, 0xf0],
-  sand: [0xef, 0xe6, 0xdb],
-  night: [0x17, 0x12, 0x0f],
-  dusk: [0x17, 0x12, 0x0f], // base under the dusk gradient overlay
-};
+/** section backgrounds as RGB for the cross-fade; read from tokens.css (--paper, --sand, --night)
+ *  in initStory, so no colour is written here (D-134). Dusk's base under its overlay is Night. */
+const BG: Record<string, [number, number, number]> = { paper: [0, 0, 0], sand: [0, 0, 0], night: [0, 0, 0], dusk: [0, 0, 0] };
+function readBg() {
+  const probe = document.createElement('i');
+  probe.style.display = 'none';
+  document.body.appendChild(probe);
+  const rgb = (token: string): [number, number, number] => {
+    probe.style.color = `var(${token})`;
+    const m = getComputedStyle(probe).color.match(/[\d.]+/g) ?? ['0', '0', '0'];
+    return [Number(m[0]), Number(m[1]), Number(m[2])];
+  };
+  BG.paper = rgb('--paper');
+  BG.sand = rgb('--sand');
+  BG.night = rgb('--night');
+  BG.dusk = BG.night;
+  probe.remove();
+}
 const isDark = (b: string) => b === 'night' || b === 'dusk';
 const toMin = (s: string) => {
   const [h, m] = s.split(':').map(Number);
@@ -80,6 +92,7 @@ interface Item {
 
 export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) => void }) {
   const { reduced } = opts;
+  readBg();
   const mq = window.matchMedia('(max-width: 719px)');
   const ctx: Ctx = { mobile: mq.matches, reduced };
 

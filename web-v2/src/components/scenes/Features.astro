@@ -72,10 +72,11 @@ import { features as d } from '../../content/copy';
     left: var(--margin);
     top: calc(var(--header-h) + 5vh);
     width: min(40rem, 46vw);
-    font-size: clamp(2.25rem, 1.2rem + 2.6vw, 3.75rem);
+    /* Heading/Heading 1 */
     font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
-    line-height: 1;
+    font-size: var(--t-heading-1-size);
+    line-height: var(--t-heading-1-lh);
+    letter-spacing: var(--t-heading-1-ls);
   }
   .ft__head {
     position: absolute;
@@ -103,16 +104,21 @@ import { features as d } from '../../content/copy';
     position: absolute;
     inset: 0;
     border-radius: 6px;
-    background: rgb(247 245 240 / 0.1);
+    background: var(--cocoa); /* D-135: chip on Night = Cocoa */
     display: grid;
     place-items: center;
-    font-size: 11px;
+    /* Mono/X-Small */
+    font-weight: var(--w-mono);
+    font-size: var(--t-mono-xs-size);
+    line-height: var(--t-mono-xs-lh);
+    letter-spacing: var(--t-mono-xs-ls);
   }
+  /* Heading/Heading 2 */
   .ft__sub {
-    font-size: var(--fs-h3);
     font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
-    line-height: 1.15;
+    font-size: var(--t-heading-2-size);
+    line-height: var(--t-heading-2-lh);
+    letter-spacing: var(--t-heading-2-ls);
   }
   .ft__legendwrap {
     display: grid;
@@ -131,7 +137,10 @@ import { features as d } from '../../content/copy';
     padding: 0;
     display: grid;
     gap: 8px;
-    font-size: 15px;
+    /* Paragraph/Small */
+    font-size: var(--t-para-sm-size);
+    line-height: var(--t-para-sm-lh);
+    letter-spacing: var(--t-para-sm-ls);
   }
   .ft__leg {
     display: flex;
@@ -160,12 +169,17 @@ import { features as d } from '../../content/copy';
   }
   .ft__body {
     grid-area: 1 / 1;
-    font-size: 15px;
-    line-height: 1.5;
+    /* Paragraph/Small */
+    font-size: var(--t-para-sm-size);
+    line-height: var(--t-para-sm-lh);
+    letter-spacing: var(--t-para-sm-ls);
     color: var(--paper);
   }
   .ft__off {
-    font-size: var(--fs-small);
+    /* Paragraph/Small */
+    font-size: var(--t-para-sm-size);
+    line-height: var(--t-para-sm-lh);
+    letter-spacing: var(--t-para-sm-ls);
     color: var(--stone-on-night);
   }
   .sr-only {
@@ -184,7 +198,6 @@ import { features as d } from '../../content/copy';
       top: calc(var(--header-h) + 3vh);
       width: auto;
       right: var(--margin);
-      font-size: 2.1rem;
     }
     .ft__block {
       width: auto;
@@ -197,14 +210,10 @@ import { features as d } from '../../content/copy';
     }
     .ft__legend {
       grid-auto-flow: column;
-      font-size: 12px;
       gap: 6px;
     }
     .ft__leg {
       gap: 6px;
-    }
-    .ft__body {
-      font-size: 14px;
     }
   }
 </style>

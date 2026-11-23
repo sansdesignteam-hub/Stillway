@@ -5,8 +5,8 @@
  */
 .site-header {
   --header-ink: var(--ink);
-  --bar-bg: rgb(255 255 255 / 0.55);
-  --bar-rule: rgb(35 31 32 / 0.12);
+  --bar-bg: color-mix(in srgb, var(--white) 55%, transparent);
+  --bar-rule: color-mix(in srgb, var(--ink) 12%, transparent);
   position: fixed;
   inset: 12px 0 auto 0;
   z-index: 50;
@@ -16,14 +16,14 @@
 }
 .site-header[data-theme='dark'] {
   --header-ink: var(--paper);
-  --bar-bg: rgb(255 255 255 / 0.08);
-  --bar-rule: rgb(255 255 255 / 0.14);
+  --bar-bg: color-mix(in srgb, var(--white) 8%, transparent);
+  --bar-rule: color-mix(in srgb, var(--white) 14%, transparent);
 }
 .site-header[data-theme='photo'] {
   /* over the S01 photograph (V1 'photo' theme) */
-  --header-ink: #fff;
-  --bar-bg: rgb(255 255 255 / 0.14);
-  --bar-rule: rgb(255 255 255 / 0.25);
+  --header-ink: var(--white);
+  --bar-bg: color-mix(in srgb, var(--white) 14%, transparent);
+  --bar-rule: color-mix(in srgb, var(--white) 25%, transparent);
 }
 .site-header__inner {
   padding-inline: var(--margin);
@@ -37,7 +37,7 @@
 }
 .wordmark {
   margin-right: clamp(8px, 2vw, 32px);
-  font-size: 20px;
+  font-size: var(--t-label-lg-size); /* Label/Large size; the logo keeps its own tracking (D-083) */
   text-decoration: none;
 }
 .nav-home,
@@ -88,8 +88,11 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 15px;
-  font-weight: var(--w-medium);
+  /* Label/Small */
+  font-weight: var(--w-label);
+  font-size: var(--t-label-sm-size);
+  line-height: var(--t-label-sm-lh);
+  letter-spacing: var(--t-label-sm-ls);
 }
 .site-nav li + li {
   border-left: 1px solid var(--bar-rule);
@@ -113,9 +116,12 @@
   display: flex;
   align-items: baseline;
   gap: 8px;
+  /* Mono/Medium (navbar clock) */
   font-family: var(--font-mono);
-  font-size: var(--fs-mono);
-  letter-spacing: var(--track-mono);
+  font-weight: var(--w-label);
+  font-size: var(--t-mono-md-size);
+  line-height: var(--t-mono-md-lh);
+  letter-spacing: var(--t-mono-md-ls);
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -130,7 +136,7 @@
 }
 .site-header[data-theme='photo'] .clock__time {
   /* ochre is unreadable on the warm photo: the live value goes white there (D-081 review) */
-  color: #fff;
+  color: var(--white);
   font-weight: var(--w-medium);
 }
 .site-header[data-theme='photo'] .clock__part {
@@ -162,8 +168,9 @@
   border-radius: 999px;
   background: var(--btn-bg);
   color: var(--btn-ink);
-  font: 500 16px/1 var(--font-sans);
-  letter-spacing: -0.01em;
+  /* Buttons/Medium */
+  font: var(--w-label) var(--t-btn-md-size) / var(--t-btn-md-lh) var(--font-sans);
+  letter-spacing: var(--t-btn-md-ls);
   text-decoration: none;
   white-space: nowrap;
   pointer-events: auto;
@@ -233,7 +240,10 @@
   min-height: 44px;
   gap: 14px;
   padding: 4px 4px 4px 18px;
-  font-size: 15px;
+  /* Buttons/Small */
+  font-size: var(--t-btn-sm-size);
+  line-height: var(--t-btn-sm-lh);
+  letter-spacing: var(--t-btn-sm-ls);
 }
 .btn--compact::before,
 .btn--compact .btn__icon {
@@ -275,7 +285,6 @@
     padding-left: 16px;
   }
   .wordmark {
-    font-size: 17px;
     margin-right: auto;
   }
 }
@@ -298,7 +307,7 @@
 .menu__backdrop {
   position: absolute;
   inset: 0;
-  background: rgb(23 18 15 / 0.28);
+  background: color-mix(in srgb, var(--night) 28%, transparent);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   opacity: 0;
@@ -351,9 +360,11 @@
 .menu__list a {
   display: block;
   padding: 10px 0;
-  font-size: 30px;
-  font-weight: var(--w-regular);
-  letter-spacing: -0.03em;
+  /* Heading/Heading 1 */
+  font-weight: var(--w-heading);
+  font-size: var(--t-heading-1-size);
+  line-height: var(--t-heading-1-lh);
+  letter-spacing: var(--t-heading-1-ls);
   text-decoration: none;
 }
 .menu__list li,

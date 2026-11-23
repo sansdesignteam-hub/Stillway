@@ -58,11 +58,12 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   .sleep__kicker {
     color: var(--stone);
   }
+  /* Heading/Heading 2 (= S01 statement) */
   .sleep__head {
-    font-size: clamp(22px, 2.3vw, 34px); /* = S01 statement */
-    font-weight: var(--w-display);
-    letter-spacing: var(--track-tight);
-    line-height: 1.15;
+    font-weight: var(--w-heading);
+    font-size: var(--t-heading-2-size);
+    line-height: var(--t-heading-2-lh);
+    letter-spacing: var(--t-heading-2-ls);
   }
   /* one slot: all three numbers share it; the active one is full size, older ones shrink upward */
   .sleep__slot {
@@ -86,6 +87,7 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   .stat:global(.is-active) .stat__tag {
     color: var(--ochre);
   }
+  /* the big number matches no text style (≈ 18vw, between Display 1 and 2): size kept, reported */
   .stat__value {
     margin: 0;
     font-size: var(--n);
@@ -106,8 +108,11 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
     gap: 6px;
     min-height: 3.2em;
   }
+  /* Paragraph/Small */
   .sleep__line {
-    font-size: var(--fs-small);
+    font-size: var(--t-para-sm-size);
+    line-height: var(--t-para-sm-lh);
+    letter-spacing: var(--t-para-sm-ls);
   }
   .sleep__sim {
     color: var(--stone);
