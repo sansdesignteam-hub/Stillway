@@ -34,7 +34,8 @@
  *       a little; base colours unchanged.
  * corner: 0..1 S03 corner light (D-136): one soft warm light from the upper right corner that
  *         grazes the band from above the side (Avoly ref); the body stays silver.
- * envDim: 0..1 dims the environment reflections (S03 warm: the Paper studio env on Night, D-137).
+ * envDim: 0..1.4 dims the environment reflections (S03 warm: the Paper studio env on Night, D-137;
+ *         up to 1.4 = almost a silhouette before the S03 corner light reaches the ring, D-140).
  * blur: CSS blur of the ring canvas in px (03 → 04 lens, D-138).
  * alpha: canvas opacity (the ring is the only object, so fading the canvas fades the ring).
  */
