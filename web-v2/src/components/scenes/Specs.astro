@@ -38,6 +38,7 @@ const noteW: Record<string, number> = { desk: 217 };
       <div class="sp__par" data-s-par>
         <Img src={everyday} alt={d.everyday.alt} sizes="100vw" widths={[960, 1448]} ready class="sp__everyimg" />
       </div>
+      <i class="sp__evshade" aria-hidden="true"></i>
       <i class="sp__dark" data-s-dark></i>
     </div>
   </div>
@@ -110,6 +111,11 @@ const noteW: Record<string, number> = { desk: 217 };
     --bw: 392px;
     --bh: 602px;
     --ly: 53.5lvh;
+    /* D-153: exposure of the big "The Everyday" photo, one place to tune (also for the D-152 photo):
+       brightness of the photo itself, plus an optional warm shade (photo-dim) over it, in %.
+       The Rinse card is never touched by either. */
+    --ev-exposure: 0.82;
+    --ev-shade: 6%;
   }
   .scene--specs .scene__front {
     pointer-events: none;
@@ -131,6 +137,13 @@ const noteW: Record<string, number> = { desk: 217 };
     top: 0;
     height: calc(100% + var(--par, 160px));
     will-change: transform;
+    filter: brightness(var(--ev-exposure));
+  }
+  /* D-153: a light, even warm shade over the photo only (the card sits on the front layer) */
+  .sp__evshade {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--photo-dim) var(--ev-shade), transparent);
   }
   .sp__par :global(picture),
   .sp__par :global(img) {
