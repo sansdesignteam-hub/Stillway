@@ -35,7 +35,7 @@ export const sections: SectionDef[] = [
   { n: '07', id: 'specs', name: 'Specs & benefits', act: 3, time: '21:00', bg: 'sand', states: 7, tin: 1.6, hold: 0.6, built: true }, // D-147: 06 → 07 is a plain scroll; 1.6 screens so the whole hand leaves. D-149: Figma 07 State 1–7, end photo rises (Obsidian)
   { n: '08', id: 'features', name: 'Features', act: 3, time: '21:00', bg: 'night', states: 4, tin: 1, hold: 0.6, built: true }, // D-154: Figma 08 State 1–4, state 4 red = off
   { n: '09', id: 'app', name: 'The app', act: 3, time: '21:00', bg: 'paper', states: 7, tin: 1, hold: 0.6, built: true }, // D-161: 2 screens per mode (cards in, numbers count, charts draw, the screen scrolls)
-  { n: '10', id: 'finishes', name: 'Finishes & pricing', act: 4, time: '22:00', bg: 'sand', states: 2, tin: 1, hold: 1, built: true },
+  { n: '10', id: 'finishes', name: 'Finishes & pricing', act: 4, time: '22:00', bg: 'sand', states: 2, tin: 1.3, hold: 1, built: true }, // D-165: 09 → 10 a plain scroll; 1.3 screens so S09 has left before S10 comes in
   { n: '11', id: 'close', name: 'Closing, FAQ & footer', act: 4, time: '06:50', part: 'Tomorrow', bg: 'night', states: 4, tin: 1, hold: 0.4, built: true },
 ];
 

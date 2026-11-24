@@ -12,7 +12,7 @@
  * Between modes: the page and the corner light cross-fade (the texts outside the phone change with
  * them). Soft easing, no bounce.
  * Reduced motion: whole states, every screen shown complete, short opacity fades (global.css).
- *  > 6.6  to S10: the screen fades, the phone slides right and widens into the S10 panel.
+ *  > 6.6  to S10 (D-165): a plain scroll — the hand, phone and texts go up 1:1 with the page.
  */
 import { put, seg, lerp, clamp01, smooth, window4 } from '../anim';
 import { pose, type Pose } from '../ring/poses';
@@ -43,6 +43,7 @@ let glows: HTMLElement[] = [];
 let pages: Page[] = [];
 let measured = '';
 let lastIdx = -1;
+let vhPx = 0;
 
 /** the active mode as a continuous value 0..2 (the tab highlight, the texts) */
 const modeOf = (u: number) => seg(u, MODE - 0.2, MODE + 0.15) + seg(u, 2 * MODE - 0.2, 2 * MODE + 0.15);
@@ -101,28 +102,30 @@ export const app: SectionMotion = {
       })(),
       over: 0,
     }));
+    const vh = () => (vhPx = (document.querySelector('[data-vh]') as HTMLElement | null)?.offsetHeight || window.innerHeight);
+    vh();
+    window.addEventListener('resize', vh);
     const reset = () => (measured = '');
     window.addEventListener('resize', reset);
     document.fonts?.ready.then(reset);
   },
   update(u, ctx) {
     const H = window.innerHeight;
-    const out = 1 - seg(u, END, END + 0.4);
+    // 09 → 10 (D-165): a plain scroll, like 06 → 07 — the hand, the phone and the texts go up 1:1
+    // with the page, no fade; the photo's melted foot keeps its cut out of sight. Reduced motion: fade.
+    const out = ctx.reduced ? 1 - seg(u, END, END + 0.3) : 1;
+    const up = ctx.reduced ? 0 : Math.max(0, u - END) * (vhPx || H);
     const rise = ctx.reduced ? (u >= -0.5 ? 1 : 0) : seg(u, -0.5, -0.05);
     const inn = seg(u, -0.3, 0); // 70–100%: chip, texts, footer
-    // 09 → 10 (Storyboard §3): the screen content fades first, then the phone slides right and widens
-    // into the S10 panel (finishes.ts brings the panel in from the same side)
-    const go = seg(u, END + 0.25, END + 0.75);
-    put(el.phone, { o: Math.min(1, rise * 1.6) * (1 - seg(u, END + 0.5, END + 0.8)), y: (1 - rise) * H * 0.55, x: go * window.innerWidth * 0.26, s: 1 + 0.12 * go }, ctx);
-    if (el.pages) el.pages.style.opacity = (1 - seg(u, END, END + 0.3)).toFixed(3);
-    put(el.foot, { o: inn * out }, ctx);
+    put(el.phone, { o: Math.min(1, rise * 1.6) * out, y: (1 - rise) * H * 0.55 - up }, ctx);
+    put(el.foot, { o: inn * out, y: -up }, ctx);
     measure();
 
     // the mode: continuous for the tab highlight and the side texts; whole under reduced motion
     const f = ctx.reduced ? Math.min(2, Math.floor(Math.max(0, u) / MODE)) : modeOf(u);
     const near = (i: number) => clamp01(1 - Math.abs(f - i) * 2.2);
-    lefts.forEach((l, i) => put(l, { o: near(i) * inn * out, y: (1 - near(i)) * 10 }, ctx));
-    rights.forEach((l, i) => put(l, { o: near(i) * inn * out, y: (1 - near(i)) * 10 }, ctx));
+    lefts.forEach((l, i) => put(l, { o: near(i) * inn * out, y: (1 - near(i)) * 10 - up }, ctx));
+    rights.forEach((l, i) => put(l, { o: near(i) * inn * out, y: (1 - near(i)) * 10 - up }, ctx));
     flabels.forEach((l, i) => (l.style.opacity = near(i).toFixed(3)));
 
     pages.forEach((pg, k) => {

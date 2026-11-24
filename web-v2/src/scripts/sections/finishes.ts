@@ -4,6 +4,7 @@
  *          Sand, the ring comes in on the left, the panel content appears; clock 21:00 → 22:00)
  *  0  state 1  "Turn it yourself." — the ring turns by drag / swipe / ‹ ›, finish swatches + light
  *  1  state 4  "Find your size and finish." — size, trial, box, the button and its inline note
+ *  D-165: S09 → S10 is a plain scroll (app.ts); the S10 panel and ring come in after S09 has left
  *  > 2         to S11: the panel leaves right, the ring moves to the middle (close.ts ringIn)
  * States 2–3 of the Storyboard (Black, Gold + Lamp) are the visitor's own clicks, not scroll (D-069).
  */
@@ -16,6 +17,7 @@ import { finishes as d } from '../../content/copy';
 
 export const FINISHES_END = 2;
 const TAU = Math.PI * 2;
+const wrapPi = (a: number) => a - TAU * Math.round(a / TAU);
 let root: HTMLElement | null = null;
 let el: Record<string, HTMLElement | null> = {};
 let heads: HTMLElement[] = [];
@@ -62,7 +64,9 @@ function initControls(r: HTMLElement) {
       decided = true;
       drag.setPointerCapture(e.pointerId);
     }
-    view.yaw += dx * 0.012;
+    // D-165: kept in −π..π (the same pose, as rotations repeat every turn), so no later step has
+    // to unwind the turns of a long drag
+    view.yaw = wrapPi(view.yaw + dx * 0.012);
     x0 = e.clientX;
     y0 = e.clientY;
   });
@@ -74,7 +78,13 @@ function initControls(r: HTMLElement) {
   drag?.addEventListener('pointercancel', end);
 
   const step = (dir: number) => {
-    gsap.to(view, { yaw: Math.round(view.yaw / (Math.PI / 2)) * (Math.PI / 2) + dir * (Math.PI / 2), duration: reducedRef ? 0 : 0.7, ease: 'power2.inOut', overwrite: true });
+    gsap.to(view, {
+      yaw: Math.round(view.yaw / (Math.PI / 2)) * (Math.PI / 2) + dir * (Math.PI / 2),
+      duration: reducedRef ? 0 : 0.7,
+      ease: 'power2.inOut',
+      overwrite: true,
+      onComplete: () => (view.yaw = wrapPi(view.yaw)),
+    });
     settle();
   };
   q('[data-fn-prev]')?.addEventListener('click', () => step(-1));
@@ -130,7 +140,7 @@ export const finishes: SectionMotion = {
   },
   update(u, ctx) {
     const W = window.innerWidth;
-    const inn = seg(u, -0.35, 0);
+    const inn = seg(u, -0.3, 0);
     const out = seg(u, FINISHES_END, FINISHES_END + 0.45); // 10 → 11: the panel leaves right
     put(heads[0], { o: window4(u, -0.25, 0.05, 0.45, 0.7) }, ctx);
     put(heads[1], { o: seg(u, 0.55, 0.9) * (1 - out) }, ctx);
@@ -159,9 +169,9 @@ export const finishes: SectionMotion = {
       lamp: choice.lamp,
     });
   },
-  // 09 → 10: the ring comes in on the left as the phone becomes the panel
+  // 09 → 10 (D-165): the ring comes in on the left once S09 has scrolled away
   ringIn(x, _ctx, _from, to): Pose {
-    const t = seg(x, 0.35, 0.85);
+    const t = seg(x, 0.55, 0.95);
     return { ...to, w: to.w * lerp(0.85, 1, t), alpha: t };
   },
 };

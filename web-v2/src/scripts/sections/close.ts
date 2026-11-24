@@ -20,6 +20,10 @@ let el: Record<string, HTMLElement | null> = {};
 let stops = [0, 0, 0];
 let measured = '';
 let trackY = 0;
+const TAU = Math.PI * 2;
+/** an angle difference brought into −π..π */
+const wrapPi = (a: number) => a - TAU * Math.round(a / TAU);
+const ANGLES = new Set<keyof Pose>(['rx', 'ry', 'rz', 'spin', 'roll', 'pitch']);
 
 function measure() {
   if (!el.faq || !el.foot) return;
@@ -53,9 +57,15 @@ function initFaq(r: HTMLElement) {
         const on = o === b && open;
         o.setAttribute('aria-expanded', String(on));
         const a = document.getElementById(o.getAttribute('aria-controls') ?? '');
-        if (a) a.hidden = !on;
+        if (a) {
+          // D-165: the height animates (CSS grid rows); a closed answer is inert, out of the tab order
+          a.dataset.open = String(on);
+          a.toggleAttribute('inert', !on);
+        }
       });
+      // the page below moves when an answer opens: measure again once the height has settled
       measured = '';
+      window.setTimeout(() => (measured = ''), 360);
     }),
   );
   el.faq?.addEventListener('focusin', () => scrollToState(2));
@@ -142,10 +152,15 @@ export const close: SectionMotion = {
     });
   },
   // 10 → 11: the ring in the chosen finish moves to the middle as Sand turns to Night
+  // D-165: however far the ring was turned in S10, the angles go the shortest way (at most ±180°),
+  // both ways of scrolling (the interpolation is the same function of x)
   ringIn(x, _ctx, from, to): Pose {
     const t = seg(x, 0.25, 0.75);
     const o = {} as Pose;
-    for (const k of Object.keys(from) as (keyof Pose)[]) o[k] = from[k] + (to[k] - from[k]) * t;
+    for (const k of Object.keys(from) as (keyof Pose)[]) {
+      const d = ANGLES.has(k) ? wrapPi(from[k] - to[k]) : from[k] - to[k];
+      o[k] = to[k] + d * (1 - t);
+    }
     return o;
   },
 };

@@ -7,8 +7,9 @@
  *    then one button and one small line.
  *  - paper → state 3: the FAQ as one narrow column on the same dark, no white panel; one answer open
  *    at a time; the button again under it.
- *  - footer → state 4: a caps statement and the footer on the same canvas, ending with the full-width
- *    "Stillway" wordmark (text only, D-083), cut a little at the bottom, with a hover shine.
+ *  - footer → state 4 (Figma Design State 4, D-165): "Sleep on it. Stillway keeps the pattern." right,
+ *    three columns, and STILLWAY in capitals spread across the full width (text only, D-083), shine.
+ *  - FAQ answers open by height (grid rows 0fr → 1fr), the + turns into −.
  * No newsletter, no share (D-069). One unbroken dark canvas: the column below moves like a page
  * (scripts/sections/close.ts). FAQ Battery approved in full (D-099).
  */
@@ -49,8 +50,8 @@ import { close as d, finishes as f } from '../../content/copy';
                     <i aria-hidden="true" />
                   </button>
                 </h4>
-                <div class="cl__a" id={`faq-a-${i}`} role="region" aria-labelledby={`faq-q-${i}`} hidden={i !== 0}>
-                  <p>{item.a}</p>
+                <div class="cl__a" id={`faq-a-${i}`} role="region" aria-labelledby={`faq-q-${i}`} data-open={i === 0 ? 'true' : 'false'} inert={i !== 0}>
+                  <div class="cl__ain"><p>{item.a}</p></div>
                 </div>
               </li>
             ))
@@ -77,7 +78,9 @@ import { close as d, finishes as f } from '../../content/copy';
             <a class="cl__top" href="#top">{d.top} ↑</a>
           </nav>
         </div>
-        <p class="cl__word" data-cl-word aria-label={d.wordmark}><span aria-hidden="true">{d.wordmark}</span></p>
+        <p class="cl__word" data-cl-word aria-label={d.wordmark}>
+          {d.wordmark.toUpperCase().split('').map((c) => <span aria-hidden="true">{c}</span>)}
+        </p>
       </footer>
     </div>
   </div>
@@ -238,6 +241,10 @@ import { close as d, finishes as f } from '../../content/copy';
     width: 14px;
     height: 14px;
   }
+  /* + turns into − by a quarter turn of the whole mark and of its upright bar (D-165) */
+  .cl__q i {
+    transition: rotate 0.32s var(--ease-out, ease);
+  }
   .cl__q i::before,
   .cl__q i::after {
     content: '';
@@ -246,14 +253,58 @@ import { close as d, finishes as f } from '../../content/copy';
     top: 6px;
     width: 14px;
     height: 2px;
+    border-radius: 1px;
     background: currentColor;
-    transition: rotate 0.25s ease;
+    transition: rotate 0.32s var(--ease-out, ease), opacity 0.32s;
   }
   .cl__q i::after {
     rotate: 90deg;
   }
+  .cl__q[aria-expanded='true'] i {
+    rotate: 180deg;
+  }
   .cl__q[aria-expanded='true'] i::after {
-    rotate: 0deg;
+    rotate: 180deg;
+    opacity: 0;
+  }
+  /* the answer opens by its height: grid rows 0fr → 1fr (D-165), no layout jump */
+  .cl__a {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.32s var(--ease-out, ease);
+  }
+  .cl__a[data-open='true'] {
+    grid-template-rows: 1fr;
+  }
+  .cl__ain {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .cl__ain p {
+    opacity: 0;
+    translate: 0 -4px;
+    transition: opacity 0.24s ease, translate 0.32s var(--ease-out, ease);
+  }
+  .cl__a[data-open='true'] .cl__ain p {
+    opacity: 1;
+    translate: 0 0;
+    transition-delay: 0.06s;
+  }
+  :global(html.reduced) .cl__a,
+  :global(html.reduced) .cl__ain p,
+  :global(html.reduced) .cl__q i,
+  :global(html.reduced) .cl__q i::before,
+  :global(html.reduced) .cl__q i::after {
+    transition: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cl__a,
+    .cl__ain p,
+    .cl__q i,
+    .cl__q i::before,
+    .cl__q i::after {
+      transition: none;
+    }
   }
   .cl__a p {
     padding: 0 0 20px;
@@ -264,32 +315,32 @@ import { close as d, finishes as f } from '../../content/copy';
     color: color-mix(in srgb, var(--paper) 80%, transparent);
     max-width: 34em;
   }
-  /* footer on the same canvas */
+  /* footer on the same canvas — Figma Design "11 · Closing, FAQ & footer" State 4 (40004265:1480):
+     the line right at the top, three columns on the 12-column grid (1–5, 6–9, 10–12), the wordmark
+     in capitals across the full width at the foot (D-165) */
   .cl__block--foot {
     min-height: 100svh;
-    padding-top: calc(var(--header-h) + 6vh);
+    padding-top: calc(var(--header-h) + 100px);
     display: grid;
-    grid-template-rows: auto 1fr auto;
-    gap: 6vh;
+    grid-template-rows: auto auto 1fr auto;
     overflow: hidden;
   }
+  /* Heading/Heading 1, cream, right (Figma 1000 px box) */
   .cl__statement {
     justify-self: end;
-    width: min(16em, 100%);
+    width: min(1000px, 100%);
     text-align: right;
-    /* Heading/Heading 1 (uppercase kept as it was, reported) */
     font-weight: var(--w-heading);
     font-size: var(--t-heading-1-size);
     line-height: var(--t-heading-1-lh);
     letter-spacing: var(--t-heading-1-ls);
-    text-transform: uppercase;
     color: var(--cream);
   }
   .cl__cols {
-    align-self: end;
+    margin-top: clamp(64px, 19.3vh, 174px);
     display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr;
-    gap: 32px;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 20px;
     /* Paragraph/Small */
     font-size: var(--t-para-sm-size);
     line-height: var(--t-para-sm-lh);
@@ -300,17 +351,26 @@ import { close as d, finishes as f } from '../../content/copy';
     gap: 6px;
     align-content: start;
   }
-  /* Label/Small */
+  .cl__cols > :nth-child(1) {
+    grid-column: 1 / span 5;
+  }
+  .cl__cols > :nth-child(2) {
+    grid-column: 6 / span 4;
+  }
+  .cl__cols > :nth-child(3) {
+    grid-column: 10 / span 3;
+  }
+  /* Label/X-Small, as written in capitals (Figma Mono/Medium; Geist only, D-156) */
   .cl__sig {
     font-weight: var(--w-label);
-    font-size: var(--t-label-sm-size);
-    line-height: var(--t-label-sm-lh);
-    letter-spacing: var(--t-label-sm-ls);
+    font-size: var(--t-label-xs-size);
+    line-height: var(--t-para-sm-lh);
+    letter-spacing: var(--t-caps-ls);
   }
   .cl__disc,
   .cl__dim {
     color: var(--stone-on-night);
-    max-width: 30em;
+    max-width: 420px;
   }
   .cl__block--foot a {
     color: var(--paper);
@@ -326,14 +386,19 @@ import { close as d, finishes as f } from '../../content/copy';
   .cl__top {
     margin-top: 10px;
   }
-  /* the wordmark across the screen, cut a little at the bottom, with a hover shine */
-  /* footer wordmark (25.5vw ≈ 367 px at 1440): larger than Display 1, kept, reported */
+  /* the wordmark: Display/Display 1, capitals, its letters spread edge to edge (Figma), cream, with
+     the hover shine */
   .cl__word {
-    margin: 0 calc(var(--margin) * -0.2) -0.22em;
-    font-size: 25.5vw;
+    grid-row: 4;
+    margin: 0;
+    padding-top: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
     font-weight: var(--w-display);
-    letter-spacing: -0.045em;
-    line-height: 0.8;
+    font-size: var(--t-display-1-size);
+    line-height: var(--t-display-1-lh);
+    letter-spacing: 0;
     white-space: nowrap;
     pointer-events: auto;
     color: var(--cream);
@@ -343,6 +408,7 @@ import { close as d, finishes as f } from '../../content/copy';
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
+    padding-bottom: calc(var(--t-display-1-size) * 0.04);
   }
   .cl__word.is-shine {
     animation: cl-shine 0.9s ease-in-out 1;
@@ -378,11 +444,23 @@ import { close as d, finishes as f } from '../../content/copy';
       padding: 15px 0;
     }
 
-    .cl__cols {
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
+    .cl__block--foot {
+      padding-top: calc(var(--header-h) + 40px);
     }
-    .cl__cols .cl__col:first-child {
+    .cl__statement {
+      width: 100%;
+    }
+    .cl__cols {
+      margin-top: 48px;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px 20px;
+    }
+    .cl__cols > :nth-child(1) {
+      grid-column: 1 / -1;
+    }
+    /* phones: contact on its own row (the address stays on one line), the menu under it */
+    .cl__cols > :nth-child(2),
+    .cl__cols > :nth-child(3) {
       grid-column: 1 / -1;
     }
   }
