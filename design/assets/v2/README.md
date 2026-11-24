@@ -24,6 +24,7 @@ Status: **AI-generated, belum di-retouch manual, menunggu tinjauan pengguna.** D
 | A-2 | `A-2-card-rinse.png` | 1122×1402 | lama | Ukiran acak → **edit AI: band polos**. Ring basah di telunjuk kiri. |
 | A-3 | `A-3-everyday.png` | 1672×941 | lama | **Dipertahankan.** Studio Paper/Sand, C-02 duduk di sepertiga kanan, ruang kosong di tengah untuk teks. Ring kecil di tangan kiri. |
 | A-4 | `A-4-box-studio.png` | 1448×1086 | **brushed** (`ref-34-brushed`) + `masters/R-kit.png` | **Dibuat ulang dengan acuan brushed.** Ring + dock + baki 8 sampel (6–13). Logo "Stillway" bersih. |
+| A-11b | `A-11b-everyday-a.png`, `-b.png`, `-c.png` | 2880×1920 | polished Silver/Black/Gold (`polished-finishes/sheet-blender.png`) | **D-152, baru 24 Nov 2026.** Pengganti foto latar akhir S07 (`v1/home/A-11-package-flatlay.png`): sizing kit diganti tiga ring Stillway. 3 variasi menunggu pilihan pengguna. Detail, prompt, dan catatan: `everyday/README.md`. |
 
 ### Keputusan acuan per foto (setelah acuan brushed tiba)
 
