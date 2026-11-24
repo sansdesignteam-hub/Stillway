@@ -26,10 +26,13 @@ interface Page {
   el: HTMLElement;
   pin: HTMLElement | null;
   items: HTMLElement[];
-  nums: Array<{ el: HTMLElement; to: number; last: string }>;
+  nums: Array<{ el: HTMLElement; to: number; from: number; last: string }>;
   draws: HTMLElement[];
   marks: HTMLElement[];
   grows: Array<{ el: HTMLElement; h: number }>;
+  growsW: Array<{ el: HTMLElement; w: number }>;
+  arcs: Array<{ el: SVGElement; len: number }>;
+  dial: { t: number; arc: SVGElement | null; needle: SVGElement | null } | null;
   over: number;
 }
 let el: Record<string, HTMLElement | null> = {};
@@ -81,10 +84,16 @@ export const app: SectionMotion = {
       el: pg,
       pin: pg.querySelector<HTMLElement>('[data-p-pin]'),
       items: all('[data-p-item]', pg),
-      nums: all('[data-n]', pg).map((n) => ({ el: n, to: Number(n.dataset.n), last: '' })),
+      nums: all('[data-n]', pg).map((n) => ({ el: n, to: Number(n.dataset.n), from: Number(n.dataset.from ?? 0), last: '' })),
       draws: all('[data-draw]', pg),
       marks: all('[data-p-mark]', pg),
       grows: all('[data-grow]', pg).map((g) => ({ el: g, h: parseFloat(g.style.height) || 0 })),
+      growsW: all('[data-grow-w]', pg).map((g) => ({ el: g, w: parseFloat(g.style.width) || 0 })),
+      arcs: [...pg.querySelectorAll<SVGElement>('[data-arc]')].map((a) => ({ el: a, len: Number(a.dataset.arc) })),
+      dial: (() => {
+        const dl = pg.querySelector<HTMLElement>('[data-dial]');
+        return dl ? { t: Number(dl.dataset.dial), arc: dl.querySelector<SVGElement>('[data-dial-arc]'), needle: dl.querySelector<SVGElement>('[data-dial-needle]') } : null;
+      })(),
       over: 0,
     }));
     const reset = () => (measured = '');
@@ -118,16 +127,17 @@ export const app: SectionMotion = {
       if (show < 0.002) return;
       // reduced motion: the screen complete, not scrolled
       const p = ctx.reduced ? 1 : playOf(k, u);
-      // (a) title, value, chart panel, details: in, one after another
+      // (a) title, value, chart panel, details: in, one after another (capped, so the lower cards are
+      // in by the time the page scrolls to them)
       pg.items.forEach((c, j) => {
-        const e = ctx.reduced ? 1 : smooth(clamp01((p - 0.07 * j) / 0.2));
+        const e = ctx.reduced ? 1 : smooth(clamp01((p - Math.min(0.07 * j, 0.36)) / 0.2));
         set(c, 'opacity', e.toFixed(3));
         set(c, 'transform', e > 0.999 ? '' : `translate3d(0, ${((1 - e) * 14).toFixed(1)}px, 0)`);
       });
       // (b) numbers count up, the chart draws, the columns grow, then the marks
       const count = ctx.reduced ? 1 : seg(p, 0.08, 0.45);
       pg.nums.forEach((n) => {
-        const v = String(Math.round(n.to * count));
+        const v = String(Math.round(n.from + (n.to - n.from) * count));
         if (v !== n.last) {
           n.last = v;
           n.el.textContent = v;
@@ -136,6 +146,19 @@ export const app: SectionMotion = {
       const draw = ctx.reduced ? 1 : seg(p, 0.22, 0.58);
       pg.draws.forEach((d) => set(d, 'clipPath', draw > 0.999 ? '' : `inset(-30% ${((1 - draw) * 100).toFixed(2)}% -30% 0)`));
       pg.marks.forEach((m) => set(m, 'opacity', (ctx.reduced ? 1 : seg(p, 0.54, 0.62)).toFixed(3)));
+      const fill = ctx.reduced ? 1 : seg(p, 0.2, 0.56);
+      pg.arcs.forEach((a) => a.el.setAttribute('stroke-dasharray', `${(a.len * fill).toFixed(2)} 100`));
+      pg.growsW.forEach((g) => {
+        const v = `${(g.w * fill).toFixed(2)}%`;
+        if (g.el.style.width !== v) g.el.style.width = v;
+      });
+      // the dial: the knob sweeps from the scale's start to today's value as the arc fills
+      if (pg.dial) {
+        const k = ctx.reduced ? 1 : seg(p, 0.1, 0.48);
+        const t = pg.dial.t * k;
+        pg.dial.arc?.setAttribute('stroke-dasharray', `${(t * 100).toFixed(2)} 100`);
+        if (pg.dial.needle) set(pg.dial.needle, 'transform', `rotate(${(t * 240).toFixed(2)}deg)`);
+      }
       pg.grows.forEach((g, j) => {
         const k = ctx.reduced ? 1 : seg(p, 0.24 + 0.035 * j, 0.5 + 0.035 * j);
         const v = `${(g.h * k).toFixed(2)}%`;
