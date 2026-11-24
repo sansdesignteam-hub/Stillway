@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# S09 "The app", Recovery screen background photo (D-163). Brief: design/v2/BRIEF-vd-s09-recovery-bg.md (Project Manager checkout).
+# Full-bleed photo behind the recovery dial: C-02 hand (D-058, sawo matang like A-1) resting, wearing the Stillway
+# Silver polished ring (D-061, D-085), dark purple-cocoa night mood (Recovery mode #A06BFF sunk into Night/Cocoa).
+# The mood reference s09-ref-oura-recovery-photo.png is NOT attached (avoid copying its brand/text); it is described in words.
+# Usage: ./s09-recovery-bg.sh [a|b|all] -> design/assets/v2/app/_work/recovery/raw-<v>.png
+# Then:  python s09-recovery-bg-finish.py -> design/assets/v2/A-6-recovery-bg-<v>.png + app/A-6-recovery-bg-<v>-{1290,860}.webp
+set -euo pipefail
+G="$(cd "$(dirname "$0")/../../assets/v1/scripts" && pwd)/genref.sh"
+cd "$(dirname "$0")/../../.."
+WD=design/assets/v2/app/_work/recovery; mkdir -p "$WD"
+SKIN=design/assets/v2/A-1-hand-left.png                    # C-02 skin tone + hand character (S06)
+FIN=design/assets/v2/everyday/_work/refs/finishes.png      # polished finishes sheet (D-085); only the Silver one is used
+LOGO=design/assets/v2/everyday/_work/refs/logo.png          # band geometry + "Stillway" engraving (D-061)
+ONLY="${1:-all}"; want(){ [[ "$ONLY" == all || "$ONLY" == "$1" ]]; }
+run(){ [[ -f "$2" ]] && { echo "SKIP $2"; return; }; "$G" "$@" || echo "FAIL $2"; }
+
+BASE="Real photograph, not a render, not CGI, not an illustration: a calm, cinematic night-time still life of a resting human hand, made to be used as the full-screen background of a phone app's Recovery screen. FORMAT: tall vertical phone-screen portrait, aspect ratio 9:19.5 (like 1290x2796). THE HAND: use the FIRST attached image as the reference for the hand and skin: the same adult man, tan medium-brown Southeast Asian skin (sawo matang), natural knuckle creases, a few fine hairs on the back of the hand and wrist, short clean natural nails, no sleeve, no watch, no bracelet. The hand is completely relaxed, at rest, fingers loose and softly curved, never posed or tense. THE RING: on the ring finger he wears ONE Stillway smart ring, the exact design of the THIRD attached image: a flat wide band about 8 mm wide with softly rounded chamfered edges, the outer surface POLISHED high-gloss mirror silver exactly like the LEFT (silver) ring in the SECOND attached image, and the word Stillway engraved small and tone-on-tone on the outer side running along the band. The ring is clearly visible and crisp but small and not dominant; its polished silver catches a soft warm highlight and reflects a hint of the violet surroundings. If the engraving cannot be rendered correctly spelled as Stillway (two letter L), turn it away from the camera instead; never garbled letters. COLOUR AND LIGHT: a dark, quiet night mood. The background is a smooth, soft, out-of-focus single-hue gradient of deep cocoa brown blending into dark muted violet-plum (a desaturated version of violet #A06BFF sunk into near-black cocoa #241A1C), like a dim bedroom wall or soft fabric far out of focus, with no objects, no pattern, no texture. Soft warm side light (like a low bedside lamp just out of frame) falls gently across the hand; the shadows fall off into violet-cocoa darkness. Medium contrast, rich but quiet, slight film grain, shallow depth of field, 85 mm lens. COMPOSITION FOR UI: the upper 55% of the frame is calm and almost empty: only the smooth dark violet-cocoa gradient with a very soft, faint glow, reserved for a large white circular gauge and white numbers placed on top later; nothing important, no fingertips and no bright highlights there. The hand and ring sit in the lower half of the frame. Keep the hand and the ring inside the central 70% of the image width so the sides can be cropped. No text, no logo, no watermark, no UI, no graphics."
+AVOID="Avoid: orange or saturated red tones, a bright or busy background, any objects, phones, bedsheets with visible pattern, any text, logos or watermarks, more than one ring, a ring on the wrong finger, extra or missing fingers, deformed fingers, a brushed or matte ring, a gold or black ring, garbled engraving, plastic-looking skin, hard flash light."
+
+if want a; then
+run "$BASE Variation A: the LEFT hand lies palm-down, relaxed, on an invisible soft surface, entering diagonally from the lower LEFT corner toward the lower centre, the fingers pointing up and to the right and gently curled, the back of the hand toward the camera, ring visible on the ring finger with the engraving toward the camera. Light from the LEFT side, warm and soft, grazing the knuckles; the right side of the frame falls into deeper violet shadow. $AVOID" "$WD/raw-a.png" --size 1024x2224 --ref "$SKIN" --ref "$FIN" --ref "$LOGO" &
+fi
+if want b; then
+run "$BASE Variation B: the RIGHT hand rests on its side, half-open and loose, like a hand lying beside a sleeping person, entering from the lower RIGHT edge, the fingers softly curled toward the lower left, the palm partly visible and the thumb relaxed; ring on the ring finger seen in three-quarter view. Light from the RIGHT side and slightly behind, a warm rim of light along the edge of the hand and the ring, with the left side of the frame in deep violet-cocoa shadow; overall a little darker and more nocturnal than a daylight photo. $AVOID" "$WD/raw-b.png" --size 1024x2224 --ref "$SKIN" --ref "$FIN" --ref "$LOGO" &
+fi
+wait; echo "S09 RECOVERY RAW DONE ($ONLY)"

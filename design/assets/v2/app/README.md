@@ -85,3 +85,39 @@ Contoh CSS (skala dari lebar kontainer):
 - Resolusi: model menghasilkan 1024×1536, lalu diperbesar 1,5625× ke tinggi 2400. Detail kulit masih tajam pada ukuran tampil di web (±600–900 px CSS). Untuk tampilan di atas 1600 px fisik, gambar akan sedikit lembut.
 - Bulu halus lengan di tepi kiri/kanan pergelangan dipertahankan. Celah latar putih di antara bulu dibuang supaya tidak terlihat garis putih di latar gelap.
 - Anatomi sudah dicek pada crop penuh: A memiliki ibu jari dan 4 jari, B dan C memiliki ibu jari dan 3–4 jari yang terlihat. Tidak ada cincin, jam, maupun logo.
+
+---
+
+# A-6 Foto latar layar Recovery, S09 "The app" (D-163)
+
+Status: **dibuat dengan AI, menunggu tinjauan pengguna sebelum dipasang.** Dibuat 24 November 2026 oleh Visual Director. Brief: `design/v2/BRIEF-vd-s09-recovery-bg.md` (checkout Project Manager).
+
+Foto penuh layar di belakang dial/gauge Recovery. Tangan C-02 (sawo matang, seperti A-1) beristirahat dan memakai **satu ring Stillway Silver polished** (D-061, D-085) di jari manis. Latar berupa gradasi lembut cocoa gelap ke ungu-plum (warna mode Recovery #A06BFF dibenamkan ke Night/Cocoa), dengan cahaya hangat dari samping seperti lampu tidur dan kontras sedang. Tidak ada teks, logo, atau watermark. Rasa diambil dari `s09-ref-oura-recovery-photo.png`, tetapi gambar itu **tidak dilampirkan** ke model supaya merek dan teksnya tidak ikut, dan komposisinya juga tidak ditiru.
+
+## File
+
+| Variasi | Master PNG | Web (WebP q84) | Isi |
+|---|---|---|---|
+| A | `../A-6-recovery-bg-a.png` 1290×2796 | `A-6-recovery-bg-a-1290.webp` (1290×2796, ±105 KB), `-860.webp` (860×1864, ±49 KB) | Tangan kiri telungkup dari kiri bawah, punggung tangan menghadap kamera. Cahaya hangat dari kiri. Ukiran **"Stillway"** terlihat (dua L benar, huruf "y" melengkung di tepi band). Ring tampak perak hangat karena memantulkan cahaya lampu. |
+| B | `../A-6-recovery-bg-b.png` 1290×2796 | `A-6-recovery-bg-b-1290.webp` (±62 KB), `-860.webp` (±26 KB) | Tangan kanan miring dan setengah terbuka dari kanan bawah. Rim light hangat dari kanan, lebih gelap dan lebih "malam". Ring terlihat tiga-perempat dengan pantulan ungu. Ukiran menghadap ke dalam, jadi band terlihat polos (D-073). |
+
+**Angka di nama file webp adalah lebar** (berbeda dengan A-5, yang memakai tinggi). Master PNG berukuran sekitar 4 MB karena grain halus. Pakai webp untuk web.
+
+**Ruang UI:** sekitar 0–50% tinggi atas hanya berisi gradasi gelap tanpa detail, jadi aman untuk dial dan angka putih. Tangan mulai sekitar 52% (A) dan 56% (B) tinggi. Pada mock, kalimat di bawah dial (y ≈ 1390 dari 2796) belum menyentuh jari A. Sisi kiri/kanan foto boleh terpotong sedikit (`object-fit: cover`) karena tangan dan ring berada di tengah 70% lebar.
+
+Pratinjau untuk tinjauan pengguna (bukan untuk web): `_preview/A-6-recovery-bg-preview.png` menampilkan foto polos dan **mock dial** (busur 240° dengan skala 0–100, angka 64 = HRV hari ini dari `copy.ts` bars[6] × 80, Geist). Mock dial ini hanya ilustrasi; desain dial dibuat Developer (D-163).
+
+## Proses dan prompt
+
+- **Alat:** `gpt-image-bridge` lewat `design/assets/v1/scripts/genref.sh` (Codex CLI `image_generation`, referensi dilampirkan dengan `-i`). Codex memilih backend model gambar. Diminta 1024×2224, model mengembalikan **851×1848** (sudah 9:19,5).
+- **Prompt lengkap:** `design/v2/scripts/s09-recovery-bg.sh` (BASE + AVOID + variasi A/B). Raw: `_work/recovery/raw-a.png`, `raw-b.png`. Keduanya dari run pertama, tanpa edit AI dan tanpa retouch.
+- **Referensi:** (1) `design/assets/v2/A-1-hand-left.png` untuk kulit dan tangan C-02; (2) `../everyday/_work/refs/finishes.png` untuk finish Silver polished (hanya ring kiri); (3) `../everyday/_work/refs/logo.png` untuk geometri band dan ukiran.
+- **Finishing:** `design/v2/scripts/s09-recovery-bg-finish.py`: crop tengah 9:19,5 (hanya ±3 px), Lanczos 1,516× ke 1290×2796, unsharp ringan, dan grain luminans halus. Tidak ada perubahan warna/exposure. Skrip yang sama membuat pratinjau mock dial.
+- **Pemeriksaan:** crop resolusi penuh. A dan B sama-sama memiliki ibu jari + 4 jari, dan ring berada di jari manis. Ukiran A terbaca "Stillway". Tidak ada teks atau logo lain.
+
+## Batasan
+
+- Resolusi asli 851 px lebar, di-upscale 1,5× ke 1290. Pada ukuran ponsel di web (±300–430 px CSS), hasilnya tajam. Pada crop penuh, kulit sedikit lembut.
+- Ukiran pada A lebih kontras daripada tone-on-tone di render 3D, sama dengan catatan A-11b. Ukiran AI tidak bisa diatur persis.
+- Ring pada A bernuansa perak hangat/champagne karena cahaya lampu. Ini masih perak polished (selaras D-137), tetapi perlu dicek pengguna apakah sudah terbaca Silver.
+- Ring bukan produk nyata; ini aset ilustratif untuk portofolio.

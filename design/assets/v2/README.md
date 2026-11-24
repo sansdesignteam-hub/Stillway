@@ -26,6 +26,7 @@ Status: **AI-generated, belum di-retouch manual, menunggu tinjauan pengguna.** D
 | A-4 | `A-4-box-studio.png` | 1448×1086 | **brushed** (`ref-34-brushed`) + `masters/R-kit.png` | **Dibuat ulang dengan acuan brushed.** Ring + dock + baki 8 sampel (6–13). Logo "Stillway" bersih. |
 | A-11b | `A-11b-everyday-a.png`, `-b.png`, `-c.png` | 2880×1920 | polished Silver/Black/Gold (`polished-finishes/sheet-blender.png`) | **D-152, baru 24 Nov 2026.** Pengganti foto latar akhir S07 (`v1/home/A-11-package-flatlay.png`): sizing kit diganti tiga ring Stillway. 3 variasi menunggu pilihan pengguna. Detail, prompt, dan catatan: `everyday/README.md`. |
 | A-5 | `A-5-hand-phone.png` (+ `-b`, `-c`, lapisan `-front`) | 1600×2400, RGBA, layar transparan | — (tanpa ring) | **D-160, baru 24 Nov 2026.** Tangan C-02 memegang ponsel hitam tanpa logo untuk S09; latar dan layar transparan. 3 variasi, A utama; menunggu tinjauan pengguna. Koordinat layar, lapisan, dan prompt: `app/README.md`. |
+| A-6 | `A-6-recovery-bg-a.png`, `-b.png` | 1290×2796 (9:19,5) | polished Silver (`polished-finishes/sheet-blender.png`) | **D-163, baru 24 Nov 2026.** Foto latar layar Recovery di app S09: tangan C-02 beristirahat memakai ring Stillway Silver, nuansa ungu–cocoa malam, ruang tenang di atas untuk dial. 2 variasi menunggu tinjauan pengguna. Prompt dan catatan: `app/README.md`. |
 
 ### Keputusan acuan per foto (setelah acuan brushed tiba)
 
