@@ -11,7 +11,8 @@
  *                 counter circle fills; by (IV) Rinse the cards behind it are gone (Figma State 6)
  *  5.1 → 6.1 end  (obsidianassembly.com "The Connection") the big photo comes up from below at
  *                 scroll speed (1:1), its content slower (parallax); the Rinse card moves down and
- *                 shrinks in front of it into the "The / Everyday" layout; caption last
+ *                 shrinks in front of it into the "The / Everyday" layout (phones: the card above
+ *                 the words, so none of them is covered); caption last
  *  > 6.6 to S08   the frame opens to full bleed and goes to Night, the words and the card fade
  * Reduced motion: story.ts snaps u to whole states; everything is placed for that state and only
  * the opacity changes (short fade per state, global.css).
@@ -86,8 +87,10 @@ function layout(ctx: Ctx) {
   const rowW = 4 * rw + 3 * rgap;
   const row = (i: number): Slot => ({ x: cx - rowW / 2 + rw / 2 + i * (rw + rgap), y: cy, w: rw, h: rw * 1.25, s: rw / (BW * k), o: 1 });
   // the end: the small Rinse card (Figma State 7 195 × 244) lower in the frame
-  const ew = m ? W * 0.42 : 195 * k;
-  const E: Slot = { x: cx, y: H * (m ? 0.52 : 0.57), w: ew, h: ew * 1.25, s: ew / (BW * k), o: 1 };
+  // phones: Display 1 is at its 72 px floor, so "Everyday" is narrower than any readable card; the
+  // card sits above "The / Everyday" instead of across it (desktop: across the "r")
+  const ew = m ? Math.min(W * 0.38, H * 0.2) : 195 * k;
+  const E: Slot = { x: cx, y: H * (m ? 0.35 : 0.57), w: ew, h: ew * 1.25, s: ew / (BW * k), o: 1 };
   // the photo frame (Figma inset 24 / 40)
   const ey = m ? 16 : 24;
   return { W, H, m, k, cx, cy, ly, F, B1, B2, row, rowW, E, ey };
@@ -402,8 +405,8 @@ export const specs: SectionMotion = {
       const tw = el.evword.offsetWidth;
       const th = el.the.offsetHeight;
       const eh = el.evword.offsetHeight;
-      const yc = L.E.y + L.E.h * 0.12; // the big word crosses the card's lower half
-      const top = yc - eh / 2 - th; // block top, at rest
+      // desktop: the big word crosses the card's lower half; phones: the block starts under the card
+      const top = m ? L.E.y + L.E.h / 2 + 14 : L.E.y + L.E.h * 0.12 - eh / 2 - th; // block top, at rest
       const rise = ctx.reduced ? 0 : lift;
       const left = W / 2 - tw / 2;
       tf(el.etext, (u > RISE ? 1 : 0) * (1 - out), tr(left, top + rise));
