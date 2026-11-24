@@ -113,21 +113,17 @@ export const details = {
 };
 
 export const specs = {
-  status: 'draft (home-copy-v2 §07; facts D-067)',
+  status: 'Figma Design 07 State 1–7 (D-149); facts D-067',
   headline: ['Through', 'the day.'],
-  pill: 'Made for every hour',
+  // Figma State 3–6: title above the line, sentence below it (left); spec + small note (right).
+  // '\n' = a line break kept from Figma
   cards: [
-    { key: 'night', n: 'I', name: 'Night', title: "Sleeps with you. Charges while you don't.", tag: '[ BATTERY ]', fact: 'Up to 7 days on a charge. Top up on the dock while you shower.', alt: 'Night: asleep under a linen cover, the ring on the index finger of the resting hand.' },
-    { key: 'desk', n: 'II', name: 'Desk', title: 'Sized to forget.', tag: '[ SIZE ]', fact: 'Sizes 6–13. Try them on with the sizing kit before you choose.', alt: 'Desk: hands on a keyboard, the plain silver ring on the index finger.' },
-    { key: 'move', n: 'III', name: 'Move', title: 'Light enough to lose track of.', tag: '[ WEIGHT · THICKNESS ]', fact: 'About 4 g, 2.6 mm thin.', alt: 'Move: mid-stride on a plain studio floor, the ring on the left hand.' },
-    { key: 'rinse', n: 'IV', name: 'Rinse', title: 'Hands in water. Ring stays on.', tag: '[ WATER RATING ]', fact: 'Water resistant to 100 m. Washing up, rain, a swim.', alt: 'Rinse: hands under running water, the wet ring on the index finger.' },
+    { key: 'night', n: 'I', name: 'Night', title: 'Sleeps with you.\nCharges while you don’t.', spec: 'Up to 7 days on a charge.', note: 'Top up on the dock while you shower.', alt: 'Night: asleep under a linen cover, the ring on the index finger of the resting hand.' },
+    { key: 'desk', n: 'II', name: 'Desk', title: 'Sized to forget.', spec: 'Sizes 6–13.', note: 'Try them on with the sizing kit before you choose.', alt: 'Desk: hands on a keyboard, the plain silver ring on the index finger.' },
+    { key: 'move', n: 'III', name: 'Move', title: 'Light enough to lose track of.', spec: 'About 4 g, 2.6 mm thin.', note: '', alt: 'Move: tying a shoe on a studio floor, the ring on the left hand.' },
+    { key: 'rinse', n: 'IV', name: 'Rinse', title: 'Hands in water. Ring stays on.', spec: 'Water resistant to 100 m.', note: 'Washing up, rain, a swim.', alt: 'Rinse: hands under running water, the wet ring on the index finger.' },
   ],
-  // panel values: battery per day is a display of use, so it is labelled (home-copy-v2); the rest are D-067 facts
-  battery: { days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], simulated: 'Simulated data' },
-  size: { min: 6, max: 13, value: 9 },
-  weight: { g: '4 g', mm: '2.6 mm' },
-  water: { rating: '100 m', uses: ['Washing up', 'Rain', 'A swim'] },
-  everyday: { title: 'The Everyday', caption: "Ring shown where it's worn.", alt: 'A man seated in a calm paper-and-sand studio, the ring small on his left hand.' },
+  everyday: { the: 'The', word: 'Everyday', caption: 'Ring shown where it’s worn.', alt: 'A man seated on a stool in a calm sand-coloured room, holding a cup, the ring on his hand.' },
 };
 
 export const features = {
