@@ -41,6 +41,8 @@ let wordW = [0, 0];
 let wordH = 0;
 let wordFs = 0;
 let vhPx = 0;
+/** "Everyday" glyph metrics in its own box: baseline from the top, bottom of the "y", ink right inset */
+let ev = { base: 0, desc: 0, right: 0 };
 
 /* ---------- layout ---------- */
 
@@ -268,6 +270,16 @@ export const specs: SectionMotion = {
         return -c.measureText(ch).actualBoundingBoxLeft; // ink start right of the pen
       };
       root?.style.setProperty('--the-x', `${(ink(el.evword, 'E') - ink(el.the, 'T')).toFixed(1)}px`);
+      // where the baseline and the descender of "y" sit in the word's line box, and how far the ink of
+      // the last "y" stops short of the box's right edge (side bearing + trailing letter-spacing)
+      const cs = getComputedStyle(el.evword);
+      c.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const mt = c.measureText('y');
+      const lh = parseFloat(cs.lineHeight) || el.evword.offsetHeight;
+      const asc = mt.fontBoundingBoxAscent;
+      const dsc = mt.fontBoundingBoxDescent;
+      const ls = parseFloat(cs.letterSpacing) || 0;
+      ev = { base: (lh - (asc + dsc)) / 2 + asc, desc: mt.actualBoundingBoxDescent, right: mt.width - mt.actualBoundingBoxRight + ls };
     };
     const rebuild = () => {
       vhProbe();
@@ -383,22 +395,27 @@ export const specs: SectionMotion = {
       tf(el.par, 1, ctx.reduced ? '' : tr(0, -PAR * lift));
       if (el.dark) el.dark.style.opacity = seg(u, END, END + 0.75).toFixed(3);
     }
-    // "The / Everyday": in the frame (it rises with it), centred, behind the card
+    // "The / Everyday": in the frame (it rises with it), centred, behind the card. The caption rides
+    // with it (same lift, so the two never cross during the rise) and stands free under the word:
+    // below the descender of "y" (and below the card), its right edge on the ink of the last "y"
     if (el.etext && el.the && el.evword) {
       const tw = el.evword.offsetWidth;
       const th = el.the.offsetHeight;
       const eh = el.evword.offsetHeight;
       const yc = L.E.y + L.E.h * 0.12; // the big word crosses the card's lower half
-      tf(el.etext, (u > RISE ? 1 : 0) * (1 - out), tr(W / 2 - tw / 2, yc - eh / 2 - th + (ctx.reduced ? 0 : lift)));
-    }
-    // caption: bottom right of the small card (phones: under it, right aligned)
-    if (el.caption) {
-      const cw = el.caption.offsetWidth;
-      const x = m ? L.E.x + L.E.w / 2 - cw : L.E.x + L.E.w / 2 + 28 * k;
-      const y = L.E.y + L.E.h / 2 + 12;
-      const cp = seg(u, RISE + 0.72, RISE + 1.0);
-      tf(el.caption, cp > 0 ? 1 - out : 0, tr(x, y));
-      tf(el.capi, 1, ctx.reduced ? '' : ty((1 - cp) * 105));
+      const top = yc - eh / 2 - th; // block top, at rest
+      const rise = ctx.reduced ? 0 : lift;
+      const left = W / 2 - tw / 2;
+      tf(el.etext, (u > RISE ? 1 : 0) * (1 - out), tr(left, top + rise));
+      if (el.caption) {
+        const cw = el.caption.offsetWidth;
+        const descBottom = top + th + ev.base + ev.desc;
+        const x = left + tw - ev.right - cw;
+        const y = Math.max(descBottom, L.E.y + L.E.h / 2) + (m ? 14 : 22);
+        const cp = seg(u, RISE + 0.72, RISE + 1.0);
+        tf(el.caption, cp > 0 ? 1 - out : 0, tr(x, y + rise));
+        tf(el.capi, 1, ctx.reduced ? '' : ty((1 - cp) * 105));
+      }
     }
   },
   // no 3D ring in S07 (it is only in the card photos)

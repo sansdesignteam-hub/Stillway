@@ -13,7 +13,7 @@
  *  - End (obsidianassembly.com "The Connection"): the Rinse card moves down and shrinks while the
  *    big photo (inset frame, radius 14) comes up from below at scroll speed, its content slower
  *    (parallax); the card stays in front of it. "The" small over "Everyday" (Display 1), both
- *    white, "The" flush with the E; caption bottom right of the card (s07-ref-everyday-layout).
+ *    white, "The" flush with the E; caption free under the right end of "Everyday", below the "y" (s07-ref-everyday-layout).
  * Motion: scripts/sections/specs.ts.
  */
 import Img from '../Img.astro';
@@ -336,13 +336,14 @@ const noteW: Record<string, number> = { desk: 217 };
     will-change: transform;
   }
 
-  /* ---------- caption: Paragraph/Large, white, bottom right of the small card ---------- */
+  /* ---------- caption: Paragraph/Large, white, free under the right end of "Everyday" ---------- */
   .sp__caption {
     position: absolute;
     left: 0;
     top: 0;
     width: 7em;
     overflow: hidden;
+    text-align: right;
     color: var(--white);
     font-size: var(--t-para-lg-size);
     line-height: var(--t-para-lg-lh);
@@ -383,7 +384,6 @@ const noteW: Record<string, number> = { desk: 217 };
     }
     .sp__caption {
       width: 9em;
-      text-align: right;
     }
   }
 </style>
