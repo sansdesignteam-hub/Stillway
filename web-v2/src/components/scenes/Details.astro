@@ -8,7 +8,7 @@
  *  - At the edge it tips over and falls (oryzo.ai): turning as it drops, slowing near the finger.
  *  - Hand A–C: the hand photo A-1 (no ring, D-133) rises from below the screen — its cut bottom is
  *    always below the viewport and melted into Paper — the ring slides onto the finger to the seat
- *    (s06-pose.json), [ SILVER ] beside it, "Then, it just fits." centred on top.
+ *    (s06-pose.json) (D-157: no finish tag beside it), "Then, it just fits." centred on top.
  * The table is the 3D Designer's pine table GLB in the ring stage (D-146, stage.ts); the CSS table here
  * stands in until it has loaded and without WebGL.
  * Motion: scripts/sections/details.ts.
@@ -59,7 +59,6 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
       <h3 class="det__fhead">{d.fits.title}</h3>
       <p class="det__fbody">{d.fits.body}</p>
     </div>
-    <p class="det__label" data-d-label data-a>{d.label}</p>
     <div class="det__progress" data-d-progress data-a aria-hidden="true">
       {[0, 1, 2, 3].map(() => <i data-d-tick></i>)}
     </div>
@@ -263,19 +262,6 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
   }
   .det__fbody {
     max-width: 520px;
-  }
-  /* [ SILVER ]: Mono/Small, Ink, beside the ring (Figma +217 / −12 from the seat) */
-  .det__label {
-    position: absolute;
-    left: 0;
-    top: 0;
-    font-family: var(--font-mono);
-    font-weight: var(--w-mono);
-    font-size: var(--t-mono-sm-size);
-    line-height: var(--t-mono-sm-lh);
-    letter-spacing: var(--t-mono-sm-ls);
-    color: var(--ink);
-    white-space: nowrap;
   }
   /* 4-step progress, bottom left (Figma: active 32 px Ink, others 12 px line) */
   .det__progress {

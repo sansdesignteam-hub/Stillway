@@ -160,11 +160,11 @@ const digits = Array.from({ length: 20 }, (_, i) => i % 10); // 0–9 twice: a d
     position: absolute;
     left: 0;
     top: 0;
-    font-family: var(--font-mono);
-    font-weight: var(--w-mono);
-    font-size: var(--t-mono-sm-size);
-    line-height: var(--t-mono-sm-lh);
-    letter-spacing: var(--t-mono-sm-ls);
+    font-weight: var(--w-label);
+    font-size: var(--t-label-xs-size);
+    line-height: var(--t-label-xs-lh);
+    letter-spacing: var(--t-caps-ls);
+    font-variant-numeric: tabular-nums;
     color: var(--white);
     white-space: nowrap;
     will-change: transform, opacity;

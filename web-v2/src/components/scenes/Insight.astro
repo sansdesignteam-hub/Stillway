@@ -4,7 +4,7 @@
  * :827, card component "Card / Last night" 40004260:693).
  *  - Dusk ground = Night with a soft --cocoa-300 light from the lower left and a shade upper right
  *    (Stage .stage__dusk, painted by story.ts; D-139 colour instead of the Figma ochre)
- *  - State 1: [ 17:30 · DAILY INSIGHT ] + "Everything it noticed." bottom left, ring right-centre
+ *  - State 1: 17:30 · DAILY INSIGHT + "Everything it noticed." bottom left, ring right-centre
  *  - State 2: the ring grows, the text moves down to the edge and dims, "One calm view." joins
  *  - State 3: the camera goes into the opening; the glass card starts to show (≈ 45%)
  *  - State 4: the glass card (432 px, columns 5–8) fully legible + one small paragraph under it
@@ -24,7 +24,7 @@ const [settled, up] = c.line.split(' · ');
   </div>
   <div class="scene__front">
     <div class="ins__text" data-i-text data-a>
-      <p class="ins__eyebrow">[ {d.eyebrow} ]</p>
+      <p class="ins__eyebrow">{d.eyebrow}</p>
       <h2 id="insight-title" class="ins__head" data-i-head>
         <span>{d.headline[0]}</span>{' '}
         {
@@ -94,13 +94,12 @@ const [settled, up] = c.line.split(' · ');
     gap: 18px;
     will-change: transform, opacity;
   }
-  /* Mono/Medium, neutral/400 */
+  /* Label/X-Small in capitals, neutral/400 (D-156) */
   .ins__eyebrow {
-    font-family: var(--font-mono);
     font-weight: var(--w-label);
-    font-size: var(--t-mono-md-size);
-    line-height: var(--t-mono-md-lh);
-    letter-spacing: var(--t-mono-md-ls);
+    font-size: var(--t-label-xs-size);
+    line-height: var(--t-label-xs-lh);
+    letter-spacing: var(--t-caps-ls);
     text-transform: uppercase;
     color: var(--neutral-400);
   }
@@ -154,28 +153,26 @@ const [settled, up] = c.line.split(' · ');
     justify-content: space-between;
     gap: 12px;
   }
-  /* Mono/Medium in an ochre outline. On the glass the label reads in ochre-400 (Ochre itself is too
-     low on this ground; same rule as the Cocoa card, D-135) */
+  /* Label/X-Small in capitals in an ochre outline (the outline is not text); the label is Paper
+     (D-156: no ochre text) */
   .ins__chip {
     padding: 6px 14px;
     border-radius: 100px;
     border: 1px solid color-mix(in srgb, var(--ochre) 50%, transparent);
-    font-family: var(--font-mono);
     font-weight: var(--w-label);
-    font-size: var(--t-mono-md-size);
-    line-height: var(--t-mono-md-lh);
-    letter-spacing: var(--t-mono-md-ls);
+    font-size: var(--t-label-xs-size);
+    line-height: var(--t-label-xs-lh);
+    letter-spacing: var(--t-caps-ls);
     text-transform: uppercase;
-    color: var(--ochre-on-cocoa);
+    color: var(--paper);
     white-space: nowrap;
   }
-  /* Mono/X-Small, white 50% */
+  /* Label/X-Small in capitals, white 50% (D-156) */
   .ins__sim {
-    font-family: var(--font-mono);
-    font-weight: var(--w-mono);
-    font-size: var(--t-mono-xs-size);
-    line-height: var(--t-mono-xs-lh);
-    letter-spacing: var(--t-mono-xs-ls);
+    font-weight: var(--w-label);
+    font-size: var(--t-label-xs-size);
+    line-height: var(--t-label-xs-lh);
+    letter-spacing: var(--t-caps-ls);
     text-transform: uppercase;
     color: color-mix(in srgb, var(--white) 50%, transparent);
     white-space: nowrap;
@@ -263,15 +260,14 @@ const [settled, up] = c.line.split(' · ');
     left: 72.42%;
     top: 56.15%;
   }
-  /* Mono/Small, white 60% */
+  /* Label/X-Small, white 60% (D-156) */
   .ins__times {
     display: flex;
     justify-content: space-between;
-    font-family: var(--font-mono);
-    font-weight: var(--w-mono);
-    font-size: var(--t-mono-sm-size);
-    line-height: var(--t-mono-sm-lh);
-    letter-spacing: var(--t-mono-sm-ls);
+    font-weight: var(--w-label);
+    font-size: var(--t-label-xs-size);
+    line-height: var(--t-label-xs-lh);
+    letter-spacing: var(--t-caps-ls);
     text-transform: uppercase;
     color: color-mix(in srgb, var(--white) 60%, transparent);
     font-variant-numeric: tabular-nums;

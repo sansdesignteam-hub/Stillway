@@ -83,7 +83,7 @@ export const activity = {
 
 export const insight = {
   status: 'draft (numbers approved D-066)',
-  eyebrow: '17:30 · Daily insight', // Figma S05 (D-142), shown as [ 17:30 · DAILY INSIGHT ]
+  eyebrow: '17:30 · Daily insight', // Figma S05 (D-142), shown in capitals (D-156: no [ ])
   headline: ['Everything it noticed.', 'One calm view.'],
   body: 'In the evening the app gathers the day into one view you can read and put down. It describes what happened. It does not tell you what to fix.',
   card: {
@@ -105,7 +105,6 @@ export const details = {
     { title: 'Softened edges', body: 'Both edges are bevelled where they meet the finger, so the ring sits easily at night and slides on without catching.' },
   ],
   fits: { title: 'Then, it just fits.', body: 'Slip it on in the morning and stop thinking about it.' },
-  label: '[ SILVER ]', // the photo ring (A-1b) is brushed, the 3D ring polished: no finish named (open question)
   alt: {
     ring: 'The Stillway ring rolling to a stop on a sand-coloured tile.',
     hand: 'A hand on a plain cream background, the ring settling at the base of one raised finger.',
@@ -128,12 +127,12 @@ export const specs = {
 
 export const features = {
   status: 'Figma Design 08 State 1–4 (D-154); lights are mode status, not sensor claims (D-062); red only means off',
-  kickers: ['[ FEATURES ]', '[ SENSOR · LIGHT ]'],
+  kickers: ['Features', 'Sensor · Light'], // shown in capitals (D-156: no [ ])
   heads: ['Inside the ring.', 'One light, tuned to the task.', 'Blue at night. Violet by morning.', 'Red means it’s off.'],
   legend: [
-    { key: 'green', label: 'Heart rate', mono: 'Green · Heart rate' },
-    { key: 'blue', label: 'Sleep', mono: 'Blue · Sleep' },
-    { key: 'violet', label: 'Recovery', mono: 'Violet · Recovery' },
+    { key: 'green', label: 'Heart rate', detail: 'Green · Heart rate' },
+    { key: 'blue', label: 'Sleep', detail: 'Blue · Sleep' },
+    { key: 'violet', label: 'Recovery', detail: 'Violet · Recovery' },
   ],
   off: 'Red means it’s off.',
   offLong: 'When the battery runs out, one small red light shows in the lower sensor window.',

@@ -11,7 +11,7 @@
  *  3  Hand A   …and drops on the right; the hand (photo A-1, no ring) rises from below the screen,
  *              only the fingertip in view; "Then, it just fits." faint on top
  *  4  Hand B   the ring falls turning toward the fingertip and slows down (oryzo.ai); the hand stops
- *  5  Hand C   the ring goes onto the finger and slides to the seat (onFinger pose); [ SILVER ]
+ *  5  Hand C   the ring goes onto the finger and slides to the seat (onFinger pose); (D-157: no finish tag)
  *  > END to S07 (specs.ts drives the card shrink through this module's update)
  * The hand photo's cut bottom is always below the viewport (and melted into Paper), on every screen.
  */
@@ -157,7 +157,7 @@ function fingerPose(slide: number, L: ReturnType<typeof layout>, extra: Partial<
 }
 
 /**
- * 06 → 07 (D-147): a plain scroll, like 02 → 03 — the hand with the 3D ring on it, [ SILVER ] and
+ * 06 → 07 (D-147): a plain scroll, like 02 → 03 — the hand with the 3D ring on it and
  * "Then, it just fits." go up 1:1 with the page, no fade, blur or scale. The connection is long
  * enough (S07 tin) for the whole photo to leave; its melted bottom keeps the cut out of sight.
  */
@@ -228,7 +228,6 @@ export const details: SectionMotion = {
       seatShadow: q('[data-d-seat]'),
       head: q('[data-d-head]'),
       fits: q('[data-d-fits]'),
-      label: q('[data-d-label]'),
       progress: q('[data-d-progress]'),
     };
     steps = [...r.querySelectorAll<HTMLElement>('[data-d-step]')];
@@ -265,11 +264,6 @@ export const details: SectionMotion = {
     });
     const fits = 0.35 * seg(u, 2.85, 3.2) + 0.35 * seg(u, 3.6, 4) + 0.3 * seg(u, 4.5, 4.9);
     put(el.fits, { o: fits * (1 - gone), y: (1 - seg(u, 2.85, 3.3)) * 16 - up }, ctx);
-    if (el.label) {
-      el.label.style.left = `${(L.seat.x + (ctx.mobile ? 90 : 217 * L.s)).toFixed(1)}px`;
-      el.label.style.top = `${(L.seat.y - (ctx.mobile ? 10 : 12 * L.s)).toFixed(1)}px`;
-    }
-    put(el.label, { o: seg(u, 4.8, 5) * (1 - gone), y: -up }, ctx);
     put(el.progress, { o: window4(u, -0.3, 0.05, 2.55, 2.85) }, ctx);
     const on = Math.min(3, Math.max(0, Math.round(u)));
     ticks.forEach((t, i) => t.classList.toggle('is-on', i === on));

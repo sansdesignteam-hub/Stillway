@@ -25,7 +25,7 @@ import AppPhone from '../AppPhone.astro';
       {
         d.states.map((s, i) => (
           <div class="ap__lstate" data-p-left={i} data-a>
-            <p class={`ap__chip t-mono ap__chip--${s.key}`}>
+            <p class={`ap__chip t-caps ap__chip--${s.key}`}>
               <i aria-hidden="true" />
               {s.chip}
             </p>
@@ -46,7 +46,7 @@ import AppPhone from '../AppPhone.astro';
 
     <!-- the phone stays; only its screen content moves -->
     <AppPhone />
-    <p class="ap__sim t-mono" data-p-sim data-a>{d.simulated}</p>
+    <p class="ap__sim t-caps" data-p-sim data-a>{d.simulated}</p>
 
     <!-- Sofi footer: active label left; Scroll down + progress + percent right -->
     <div class="ap__foot" data-p-foot data-a>

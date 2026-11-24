@@ -4,7 +4,7 @@
  *          time, status, the other photos and labels fade (activity.ts); 30–70% the 15:30 photo darkens
  *          and fades while the Dusk rises from below (story.ts); 70–100% the ring fades in right-centre,
  *          scale 0.9 → 1, then holds = State 1; clock 15:30 → 17:30
- *  0 state 1  [ 17:30 · DAILY INSIGHT ] + "Everything it noticed." bottom left; ring right-centre
+ *  0 state 1  17:30 · DAILY INSIGHT + "Everything it noticed." bottom left; ring right-centre
  *  1 state 2  the ring grows (camera closer); the text moves down to the edge and dims, "One calm
  *             view." joins
  *  2 state 3  the camera goes into the opening; the glass card starts to show (≈ 45%)

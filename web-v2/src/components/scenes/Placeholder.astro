@@ -11,9 +11,9 @@ const dark = def.bg === 'night' || def.bg === 'dusk';
 <section class:list={['scene', dark && 'scene--dark']} data-scene={def.id} aria-label={def.name}>
   <div class="scene__front">
     <div class="ph" data-ph data-a>
-      <span class="t-mono">Section {def.n} · not built yet</span>
+      <span class="t-caps">Section {def.n} · not built yet</span>
       <span class="ph__name">{def.name}</span>
-      <span class="t-mono">{def.time}{def.timeEnd ? ` → ${def.timeEnd}` : ''}</span>
+      <span class="t-caps">{def.time}{def.timeEnd ? ` → ${def.timeEnd}` : ''}</span>
     </div>
   </div>
 </section>

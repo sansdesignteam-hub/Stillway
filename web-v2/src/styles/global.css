@@ -80,30 +80,15 @@ button {
   line-height: var(--t-heading-1-lh);
   letter-spacing: var(--t-heading-1-ls);
 }
-/* Mono/Medium: eyebrow, tag, chip (uppercase) */
-.t-mono {
-  font-family: var(--font-mono);
-  font-weight: var(--w-label);
-  font-size: var(--t-mono-md-size);
-  line-height: var(--t-mono-md-lh);
-  letter-spacing: var(--t-mono-md-ls);
-  text-transform: uppercase;
-}
+/* D-156: eyebrow, tag, chip — Label/X-Small in capitals, Geist (no Geist Mono, no [ ], no ochre:
+   the colour is the section's neutral text colour) */
+.t-caps,
 .t-tag {
-  /* [ TAG ], Mono/Medium */
-  font-family: var(--font-mono);
   font-weight: var(--w-label);
-  font-size: var(--t-mono-md-size);
-  line-height: var(--t-mono-md-lh);
-  letter-spacing: var(--t-mono-md-ls);
+  font-size: var(--t-label-xs-size);
+  line-height: var(--t-label-xs-lh);
+  letter-spacing: var(--t-caps-ls);
   text-transform: uppercase;
-  color: var(--ochre);
-}
-.t-tag::before {
-  content: '[ ';
-}
-.t-tag::after {
-  content: ' ]';
 }
 /* Paragraph/Small */
 .t-caption {

@@ -50,7 +50,7 @@
   --ink: var(--neutral-900); /* text-strong / btn-primary: text + primary button on light */
   --night: var(--cocoa-950); /* bg-cocoa-strong: dark background */
   --cocoa: var(--cocoa-900); /* bg-cocoa-surface: panels and cards that already exist on Night/Dusk (D-135) */
-  --ochre: var(--ochre-600); /* the only accent: labels, [ tags ], active chip, progress, live data, glow. Never a full background, never the primary button */
+  --ochre: var(--ochre-600); /* the only accent, for non-text only since D-156 (progress, dots, glow, focus ring, borders). Never text, never a full background, never the primary button */
   --white: var(--neutral-0);
 
   /* 2.2 derivatives */
@@ -58,7 +58,7 @@
   --line: var(--neutral-alpha-12); /* stroke-surface: dividers, card borders */
   --stone-on-night: color-mix(in srgb, var(--paper) 65%, transparent); /* Paper 65% on Night: secondary text (7.71:1, D-135) */
   --line-on-night: color-mix(in srgb, var(--paper) 12%, transparent);
-  --ochre-on-cocoa: var(--ochre-400); /* small ochre labels on a Cocoa panel (7.06:1; Ochre itself is 4.02:1) */
+  --ochre-on-cocoa: var(--ochre-400); /* kept in the palette; no text uses it since D-156 (text is neutral) */
   --btn-primary-hover: var(--neutral-800);
   /* D-139: the lights of the dark sections (S03–S05, S08, S11) are one colour, --cocoa-300, painted
      with dither by scripts/glow.ts (no CSS gradients: they band on Night). S05 "Dusk" = Night with
@@ -89,16 +89,14 @@
   --shine-cream: #e9dcc8;
   --shine-amber: #f4c98e;
 
-  /* 3 typography: Geist + Geist Mono (Option A) */
+  /* 3 typography: Geist only (D-156: Geist Mono is no longer used) */
   --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
   /* weights per text style group (D-134): Display/Heading Medium, Paragraph Regular, Label/Buttons
-     Medium, Mono Regular (Mono/Medium 500 only for eyebrows/tags). No Light/thin weights. */
+     Medium. No Light/thin weights. (The Mono group is gone, D-156.) */
   --w-display: 500;
   --w-heading: 500;
   --w-body: 400;
   --w-label: 500;
-  --w-mono: 400;
   --w-regular: var(--w-body); /* aliases kept for older rules */
   --w-medium: var(--w-label);
   /* only for texts that match no text style (reported, D-134): kept as they were */
@@ -142,6 +140,9 @@
   --t-label-xs-size: 12px;
   --t-label-xs-lh: 16px;
   --t-label-xs-ls: 0px;
+  /* D-156: eyebrows, tags, chips and the clock part in capitals use Label/X-Small (or Label/Small)
+     with this small tracking instead of Geist Mono */
+  --t-caps-ls: 0.04em;
   --t-para-lg-size: 20px;
   --t-para-lg-lh: 28px;
   --t-para-lg-ls: -0.2px;
@@ -160,18 +161,6 @@
   --t-btn-sm-size: 15px;
   --t-btn-sm-lh: 22px;
   --t-btn-sm-ls: -0.15px;
-  --t-mono-lg-size: 16px;
-  --t-mono-lg-lh: 22px;
-  --t-mono-lg-ls: 1.28px;
-  --t-mono-md-size: 13px;
-  --t-mono-md-lh: 20px;
-  --t-mono-md-ls: 1.04px;
-  --t-mono-sm-size: 13px;
-  --t-mono-sm-lh: 20px;
-  --t-mono-sm-ls: 1.04px;
-  --t-mono-xs-size: 11px;
-  --t-mono-xs-lh: 16px;
-  --t-mono-xs-ls: 0.88px;
 
   /* legacy sizes, only for texts that match no text style (reported) or for layout maths */
   --fs-giant: clamp(7rem, 24vw, 23rem); /* S02 back word "rhythm" */

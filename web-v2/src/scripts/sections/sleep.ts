@@ -8,9 +8,9 @@
  *          warm all over (68–84%, D-137); the green sensor light last (82–95%); clock 07:10 → 23:10 ·
  *          Last night (70–100%). The green stays on to the end of S03.
  *  0 state 1  dark (the navbar clock reads "23:10 · Last night"); ring centred, edge lit, slow turn
- *  1 state 2  headline + [ SETTLED ] 23:10 big in the slot; ring moves right (ref 1 composition)
- *  2 state 3  [ RESTED ] 7h 12m takes the slot; 23:10 shrinks upward and dims
- *  3 state 4  [ BROKEN ] 2× takes the slot, small line + Simulated data; ring at the reference
+ *  1 state 2  headline + SETTLED 23:10 big in the slot; ring moves right (ref 1 composition)
+ *  2 state 3  RESTED 7h 12m takes the slot; 23:10 shrinks upward and dims
+ *  3 state 4  BROKEN 2× takes the slot, small line + Simulated data; ring at the reference
  *             pose, engraving readable (D-089 lesson)
  *  > 3.6      connection to S04 (D-138 lens): the text goes up with the page 1:1 (reduced: fades),
  *             the corner light gives way to the dawn

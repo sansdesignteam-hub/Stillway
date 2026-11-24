@@ -5,6 +5,7 @@
  *  - State 1 "Inside the ring." — the ring floats in the middle, window A a faint green hint.
  *  - State 2 "One light, tuned to the task." — the camera close to the window (big ring right,
  *    three-quarter), green = Heart rate; a 3-colour legend (labels, not buttons).
+ * D-156: all text neutral and in Geist (no ochre, no Geist Mono, no [ ] on the kicker).
  *  - State 3 "Blue at night. Violet by morning." — same place, blue (±75 %) then violet (100 %);
  *    one small line "Red means it's off."
  *  - State 4 "Red means it's off." — the small red light in the lower window (off / battery empty);
@@ -56,7 +57,7 @@ const stills = [
               <li data-f-leg={i} class={`ft__leg ft__leg--${l.key}`}>
                 <i aria-hidden="true" />
                 <span class="ft__label">{l.label}</span>
-                <span class="ft__mono">{l.mono}</span>
+                <span class="ft__detail">{l.detail}</span>
               </li>
             ))
           }
@@ -108,15 +109,15 @@ const stills = [
     display: grid;
     gap: 16px;
   }
-  /* Mono/Medium, ochre (on Night the ochre-on-cocoa step, D-135) */
+  /* Label/X-Small in capitals, Paper 65 % (D-156: neutral, no brackets, no mono) */
   .ft__kick {
     display: grid;
-    font-family: var(--font-mono);
     font-weight: var(--w-label);
-    font-size: var(--t-mono-md-size);
-    line-height: var(--t-mono-md-lh);
-    letter-spacing: var(--t-mono-md-ls);
-    color: var(--ochre-on-cocoa);
+    font-size: var(--t-label-xs-size);
+    line-height: var(--t-label-xs-lh);
+    letter-spacing: var(--t-caps-ls);
+    text-transform: uppercase;
+    color: var(--stone-on-night);
     white-space: nowrap;
   }
   .ft__kick span {
@@ -174,12 +175,13 @@ const stills = [
     line-height: var(--t-para-md-lh);
     letter-spacing: var(--t-para-md-ls);
   }
-  .ft__mono {
-    font-family: var(--font-mono);
-    font-weight: var(--w-mono);
-    font-size: var(--t-mono-sm-size);
-    line-height: var(--t-mono-sm-lh);
-    letter-spacing: var(--t-mono-sm-ls);
+  /* Label/X-Small, Paper 65 % (Figma Mono/Small, D-156) */
+  .ft__detail {
+    font-weight: var(--w-label);
+    font-size: var(--t-label-xs-size);
+    line-height: var(--t-label-xs-lh);
+    letter-spacing: var(--t-label-xs-ls);
+    color: var(--stone-on-night);
   }
   /* off note: red dot 8 + Paragraph/Small, white */
   .ft__off {
