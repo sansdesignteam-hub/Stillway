@@ -262,8 +262,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   spinner.add(ring);
 
   /* S06 pine table (D-146, HANDOFF-s06-table.md). Its own scene and lights, drawn before the ring with
-     the same camera and depth buffer, so the warm key + hemisphere fill light only the wood and the
-     ring looks exactly as before. Loaded lazily after the ring; until then (and without WebGL) the
+     the same camera (depth cleared in between: the ring is always in front), so the warm key +
+     hemisphere fill light only the wood and the ring looks exactly as before. Loaded lazily after the ring; until then (and without WebGL) the
      CSS table in Details.astro shows. Contact shadow: two soft planes on the top surface under the
      ring (a tight one at the touch point, a wider one back-right like the review render). */
   const tableScene = new THREE.Scene();
@@ -538,6 +538,10 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       renderer.autoClear = false;
       renderer.clear();
       renderer.render(tableScene, camera);
+      // the ring is always in front of the table: it stands on the top surface or falls beside the
+      // right edge, never behind it, and while it comes in from S05 (still large) it must never cut
+      // into the wood
+      renderer.clearDepth();
       renderer.render(scene, camera);
       renderer.autoClear = true;
       return;

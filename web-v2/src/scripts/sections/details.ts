@@ -176,11 +176,14 @@ export function detailsLeaveRing(x: number, ctx: Ctx): Pose {
 
 /** the pine table GLB (D-146) in the ring stage: at the same contact line and scale as the ring */
 function tableOf(u: number, L: L6): Partial<Pose> {
+  // 05 → 06: the table rises from below with the Paper ground and arrives exactly when the ring
+  // lands on it (ringIn reaches the State 1 pose at 85% of the connection = u −0.15)
+  const rise = seg(u, -0.55, -0.15);
   return {
-    table: seg(u, -0.35, -0.05) * (1 - seg(u, 4.2, 4.7)),
+    table: Math.min(1, rise * 2.5) * (1 - seg(u, 4.2, 4.7)),
     tableD: L.D,
-    tableY: fy(L.contact, L.H),
-    tableShadow: u <= 2.6 ? 1 - seg(u, 2.1, 2.45) : 0,
+    tableY: fy(L.contact + (1 - rise) * 0.5 * L.H, L.H),
+    tableShadow: u < 0 ? seg(u, -0.2, -0.05) : u <= 2.6 ? 1 - seg(u, 2.1, 2.45) : 0,
   };
 }
 
@@ -239,8 +242,9 @@ export const details: SectionMotion = {
     const up = ctx.reduced ? 0 : Math.max(0, u - DETAILS_END) * vhPx;
     const gone = ctx.reduced ? seg(u, DETAILS_END, DETAILS_END + 0.3) : 0;
     // the table: in with the end of the connection, out once the ring is in the hand
-    const tableIn = ctx.reduced ? (u >= -0.5 ? 1 : 0) : seg(u, -0.35, -0.05);
-    put(el.table, { o: tableIn * (1 - seg(u, 4.2, 4.7)), y: (1 - tableIn) * 40 }, ctx);
+    // (the CSS stand-in table, until the GLB is in) rises with the same timing as the GLB table
+    const tableIn = ctx.reduced ? (u >= -0.5 ? 1 : 0) : seg(u, -0.55, -0.15);
+    put(el.table, { o: Math.min(1, tableIn * 2.5) * (1 - seg(u, 4.2, 4.7)), y: (1 - tableIn) * 0.5 * L.H }, ctx);
     // contact shadow (Figma 300 × 30 under the 316 ring): follows the roll, fades as it tips
     if (el.shadow) {
       const t = onTable(Math.max(0, Math.min(u, 2.6)), ctx, L);
@@ -287,12 +291,13 @@ export const details: SectionMotion = {
   },
   // 05 → 06 (Storyboard §3): the camera backs out of the ring — it shrinks (geometric, so it reads
   // as distance) and lands on the table on the left
-  ringIn(x, _ctx, from, to) {
+  ringIn(x, ctx, from, to) {
     const t = seg(x, 0.05, 0.85);
     const p = lerpPose(from, to, t);
     p.w = from.w * Math.pow(to.w / from.w, t);
     p.warm = from.warm * (1 - seg(x, 0.2, 0.6));
-    return p;
+    // the table is not lerped from S05 (it has none): it rises on its own and meets the ring
+    return { ...p, ...tableOf(x - 1, layout(ctx)) };
   },
 };
 
