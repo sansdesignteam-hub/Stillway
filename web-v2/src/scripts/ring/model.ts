@@ -9,6 +9,9 @@
  */
 export const RING_MODEL = {
   url: '/models/stillway-ring-v2-silver_web.glb',
+  /** S06 light pine table (D-146; 3D Designer 5f00763, design/3d/v2/HANDOFF-s06-table.md): metres,
+   *  origin = top surface, right edge, ring path; loaded lazily after the ring */
+  tableUrl: '/models/s06-table.glb',
   dracoPath: '/draco/',
   /** material name patterns in the GLB */
   materials: {

@@ -261,6 +261,71 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   }
   spinner.add(ring);
 
+  /* S06 pine table (D-146, HANDOFF-s06-table.md). Its own scene and lights, drawn before the ring with
+     the same camera and depth buffer, so the warm key + hemisphere fill light only the wood and the
+     ring looks exactly as before. Loaded lazily after the ring; until then (and without WebGL) the
+     CSS table in Details.astro shows. Contact shadow: two soft planes on the top surface under the
+     ring (a tight one at the touch point, a wider one back-right like the review render). */
+  const tableScene = new THREE.Scene();
+  const tableRoot = new THREE.Group();
+  tableScene.add(tableRoot);
+  const tableKey = new THREE.DirectionalLight(0xffe6c7, 2.8);
+  tableKey.position.set(-600, 900, 700);
+  tableScene.add(tableKey, tableKey.target, new THREE.HemisphereLight(0xfff1dc, 0xd9ccb8, 0.75));
+  const shadowTex = (() => {
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = 128;
+    const g = cv.getContext('2d')!;
+    const grd = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grd.addColorStop(0, 'rgba(0,0,0,1)');
+    grd.addColorStop(0.5, 'rgba(0,0,0,0.35)');
+    grd.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = grd;
+    g.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(cv);
+  })();
+  const shadowPlane = (o: number) => {
+    const m = new THREE.Mesh(
+      new THREE.PlaneGeometry(1, 1),
+      new THREE.MeshBasicMaterial({ map: shadowTex, color: 0x231f20, transparent: true, opacity: o, depthWrite: false, toneMapped: false }),
+    );
+    m.rotation.x = -Math.PI / 2;
+    m.renderOrder = 1;
+    tableScene.add(m);
+    return m;
+  };
+  const contactTight = shadowPlane(0.35);
+  const contactWide = shadowPlane(0.16);
+  let table: THREE.Object3D | null = null;
+  const tableMats: THREE.MeshStandardMaterial[] = [];
+  let tableLoading = false;
+  const loadTable = () => {
+    if (tableLoading) return;
+    tableLoading = true;
+    new GLTFLoader()
+      .loadAsync(RING_MODEL.tableUrl)
+      .then((g) => {
+        table = g.scene;
+        const aniso = renderer.capabilities.getMaxAnisotropy();
+        table.traverse((o) => {
+          if (!o.isMesh) return;
+          const m = o.material as THREE.MeshStandardMaterial;
+          for (const t of [m.map, m.roughnessMap, m.metalnessMap, m.normalMap]) if (t) t.anisotropy = aniso;
+          m.transparent = true; // fades with S06 (opacity set per frame)
+          tableMats.push(m);
+        });
+        tableRoot.add(table);
+        document.documentElement.classList.add('table-ready');
+        lastTableKey = '';
+      })
+      .catch(() => {
+        /* the CSS table stays */
+      });
+  };
+  // lazily, once the first paint is done (it is needed from S06 on)
+  setTimeout(() => ('requestIdleCallback' in window ? (window as any).requestIdleCallback(loadTable, { timeout: 3000 }) : loadTable()), 2500);
+  let lastTableKey = '';
+
   /* S08: window A lit in the three mode colours (D-062), a soft flare sprite and the coloured bounce
      on the inner band (point light). Placed at the LED mesh centre, nudged toward the ring axis. */
   const LED_COLS = [new THREE.Color('#34E07A'), new THREE.Color('#3B8CFF'), new THREE.Color('#A06BFF')];
@@ -347,6 +412,30 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       finger.rotation.set(0, 0, FINGER_TILT);
     }
     spinner.rotation.z = p.spin;
+    // S06 table: scale = ring px per metre, origin at the contact line, x 0 = middle of the screen
+    const tk = `${p.table.toFixed(3)}|${p.tableD.toFixed(1)}|${p.tableY.toFixed(4)}|${W}x${H}`;
+    tableRoot.visible = p.table > 0.002;
+    if (tableRoot.visible && tk !== lastTableKey) {
+      lastTableKey = tk;
+      const s = p.tableD / 0.02384;
+      tableRoot.scale.setScalar(s);
+      tableRoot.position.set(0, p.tableY * H, 0);
+      tableMats.forEach((m) => (m.opacity = Math.min(1, p.table)));
+    }
+    if (tableRoot.visible) {
+      // contact shadows follow the ring on the top surface (just above it, in table space)
+      const ux = pivot.position.x;
+      const y = p.tableY * H + 0.15;
+      const D = p.tableD;
+      contactTight.position.set(ux, y, 0);
+      contactTight.scale.set(0.55 * D, 0.32 * D, 1);
+      contactWide.position.set(ux + 0.12 * D, y, -0.3 * D);
+      contactWide.scale.set(1.15 * D, 0.9 * D, 1);
+      const so = Math.max(0, p.tableShadow) * Math.min(1, p.table);
+      (contactTight.material as THREE.MeshBasicMaterial).opacity = 0.35 * so;
+      (contactWide.material as THREE.MeshBasicMaterial).opacity = 0.16 * so;
+      contactTight.visible = contactWide.visible = so > 0.003;
+    }
 
     // finish: brushed → polished (V1)
     const finKey = `${p.gloss}|${p.custom.toFixed(3)}|${p.finA}|${p.finB}|${p.finT.toFixed(3)}`;
@@ -442,6 +531,17 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
 
   const render = () => {
     if (lastAlpha <= 0.001 || !W) return;
+    if (table && tableRoot.visible) {
+      // the table first (its own lights), then the ring over it in the same depth buffer
+      tableScene.environment = scene.environment;
+      tableScene.environmentIntensity = 1;
+      renderer.autoClear = false;
+      renderer.clear();
+      renderer.render(tableScene, camera);
+      renderer.render(scene, camera);
+      renderer.autoClear = true;
+      return;
+    }
     renderer.render(scene, camera);
   };
 

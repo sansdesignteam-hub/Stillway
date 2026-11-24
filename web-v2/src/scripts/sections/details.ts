@@ -18,6 +18,7 @@
 import { put, seg, lerp, clamp01, window4, type Ctx } from '../anim';
 import { lerpPose, pose, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
+import { sections } from '../../content/sections';
 
 let el: Record<string, HTMLElement | null> = {};
 let steps: HTMLElement[] = [];
@@ -156,48 +157,59 @@ function fingerPose(slide: number, L: ReturnType<typeof layout>, extra: Partial<
 }
 
 /**
- * 06 → 07 (Storyboard §3): the hand photo shrinks into a card with rounded corners around the
- * finger, moves to the centre (where S07's cards appear) and fades. leave 0..1 (eased).
+ * 06 → 07 (D-147): a plain scroll, like 02 → 03 — the hand with the 3D ring on it, [ SILVER ] and
+ * "Then, it just fits." go up 1:1 with the page, no fade, blur or scale. The connection is long
+ * enough (S07 tin) for the whole photo to leave; its melted bottom keeps the cut out of sight.
  */
-function cardLeave(leave: number, L: ReturnType<typeof layout>, ctx: Ctx) {
-  const k = seg(leave, 0, 0.55);
-  const cw = Math.min(L.W * (ctx.mobile ? 0.5 : 0.2), L.H * 0.36);
-  const ch = cw * 1.25;
-  const cx = L.seat.x;
-  const cy = L.hy + 300 * L.hs;
-  const mv = seg(leave, 0.15, 0.6);
+const SPECS_TIN = sections.find((d) => d.id === 'specs')!.tin;
+let vhPx = 0;
+const measureVh = () => (vhPx = (document.querySelector('[data-vh]') as HTMLElement | null)?.offsetHeight || window.innerHeight);
+
+/** the 3D ring on the finger goes up with the hand (it is not part of the photo) */
+export function detailsLeaveRing(x: number, ctx: Ctx): Pose {
+  const L = layout(ctx);
+  const p = fingerPose(1, L, { shadow: 0 });
+  if (!vhPx) measureVh();
+  const up = ctx.reduced ? 0 : (x * SPECS_TIN * vhPx) / L.H; // fraction of the height, y up
+  return { ...p, y: p.y + up, fy: p.fy + up, alpha: ctx.reduced ? 1 - seg(x, 0.3, 0.6) : 1 };
+}
+
+/** the pine table GLB (D-146) in the ring stage: at the same contact line and scale as the ring */
+function tableOf(u: number, L: L6): Partial<Pose> {
   return {
-    k,
-    t: lerp(0, cy - ch / 2, k),
-    b: lerp(0, L.H - (cy + ch / 2), k),
-    l: lerp(0, cx - cw / 2, k),
-    r: lerp(0, L.W - (cx + cw / 2), k),
-    mx: (L.W / 2 - cx) * mv,
-    my: (L.H / 2 - cy) * mv,
-    s: 1 - 0.35 * seg(leave, 0.2, 0.6),
-    o: 1 - seg(leave, 0.5, 0.7),
+    table: seg(u, -0.35, -0.05) * (1 - seg(u, 4.2, 4.7)),
+    tableD: L.D,
+    tableY: fy(L.contact, L.H),
+    tableShadow: u <= 2.6 ? 1 - seg(u, 2.1, 2.45) : 0,
   };
 }
 
-/** the 3D ring on the finger follows the card out (it is not part of the photo, D-093 r1) */
-export function detailsLeaveRing(x: number, ctx: Ctx): Pose {
-  const L = layout(ctx);
-  const leave = seg(x, 0, 1);
-  const c = cardLeave(leave, L, ctx);
-  const p = fingerPose(1, L, { shadow: 0 });
-  // card transform: translate(mx, my) scale(s) about the viewport centre
-  const sx = L.W / 2 + (L.seat.x - L.W / 2) * c.s + c.mx;
-  const sy = L.H / 2 + (L.seat.y - L.H / 2) * c.s + c.my;
-  return {
-    ...p,
-    x: fx(sx, L.W),
-    y: fy(sy, L.H),
-    w: p.w * c.s,
-    fx: fx(sx, L.W),
-    fy: fy(sy, L.H),
-    fs: p.fs * c.s,
-    alpha: c.o,
-  };
+function ringPose(u: number, ctx: Ctx, L: L6): Pose {
+  const base = (cx: number, cy: number, spin: number, extra: Partial<Pose> = {}) =>
+    pose({ x: fx(cx, L.W), y: fy(cy, L.H), w: L.D / L.W, ...UP, spin, ...extra });
+  if (u <= 2.55) {
+    const t = onTable(Math.max(0, u), ctx, L);
+    return base(t.cx, t.cy, t.spin);
+  }
+  // the fall (oryzo.ai): from the corner down and right onto the fingertip of the rising hand,
+  // turning from facing the camera to side-on as it drops, quick at first, slowing near the finger
+  const from = onTable(2.55, ctx, L);
+  const above = withHand(fingerPose(0, L, { fing: 0 }), handOff(4, L, ctx.mobile), L);
+  const turns = Math.round(from.spin / (2 * Math.PI)) * 2 * Math.PI; // lands without unwinding
+  const start = base(from.cx, from.cy, from.spin);
+  if (u < 4) {
+    const t = seg(u, 2.55, 4);
+    const k = 1 - Math.pow(1 - t, 2.4); // eases out: slows near the finger
+    const p = lerpPose(start, { ...above, spin: turns }, k);
+    p.w = lerp(start.w, above.w, k * k); // stays larger longer, smaller as it reaches the finger
+    // a soft arc: it leaves the corner outward before it drops in over the finger
+    const sx = (p.x + 0.5) * L.W + Math.sin(Math.PI * k) * 0.25 * L.D;
+    return { ...p, x: fx(sx, L.W), fing: 0 };
+  }
+  // onto the finger and down to the seat while the hand settles at its final place
+  const slide = seg(u, 4.05, 4.95);
+  const p = withHand(fingerPose(slide, L, { shadow: 0 }), handOff(u, L, ctx.mobile), L);
+  return slide < 0.02 ? { ...p, fing: 0 } : p;
 }
 
 export const details: SectionMotion = {
@@ -217,11 +229,15 @@ export const details: SectionMotion = {
       progress: q('[data-d-progress]'),
     };
     steps = [...r.querySelectorAll<HTMLElement>('[data-d-step]')];
+    measureVh();
+    window.addEventListener('resize', measureVh);
     ticks = [...r.querySelectorAll<HTMLElement>('[data-d-tick]')];
   },
   update(u, ctx) {
     const L = setVars(ctx);
-    const leave = seg(u, DETAILS_END, DETAILS_END + 1); // the 06 → 07 connection, 0..1
+    // 06 → 07 (D-147): everything still on screen goes up with the page, 1:1 (reduced motion fades)
+    const up = ctx.reduced ? 0 : Math.max(0, u - DETAILS_END) * vhPx;
+    const gone = ctx.reduced ? seg(u, DETAILS_END, DETAILS_END + 0.3) : 0;
     // the table: in with the end of the connection, out once the ring is in the hand
     const tableIn = ctx.reduced ? (u >= -0.5 ? 1 : 0) : seg(u, -0.35, -0.05);
     put(el.table, { o: tableIn * (1 - seg(u, 4.2, 4.7)), y: (1 - tableIn) * 40 }, ctx);
@@ -244,12 +260,12 @@ export const details: SectionMotion = {
       put(st, { o: window4(u, a, a + 0.25, a + 0.8, a + 1.05), y: (1 - seg(u, a, a + 0.25)) * 14 }, ctx);
     });
     const fits = 0.35 * seg(u, 2.85, 3.2) + 0.35 * seg(u, 3.6, 4) + 0.3 * seg(u, 4.5, 4.9);
-    put(el.fits, { o: fits * (1 - seg(leave, 0, 0.3)), y: (1 - seg(u, 2.85, 3.3)) * 16 }, ctx);
+    put(el.fits, { o: fits * (1 - gone), y: (1 - seg(u, 2.85, 3.3)) * 16 - up }, ctx);
     if (el.label) {
       el.label.style.left = `${(L.seat.x + (ctx.mobile ? 90 : 217 * L.s)).toFixed(1)}px`;
       el.label.style.top = `${(L.seat.y - (ctx.mobile ? 10 : 12 * L.s)).toFixed(1)}px`;
     }
-    put(el.label, { o: seg(u, 4.8, 5) * (1 - seg(leave, 0, 0.3)) }, ctx);
+    put(el.label, { o: seg(u, 4.8, 5) * (1 - gone), y: -up }, ctx);
     put(el.progress, { o: window4(u, -0.3, 0.05, 2.55, 2.85) }, ctx);
     const on = Math.min(3, Math.max(0, Math.round(u)));
     ticks.forEach((t, i) => t.classList.toggle('is-on', i === on));
@@ -262,48 +278,12 @@ export const details: SectionMotion = {
     const live = document.documentElement.classList.contains('ring-ready');
     if (el.ringed) el.ringed.style.opacity = live ? '0' : seg(u, 4.8, 5).toFixed(3);
     put(el.seatShadow, { o: live ? seg(u, 4.75, 4.95) : 0 }, ctx);
-    // 06 → 07 (Storyboard §3): the hand photo shrinks into a card with rounded corners, then fades
-    if (el.card && root) {
-      const c = cardLeave(leave, L, ctx);
-      const cs = el.card.style;
-      cs.setProperty('--ct', `${c.t.toFixed(1)}px`);
-      cs.setProperty('--cb', `${c.b.toFixed(1)}px`);
-      cs.setProperty('--cl', `${c.l.toFixed(1)}px`);
-      cs.setProperty('--cr', `${c.r.toFixed(1)}px`);
-      cs.setProperty('--cr0', `${(14 * c.k).toFixed(1)}px`);
-      cs.setProperty('--cbg', c.k > 0.001 ? '1' : '0');
-      put(el.card, { o: (ctx.reduced ? (u >= 3 ? 1 : 0) : rise > 0 ? 1 : 0) * c.o, x: c.mx, y: c.my, s: c.s }, ctx);
-      put(el.hand, { o: 1, x: off.dx, y: off.dy }, ctx);
-    }
+    if (el.card) put(el.card, { o: (ctx.reduced ? (u >= 3 ? 1 : 0) : rise > 0 ? 1 : 0) * (1 - gone), y: -up }, ctx);
+    put(el.hand, { o: 1, x: off.dx, y: off.dy }, ctx);
   },
   ring(u, ctx) {
     const L = layout(ctx);
-    const r = L.D / 2;
-    const base = (cx: number, cy: number, spin: number, extra: Partial<Pose> = {}) =>
-      pose({ x: fx(cx, L.W), y: fy(cy, L.H), w: L.D / L.W, ...UP, spin, ...extra });
-    if (u <= 2.55) {
-      const t = onTable(Math.max(0, u), ctx, L);
-      return base(t.cx, t.cy, t.spin);
-    }
-    // the fall (oryzo.ai): from the corner down and right onto the fingertip of the rising hand,
-    // turning from facing the camera to side-on as it drops, quick at first, slowing near the finger
-    const from = onTable(2.55, ctx, L);
-    const above = withHand(fingerPose(0, L, { fing: 0 }), handOff(4, L, ctx.mobile), L);
-    const turns = Math.round(from.spin / (2 * Math.PI)) * 2 * Math.PI; // lands without unwinding
-    const start = base(from.cx, from.cy, from.spin);
-    if (u < 4) {
-      const t = seg(u, 2.55, 4);
-      const k = 1 - Math.pow(1 - t, 2.4); // eases out: slows near the finger
-      const p = lerpPose(start, { ...above, spin: turns }, k);
-      p.w = lerp(start.w, above.w, k * k); // stays larger longer, smaller as it reaches the finger
-      // a soft arc: it leaves the corner outward before it drops in over the finger
-      const sx = (p.x + 0.5) * L.W + Math.sin(Math.PI * k) * 0.25 * L.D;
-      return { ...p, x: fx(sx, L.W), fing: 0 };
-    }
-    // onto the finger and down to the seat while the hand settles at its final place
-    const slide = seg(u, 4.05, 4.95);
-    const p = withHand(fingerPose(slide, L, { shadow: 0 }), handOff(u, L, ctx.mobile), L);
-    return slide < 0.02 ? { ...p, fing: 0 } : p;
+    return { ...ringPose(u, ctx, L), ...tableOf(u, L) };
   },
   // 05 → 06 (Storyboard §3): the camera backs out of the ring — it shrinks (geometric, so it reads
   // as distance) and lands on the table on the left

@@ -32,7 +32,7 @@ export const sections: SectionDef[] = [
   { n: '04', id: 'activity', name: 'Activity & rest', act: 2, time: '07:40', timeEnd: '15:30', bg: 'night', states: 5, tin: 2, hold: 0.6, built: true }, // D-138: the 03 → 04 lens is 2 screens
   { n: '05', id: 'insight', name: 'Daily insight', act: 2, time: '17:30', part: 'Evening', bg: 'dusk', states: 4, tin: 1, hold: 0.6, built: true },
   { n: '06', id: 'details', name: 'Product details', act: 3, time: '21:00', bg: 'paper', states: 6, tin: 1, hold: 0.6, built: true }, // D-144: roll 1–3, hand A–C
-  { n: '07', id: 'specs', name: 'Specs & benefits', act: 3, time: '21:00', bg: 'sand', states: 7, tin: 1, hold: 0.6, built: true },
+  { n: '07', id: 'specs', name: 'Specs & benefits', act: 3, time: '21:00', bg: 'sand', states: 7, tin: 1.6, hold: 0.6, built: true }, // D-147: 06 → 07 is a plain scroll; 1.6 screens so the whole hand leaves
   { n: '08', id: 'features', name: 'Features', act: 3, time: '21:00', bg: 'night', states: 3, tin: 1, hold: 0.6, built: true },
   { n: '09', id: 'app', name: 'The app', act: 3, time: '21:00', bg: 'paper', states: 3, tin: 1, hold: 0.6, built: true },
   { n: '10', id: 'finishes', name: 'Finishes & pricing', act: 4, time: '22:00', bg: 'sand', states: 2, tin: 1, hold: 1, built: true },

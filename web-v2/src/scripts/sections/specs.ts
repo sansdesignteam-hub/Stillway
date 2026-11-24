@@ -1,8 +1,8 @@
 /**
  * S07 Specs & benefits — 21:00 · Sand → full-bleed photo (D-093; flow Storyboard §2, look Figma
  * sticky 40004118:121, Obsidian Assembly).
- * u: -1..0 connection from S06 (the hand photo shrinks into a card and fades — details.ts — Paper →
- *          Sand, "Through the day." comes in at the end)
+ * u: -1.6..0 connection from S06 (D-147: the hand with the ring, [ SILVER ] and the headline go up 1:1
+ *          with the page — details.ts — Paper → Sand, "Through the day." comes in at the end)
  *  0  state 1  "Through the day." in the middle, pill on a thin line at the bottom
  *  1  state 2  the words split left / right, four cards rise between them
  *  2  state 3  (I) Night in focus: title on a line, counter 1/4, orbit lines, battery panel

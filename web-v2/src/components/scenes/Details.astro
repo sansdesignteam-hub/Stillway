@@ -9,7 +9,8 @@
  *  - Hand A–C: the hand photo A-1 (no ring, D-133) rises from below the screen — its cut bottom is
  *    always below the viewport and melted into Paper — the ring slides onto the finger to the seat
  *    (s06-pose.json), [ SILVER ] beside it, "Then, it just fits." centred on top.
- * The table is a temporary CSS table at the Figma place until design/3d/v2/s06-table.glb lands.
+ * The table is the 3D Designer's pine table GLB in the ring stage (D-146, stage.ts); the CSS table here
+ * stands in until it has loaded and without WebGL.
  * Motion: scripts/sections/details.ts.
  */
 import Img from '../Img.astro';
@@ -77,6 +78,11 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
   }
   /* temporary table: a light pine top seen from above, a lit right edge with a darker side and its
      shadow, a soft wall shadow on the back edge (Figma layers, colours as tokens) */
+  /* D-146: once the pine table GLB is in the ring stage (html.table-ready), this CSS table is only the
+     stand-in for no WebGL / reduced motion */
+  :global(html.table-ready) .det__table {
+    display: none;
+  }
   .det__table {
     position: absolute;
     left: 0;
@@ -154,12 +160,10 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     );
     will-change: transform, opacity;
   }
-  /* the hand lives in a card so 06 → 07 can shrink it into one (Storyboard §3) */
+  /* the hand layer; 06 → 07 scrolls it up with the page (D-147: no card) */
   .det__card {
     position: absolute;
     inset: 0;
-    clip-path: inset(var(--ct, 0px) var(--cr, 0px) var(--cb, 0px) var(--cl, 0px) round var(--cr0, 0px));
-    background: color-mix(in srgb, var(--paper) calc(var(--cbg, 0) * 100%), transparent);
   }
   /* A-1 (579 × 1198). Its bottom (the cut at the wrist) is always placed below the viewport by
      details.ts; on top of that its lowest 14% melts into Paper, so no cut can ever show */
