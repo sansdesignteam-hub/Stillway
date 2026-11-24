@@ -75,6 +75,9 @@ const hrv = d.recovery.bars.map((b) => Math.round(b * 80));
 const today = hrv[hrv.length - 1];
 const hMax = 68;
 const hMin = 30;
+// D-164 fix: the week's bars run from just under the week's lowest value, so they fill the chart
+const BAR_FLOOR = 40;
+const BAR_TOP = 66;
 
 /* ---------- D-163 Heart rate cards (simulated, consistent with the site's set) ---------- */
 const MW = 120;
@@ -452,8 +455,11 @@ const dialTicks = Array.from({ length: 49 }, (_, i) => {
               {
                 hrv.map((v, i) => (
                   <span class={i === hrv.length - 1 ? 'is-today' : ''}>
-                    <em><span data-n={String(v)}>{v}</span></em>
-                    <i class="ap__gcol"><b data-grow style={`height:${(((v - 38) / (66 - 38)) * 100).toFixed(1)}%`} /></i>
+                    <i class="ap__gcol">
+                      <b data-grow style={`height:${(((v - BAR_FLOOR) / (BAR_TOP - BAR_FLOOR)) * 100).toFixed(1)}%`}>
+                        <em><span data-n={String(v)}>{v}</span></em>
+                      </b>
+                    </i>
                     <small>{i === hrv.length - 1 ? 'Today' : d.recovery.days[i][0]}</small>
                   </span>
                 ))
@@ -1290,13 +1296,20 @@ const dialTicks = Array.from({ length: 49 }, (_, i) => {
   }
   .ap__gbars > span {
     display: grid;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: 1fr auto;
     justify-items: center;
     gap: calc(var(--u) * 0.7);
     min-width: 0;
   }
   .ap__gbars > span + span {
     background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--white) 8%, transparent) 20%, color-mix(in srgb, var(--white) 8%, transparent) 85%, transparent) left / 1px 100% no-repeat;
+  }
+  /* the value rides on the bar's top as it grows */
+  .ap__gbars em {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + var(--u) * 0.6);
+    translate: -50% 0;
   }
   .ap__gbars em,
   .ap__gbars small {
@@ -1309,7 +1322,8 @@ const dialTicks = Array.from({ length: 49 }, (_, i) => {
   .ap__gcol {
     position: relative;
     width: 46%;
-    height: 100%;
+    height: calc(100% - var(--u) * 3);
+    margin-top: calc(var(--u) * 3);
     display: flex;
     align-items: flex-end;
   }

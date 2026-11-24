@@ -46,11 +46,16 @@ let lastIdx = -1;
 
 /** the active mode as a continuous value 0..2 (the tab highlight, the texts) */
 const modeOf = (u: number) => seg(u, MODE - 0.2, MODE + 0.15) + seg(u, 2 * MODE - 0.2, 2 * MODE + 0.15);
-/** how far mode k has played, 0..1 (mode 0 starts as the phone lands) */
-const playOf = (k: number, u: number) => clamp01((u - MODE * k + 0.14) / 1.7);
-/** page k's opacity: the old page goes first, then the new one comes (no double exposure) */
+/** how far mode k has played, 0..1: it starts while the previous page is still fading out, so the new
+ * page's first items are already in when it becomes visible (no empty screen between modes) */
+const playOf = (k: number, u: number) => clamp01((u - MODE * k + 0.5) / 1.75);
+/** page k's opacity: a cross-fade with no empty moment — the new page (its first items already in)
+ * starts to show before the old one is gone; the old one leaves a touch earlier so the two never sit
+ * at full strength together */
+const IN = [-0.22, 0.04];
+const OUT = [-0.32, -0.04];
 const showOf = (k: number, u: number) =>
-  (k === 0 ? 1 : seg(u, MODE * k - 0.14, MODE * k + 0.06)) * (k === 2 ? 1 : 1 - seg(u, MODE * (k + 1) - 0.28, MODE * (k + 1) - 0.1));
+  (k === 0 ? 1 : seg(u, MODE * k + IN[0], MODE * k + IN[1])) * (k === 2 ? 1 : 1 - seg(u, MODE * (k + 1) + OUT[0], MODE * (k + 1) + OUT[1]));
 
 const cache = new WeakMap<Element, string>();
 function set(e: HTMLElement | SVGElement, prop: 'transform' | 'clipPath' | 'opacity', v: string) {
@@ -122,7 +127,9 @@ export const app: SectionMotion = {
 
     pages.forEach((pg, k) => {
       const show = ctx.reduced ? (k === f ? 1 : 0) : showOf(k, u);
-      put(pg.el, { o: show }, ctx);
+      // the old page drifts up a little as it goes, the new one rises into place
+      const leaving = u > MODE * k + 1;
+      put(pg.el, { o: show, y: ctx.reduced ? 0 : (1 - show) * (leaving ? -12 : 12) }, ctx);
       put(glows[k], { o: show }, ctx);
       if (show < 0.002) return;
       // reduced motion: the screen complete, not scrolled
