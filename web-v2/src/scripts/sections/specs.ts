@@ -11,8 +11,8 @@
  *                 counter circle fills; by (IV) Rinse the cards behind it are gone (Figma State 6)
  *  5.1 → 6.1 end  (obsidianassembly.com "The Connection") the big photo comes up from below at
  *                 scroll speed (1:1), its content slower (parallax); the Rinse card moves down and
- *                 shrinks in front of it into the "The / Everyday" layout (phones: the card above
- *                 the words, so none of them is covered); caption last
+ *                 shrinks in front of it, then the words run over it (D-151: photo → card → words →
+ *                 caption); the group is centred in the frame (D-150); caption last
  *  > 6.6 to S08   the frame opens to full bleed and goes to Night, the words and the card fade
  * Reduced motion: story.ts snaps u to whole states; everything is placed for that state and only
  * the opacity changes (short fade per state, global.css).
@@ -44,6 +44,8 @@ let wordFs = 0;
 let vhPx = 0;
 /** "Everyday" glyph metrics in its own box: baseline from the top, bottom of the "y", ink right inset */
 let ev = { base: 0, desc: 0, right: 0 };
+/** the navbar's height (--header-h); the end group is centred in the part of the frame below it */
+let headerH = 76;
 
 /* ---------- layout ---------- */
 
@@ -86,11 +88,9 @@ function layout(ctx: Ctx) {
   const rgap = m ? 8 : 19.99 * k;
   const rowW = 4 * rw + 3 * rgap;
   const row = (i: number): Slot => ({ x: cx - rowW / 2 + rw / 2 + i * (rw + rgap), y: cy, w: rw, h: rw * 1.25, s: rw / (BW * k), o: 1 });
-  // the end: the small Rinse card (Figma State 7 195 × 244) lower in the frame
-  // phones: Display 1 is at its 72 px floor, so "Everyday" is narrower than any readable card; the
-  // card sits above "The / Everyday" instead of across it (desktop: across the "r")
-  const ew = m ? Math.min(W * 0.38, H * 0.2) : 195 * k;
-  const E: Slot = { x: cx, y: H * (m ? 0.35 : 0.57), w: ew, h: ew * 1.25, s: ew / (BW * k), o: 1 };
+  // the end: the small Rinse card (Figma State 7 195 × 244); its y is set by endLayout (D-150)
+  const ew = m ? Math.min(W * 0.4, H * 0.21) : 195 * k;
+  const E: Slot = { x: cx, y: H / 2, w: ew, h: ew * 1.25, s: ew / (BW * k), o: 1 };
   // the photo frame (Figma inset 24 / 40)
   const ey = m ? 16 : 24;
   return { W, H, m, k, cx, cy, ly, F, B1, B2, row, rowW, E, ey };
@@ -107,6 +107,7 @@ function measure(ctx: Ctx): L7 {
     root.style.setProperty('--bh', `${(BH * L.k).toFixed(1)}px`);
     root.style.setProperty('--ly', `${L.ly.toFixed(1)}px`);
     root.style.setProperty('--par', `${(PAR * (L.H - L.ey)).toFixed(1)}px`);
+    headerH = parseFloat(getComputedStyle(root).getPropertyValue('--header-h')) || (ctx.mobile ? 60 : 76);
   }
   if (words[0] && words[0].offsetWidth !== wordW[0]) {
     wordW = [words[0].offsetWidth, words[1].offsetWidth];
@@ -215,6 +216,28 @@ function lines(list: HTMLElement[], inP: number, outP: number, delay = 0) {
 }
 
 /* ---------- motion ---------- */
+
+/**
+ * The end group — "The", "Everyday", the small card, the caption — centred as one in the frame,
+ * below the navbar (D-150). The word crosses the card's lower half and is drawn over it (D-151,
+ * desktop and phones alike). The caption stands free under the descender of the "y" and the card.
+ */
+function endLayout(L: L7) {
+  const th = el.the?.offsetHeight ?? 0;
+  const eh = el.evword?.offsetHeight ?? 0;
+  const ch = el.caption?.offsetHeight ?? 0;
+  const h = L.E.h;
+  // offsets from the card centre
+  const textTop = h * 0.12 - eh / 2 - th;
+  const desc = textTop + th + ev.base + ev.desc;
+  const capTop = Math.max(desc, h / 2) + (L.m ? 14 : 22);
+  const gTop = Math.min(-h / 2, textTop);
+  const gBot = capTop + ch;
+  const vTop = Math.max(L.ey, headerH);
+  const vBot = L.H - L.ey;
+  const y = (vTop + vBot) / 2 - (gTop + gBot) / 2;
+  return { E: { ...L.E, y }, textTop: y + textTop, capTop: y + capTop };
+}
 
 /** the focused card, 0..3, with a dwell at each card */
 const focusOf = (u: number) => {
@@ -338,6 +361,7 @@ export const specs: SectionMotion = {
     const f = focusOf(u);
     const close = seg(u, 1.05, 1.7);
     const pe = seg(u, RISE, RISE + 0.98); // the end
+    const G = endLayout(L);
     const backsGo = 1 - seg(f, 2.1, 2.9); // Figma State 6: only Rinse is left
     cards.forEach((c, i) => {
       const rise = seg(u, 0.22 + 0.08 * i, 0.75 + 0.08 * i);
@@ -346,7 +370,7 @@ export const specs: SectionMotion = {
       const [st, z] = stackSlot(i, f, L);
       let r = lerpSlot(rw, st, close);
       if (i !== 3) r.o *= backsGo;
-      if (i === 3) r = lerpSlot(r, L.E, pe);
+      if (i === 3) r = lerpSlot(r, G.E, pe);
       r.o *= 1 - out;
       placeCard(c, r, k, close < 0.5 ? 40 : i === 3 && pe > 0 ? 60 : Math.round(z));
     });
@@ -398,23 +422,28 @@ export const specs: SectionMotion = {
       tf(el.par, 1, ctx.reduced ? '' : tr(0, -PAR * lift));
       if (el.dark) el.dark.style.opacity = seg(u, END, END + 0.75).toFixed(3);
     }
-    // "The / Everyday": in the frame (it rises with it), centred, behind the card. The caption rides
+    // "The / Everyday": rises with the frame, centred, drawn over the card (D-151). The caption rides
     // with it (same lift, so the two never cross during the rise) and stands free under the word:
     // below the descender of "y" (and below the card), its right edge on the ink of the last "y"
     if (el.etext && el.the && el.evword) {
       const tw = el.evword.offsetWidth;
       const th = el.the.offsetHeight;
       const eh = el.evword.offsetHeight;
-      // desktop: the big word crosses the card's lower half; phones: the block starts under the card
-      const top = m ? L.E.y + L.E.h / 2 + 14 : L.E.y + L.E.h * 0.12 - eh / 2 - th; // block top, at rest
+      const top = G.textTop; // block top, at rest (endLayout)
       const rise = ctx.reduced ? 0 : lift;
       const left = W / 2 - tw / 2;
-      tf(el.etext, (u > RISE ? 1 : 0) * (1 - out), tr(left, top + rise));
+      // clipped to the photo frame, so the soft text shadow never spills onto the Sand around it
+      const fx = (m ? 16 : Math.min(40, W * 0.028)) * shut;
+      const fy = L.ey * shut;
+      const bw = el.etext.offsetWidth;
+      const bh = el.etext.offsetHeight;
+      const ty0 = top + rise;
+      const clip = `inset(${(fy + rise - ty0).toFixed(1)}px ${(left + bw - (W - fx)).toFixed(1)}px ${(ty0 + bh - (H - fy + rise)).toFixed(1)}px ${(fx - left).toFixed(1)}px)`;
+      tf(el.etext, (u > RISE ? 1 : 0) * (1 - out), tr(left, ty0), clip);
       if (el.caption) {
         const cw = el.caption.offsetWidth;
-        const descBottom = top + th + ev.base + ev.desc;
         const x = left + tw - ev.right - cw;
-        const y = Math.max(descBottom, L.E.y + L.E.h / 2) + (m ? 14 : 22);
+        const y = G.capTop;
         const cp = seg(u, RISE + 0.72, RISE + 1.0);
         tf(el.caption, cp > 0 ? 1 - out : 0, tr(x, y + rise));
         tf(el.capi, 1, ctx.reduced ? '' : ty((1 - cp) * 105));

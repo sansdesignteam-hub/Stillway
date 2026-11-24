@@ -12,7 +12,9 @@
  *    below rise line by line (masks), the counter circle fills. No orbit lines (D-149 note 1).
  *  - End (obsidianassembly.com "The Connection"): the Rinse card moves down and shrinks while the
  *    big photo (inset frame, radius 14) comes up from below at scroll speed, its content slower
- *    (parallax); the card stays in front of it. "The" small over "Everyday" (Display 1), both
+ *    (parallax). D-150: the photo is the package flat lay (A-11), bright, with only a soft text
+ *    shadow on the words; the group is centred in the frame. D-151: layers photo → card → words
+ *    → caption, the words run whole over the card (obsidianassembly.com "The Connection"). "The" small over "Everyday" (Display 1), both
  *    white, "The" flush with the E; caption free under the right end of "Everyday", below the "y" (s07-ref-everyday-layout).
  * Motion: scripts/sections/specs.ts.
  */
@@ -22,7 +24,7 @@ import night from '../../../../design/assets/v2/A-2-card-night.png';
 import desk from '../../../../design/assets/v2/A-2-card-desk.png';
 import move from '../../../../design/assets/v2/A-2-card-move.png';
 import rinse from '../../../../design/assets/v2/A-2-card-rinse.png';
-import everyday from '../../../../design/assets/v2/A-3-everyday.png';
+import everyday from '../../../../design/assets/v1/home/A-11-package-flatlay.png'; // D-150
 
 const img: Record<string, any> = { night, desk, move, rinse };
 // Figma: the Desk note wraps in a 217 px box, the others sit in 316
@@ -30,18 +32,13 @@ const noteW: Record<string, number> = { desk: 217 };
 ---
 
 <section class="scene scene--specs" data-scene="specs" aria-labelledby="specs-title">
-  <!-- the everyday photo and its words sit on the back layer, so the S08 ring can show over them (D-096) -->
+  <!-- the everyday photo sits on the back layer, so the S08 ring can show over it (D-096) -->
   <div class="scene__back">
     <div class="sp__every" data-s-every data-a>
       <div class="sp__par" data-s-par>
-        <Img src={everyday} alt={d.everyday.alt} sizes="100vw" widths={[960, 1440, 1672]} ready class="sp__everyimg" />
+        <Img src={everyday} alt={d.everyday.alt} sizes="100vw" widths={[960, 1448]} ready class="sp__everyimg" />
       </div>
-      <i class="sp__dim"></i>
       <i class="sp__dark" data-s-dark></i>
-    </div>
-    <div class="sp__everytext" data-s-etext data-a>
-      <p class="sp__the" data-s-the>{d.everyday.the}</p>
-      <p class="sp__evword" data-s-evword>{d.everyday.word}</p>
     </div>
   </div>
 
@@ -97,6 +94,11 @@ const noteW: Record<string, number> = { desk: 217 };
       <span class="sp__nums">{d.cards.map((_, i) => <span class="sp__num" data-s-num={i}>{i + 1}/4</span>)}</span>
     </div>
 
+    <!-- D-151: the words are drawn over the card (obsidianassembly.com "The Connection") -->
+    <div class="sp__everytext" data-s-etext data-a>
+      <p class="sp__the" data-s-the>{d.everyday.the}</p>
+      <p class="sp__evword" data-s-evword>{d.everyday.word}</p>
+    </div>
     <p class="sp__caption" data-s-caption data-a><span class="sp__capi" data-s-capi>{d.everyday.caption}</span></p>
   </div>
 </section>
@@ -136,13 +138,7 @@ const noteW: Record<string, number> = { desk: 217 };
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 76% 50%;
-  }
-  /* a quiet shade so the white words read on the light wall (photo-dim token, as S01) */
-  .sp__dim {
-    position: absolute;
-    inset: 0;
-    background: color-mix(in srgb, var(--photo-dim) 34%, transparent);
+    object-position: 50% 50%;
   }
   .sp__dark {
     position: absolute;
@@ -156,7 +152,13 @@ const noteW: Record<string, number> = { desk: 217 };
     top: 0;
     color: var(--white);
     white-space: nowrap;
+    z-index: 75; /* D-151: over the card (cards ≤ 60), under the caption */
     will-change: transform, opacity;
+    /* D-150/151: photo and card stay bright; only a soft shadow hugging the letters */
+    text-shadow:
+      0 0 2px color-mix(in srgb, var(--photo-dim) 30%, transparent),
+      0 2px 22px color-mix(in srgb, var(--photo-dim) 42%, transparent),
+      0 4px 64px color-mix(in srgb, var(--photo-dim) 26%, transparent);
   }
   /* Display/Display 4; nudged by specs.ts so its T sits flush over the E */
   .sp__the {
@@ -345,6 +347,10 @@ const noteW: Record<string, number> = { desk: 217 };
     overflow: hidden;
     text-align: right;
     color: var(--white);
+    text-shadow:
+      0 0 1px color-mix(in srgb, var(--photo-dim) 60%, transparent),
+      0 1px 3px color-mix(in srgb, var(--photo-dim) 55%, transparent),
+      0 1px 14px color-mix(in srgb, var(--photo-dim) 70%, transparent);
     font-size: var(--t-para-lg-size);
     line-height: var(--t-para-lg-lh);
     letter-spacing: var(--t-para-lg-ls);
@@ -360,7 +366,7 @@ const noteW: Record<string, number> = { desk: 217 };
       inset: 16px var(--margin);
     }
     .sp__par :global(img) {
-      object-position: 82% 50%;
+      object-position: 42% 50%;
     }
     .sp__below {
       flex-direction: column;
