@@ -4,12 +4,10 @@
  * the scroll, paragraph right; the text lights up character by character with the scroll and goes
  * out the same way. End state: "Stillway just keeps the pattern." small (no label, no underline) and
  * "keeps the pattern." moving in from both sides to flank the ring, like Oryzo's "it's wearable".
+ * Background: plain Paper (D-148; the D-088 shadow-wall photo is gone).
  * Motion: scripts/sections/why.ts.
  */
 import { why } from '../../content/copy';
-import { whyBg } from '../../content/whyBg';
-const D = whyBg.desktop;
-const M = whyBg.mobile;
 const last = why.steps[why.steps.length - 1];
 const words = (t: string) => t.split(' ');
 const wide = words(why.wide); // ["keeps", "the", "pattern."]
@@ -18,17 +16,6 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
 
 <section class="scene scene--why" data-scene="why" aria-labelledby="why-title">
   <div class="scene__back">
-    {
-      /* D-088 slot: soft shadow-wall photo behind everything; empty (plain Paper) until the files arrive */
-      D && (
-        <div class="why__bg" data-w-bg data-a style={`--pos-d:${D.position}; --pos-m:${M?.position ?? D.position}; --overscan:${whyBg.overscan}`}>
-          <picture>
-            {M && <source media={M.media} srcset={M.srcset ?? M.src} sizes="100vw" />}
-            <img src={D.src} srcset={D.srcset} sizes="100vw" width={D.width} height={D.height} alt="" decoding="async" />
-          </picture>
-        </div>
-      )
-    }
     <p class="why__word giant" data-w-word data-a aria-hidden="true">{why.backWord}</p>
     <p class="why__wide giant" data-w-wide data-a aria-hidden="true">
       <span class="why__wide-l" data-w-wide-l>{wide.slice(0, split).join(' ')}</span>
@@ -73,34 +60,6 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
 </section>
 
 <style>
-  /* D-136: the wall in the photo is a little greyer and darker than Paper (≈ 245 243 238, 242 at the
-     bottom, Paper is 249 245 239) and the photo had a hard bottom edge, which showed as a line once
-     the edge came into view (the 02 → 03 scroll, tall screens). The build lifts it to Paper and
-     melts its lower part into the Paper behind it; the photo file is untouched. */
-  .why__bg {
-    position: absolute;
-    inset: 0;
-    scale: var(--overscan, 1.08);
-    will-change: transform, opacity;
-    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 96%);
-    mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 96%);
-  }
-  .why__bg picture,
-  .why__bg img {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
-  .why__bg img {
-    object-fit: cover;
-    filter: brightness(1.016);
-    object-position: var(--pos-d, 50% 50%);
-  }
-  @media (max-width: 760px) {
-    .why__bg img {
-      object-position: var(--pos-m, 50% 50%);
-    }
-  }
   .why__word {
     position: absolute;
     inset: 0;
