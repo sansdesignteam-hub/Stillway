@@ -363,18 +363,25 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   flare.renderOrder = 10;
   flare.visible = false;
   const bounce = new THREE.PointLight(0x34e07a, 0, 0, 0);
-  const ledMesh = ring.getObjectByName(RING_MODEL.meshes.ledMain) as THREE.Mesh | undefined;
-  if (ledMesh) {
+  // flare / bounce anchors: window A (led_main) and, for "off" (D-154), the lower window (led_power)
+  const anchorOf = (name: string) => {
+    const mesh = ring.getObjectByName(name) as THREE.Mesh | undefined;
+    if (!mesh) return null;
     ring.updateMatrixWorld(true);
-    const bb = new THREE.Box3().setFromObject(ledMesh);
-    const c = bb.getCenter(new THREE.Vector3());
+    const c = new THREE.Box3().setFromObject(mesh).getCenter(new THREE.Vector3());
     const local = ring.worldToLocal(c.clone());
     // toward the axis (the window faces the skin, inward)
     const inward = new THREE.Vector3(-local.x, -local.y, 0).normalize().multiplyScalar(ringSize * 0.04);
-    flare.position.copy(local).add(inward);
-    bounce.position.copy(local).add(inward.multiplyScalar(2));
+    return { flare: local.clone().add(inward), bounce: local.clone().add(inward.clone().multiplyScalar(2)) };
+  };
+  const anchorMain = anchorOf(RING_MODEL.meshes.ledMain);
+  const anchorPower = anchorOf(RING_MODEL.meshes.ledPower) ?? anchorMain;
+  if (anchorMain) {
+    flare.position.copy(anchorMain.flare);
+    bounce.position.copy(anchorMain.bounce);
     ring.add(flare, bounce);
   }
+  const LED_RED = new THREE.Color('#FF3B30'); // --led-off
 
   let W = 0;
   let H = 0;
@@ -500,19 +507,31 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     // under the desk lamp the room is a little dimmer (evening), so the amber edge reads (D-100)
     scene.environmentIntensity = (0.45 + 0.55 * dip) * (1 + 1.4 * p.rim) * (1 - 0.12 * lp) * (1 - 0.7 * Math.min(1.4, Math.max(0, p.envDim)));
 
+    // D-154: ledc 2 → 3 hands the light from window A (violet) to the small red one in the lower window
+    const off = Math.min(1, Math.max(0, p.ledc - 2));
     const ledKey = p.led.toFixed(3) + '|' + p.ledc.toFixed(3);
     if (ledKey !== lastLedKey) {
       lastLedKey = ledKey;
-      setLed(p.led > 0.01 ? '#' + ledColor(p.ledc).getHexString() : null, RING_MODEL.ledIntensity * p.led);
+      const li = RING_MODEL.ledIntensity * p.led;
+      litLed(ledMain, p.led > 0.01 && off < 1 ? ledColor(p.ledc) : null, li * (1 - off));
+      litLed(ledPower, p.led > 0.01 && off > 0 ? LED_RED : null, li * off);
     }
-    const fl = Math.max(0, p.flare);
+    // the flare fades out at window A, then in (a little smaller: "one small light") at the red one
+    const red = off > 0.5;
+    const fl = Math.max(0, p.flare) * (red ? (off - 0.5) * 2 : 1 - off * 2);
     flare.visible = fl > 0.005;
     bounce.intensity = 0;
     if (flare.visible) {
-      const col = ledColor(p.ledc);
+      const col = red ? LED_RED : ledColor(p.ledc);
+      const at = red ? anchorPower : anchorMain;
+      if (at) {
+        flare.position.copy(at.flare);
+        bounce.position.copy(at.bounce);
+      }
       flare.material.color.copy(col);
       flare.material.opacity = Math.min(1, fl);
-      flare.scale.set(ringSize * 0.6, ringSize * 0.6, 1);
+      const fs = ringSize * 0.6 * (red ? 0.85 : 1);
+      flare.scale.set(fs, fs, 1);
       bounce.color.copy(col);
       bounce.distance = w * 0.9;
       bounce.intensity = 2.4 * fl;
@@ -550,16 +569,18 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   };
 
   /** colour for window A, or 'off' to light only the red dot, or null for both dark */
+  /** one LED: lit in a colour at an intensity, or dark (no colour at all) */
+  function litLed(m: THREE.MeshStandardMaterial | undefined, c: THREE.Color | string | null, intensity: number) {
+    if (!m) return;
+    const on = !!c && intensity > 0.001;
+    if (on) m.emissive.set(c as THREE.Color);
+    m.emissiveIntensity = on ? intensity : 0;
+    m.toneMapped = !on;
+    m.color.copy(on ? ledBase.get(m) ?? LED_OFF : LED_OFF);
+  }
   const setLed = (color: string | 'off' | null, intensity: number = RING_MODEL.ledIntensity) => {
-    const lit = (m: THREE.MeshStandardMaterial | undefined, c: string | null) => {
-      if (!m) return;
-      if (c) m.emissive.set(c);
-      m.emissiveIntensity = c ? intensity : 0;
-      m.toneMapped = !c;
-      m.color.copy(c ? ledBase.get(m) ?? LED_OFF : LED_OFF);
-    };
-    lit(ledMain, color && color !== 'off' ? color : null);
-    lit(ledPower, color === 'off' ? '#FF3B30' : null);
+    litLed(ledMain, color && color !== 'off' ? color : null, intensity);
+    litLed(ledPower, color === 'off' ? LED_RED : null, intensity);
   };
 
   return { apply, render, setLed, canvas, three: THREE, pivot };

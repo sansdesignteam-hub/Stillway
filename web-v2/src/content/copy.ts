@@ -127,17 +127,17 @@ export const specs = {
 };
 
 export const features = {
-  status: 'draft (home-copy-v2 §08); claims D-062: colours are mode lights, red only means off',
-  heads: ['Inside the ring.', 'One light, tuned to the task.', 'Blue at night. Violet by morning.'],
-  sub: 'One small window, facing your skin.',
-  tag: '[ SENSOR · LIGHT ]',
+  status: 'Figma Design 08 State 1–4 (D-154); lights are mode status, not sensor claims (D-062); red only means off',
+  kickers: ['[ FEATURES ]', '[ SENSOR · LIGHT ]'],
+  heads: ['Inside the ring.', 'One light, tuned to the task.', 'Blue at night. Violet by morning.', 'Red means it’s off.'],
   legend: [
-    { key: 'green', label: 'Green · Heart rate', body: 'By day, a green light while the ring follows your heart rate.' },
-    { key: 'blue', label: 'Blue · Sleep', body: 'At night it dims to blue while the ring keeps track of your sleep.' },
-    { key: 'violet', label: 'Violet · Recovery', body: 'By morning it turns violet as the night is put together.' },
+    { key: 'green', label: 'Heart rate', mono: 'Green · Heart rate' },
+    { key: 'blue', label: 'Sleep', mono: 'Blue · Sleep' },
+    { key: 'violet', label: 'Recovery', mono: 'Violet · Recovery' },
   ],
-  off: "Red means it's off.",
-  alt: 'The inside of the Stillway ring, one small window lit green, then blue, then violet.',
+  off: 'Red means it’s off.',
+  offLong: 'When the battery runs out, one small red light shows in the lower sensor window.',
+  alt: 'The inside of the Stillway ring, one small window lit green, then blue, then violet; when the ring is off, a small red light in the lower window.',
 };
 
 export const app = {

@@ -26,6 +26,8 @@
  *       of the viewport from the centre, y up), fs = CSS px per image px of the hand photo.
  * ledc: colour of window A while lit, 0 = green (heart rate) → 1 = blue (sleep) → 2 = violet (recovery),
  *       blended between the LED tokens (Moodboard §2.3, D-062). S08 drives it by scroll.
+ *       2 → 3 (D-154): window A goes dark and the small red light in the lower window (led_power)
+ *       comes on = off / battery empty; the flare and bounce move to that window.
  * flare: 0..1 soft flare on window A (thin streak + glow sprite) and its coloured bounce on the inner
  *        band (S08, client LED reference).
  * custom: 0..1 how much of the visitor's finish choice shows (S10–S11; 0 = polished Silver as everywhere
