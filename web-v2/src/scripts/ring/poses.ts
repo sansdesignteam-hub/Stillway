@@ -37,6 +37,9 @@
  * envDim: 0..1.4 dims the environment reflections (S03 warm: the Paper studio env on Night, D-137;
  *         up to 1.4 = almost a silhouette before the S03 corner light reaches the ring, D-140).
  * blur: CSS blur of the ring canvas in px (03 → 04 lens, D-138).
+ * ghost: 0..1 strength of the two motion ghosts behind the ring (S06 roll, D-144); ghostDx = their
+ *        spacing as a fraction of the viewport width (behind = to the left), ghostSpin = their spin
+ *        step (rad) so each copy shows the earlier turn of a rolling ring.
  * alpha: canvas opacity (the ring is the only object, so fading the canvas fades the ring).
  */
 export interface Pose {
@@ -74,6 +77,9 @@ export interface Pose {
   corner: number;
   envDim: number;
   blur: number;
+  ghost: number;
+  ghostDx: number;
+  ghostSpin: number;
   alpha: number;
 }
 
@@ -120,4 +126,4 @@ export function along(u: number, frames: Array<[number, Pose]>): Pose {
   return frames[frames.length - 1][1];
 }
 
-export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, shadowX: 0, shadowY: -0.3, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, ledc: 0, flare: 0, custom: 0, finA: 0, finB: 0, finT: 0, lamp: 0, corner: 0, envDim: 0, blur: 0, alpha: 1, ...p });
+export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, shadowX: 0, shadowY: -0.3, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, ledc: 0, flare: 0, custom: 0, finA: 0, finB: 0, finT: 0, lamp: 0, corner: 0, envDim: 0, blur: 0, ghost: 0, ghostDx: 0, ghostSpin: 0, alpha: 1, ...p });

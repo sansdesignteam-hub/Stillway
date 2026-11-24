@@ -74,6 +74,12 @@
 
   /* non-UI colours kept as they were: photo tint, V1 resting dot (D-092), product finishes (D-100) */
   --photo-dim: #2a1f14; /* S01 photo dim layer */
+  /* S06 light pine table (D-144). Temporary CSS table until the 3D Designer's s06-table.glb lands;
+     side colour from Figma "Tepi kanan · sisi" */
+  --wood-top: #e8d6b6;
+  --wood-top-far: #ddc7a2;
+  --wood-grain: #c9ad84;
+  --wood-side: #a88f70;
   --rest-dot: #9aa883; /* S04 "Resting" key dot */
   --finish-silver: radial-gradient(circle at 35% 30%, #f6f6f7, #b9b9bd 55%, #8c8c90);
   --finish-black: radial-gradient(circle at 35% 30%, #4a4a4e, #141416 55%, #050506);

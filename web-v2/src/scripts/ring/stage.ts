@@ -261,6 +261,45 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   }
   spinner.add(ring);
 
+  /* S06 motion ghosts (D-144): two see-through copies of the ring behind it while it rolls (Figma
+     "Motion ghost", opacity .35 and .18). Same geometry, own transparent materials (kept in step
+     with the finish), own pivot/spinner; they never write depth so the real ring stays on top. */
+  const ghostMats = new Map<THREE.Material, THREE.Material[]>();
+  const ghosts = [0.35, 0.18].map((base) => {
+    const gp = new THREE.Group();
+    const gs = new THREE.Group();
+    const g = ring.clone(true);
+    g.traverse((o) => {
+      if (!o.isMesh) return;
+      const src = o.material as THREE.Material;
+      const m = src.clone();
+      m.transparent = true;
+      m.depthWrite = false;
+      o.material = m;
+      o.castShadow = false;
+      const list = ghostMats.get(src) ?? [];
+      list.push(m);
+      ghostMats.set(src, list);
+    });
+    gs.add(g);
+    gp.add(gs);
+    gp.visible = false;
+    gp.renderOrder = -1;
+    scene.add(gp);
+    return { gp, gs, g, base, mats: [] as THREE.Material[] };
+  });
+  ghosts.forEach((gh) => gh.g.traverse((o) => o.isMesh && gh.mats.push(o.material)));
+  const syncGhostMats = () =>
+    ghostMats.forEach((list, src) =>
+      list.forEach((m) => {
+        const o = m.opacity;
+        m.copy(src);
+        m.transparent = true;
+        m.depthWrite = false;
+        m.opacity = o;
+      }),
+    );
+
   /* S08: window A lit in the three mode colours (D-062), a soft flare sprite and the coloured bounce
      on the inner band (point light). Placed at the LED mesh centre, nudged toward the ring axis. */
   const LED_COLS = [new THREE.Color('#34E07A'), new THREE.Color('#3B8CFF'), new THREE.Color('#A06BFF')];
@@ -347,6 +386,18 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       finger.rotation.set(0, 0, FINGER_TILT);
     }
     spinner.rotation.z = p.spin;
+    // motion ghosts: i steps back along the roll (ghostDx of the width each, ghostSpin each)
+    ghosts.forEach((gh, i) => {
+      const o = Math.max(0, p.ghost) * gh.base;
+      gh.gp.visible = o > 0.004;
+      if (!gh.gp.visible) return;
+      gh.gp.position.copy(pivot.position);
+      gh.gp.position.x -= (i + 1) * p.ghostDx * W;
+      gh.gp.quaternion.copy(pivot.quaternion);
+      gh.gp.scale.copy(pivot.scale);
+      gh.gs.rotation.z = p.spin + (i + 1) * p.ghostSpin;
+      gh.mats.forEach((m) => (m.opacity = o));
+    });
 
     // finish: brushed → polished (V1)
     const finKey = `${p.gloss}|${p.custom.toFixed(3)}|${p.finA}|${p.finB}|${p.finT.toFixed(3)}`;
@@ -360,6 +411,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       } else {
         if (band && 'clearcoat' in band) band.clearcoat = 0;
       }
+      syncGhostMats();
     }
 
     // V1 rig and cast shadow, S01 only

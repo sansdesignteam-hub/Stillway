@@ -1,15 +1,18 @@
 /**
- * S06 Product details — 21:00 · Paper + Sand plinth (D-093; flow Storyboard §2, look Figma sticky
- * 40004118:112, geometry design/3d/v2/s06-pose.json).
- * u: -1..0 connection from S05 (card fades, camera backs out of the ring, it shrinks and drops to the
- *          plinth on the left, Dusk → Paper, the plinth appears; clock 17:30 → 21:00)
- *  0..1  state 1  the ring rolls in from the left edge (≈55 vw desktop, 40 vw phone), overshoots,
- *                 rocks back and rests facing the camera; "Made to be forgotten." from 16%
- *  2     state 2  turned ±90° to the side; "One quiet band"
- *  3     state 3  seen from the edge at 45°, tipped 20°; "Softened edges"
- *  4     state 4  the plinth leaves, the hand fades in on the right; the ring moves above the
- *                 fingertip, slides down to the seat and becomes the ring in the photo (A-1b)
- *  > 4.6 to S07 (specs.ts drives the card shrink through this module's update)
+ * S06 Product details — 21:00 · Paper (D-144; Figma Design 06 State 1–4 40004263:662 … :794 and
+ * 06 · Tangan & ring A–C 40004325:3298 … :3368; final pose design/3d/v2/s06-pose.json).
+ * u: -1..0 connection from S05 (the camera backs out of the ring, it lands on the table; Dusk → Paper)
+ *  0  State 1  the ring stands upright, opening to the camera, on the pine table; it rolls right,
+ *              turning by the distance (angle = distance / radius), two motion ghosts while it moves;
+ *              "Made to be forgotten."
+ *  1  State 2  nearer the edge; "One quiet band"
+ *  2  State 3  at the edge (x 720 of 1440); "Softened edges"; it tips over the corner…
+ *  3  Hand A   …and drops on the right; the hand (photo A-1, no ring) rises from below the screen,
+ *              only the fingertip in view; "Then, it just fits." faint on top
+ *  4  Hand B   the ring falls turning toward the fingertip and slows down (oryzo.ai); the hand stops
+ *  5  Hand C   the ring goes onto the finger and slides to the seat (onFinger pose); [ SILVER ]
+ *  > END to S07 (specs.ts drives the card shrink through this module's update)
+ * The hand photo's cut bottom is always below the viewport (and melted into Paper), on every screen.
  */
 import { put, seg, lerp, clamp01, window4, type Ctx } from '../anim';
 import { lerpPose, pose, type Pose } from '../ring/poses';
@@ -17,27 +20,35 @@ import type { SectionMotion } from '../story';
 
 let el: Record<string, HTMLElement | null> = {};
 let steps: HTMLElement[] = [];
+let ticks: HTMLElement[] = [];
 let root: HTMLElement | null = null;
-export const DETAILS_END = 4.6;
+export const DETAILS_END = 5.6;
 const D2R = Math.PI / 180;
 
-/** layout in px for the current viewport: ring diameter, plinth top, hand box (s06-pose.json) */
+/** layout in px: table, ring, roll stops, hand box (s06-pose.json image px × hs) */
 function layout(ctx: Ctx) {
   const W = window.innerWidth;
   const H = window.innerHeight;
   const m = ctx.mobile;
-  // D-093 r1: the standing ring is the figure of the screen (Ultrahuman ref ±55–65% of the height)
-  const D = m ? Math.min(W * 0.7, H * 0.36) : Math.min(H * 0.6, W * 0.36);
-  const py = H * (m ? 0.6 : 0.74); // plinth top
-  const face = H * 0.036;
-  const cy = py + face * 0.55 - D / 2; // the ring stands on the middle of the top face
-  // hand A-1 (579 × 1198 img px): desktop right, full height from 10 vh; phone lower right
-  const hs = m ? (H * 0.66) / 1198 : H / 1198;
-  const hy = m ? H * 0.36 : H * 0.1;
-  const seatX = m ? W * 0.6 : W * 0.7;
+  const sy = H / 900;
+  const s = Math.min(W / 1440, sy);
+  const tx = W / 2; // table right edge (Figma x 720)
+  const ty = m ? H * 0.6 : 600 * sy; // table top (back edge)
+  const contact = ty + 0.47 * (H - ty); // where the ring stands (Figma y ≈ 741)
+  const D = m ? Math.min(W * 0.42, H * 0.22) : 316 * s; // ring diameter (Figma 316)
+  // phones: the table is half the screen, so the roll starts at its left edge, fully in view
+  const x0 = m ? 0.55 * D : tx - 250 * s; // State 1 (Figma centre 470)
+  const x1 = m ? tx - 0.42 * D : tx - 108 * s; // State 2 (Figma centre 612)
+  const x2 = tx - 0.04 * D; // State 3: at the edge
+  // hand A-1 (579 × 1198 img px). Figma Hand C: A-1 at 0.807 of 900 px, seat (343, 360) at (723, 696)
+  const hs = m ? (0.45 * H) / 844 : 0.807 * sy;
+  const seatX = m ? W / 2 + 6 : W / 2 + 3 * s;
+  const seatY = m ? H * 0.66 : 696 * sy;
   const hx = seatX - 343 * hs;
-  return { W, H, D, py, face, cy, hs, hx, hy, seat: { x: seatX, y: hy + 360 * hs } };
+  const hy = seatY - 360 * hs; // the photo's bottom = seatY + 838 hs, always below the screen
+  return { W, H, s, tx, ty, contact, D, x0, x1, x2, hs, hx, hy, seat: { x: seatX, y: seatY } };
 }
+type L6 = ReturnType<typeof layout>;
 
 let lastKey = '';
 function setVars(ctx: Ctx) {
@@ -48,13 +59,13 @@ function setVars(ctx: Ctx) {
   root.style.setProperty('--hx', `${L.hx.toFixed(1)}px`);
   root.style.setProperty('--hy', `${L.hy.toFixed(1)}px`);
   root.style.setProperty('--hs', L.hs.toFixed(4));
-  root.style.setProperty('--py', `${L.py.toFixed(1)}px`);
-  // reduced motion / no WebGL: polished still (fb-s02, ring 84.6% of the image height) on the plinth
+  root.style.setProperty('--ty', `${L.ty.toFixed(1)}px`);
+  root.style.setProperty('--tx', `${L.tx.toFixed(1)}px`);
+  // reduced motion / no WebGL: the polished still (fb-s02, ring 84.6% of the image height) on the table
   const fbw = L.D / 0.846;
-  const cx = (0.5 + (ctx.mobile ? -0.02 : 0.12)) * L.W;
   root.style.setProperty('--fbw', `${fbw.toFixed(1)}px`);
-  root.style.setProperty('--fbx', `${(cx - 0.528 * fbw).toFixed(1)}px`);
-  root.style.setProperty('--fby', `${(L.py + L.face * 0.55 - 0.918 * fbw).toFixed(1)}px`);
+  root.style.setProperty('--fbx', `${(L.x1 - 0.528 * fbw).toFixed(1)}px`);
+  root.style.setProperty('--fby', `${(L.contact - 0.918 * fbw).toFixed(1)}px`);
   return L;
 }
 
@@ -62,42 +73,63 @@ function setVars(ctx: Ctx) {
 const fx = (px: number, W: number) => px / W - 0.5;
 const fy = (py: number, H: number) => 0.5 - py / H;
 
-// rest angle: opening toward the camera, turned a little so the band and the engraved "Stillway"
-// on its right side read (Ultrahuman ref: the wordmark runs up the visible side of the band)
-const FRONT = { rx: 0, ry: -0.68, rz: 0, spin: 0, pitch: 0.1 };
-const SIDE = { rx: 0, ry: -Math.PI / 2 + 0.08, rz: 0, spin: 0, pitch: 0.12 };
-const EDGE = { rx: 0, ry: -Math.PI / 4, rz: 0, spin: 0, pitch: 20 * D2R };
-
-function rollX(u: number, ctx: Ctx, L: ReturnType<typeof layout>) {
-  const start = ctx.mobile ? -0.42 : -0.43;
-  const stop = ctx.mobile ? -0.02 : 0.12;
-  const over = stop + (0.06 * L.D) / 2 / L.W;
-  const t = ctx.reduced ? 1 : clamp01(u);
-  // 0 → 22%: power2.out to a little past the stop; 22 → 25%: sine back (s06-pose.json rolling)
-  const k = 0.88;
-  let x: number;
-  if (t <= k) {
-    const q = t / k;
-    x = lerp(start, over, 1 - (1 - q) * (1 - q));
-  } else {
-    const q = (t - k) / (1 - k);
-    x = lerp(over, stop, 0.5 - 0.5 * Math.cos(Math.PI * q));
+/**
+ * the hand's offset from its final place (px). Figma: at A / B it rises right of the table (≈ +255 px
+ * at 1440), fingertip near the bottom (B ≈ 84% of the height); at C it is home (offset 0), so the
+ * ring falls down and right from the corner onto the fingertip, then hand and ring settle together.
+ */
+function handOff(u: number, L: L6, m: boolean) {
+  const tipY = L.seat.y - 337 * L.hs; // fingertip (img px 23) at the final place
+  const dxB = m ? 0.2 * L.W : 255 * L.s;
+  const dyB = 0.84 * L.H - tipY;
+  const below = L.H - tipY + 40; // fingertip just under the bottom edge
+  if (u <= 4) {
+    const t = seg(u, 2.55, 4);
+    const e = 1 - (1 - t) * (1 - t);
+    return { dx: dxB, dy: lerp(below, dyB, e) };
   }
-  // rolling: angle = distance / radius, clockwise when moving right
-  const spin = FRONT.spin - ((x - stop) * L.W) / (L.D / 2);
-  return { x, spin, stop };
+  const t = seg(u, 4, 4.95);
+  return { dx: lerp(dxB, 0, t), dy: lerp(dyB, 0, t) };
+}
+/** shift a finger pose by the hand's offset (ring and finger proxy move with the hand) */
+function withHand(p: Pose, off: { dx: number; dy: number }, L: L6): Pose {
+  return { ...p, x: p.x + off.dx / L.W, y: p.y - off.dy / L.H, fx: p.fx + off.dx / L.W, fy: p.fy - off.dy / L.H };
 }
 
-function plinthPose(u: number, ctx: Ctx, L: ReturnType<typeof layout>): Pose {
-  const { x, spin, stop } = rollX(u, ctx, L);
-  const y = fy(L.cy, L.H);
-  const base = { y, w: L.D / L.W }; // contact shadow is CSS on the plinth (details update)
-  if (u <= 1) return pose({ ...base, x, ...FRONT, spin });
-  const front = pose({ ...base, x: stop, ...FRONT });
-  const side = pose({ ...front, ...SIDE });
-  const edge = pose({ ...front, ...EDGE });
-  if (u <= 2) return lerpPose(front, side, seg(u, 1.15, 1.85));
-  return lerpPose(side, edge, seg(u, 2.15, 2.85));
+/** upright, opening to the camera (pose 0/0/0); "Stillway" on the band turns with the roll */
+const UP = { rx: 0, ry: 0, rz: 0 };
+const TIP = 40 * D2R; // how far it tips over the corner before it lets go
+
+/** ring centre x on the table for u in 0..2 (eased between the states, still at each state) */
+function rollX(u: number, L: L6) {
+  if (u <= 0) return L.x0;
+  if (u <= 1) return lerp(L.x0, L.x1, seg(u, 0.1, 0.95));
+  return lerp(L.x1, L.x2, seg(u, 1.1, 1.95));
+}
+
+/** the rolling ring (u ≤ 2) and the tip over the corner (2 → 2.55): centre, spin, ghost strength */
+function onTable(u: number, ctx: Ctx, L: L6) {
+  const r = L.D / 2;
+  const x = rollX(Math.min(u, 2), L);
+  let cx = x;
+  let cy = L.contact - r;
+  let spin = -(x - L.x0) / r; // rolling without slip, clockwise to the right
+  // tip: roll the last bit to the corner, then turn about the corner
+  const reach = seg(u, 2, 2.2);
+  const tip = seg(u, 2.15, 2.55);
+  if (u > 2) {
+    const toEdge = lerp(x, L.tx, reach);
+    spin = -(toEdge - L.x0) / r;
+    const th = TIP * tip;
+    cx = L.tx + r * Math.sin(th) - (L.tx - toEdge);
+    cy = L.contact - r * Math.cos(th);
+    spin -= th;
+  }
+  // ghosts: only while it moves, stronger when faster
+  const e = 0.02;
+  const v = Math.abs(rollX(Math.min(u + e, 2), L) - rollX(Math.max(Math.min(u - e, 2), 0), L)) / (2 * e);
+  const ghost = ctx.reduced ? 0 : clamp01(v / (0.9 * L.D)) * (1 - seg(u, 1.95, 2.1));
+  return { cx, cy, spin, ghost };
 }
 
 /** state 4: above the fingertip → seat, onFinger pose with the view correction (s06-pose.json) */
@@ -178,7 +210,7 @@ export const details: SectionMotion = {
     root = r;
     const q = (s: string) => r.querySelector<HTMLElement>(s);
     el = {
-      plinth: q('[data-d-plinth]'),
+      table: q('[data-d-table]'),
       shadow: q('[data-d-shadow]'),
       card: q('[data-d-card]'),
       hand: q('[data-d-hand]'),
@@ -187,41 +219,54 @@ export const details: SectionMotion = {
       head: q('[data-d-head]'),
       fits: q('[data-d-fits]'),
       label: q('[data-d-label]'),
+      progress: q('[data-d-progress]'),
     };
     steps = [...r.querySelectorAll<HTMLElement>('[data-d-step]')];
+    ticks = [...r.querySelectorAll<HTMLElement>('[data-d-tick]')];
   },
   update(u, ctx) {
     const L = setVars(ctx);
     const leave = seg(u, DETAILS_END, DETAILS_END + 1); // the 06 → 07 connection, 0..1
-    // plinth rises with the end of the connection, leaves before the hand comes in
-    const plinthIn = ctx.reduced ? (u >= -0.5 ? 1 : 0) : seg(u, -0.35, -0.05);
-    const plinthOut = seg(u, 3.05, 3.45);
-    put(el.plinth, { o: plinthIn * (1 - plinthOut), y: (1 - plinthIn) * 40 + plinthOut * 60 }, ctx);
-    // soft contact shadow under the ring on the top face; follows the roll, narrows side-on
-    if (el.shadow && u < 3.2) {
-      const p = plinthPose(Math.max(0, u), ctx, L);
-      const wpx = L.D * (0.92 * Math.abs(Math.cos(p.ry)) + 0.36 * Math.abs(Math.sin(p.ry)));
-      el.shadow.style.width = `${wpx.toFixed(1)}px`;
-      const sh = L.D * 0.07;
+    // the table: in with the end of the connection, out once the ring is in the hand
+    const tableIn = ctx.reduced ? (u >= -0.5 ? 1 : 0) : seg(u, -0.35, -0.05);
+    put(el.table, { o: tableIn * (1 - seg(u, 4.2, 4.7)), y: (1 - tableIn) * 40 }, ctx);
+    // contact shadow (Figma 300 × 30 under the 316 ring): follows the roll, fades as it tips
+    if (el.shadow) {
+      const t = onTable(Math.max(0, Math.min(u, 2.6)), ctx, L);
+      const sw = 0.95 * L.D;
+      const sh = 0.095 * L.D;
+      el.shadow.style.width = `${sw.toFixed(1)}px`;
       el.shadow.style.height = `${sh.toFixed(1)}px`;
-      el.shadow.style.top = `${(L.face * 0.55 - sh / 2).toFixed(1)}px`;
-      el.shadow.style.left = `${((p.x + 0.5) * L.W - wpx / 2 + L.W * 0.04).toFixed(1)}px`;
+      el.shadow.style.transform = `translate3d(${(t.cx - sw / 2).toFixed(1)}px, ${(L.contact - (L.ty - 30) - sh / 2).toFixed(1)}px, 0)`;
+      el.shadow.style.opacity = (1 - seg(u, 2.1, 2.45)).toFixed(3);
     }
-    put(el.head, { o: window4(u, ctx.reduced ? -0.5 : 0.55, 0.85, 3.05, 3.35), y: (1 - seg(u, 0.55, 0.85)) * 16 }, ctx);
-    steps.forEach((s, i) => {
-      const a = 1.4 + i;
-      put(s, { o: window4(u, a, a + 0.35, a + 0.85, a + 1.15), y: (1 - seg(u, a, a + 0.35)) * 14 }, ctx);
-    });
-    const fits = seg(u, 3.35, 3.75);
-    put(el.fits, { o: fits * (1 - seg(leave, 0, 0.3)), y: (1 - fits) * 16 }, ctx);
-    put(el.label, { o: seg(u, 3.8, 3.98) * (1 - seg(leave, 0, 0.3)) }, ctx);
 
-    // hand: fades in with the end of the plinth, slight rise
-    const hand = seg(u, 3.1, 3.5);
-    // D-093 r1: the polished 3D ring stays on the finger (D-085); A-1b only without WebGL / reduced motion
+    // text: headline (State 1), the two steps (States 2, 3), then "Then, it just fits." on top —
+    // faint at A, clearer at B, full at C
+    put(el.head, { o: window4(u, ctx.reduced ? -0.5 : -0.3, 0.05, 0.55, 0.8), y: (1 - seg(u, -0.3, 0.05)) * 16 }, ctx);
+    steps.forEach((st, i) => {
+      const a = 0.75 + i;
+      put(st, { o: window4(u, a, a + 0.25, a + 0.8, a + 1.05), y: (1 - seg(u, a, a + 0.25)) * 14 }, ctx);
+    });
+    const fits = 0.35 * seg(u, 2.85, 3.2) + 0.35 * seg(u, 3.6, 4) + 0.3 * seg(u, 4.5, 4.9);
+    put(el.fits, { o: fits * (1 - seg(leave, 0, 0.3)), y: (1 - seg(u, 2.85, 3.3)) * 16 }, ctx);
+    if (el.label) {
+      el.label.style.left = `${(L.seat.x + (ctx.mobile ? 90 : 217 * L.s)).toFixed(1)}px`;
+      el.label.style.top = `${(L.seat.y - (ctx.mobile ? 10 : 12 * L.s)).toFixed(1)}px`;
+    }
+    put(el.label, { o: seg(u, 4.8, 5) * (1 - seg(leave, 0, 0.3)) }, ctx);
+    put(el.progress, { o: window4(u, -0.3, 0.05, 2.55, 2.85) }, ctx);
+    const on = Math.min(3, Math.max(0, Math.round(u)));
+    ticks.forEach((t, i) => t.classList.toggle('is-on', i === on));
+
+    // the hand rises from below the screen right of the table (fingertip in view at A), the ring
+    // lands on it (B), then both settle at the final place (C)
+    const rise = seg(u, 2.55, 4);
+    const off = handOff(u, L, ctx.mobile);
+    // D-093 r1: the polished 3D ring stays on the finger (D-085); A-1b only without WebGL / reduced
     const live = document.documentElement.classList.contains('ring-ready');
-    if (el.ringed) el.ringed.style.opacity = live ? '0' : seg(u, 3.88, 3.98).toFixed(3);
-    put(el.seatShadow, { o: live ? seg(u, 3.75, 3.92) : 0 }, ctx);
+    if (el.ringed) el.ringed.style.opacity = live ? '0' : seg(u, 4.8, 5).toFixed(3);
+    put(el.seatShadow, { o: live ? seg(u, 4.75, 4.95) : 0 }, ctx);
     // 06 → 07 (Storyboard §3): the hand photo shrinks into a card with rounded corners, then fades
     if (el.card && root) {
       const c = cardLeave(leave, L, ctx);
@@ -232,36 +277,50 @@ export const details: SectionMotion = {
       cs.setProperty('--cr', `${c.r.toFixed(1)}px`);
       cs.setProperty('--cr0', `${(14 * c.k).toFixed(1)}px`);
       cs.setProperty('--cbg', c.k > 0.001 ? '1' : '0');
-      put(el.card, { o: hand * c.o, x: c.mx, y: c.my, s: c.s }, ctx);
-      put(el.hand, { o: 1, y: (1 - hand) * 30 }, ctx);
+      put(el.card, { o: (ctx.reduced ? (u >= 3 ? 1 : 0) : rise > 0 ? 1 : 0) * c.o, x: c.mx, y: c.my, s: c.s }, ctx);
+      put(el.hand, { o: 1, x: off.dx, y: off.dy }, ctx);
     }
   },
   ring(u, ctx) {
     const L = layout(ctx);
-    if (u <= 3.1) return plinthPose(u, ctx, L);
-    const edge = plinthPose(3, ctx, L);
-    // 3.1 → 3.55 lift over the fingertip, scale to the finger and turn to onFinger; 3.55 → 3.9 slide
-    const above = fingerPose(0, L, { fing: 0 });
-    const lift = seg(u, 3.1, 3.55);
-    if (u < 3.55) {
-      const p = lerpPose(edge, above, lift);
-      return { ...p, fing: 0 };
+    const r = L.D / 2;
+    const base = (cx: number, cy: number, spin: number, extra: Partial<Pose> = {}) =>
+      pose({ x: fx(cx, L.W), y: fy(cy, L.H), w: L.D / L.W, ...UP, spin, ...extra });
+    if (u <= 2.55) {
+      const t = onTable(Math.max(0, u), ctx, L);
+      const ghostDx = (0.46 * L.D) / L.W;
+      return base(t.cx, t.cy, t.spin, { ghost: t.ghost, ghostDx, ghostSpin: (ghostDx * L.W) / r });
     }
-    const slide = seg(u, 3.55, 3.9);
-    // the 3D ring hands over to the photo ring (A-1b) at the seat
-    return fingerPose(slide, L, { shadow: 0 });
+    // the fall (oryzo.ai): from the corner down and right onto the fingertip of the rising hand,
+    // turning from facing the camera to side-on as it drops, quick at first, slowing near the finger
+    const from = onTable(2.55, ctx, L);
+    const above = withHand(fingerPose(0, L, { fing: 0 }), handOff(4, L, ctx.mobile), L);
+    const turns = Math.round(from.spin / (2 * Math.PI)) * 2 * Math.PI; // lands without unwinding
+    const start = base(from.cx, from.cy, from.spin);
+    if (u < 4) {
+      const t = seg(u, 2.55, 4);
+      const k = 1 - Math.pow(1 - t, 2.4); // eases out: slows near the finger
+      const p = lerpPose(start, { ...above, spin: turns }, k);
+      p.w = lerp(start.w, above.w, k * k); // stays larger longer, smaller as it reaches the finger
+      // a soft arc: it leaves the corner outward before it drops in over the finger
+      const sx = (p.x + 0.5) * L.W + Math.sin(Math.PI * k) * 0.25 * L.D;
+      return { ...p, x: fx(sx, L.W), fing: 0 };
+    }
+    // onto the finger and down to the seat while the hand settles at its final place
+    const slide = seg(u, 4.05, 4.95);
+    const p = withHand(fingerPose(slide, L, { shadow: 0 }), handOff(u, L, ctx.mobile), L);
+    return slide < 0.02 ? { ...p, fing: 0 } : p;
   },
   // 05 → 06 (Storyboard §3): the camera backs out of the ring — it shrinks (geometric, so it reads
-  // as distance) and drops to the plinth on the left; the cast shadow lands as it touches down
+  // as distance) and lands on the table on the left
   ringIn(x, _ctx, from, to) {
     const t = seg(x, 0.05, 0.85);
     const p = lerpPose(from, to, t);
     p.w = from.w * Math.pow(to.w / from.w, t);
-    p.shadow = to.shadow * seg(x, 0.7, 0.95);
     p.warm = from.warm * (1 - seg(x, 0.2, 0.6));
     return p;
   },
 };
 
-/** S06 first frame for the incoming connection (ring on the plinth, half cut off at the left edge) */
+/** S06 first frame for the incoming connection (ring upright on the table) */
 export const detailsStart = (ctx: Ctx) => details.ring!(0, ctx);
