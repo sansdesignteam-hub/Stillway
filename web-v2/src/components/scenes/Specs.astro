@@ -15,7 +15,7 @@
  *    (parallax). D-150: the photo is the package flat lay (A-11), bright, with only a soft text
  *    shadow on the words; the group is centred in the frame. D-151: layers photo → card → words
  *    → caption, the words run whole over the card (obsidianassembly.com "The Connection"). "The" small over "Everyday" (Display 1), both
- *    white, "The" flush with the E; caption free under the right end of "Everyday", below the "y" (s07-ref-everyday-layout).
+ *    white, "The" flush with the E; caption free under "Everyday", just right of the card (D-155: clear of the Gold ring; phones: under the word's right end).
  * Motion: scripts/sections/specs.ts.
  */
 import Img from '../Img.astro';
@@ -24,7 +24,10 @@ import night from '../../../../design/assets/v2/A-2-card-night.png';
 import desk from '../../../../design/assets/v2/A-2-card-desk.png';
 import move from '../../../../design/assets/v2/A-2-card-move.png';
 import rinse from '../../../../design/assets/v2/A-2-card-rinse.png';
-import everyday from '../../../../design/assets/v1/home/A-11-package-flatlay.png'; // D-150
+// D-155: Visual Director's A-11b variation C (dock + Black top right, Silver standing top left, Gold
+// lying bottom right, the middle of the stone empty); the two web sizes as they are (PNG = master)
+import ev1920 from '../../../../design/assets/v2/everyday/A-11b-everyday-c-1920.webp';
+import ev2880 from '../../../../design/assets/v2/everyday/A-11b-everyday-c-2880.webp';
 
 const img: Record<string, any> = { night, desk, move, rinse };
 // Figma: the Desk note wraps in a 217 px box, the others sit in 316
@@ -36,7 +39,7 @@ const noteW: Record<string, number> = { desk: 217 };
   <div class="scene__back">
     <div class="sp__every" data-s-every data-a>
       <div class="sp__par" data-s-par>
-        <Img src={everyday} alt={d.everyday.alt} sizes="100vw" widths={[960, 1448]} ready class="sp__everyimg" />
+        <img class="sp__everyimg" src={ev1920.src} srcset={`${ev1920.src} 1920w, ${ev2880.src} 2880w`} sizes="100vw" width={ev2880.width} height={ev2880.height} alt={d.everyday.alt} decoding="async" />
       </div>
       <i class="sp__evshade" aria-hidden="true"></i>
       <i class="sp__dark" data-s-dark></i>
@@ -114,7 +117,7 @@ const noteW: Record<string, number> = { desk: 217 };
     /* D-153: exposure of the big "The Everyday" photo, one place to tune (also for the D-152 photo):
        brightness of the photo itself, plus an optional warm shade (photo-dim) over it, in %.
        The Rinse card is never touched by either. */
-    --ev-exposure: 0.82;
+    --ev-exposure: 0.8; /* D-155: variation C */
     --ev-shade: 6%;
   }
   .scene--specs .scene__front {
@@ -151,7 +154,7 @@ const noteW: Record<string, number> = { desk: 217 };
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 50% 50%;
+    object-position: 50% 46%;
   }
   .sp__dark {
     position: absolute;
@@ -358,7 +361,7 @@ const noteW: Record<string, number> = { desk: 217 };
     top: 0;
     width: 7em;
     overflow: hidden;
-    text-align: right;
+    text-align: left;
     color: var(--white);
     text-shadow:
       0 0 1px color-mix(in srgb, var(--photo-dim) 60%, transparent),
@@ -378,8 +381,10 @@ const noteW: Record<string, number> = { desk: 217 };
     .sp__every {
       inset: 16px var(--margin);
     }
+    /* phones: the portrait frame shows a quarter of the width; keep the dock + Black and the Gold,
+       with the empty stone between them behind the words (Silver, far left, is cropped) */
     .sp__par :global(img) {
-      object-position: 42% 50%;
+      object-position: 81% 50%;
     }
     .sp__below {
       flex-direction: column;
@@ -403,6 +408,7 @@ const noteW: Record<string, number> = { desk: 217 };
     }
     .sp__caption {
       width: 9em;
+      text-align: right;
     }
   }
 </style>

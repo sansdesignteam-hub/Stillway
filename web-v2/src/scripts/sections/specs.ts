@@ -423,8 +423,8 @@ export const specs: SectionMotion = {
       if (el.dark) el.dark.style.opacity = seg(u, END, END + 0.75).toFixed(3);
     }
     // "The / Everyday": rises with the frame, centred, drawn over the card (D-151). The caption rides
-    // with it (same lift, so the two never cross during the rise) and stands free under the word:
-    // below the descender of "y" (and below the card), its right edge on the ink of the last "y"
+    // with it (same lift, so the two never cross during the rise) and stands free under the word,
+    // below the descender of "y" (and below the card)
     if (el.etext && el.the && el.evword) {
       const tw = el.evword.offsetWidth;
       const th = el.the.offsetHeight;
@@ -442,7 +442,9 @@ export const specs: SectionMotion = {
       tf(el.etext, (u > RISE ? 1 : 0) * (1 - out), tr(left, ty0), clip);
       if (el.caption) {
         const cw = el.caption.offsetWidth;
-        const x = left + tw - ev.right - cw;
+        // D-155: desktop just right of the card (clear of the Gold ring in the photo's lower right);
+        // phones: right edge on the ink of the last "y"
+        const x = m ? left + tw - ev.right - cw : G.E.x + G.E.w / 2 + 20 * k;
         const y = G.capTop;
         const cp = seg(u, RISE + 0.72, RISE + 1.0);
         tf(el.caption, cp > 0 ? 1 - out : 0, tr(x, y + rise));

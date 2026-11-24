@@ -123,7 +123,7 @@ export const specs = {
     { key: 'move', n: 'III', name: 'Move', title: 'Light enough to lose track of.', spec: 'About 4 g, 2.6 mm thin.', note: '', alt: 'Move: tying a shoe on a studio floor, the ring on the left hand.' },
     { key: 'rinse', n: 'IV', name: 'Rinse', title: 'Hands in water. Ring stays on.', spec: 'Water resistant to 100 m.', note: 'Washing up, rain, a swim.', alt: 'Rinse: hands under running water, the wet ring on the index finger.' },
   ],
-  everyday: { the: 'The', word: 'Everyday', caption: 'Ring shown where it’s worn.', alt: 'The ring, its charging dock and a sizing kit laid out on a mossy stone in warm light.' },
+  everyday: { the: 'The', word: 'Everyday', caption: 'Ring shown where it’s worn.', alt: 'Three Stillway rings on a mossy stone in warm light: silver standing, black in its charging dock, gold lying down.' },
 };
 
 export const features = {
