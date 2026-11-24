@@ -12,7 +12,7 @@
 
 <div class="stage">
   <div class="stage__bg" data-bg></div>
-  <div class="stage__dusk" data-dusk></div>
+  <div class="stage__dusk" data-dusk><canvas class="stage__duskLight" data-dusk-light aria-hidden="true"></canvas></div>
   <div class="stage__wipe" data-wipe></div>
   <canvas class="stage__ring" data-ring-canvas aria-hidden="true"></canvas>
   <main id="main" class="stage__scenes" tabindex="-1">
@@ -33,12 +33,19 @@
     inset: 0;
     background: var(--paper);
   }
+  /* S05 Dusk (D-139): Night with the soft --cocoa-300 light from the lower left, painted by story.ts */
   .stage__dusk {
-    background: var(--dusk);
+    background: var(--night);
     opacity: 0;
   }
-  /* Dusk → Paper (D-093): light sweeps down — paper, sand, a warm ochre edge, then clear — so the
-     middle of the change is a sunset band, never a grey mix of Night and Paper */
+  .stage__duskLight {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  /* Dusk → Paper (D-093): light sweeps down — paper, sand, a warm edge (--cocoa-300, D-139), then
+     clear — so the middle of the change is never a grey mix of Night and Paper */
   .stage__wipe {
     position: absolute;
     left: 0;
@@ -50,18 +57,32 @@
       var(--paper) 0%,
       var(--paper) 56%,
       var(--sand) 63%,
-      rgb(214 170 116 / 0.9) 69%,
-      rgb(183 111 32 / 0.45) 75%,
-      rgb(183 111 32 / 0) 84%
+      color-mix(in srgb, color-mix(in srgb, var(--cocoa-300) 60%, var(--sand)) 90%, transparent) 69%,
+      color-mix(in srgb, var(--cocoa-300) 45%, transparent) 75%,
+      transparent 84%
     );
     visibility: hidden;
     will-change: transform;
   }
   .stage__wipe[data-tone='rise'] {
-    background: linear-gradient(to top, var(--night) 0%, var(--night) 56%, rgb(183 111 32 / 0.55) 64%, rgb(183 111 32 / 0.2) 72%, rgb(183 111 32 / 0) 82%);
+    /* → S11 (D-139): the rising edge in the light colour, not ochre */
+    background: linear-gradient(to top, var(--night) 0%, var(--night) 56%, color-mix(in srgb, var(--cocoa-300) 45%, transparent) 64%, color-mix(in srgb, var(--cocoa-300) 16%, transparent) 72%, transparent 82%);
+  }
+  /* D-136 (02 → 03): Night rising from below through warm Cocoa steps into the Paper above */
+  .stage__wipe[data-tone='rise-cocoa'] {
+    background: linear-gradient(
+      to top,
+      var(--night) 0%,
+      var(--night) 40%,
+      var(--cocoa-900) 47%,
+      var(--cocoa-700) 54%,
+      color-mix(in srgb, var(--cocoa-500) 85%, transparent) 61%,
+      color-mix(in srgb, var(--cocoa-300) 45%, transparent) 70%,
+      transparent 80%
+    );
   }
   .stage__wipe[data-tone='plain'] {
-    background: linear-gradient(to bottom, var(--paper) 0%, var(--paper) 58%, var(--sand) 66%, rgb(239 230 219 / 0.5) 74%, rgb(239 230 219 / 0) 84%);
+    background: linear-gradient(to bottom, var(--paper) 0%, var(--paper) 58%, var(--sand) 66%, color-mix(in srgb, var(--sand) 50%, transparent) 74%, transparent 84%);
   }
   .stage__ring {
     position: absolute;

@@ -16,8 +16,10 @@ body {
   color: var(--ink);
   font-family: var(--font-sans);
   font-weight: var(--w-body);
-  font-size: var(--fs-body);
-  line-height: 1.5;
+  /* Paragraph/Medium */
+  font-size: var(--t-para-md-size);
+  line-height: var(--t-para-md-lh);
+  letter-spacing: var(--t-para-md-ls);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: clip;
@@ -70,43 +72,33 @@ button {
   white-space: nowrap;
 }
 
-/* ---------- type roles (Moodboard §3) ---------- */
+/* ---------- type roles (Moodboard §3.1 text styles) ---------- */
+/* Heading/Heading 1 */
 .t-display {
   font-weight: var(--w-heading);
-  letter-spacing: var(--track-tight);
-  line-height: 0.98;
+  font-size: var(--t-heading-1-size);
+  line-height: var(--t-heading-1-lh);
+  letter-spacing: var(--t-heading-1-ls);
 }
-.t-display {
-  font-size: var(--fs-display);
-}
-.t-mono {
-  font-family: var(--font-mono);
-  font-weight: var(--w-label);
-  font-size: var(--fs-mono);
-  letter-spacing: var(--track-mono);
-  text-transform: uppercase;
-}
+/* D-156: eyebrow, tag, chip — Label/X-Small in capitals, Geist (no Geist Mono, no [ ], no ochre:
+   the colour is the section's neutral text colour) */
+.t-caps,
 .t-tag {
-  /* [ TAG ] */
-  font-family: var(--font-mono);
   font-weight: var(--w-label);
-  font-size: var(--fs-mono);
-  letter-spacing: var(--track-mono);
+  font-size: var(--t-label-xs-size);
+  line-height: var(--t-label-xs-lh);
+  letter-spacing: var(--t-caps-ls);
   text-transform: uppercase;
-  color: var(--ochre);
 }
-.t-tag::before {
-  content: '[ ';
-}
-.t-tag::after {
-  content: ' ]';
-}
+/* Paragraph/Small */
 .t-caption {
-  font-size: var(--fs-small);
+  font-size: var(--t-para-sm-size);
+  line-height: var(--t-para-sm-lh);
   color: var(--stone);
 }
 
-/* S01 label style (uppercase sans, Hero foot) */
+/* S01 label style (uppercase sans, Hero foot). Matches no text style (caps are for Mono only):
+   kept as it was and reported (D-134). */
 .t-label {
   font-size: 13px;
   font-weight: var(--w-label);
@@ -121,7 +113,7 @@ button {
   letter-spacing: var(--track-display);
   line-height: 0.85;
   white-space: nowrap;
-  color: rgb(35 31 32 / var(--giant-o, 0.1));
+  color: color-mix(in srgb, var(--ink) calc(var(--giant-o, 0.1) * 100%), transparent);
   user-select: none;
 }
 .link-arrow {
@@ -179,6 +171,28 @@ html.js .scene--hero [data-a] {
 }
 html.ring-ready .ring-fallback {
   display: none;
+}
+
+/* ---------- inspect mode (D-135): ?inspect in the URL, set in scripts/motion.ts ----------
+   The stage is a fixed layer with pointer-events: none, so the DevTools picker falls through to
+   the empty .track boxes. In inspect mode the stage takes the pointer and the tracks do not; the
+   wheel still scrolls the page (the stage is fixed, the window scrolls). Without ?inspect
+   nothing changes. */
+html.inspect .stage {
+  pointer-events: auto;
+}
+html.inspect .tracks {
+  pointer-events: none;
+}
+/* Layout boxes let the pointer through (the next scene's full-screen front layer is on top of the
+   current one, and the ring canvas covers the back words); content takes it. :where() keeps these
+   at zero specificity, so a component's own pointer-events (panels, drag area, fallbacks) win.
+   States at opacity 0 are already visibility: hidden (anim.ts put), so the picker skips them. */
+:where(html.inspect .stage) :where(div, main, section, ul, ol, dl, nav, footer, canvas) {
+  pointer-events: none;
+}
+:where(html.inspect .stage) :where(h1, h2, h3, p, span, li, dt, dd, b, i, img, svg, output, article, a, button, input) {
+  pointer-events: auto;
 }
 
 /* ---------- tracks: scroll length + anchors ---------- */

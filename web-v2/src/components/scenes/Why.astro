@@ -4,12 +4,10 @@
  * the scroll, paragraph right; the text lights up character by character with the scroll and goes
  * out the same way. End state: "Stillway just keeps the pattern." small (no label, no underline) and
  * "keeps the pattern." moving in from both sides to flank the ring, like Oryzo's "it's wearable".
+ * Background: plain Paper (D-148; the D-088 shadow-wall photo is gone).
  * Motion: scripts/sections/why.ts.
  */
 import { why } from '../../content/copy';
-import { whyBg } from '../../content/whyBg';
-const D = whyBg.desktop;
-const M = whyBg.mobile;
 const last = why.steps[why.steps.length - 1];
 const words = (t: string) => t.split(' ');
 const wide = words(why.wide); // ["keeps", "the", "pattern."]
@@ -18,23 +16,15 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
 
 <section class="scene scene--why" data-scene="why" aria-labelledby="why-title">
   <div class="scene__back">
-    {
-      /* D-088 slot: soft shadow-wall photo behind everything; empty (plain Paper) until the files arrive */
-      D && (
-        <div class="why__bg" data-w-bg data-a style={`--pos-d:${D.position}; --pos-m:${M?.position ?? D.position}; --overscan:${whyBg.overscan}`}>
-          <picture>
-            {M && <source media={M.media} srcset={M.srcset ?? M.src} sizes="100vw" />}
-            <img src={D.src} srcset={D.srcset} sizes="100vw" width={D.width} height={D.height} alt="" decoding="async" />
-          </picture>
-        </div>
-      )
-    }
     <p class="why__word giant" data-w-word data-a aria-hidden="true">{why.backWord}</p>
     <p class="why__wide giant" data-w-wide data-a aria-hidden="true">
       <span class="why__wide-l" data-w-wide-l>{wide.slice(0, split).join(' ')}</span>
       <span class="why__wide-gap"></span>
       <span class="why__wide-r" data-w-wide-r>{wide.slice(split).join(' ')}</span>
     </p>
+    <!-- D-137: the last small sentence sits behind the ring like the big words, so on phones it passes
+         behind the ring when the page scrolls up to S03 (it never meets the ring on desktop) -->
+    <p class="why__small why__end" data-w-end data-a>{last.small}</p>
   </div>
   <img class="ring-fallback why__fb" src="/ring-fallback/fb-s02-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
   <div class="scene__front">
@@ -66,32 +56,10 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
         ))
       }
     </div>
-    <p class="why__small why__end" data-w-end data-a>{last.small}</p>
   </div>
 </section>
 
 <style>
-  .why__bg {
-    position: absolute;
-    inset: 0;
-    scale: var(--overscan, 1.08);
-    will-change: transform, opacity;
-  }
-  .why__bg picture,
-  .why__bg img {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
-  .why__bg img {
-    object-fit: cover;
-    object-position: var(--pos-d, 50% 50%);
-  }
-  @media (max-width: 760px) {
-    .why__bg img {
-      object-position: var(--pos-m, 50% 50%);
-    }
-  }
   .why__word {
     position: absolute;
     inset: 0;
@@ -108,7 +76,7 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
     display: flex;
     justify-content: center;
     align-items: baseline;
-    font-size: 12vw; /* Sofi / Oryzo "it's wearable": edge to edge behind the ring (weight 500, D-082) */
+    font-size: 12vw; /* Sofi / Oryzo "it's wearable": edge to edge behind the ring (weight 500, D-082). Matches no text style: kept, reported */
     white-space: nowrap;
     --giant-o: 1;
   }
@@ -124,10 +92,11 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
     position: absolute;
     left: var(--margin);
     top: calc(50% - 12vw * 0.82);
-    font-size: var(--fs-h3);
+    /* Heading/Heading 2 */
     font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
-    line-height: 1.15;
+    font-size: var(--t-heading-2-size);
+    line-height: var(--t-heading-2-lh);
+    letter-spacing: var(--t-heading-2-ls);
   }
   .why__left {
     position: absolute;
@@ -141,10 +110,7 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
   .why__right > * {
     grid-area: 1 / 1;
   }
-  .why__big {
-    font-size: clamp(2.5rem, 1.2rem + 3.4vw, 4.25rem);
-    line-height: 1;
-  }
+  /* Heading/Heading 1 (.t-display) */
   .why__right {
     position: absolute;
     right: var(--margin);
@@ -153,12 +119,13 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
     width: calc((100vw - 2 * var(--margin)) * 3 / 12);
     display: grid;
   }
+  /* Label/Large */
   .why__small {
     color: var(--ink);
-    font-size: clamp(1.0625rem, 0.9rem + 0.45vw, 1.375rem);
-    font-weight: var(--w-heading);
-    line-height: 1.3;
-    letter-spacing: -0.01em;
+    font-weight: var(--w-label);
+    font-size: var(--t-label-lg-size);
+    line-height: var(--t-label-lg-lh);
+    letter-spacing: var(--t-label-lg-ls);
   }
   .why__end {
     position: absolute;
@@ -201,16 +168,12 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
     }
     .why__final {
       top: calc(var(--header-h) + 40px);
-      font-size: 1.25rem;
     }
     .why__left {
       top: calc(var(--header-h) + 40px);
       translate: none;
       right: var(--margin);
       width: auto;
-    }
-    .why__left .why__big {
-      font-size: var(--fs-h2m);
     }
     .why__right,
     .why__end {

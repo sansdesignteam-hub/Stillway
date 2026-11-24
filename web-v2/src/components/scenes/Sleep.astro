@@ -5,7 +5,9 @@
  *    by one cold light; text side left, ring right.
  *  - Sensiq label + number → states 2–4: small caps mono label above one big number, raised units.
  *  - Ultrahuman big number → one number per scroll step in ONE slot; the previous one dims and
- *    shrinks upward instead of vanishing. Our colours: Paper, ochre only on the active label.
+ *    shrinks upward instead of vanishing. Our colours: Paper; the active label goes Paper, the others Paper 65 % (D-156: no ochre text).
+ *  - Avoly corner light (D-136) → after Night is in: one soft warm beam from the upper right corner,
+ *    behind the ring (back layer), with the green sensor light on the ring (ring stage).
  * Motion: scripts/sections/sleep.ts.
  */
 import { sleep } from '../../content/copy';
@@ -14,6 +16,9 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
 ---
 
 <section class="scene scene--sleep" data-scene="sleep" aria-labelledby="sleep-title">
+  <div class="scene__back">
+    <div class="sleep__light" data-s-light data-a aria-hidden="true"><canvas class="sleep__beam" data-s-beam></canvas></div>
+  </div>
   <img class="ring-fallback sleep__fb" src="/ring-fallback/fb-s03-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
   <div class="scene__front">
     <div class="sleep__col">
@@ -33,7 +38,6 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
       </dl>
       <div class="sleep__foot">
         <p class="sleep__line" data-s-line data-a>{sleep.line}</p>
-        <p class="t-mono sleep__sim" data-s-sim data-a>{sleep.simulated}</p>
       </div>
     </div>
   </div>
@@ -43,6 +47,19 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   .scene--sleep {
     color: var(--paper);
     --stone: var(--stone-on-night);
+  }
+  /* D-136 corner light: a soft warm beam falling from the upper right corner toward the ring,
+     blurred, behind the ring (scene back layer, never on top of it) */
+  .sleep__light {
+    position: absolute;
+    inset: 0;
+  }
+  /* painted by scripts/glow.ts (dithered, no banding); shape per breakpoint in sleep.ts */
+  .sleep__beam {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
   }
   /* text column left (Ultrahuman ref 1 composition): kicker, headline, one number slot, foot */
   .sleep__col {
@@ -58,11 +75,12 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   .sleep__kicker {
     color: var(--stone);
   }
+  /* Heading/Heading 2 (= S01 statement) */
   .sleep__head {
-    font-size: clamp(22px, 2.3vw, 34px); /* = S01 statement */
-    font-weight: var(--w-display);
-    letter-spacing: var(--track-tight);
-    line-height: 1.15;
+    font-weight: var(--w-heading);
+    font-size: var(--t-heading-2-size);
+    line-height: var(--t-heading-2-lh);
+    letter-spacing: var(--t-heading-2-ls);
   }
   /* one slot: all three numbers share it; the active one is full size, older ones shrink upward */
   .sleep__slot {
@@ -80,12 +98,14 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
     will-change: transform, opacity;
   }
   .stat__tag {
-    color: var(--stone);
+    color: var(--stone-on-night);
     transition: color 0.3s ease;
   }
+  /* D-156: the active label in Paper (no ochre text) */
   .stat:global(.is-active) .stat__tag {
-    color: var(--ochre);
+    color: var(--paper);
   }
+  /* the big number matches no text style (≈ 18vw, between Display 1 and 2): size kept, reported */
   .stat__value {
     margin: 0;
     font-size: var(--n);
@@ -106,11 +126,11 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
     gap: 6px;
     min-height: 3.2em;
   }
+  /* Paragraph/Small */
   .sleep__line {
-    font-size: var(--fs-small);
-  }
-  .sleep__sim {
-    color: var(--stone);
+    font-size: var(--t-para-sm-size);
+    line-height: var(--t-para-sm-lh);
+    letter-spacing: var(--t-para-sm-ls);
   }
   .sleep__fb {
     --rw: min(56vw, 82vh);

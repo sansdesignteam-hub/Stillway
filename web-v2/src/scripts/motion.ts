@@ -20,6 +20,9 @@ export let lenis: Lenis | null = null;
 
 export function initMotion() {
   window.__stillwayMotion = true;
+  // D-135 inspect mode: ?inspect lets the DevTools picker reach the stage (text, images) instead
+  // of the empty scroll tracks; see global.css "inspect mode". No effect without the parameter.
+  if (new URLSearchParams(location.search).has('inspect')) document.documentElement.classList.add('inspect');
   // dev only: ?reduced-test on localhost simulates prefers-reduced-motion (review screenshots)
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('reduced');
 

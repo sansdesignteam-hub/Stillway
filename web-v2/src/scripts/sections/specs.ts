@@ -1,112 +1,264 @@
 /**
- * S07 Specs & benefits — 21:00 · Sand → full-bleed photo (D-093; flow Storyboard §2, look Figma
- * sticky 40004118:121, Obsidian Assembly).
- * u: -1..0 connection from S06 (the hand photo shrinks into a card and fades — details.ts — Paper →
- *          Sand, "Through the day." comes in at the end)
- *  0  state 1  "Through the day." in the middle, pill on a thin line at the bottom
- *  1  state 2  the words split left / right, four cards rise between them
- *  2  state 3  (I) Night in focus: title on a line, counter 1/4, orbit lines, battery panel
- *  3–5 state 4 (II) Desk → (III) Move → (IV) Rinse, one per viewport
- *  6  state 5  the card shrinks, The Everyday opens to full bleed behind it
- *  > 6.6       to S08 (placeholder): the photo darkens to Night, the text fades
- * The panels are the only things to touch (range / buttons, keyboard and screen-reader labelled);
- * they never stop the page from scrolling.
+ * S07 Specs & benefits — 21:00 · Sand → the everyday photo (D-149, Figma Design 07 State 1–7 with
+ * the user's notes; Specs.astro has the layout).
+ * u: -1.6..0 connection from S06 (D-147, unchanged: the hand goes up 1:1 — details.ts — and
+ *          "Through the day." comes in at the end)
+ *  0     State 1  "Through the day." in the middle
+ *  0 → 1 State 2  the words part, cut at the cards' edges; the four cards rise from below into a row
+ *  1 → 2 State 3  the cards close into a stack, the words leave sideways, the line grows from the
+ *                 middle; (I) Night: title letter by letter from behind the line, lines rise
+ *  2 → 5 States 4–6  the front card rises behind the stack, the next comes forward (II)–(IV); the
+ *                 counter circle fills; by (IV) Rinse the cards behind it are gone (Figma State 6)
+ *  5.1 → 6.1 end  (obsidianassembly.com "The Connection") the big photo comes up from below at
+ *                 scroll speed (1:1), its content slower (parallax); the Rinse card moves down and
+ *                 shrinks in front of it, then the words run over it (D-151: photo → card → words →
+ *                 caption); the group is centred in the frame (D-150); caption last
+ *  > 6.6 to S08   the frame opens to full bleed and goes to Night, the words and the card fade
+ * Reduced motion: story.ts snaps u to whole states; everything is placed for that state and only
+ * the opacity changes (short fade per state, global.css).
  */
-import { put, seg, lerp, clamp01, smooth, type Ctx } from '../anim';
+import { seg, lerp, clamp01, smooth, type Ctx } from '../anim';
 import { pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
 import { detailsLeaveRing } from './details';
 
 const END = 6.6;
+/** the end: the frame starts to come up at RISE and moves 1:1 with the page */
+const RISE = 5.12;
+/** parallax: the photo moves at (1 − PAR) of the frame's speed */
+const PAR = 0.18;
+
 let root: HTMLElement | null = null;
 let el: Record<string, HTMLElement | null> = {};
 let cards: HTMLElement[] = [];
 let words: HTMLElement[] = [];
 let texts: HTMLElement[] = [];
 let nums: HTMLElement[] = [];
-let panels: HTMLElement[] = [];
+/** per (I)–(IV): the title letters, the left lines, the right lines (made by splitLines) */
+let chars: HTMLElement[][] = [];
+let leftLines: HTMLElement[][] = [];
+let rightLines: HTMLElement[][] = [];
 let wordW = [0, 0];
 let wordH = 0;
+let wordFs = 0;
+let vhPx = 0;
+/** "Everyday" glyph metrics in its own box: baseline from the top, bottom of the "y", ink right inset */
+let ev = { base: 0, desc: 0, right: 0 };
+/** the navbar's height (--header-h); the end group is centred in the part of the frame below it */
+let headerH = 76;
+
+/* ---------- layout ---------- */
+
+/** card box in Figma px (the slots are clip windows inside it) */
+const BW = 392;
+const BH = 602;
+interface Slot {
+  x: number; // centre, viewport px
+  y: number;
+  w: number; // visible window, viewport px
+  h: number;
+  s: number; // scale of the box
+  o: number;
+}
+const lerpSlot = (a: Slot, b: Slot, t: number): Slot => ({
+  x: lerp(a.x, b.x, t),
+  y: lerp(a.y, b.y, t),
+  w: lerp(a.w, b.w, t),
+  h: lerp(a.h, b.h, t),
+  s: lerp(a.s, b.s, t),
+  o: lerp(a.o, b.o, t),
+});
 
 function layout(ctx: Ctx) {
   const W = window.innerWidth;
   const H = window.innerHeight;
   const m = ctx.mobile;
-  const fw = m ? Math.min(W * 0.62, (H * 0.4) / 1.25) : Math.min(W * 0.275, (H * 0.62) / 1.25);
-  const fh = fw * 1.25;
-  const gap = m ? 8 : W * 0.014;
-  const cw = m ? (W - 32 - 3 * gap) / 4 : Math.min(W * 0.125, (H * 0.36) / 1.25);
-  const ch = cw * 1.25;
-  const rowY = H * (m ? 0.47 : 0.48);
-  const cy = H * (m ? 0.43 : 0.5);
-  return { W, H, m, fw, fh, gap, cw, ch, rowY, cy };
+  // Figma frame 1440 × 900; phones: the front card 60 % of the width
+  const k = m ? Math.min((W * 0.6) / BW, (H * 0.36) / 490) : Math.min(W / 1440, H / 900);
+  const cx = W / 2;
+  const cy = m ? H * 0.4 : H / 2 + 32 * k; // Figma: stack and line centred on y 482
+  const ly = m ? cy + (BH / 2) * k + 60 : cy; // phones: the line under the stack
+  // stack slots (Figma State 3: front 392 × 490, behind 352 × 602, then 312 wide from y 125)
+  const F: Slot = { x: cx, y: cy, w: 392 * k, h: 490 * k, s: 1, o: 1 };
+  const B1: Slot = { x: cx, y: cy, w: 352 * k, h: 602 * k, s: 1, o: 1 };
+  const s2 = 312 / BW;
+  const B2: Slot = { x: cx, y: cy - (482 - 125 - (BH * s2) / 2) * k, w: 312 * k, h: BH * s2 * k, s: s2, o: 1 };
+  // State 2 row (Figma 180 × 225 every 200 px, centred on y 482)
+  const rw = m ? (W - 32 - 3 * 8) / 4 : 179.93 * k;
+  const rgap = m ? 8 : 19.99 * k;
+  const rowW = 4 * rw + 3 * rgap;
+  const row = (i: number): Slot => ({ x: cx - rowW / 2 + rw / 2 + i * (rw + rgap), y: cy, w: rw, h: rw * 1.25, s: rw / (BW * k), o: 1 });
+  // the end: the small Rinse card (Figma State 7 195 × 244); its y is set by endLayout (D-150)
+  const ew = m ? Math.min(W * 0.4, H * 0.21) : 195 * k;
+  const E: Slot = { x: cx, y: H / 2, w: ew, h: ew * 1.25, s: ew / (BW * k), o: 1 };
+  // the photo frame (Figma inset 24 / 40)
+  const ey = m ? 16 : 24;
+  return { W, H, m, k, cx, cy, ly, F, B1, B2, row, rowW, E, ey };
 }
+type L7 = ReturnType<typeof layout>;
 
 let lastKey = '';
-function measure(ctx: Ctx) {
+function measure(ctx: Ctx): L7 {
   const L = layout(ctx);
   const key = `${L.W}x${L.H}${ctx.mobile}`;
   if (key !== lastKey && root) {
     lastKey = key;
-    root.style.setProperty('--fw', `${L.fw.toFixed(1)}px`);
-    root.style.setProperty('--fh', `${L.fh.toFixed(1)}px`);
+    root.style.setProperty('--bw', `${(BW * L.k).toFixed(1)}px`);
+    root.style.setProperty('--bh', `${(BH * L.k).toFixed(1)}px`);
+    root.style.setProperty('--ly', `${L.ly.toFixed(1)}px`);
+    root.style.setProperty('--par', `${(PAR * (L.H - L.ey)).toFixed(1)}px`);
+    headerH = parseFloat(getComputedStyle(root).getPropertyValue('--header-h')) || (ctx.mobile ? 60 : 76);
   }
-  // words: measured untransformed (fonts may load late)
   if (words[0] && words[0].offsetWidth !== wordW[0]) {
     wordW = [words[0].offsetWidth, words[1].offsetWidth];
     wordH = words[0].offsetHeight;
+    wordFs = parseFloat(getComputedStyle(words[0]).fontSize) || 160;
   }
   return L;
 }
 
-/** focused card index with a dwell at each card (as S04): raw 0..3 → eased between whole cards */
+/* ---------- writes (cached; also used under reduced motion, where u only takes whole states) ---------- */
+
+const cache = new WeakMap<HTMLElement, string>();
+function tf(e: HTMLElement | null | undefined, o: number, transform = '', clip = '') {
+  if (!e) return;
+  const key = `${o.toFixed(3)}|${transform}|${clip}`;
+  if (cache.get(e) === key) return;
+  cache.set(e, key);
+  e.style.opacity = o.toFixed(3);
+  e.style.transform = transform;
+  e.style.clipPath = clip;
+  e.style.visibility = o < 0.002 ? 'hidden' : '';
+}
+const tr = (x: number, y: number, s = 1) => `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)${s !== 1 ? ` scale(${s.toFixed(4)})` : ''}`;
+/** a y shift inside a mask, in % of the element */
+const ty = (p: number) => (Math.abs(p) < 0.05 ? '' : `translate3d(0, ${p.toFixed(1)}%, 0)`);
+
+function placeCard(c: HTMLElement, r: Slot, k: number, z: number) {
+  const bw = BW * k;
+  const bh = BH * k;
+  const ix = Math.max(0, (bw - r.w / r.s) / 2);
+  const iy = Math.max(0, (bh - r.h / r.s) / 2);
+  const rad = 6 / r.s;
+  tf(c, r.o, tr(r.x - bw / 2, r.y - bh / 2, r.s), `inset(${iy.toFixed(1)}px ${ix.toFixed(1)}px round ${rad.toFixed(1)}px)`);
+  const zs = String(z);
+  if (c.style.zIndex !== zs) c.style.zIndex = zs;
+}
+
+/* ---------- text masks ---------- */
+
+/** split a paragraph into line masks (by the browser's own wrapping; '\n' is a hard break) */
+function splitLines(p: HTMLElement): HTMLElement[] {
+  const src = p.dataset.src ?? (p.textContent ?? '').trim();
+  p.dataset.src = src;
+  p.textContent = '';
+  const spans: HTMLElement[] = [];
+  src.split('\n').forEach((part, pi, all) => {
+    part
+      .trim()
+      .split(/\s+/)
+      .forEach((w) => {
+        const s = document.createElement('span');
+        s.textContent = w;
+        s.style.display = 'inline-block';
+        p.append(s, ' ');
+        spans.push(s);
+      });
+    if (pi < all.length - 1) p.append(document.createElement('br'));
+  });
+  const groups: string[][] = [];
+  let top = -1e9;
+  spans.forEach((s) => {
+    if (Math.abs(s.offsetTop - top) > 2) {
+      groups.push([]);
+      top = s.offsetTop;
+    }
+    groups[groups.length - 1].push(s.textContent ?? '');
+  });
+  p.textContent = '';
+  return groups.map((g) => {
+    const ln = document.createElement('span');
+    ln.className = 'ln';
+    const inner = document.createElement('span');
+    inner.className = 'lni';
+    inner.textContent = g.join(' ');
+    ln.append(inner);
+    p.append(ln);
+    return inner;
+  });
+}
+function buildMasks() {
+  leftLines = texts.map((t) => {
+    const p = t.querySelector<HTMLElement>('.sp__ttl');
+    return p ? splitLines(p) : [];
+  });
+  rightLines = texts.map((t) => [...t.querySelectorAll<HTMLElement>('.sp__right [data-s-lines]')].flatMap((p) => splitLines(p)));
+}
+
+/** letters rise from behind the line (in), sink back behind it (out); stagger per letter */
+function letters(list: HTMLElement[], inP: number, outP: number) {
+  const n = list.length;
+  const st = 0.5 / Math.max(1, n);
+  list.forEach((c, j) => {
+    const a = smooth(clamp01((inP - j * st) / 0.5));
+    const b = smooth(clamp01((outP - j * st) / 0.5));
+    tf(c, 1, ty((1 - a) * 130 + b * 130));
+  });
+}
+/** lines rise into their masks (in) and on out of them (out), one after another */
+function lines(list: HTMLElement[], inP: number, outP: number, delay = 0) {
+  list.forEach((l, j) => {
+    const d = delay + j * 0.12;
+    const a = smooth(clamp01((inP - d) / (1 - Math.min(0.6, d))));
+    const b = smooth(clamp01((outP - j * 0.12) / 0.88));
+    tf(l, 1, ty((1 - a) * 105 - b * 105));
+  });
+}
+
+/* ---------- motion ---------- */
+
+/**
+ * The end group — "The", "Everyday", the small card, the caption — centred as one in the frame,
+ * below the navbar (D-150). The word crosses the card's lower half and is drawn over it (D-151,
+ * desktop and phones alike). The caption stands free under the descender of the "y" and the card.
+ */
+function endLayout(L: L7) {
+  const th = el.the?.offsetHeight ?? 0;
+  const eh = el.evword?.offsetHeight ?? 0;
+  const ch = el.caption?.offsetHeight ?? 0;
+  const h = L.E.h;
+  // offsets from the card centre
+  const textTop = h * 0.12 - eh / 2 - th;
+  const desc = textTop + th + ev.base + ev.desc;
+  const capTop = Math.max(desc, h / 2) + (L.m ? 14 : 22);
+  const gTop = Math.min(-h / 2, textTop);
+  const gBot = capTop + ch;
+  const vTop = Math.max(L.ey, headerH);
+  const vBot = L.H - L.ey;
+  const y = (vTop + vBot) / 2 - (gTop + gBot) / 2;
+  return { E: { ...L.E, y }, textTop: y + textTop, capTop: y + capTop };
+}
+
+/** the focused card, 0..3, with a dwell at each card */
 const focusOf = (u: number) => {
   const raw = clamp01((u - 2) / 3) * 3;
   const base = Math.floor(raw);
   return Math.min(3, base + smooth(smooth(raw - base)));
 };
+const mod4 = (v: number) => ((v % 4) + 4) % 4;
 
-function initPanels(r: HTMLElement) {
-  // (I) battery: one range over the days; the bars show the week, the output reads the day
-  const bat = r.querySelector<HTMLInputElement>('[data-bat]');
-  const batOut = r.querySelector<HTMLElement>('[data-bat-out]');
-  const bars = [...r.querySelectorAll<HTMLElement>('[data-bat-bar]')];
-  const days: Array<{ day: string; pct: number }> = JSON.parse(bat?.dataset.days ?? '[]');
-  const long = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const setBat = () => {
-    if (!bat) return;
-    const i = Number(bat.value);
-    const dd = days[i];
-    if (!dd) return;
-    if (batOut) batOut.textContent = `${dd.day} · ${dd.pct}% left`;
-    bat.setAttribute('aria-valuetext', `${long[i]}, ${dd.pct}% battery left, simulated`);
-    bars.forEach((b, j) => b.classList.toggle('is-on', j === i));
-  };
-  bat?.addEventListener('input', setBat);
-  setBat();
-  // (II) size 6–13
-  const size = r.querySelector<HTMLInputElement>('[data-size]');
-  const sizeOut = r.querySelector<HTMLElement>('[data-size-out]');
-  const setSize = () => {
-    if (!size) return;
-    if (sizeOut) sizeOut.textContent = `Size ${size.value}`;
-    size.setAttribute('aria-valuetext', `Size ${size.value}`);
-  };
-  size?.addEventListener('input', setSize);
-  setSize();
-  // (III) weight / thickness, (IV) where it stays on: pressed buttons
-  const group = (sel: string, onPick?: (b: HTMLButtonElement) => void) => {
-    const bs = [...r.querySelectorAll<HTMLButtonElement>(sel)];
-    bs.forEach((b) =>
-      b.addEventListener('click', () => {
-        bs.forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
-        onPick?.(b);
-      }),
-    );
-  };
-  const wtOut = r.querySelector<HTMLElement>('[data-wt-out]');
-  group('[data-wt]', (b) => wtOut && (wtOut.textContent = b.dataset.wt ?? ''));
-  group('[data-water]');
+/** where card i sits in the stack for focus f; z order with it */
+function stackSlot(i: number, f: number, L: L7): [Slot, number] {
+  const p = mod4(i - f);
+  if (p <= 1) return [lerpSlot(L.F, L.B1, p), 40 - p * 10];
+  if (p <= 2) return [lerpSlot(L.B1, L.B2, p - 1), 30 - (p - 1) * 10];
+  if (p <= 3) return [{ ...L.B2, o: 1 - (p - 2) }, 20 - (p - 2) * 10];
+  // leaving the front: it rises, goes behind the stack and settles at the back (hidden)
+  const q = 4 - p;
+  const r = lerpSlot(L.F, L.B2, smooth(q));
+  r.y -= Math.sin(Math.PI * q) * (L.m ? 0.3 : 0.42) * L.F.h;
+  r.o = q < 0.7 ? 1 : 1 - (q - 0.7) / 0.3;
+  return [r, q < 0.5 ? 50 : 5];
 }
 
 export const specs: SectionMotion = {
@@ -115,135 +267,193 @@ export const specs: SectionMotion = {
     const q = (s: string) => r.querySelector<HTMLElement>(s);
     el = {
       every: q('[data-s-every]'),
+      par: q('[data-s-par]'),
       dark: q('[data-s-dark]'),
-      orbit: q('[data-s-orbit]'),
-      pill: q('[data-s-pill]'),
+      etext: q('[data-s-etext]'),
+      the: q('[data-s-the]'),
+      evword: q('[data-s-evword]'),
       line: q('[data-s-line]'),
       count: q('[data-s-count]'),
       arc: q('[data-s-arc]'),
-      etext: q('[data-s-etext]'),
       caption: q('[data-s-caption]'),
+      capi: q('[data-s-capi]'),
     };
-    const all = (s: string) => [...r.querySelectorAll<HTMLElement>(s)];
+    const all = (s: string, from: ParentNode = r) => [...from.querySelectorAll<HTMLElement>(s)];
     cards = all('[data-s-card]');
     words = all('[data-s-w]');
     texts = all('[data-s-text]');
     nums = all('[data-s-num]');
-    panels = all('[data-s-panel]');
-    initPanels(r);
+    chars = texts.map((t) => all('[data-s-ch]', t));
+    const vhProbe = () => (vhPx = (document.querySelector('[data-vh]') as HTMLElement | null)?.offsetHeight || window.innerHeight);
+    // "The" flush with the E of "Everyday": move it by the difference of the two side bearings
+    const alignThe = () => {
+      if (!el.the || !el.evword) return;
+      const c = document.createElement('canvas').getContext('2d');
+      if (!c) return;
+      const ink = (e: HTMLElement, ch: string) => {
+        const cs = getComputedStyle(e);
+        c.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+        return -c.measureText(ch).actualBoundingBoxLeft; // ink start right of the pen
+      };
+      root?.style.setProperty('--the-x', `${(ink(el.evword, 'E') - ink(el.the, 'T')).toFixed(1)}px`);
+      // where the baseline and the descender of "y" sit in the word's line box, and how far the ink of
+      // the last "y" stops short of the box's right edge (side bearing + trailing letter-spacing)
+      const cs = getComputedStyle(el.evword);
+      c.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const mt = c.measureText('y');
+      const lh = parseFloat(cs.lineHeight) || el.evword.offsetHeight;
+      const asc = mt.fontBoundingBoxAscent;
+      const dsc = mt.fontBoundingBoxDescent;
+      const ls = parseFloat(cs.letterSpacing) || 0;
+      ev = { base: (lh - (asc + dsc)) / 2 + asc, desc: mt.actualBoundingBoxDescent, right: mt.width - mt.actualBoundingBoxRight + ls };
+    };
+    const rebuild = () => {
+      vhProbe();
+      buildMasks();
+      alignThe();
+      lastKey = '';
+    };
+    rebuild();
+    document.fonts?.ready.then(rebuild);
+    let t = 0;
+    window.addEventListener('resize', () => {
+      clearTimeout(t);
+      t = window.setTimeout(rebuild, 120);
+      vhProbe();
+    });
   },
   update(u, ctx) {
     const L = measure(ctx);
-    const { W, H, m } = L;
+    const { W, H, m, k } = L;
+    const vh = vhPx || H;
     const out = seg(u, END, END + 0.3); // leaving for S08
-    const inn = seg(u, -0.3, 0); // 70–100% of the incoming connection
+    const inn = seg(u, -0.3, 0); // 70–100 % of the incoming connection (D-147)
 
-    /* words: one line in the middle (state 1) → split around the row of cards (state 2) → out */
-    const split = seg(u, 0.3, 1);
-    const focusIn = seg(u, 1.25, 2); // row → one card in focus
-    const rowW = 4 * L.cw + 3 * L.gap;
-    const rowL = W / 2 - rowW / 2;
+    /* ----- States 1–2: the words ----- */
+    const split = seg(u, 0.22, 0.9);
+    const leave = seg(u, 1.05, 1.6); // out to the sides as the cards close
     const [w0, w1] = wordW;
-    const space = wordH * 0.25;
-    let p0x: number, p0y: number, p1x: number, p1y: number;
+    const space = wordFs * 0.24;
     if (m) {
-      // phone: stacked in the middle → above / below the row
-      const c0 = W / 2 - w0 / 2;
-      const c1 = W / 2 - w1 / 2;
-      p0x = c0;
-      p1x = c1;
-      p0y = lerp(H * 0.5 - wordH, L.rowY - L.ch / 2 - wordH - 10, split);
-      p1y = lerp(H * 0.5, L.rowY + L.ch / 2 + 6, split);
+      // phones: two lines in the middle → above / below the row → out to the sides
+      const rowH = L.row(0).h;
+      const y0 = lerp(L.cy - wordH, L.cy - rowH / 2 - 12 - wordH, split);
+      const y1 = lerp(L.cy, L.cy + rowH / 2 + 4, split);
+      tf(words[0], inn * (1 - leave), tr(W / 2 - w0 / 2 - leave * (W / 2 + w0 / 2), y0 + (1 - inn) * 20));
+      tf(words[1], inn * (1 - leave), tr(W / 2 - w1 / 2 + leave * (W / 2 + w1 / 2), y1 + (1 - inn) * 20));
     } else {
-      const total = w0 + space + w1;
-      const s0 = W / 2 - total / 2;
-      p0x = lerp(s0, rowL - w0 + L.cw * 0.06, split);
-      p1x = lerp(s0 + w0 + space, rowL + rowW - L.cw * 0.12, split);
-      p0y = p1y = L.rowY - wordH / 2;
+      // State 1: one line centred on the stack line; State 2: 'Through' at the left margin, 'the
+      // day.' at the right one, each cut 20 px short of the row (Figma "clip di tepi kartu")
+      const margin = Math.min(40, W * 0.028);
+      const s0 = W / 2 - (w0 + space + w1) / 2;
+      const x0 = lerp(s0, margin, split) - leave * (w0 + margin);
+      const x1 = lerp(s0 + w0 + space, W - margin - w1, split) + leave * (w1 + margin);
+      const y = L.cy - wordH / 2 + (1 - inn) * 20;
+      const edgeL = lerp(W, W / 2 - L.rowW / 2 - 20 * k, split);
+      const edgeR = lerp(0, W / 2 + L.rowW / 2 + 20 * k, split);
+      const cutR = Math.max(0, x0 + w0 - edgeL);
+      const cutL = Math.max(0, edgeR - x1);
+      tf(words[0], inn * (1 - leave), tr(x0, y), cutR > 0 ? `inset(-40% ${cutR.toFixed(1)}px -40% 0)` : '');
+      tf(words[1], inn * (1 - leave), tr(x1, y), cutL > 0 ? `inset(-40% 0 -40% ${cutL.toFixed(1)}px)` : '');
     }
-    const wo = inn * (1 - focusIn);
-    put(words[0], { o: wo, x: p0x - (m ? 0 : 60 * focusIn), y: p0y + (1 - inn) * 20 }, ctx);
-    put(words[1], { o: wo, x: p1x + (m ? 0 : 60 * focusIn), y: p1y + (1 - inn) * 20 }, ctx);
-    put(el.pill, { o: inn * (1 - focusIn) }, ctx);
 
-    /* cards: rise into the row, then one comes into focus, the next peeks behind it */
+    /* ----- the cards ----- */
     const f = focusOf(u);
-    const every = seg(u, 5.2, 5.95);
+    const close = seg(u, 1.05, 1.7);
+    const pe = seg(u, RISE, RISE + 0.98); // the end
+    const G = endLayout(L);
+    const backsGo = 1 - seg(f, 2.1, 2.9); // Figma State 6: only Rinse is left
     cards.forEach((c, i) => {
-      const rise = ctx.reduced ? (u >= 1 ? 1 : 0) : seg(u, 0.28 + 0.07 * i, 0.72 + 0.07 * i);
-      // row pose (relative to the focus centre, scale to the small card)
-      const rx = rowL + L.cw / 2 + i * (L.cw + L.gap) - W / 2;
-      const ry = L.rowY - L.cy + (1 - rise) * H * 0.75;
-      const rs = L.cw / L.fw;
-      // focus pose
-      const d = i - f;
-      let fx = 0;
-      let fy = 0;
-      let fs = 1;
-      let fo = 1;
-      if (d < 0) {
-        // leaving upward
-        fy = d * H * 0.9;
-        fo = clamp01(1 + d * 1.6);
-      } else if (d > 0) {
-        // behind: a little smaller, peeking above the card in front
-        const k = Math.min(1, d);
-        fs = lerp(1, 0.9, k);
-        fy = -k * L.fh * 0.12;
-        fo = d <= 1 ? 1 : clamp01(2 - d);
-      }
-      // state 5: the last card shrinks to a small card in the middle of the place
-      if (i === 3) fs *= lerp(1, m ? 0.55 : 0.5, every);
-      const x = lerp(rx, fx, focusIn);
-      const y = lerp(ry, fy, focusIn);
-      const s = lerp(rs, fs, focusIn);
-      const o = lerp(rise, fo, focusIn) * (i === 3 ? 1 : 1 - every) * (1 - out);
-      put(c, { o, x, y: y + (L.cy - H / 2), s }, ctx);
-      c.style.zIndex = String(10 - Math.round(Math.abs(d) * 2) + (d < 0 ? -5 : 0));
+      const rise = seg(u, 0.22 + 0.08 * i, 0.75 + 0.08 * i);
+      const rw = L.row(i);
+      rw.y += (1 - rise) * H * 0.85;
+      const [st, z] = stackSlot(i, f, L);
+      let r = lerpSlot(rw, st, close);
+      if (i !== 3) r.o *= backsGo;
+      if (i === 3) r = lerpSlot(r, G.E, pe);
+      r.o *= 1 - out;
+      placeCard(c, r, k, close < 0.5 ? 40 : i === 3 && pe > 0 ? 60 : Math.round(z));
     });
 
-    /* focus furniture: line, (n) name, text, counter, orbit, panel */
-    const furn = focusIn * (1 - seg(u, 5.15, 5.5)) * (1 - out);
-    put(el.line, { o: furn }, ctx);
-    put(el.orbit, { o: furn, y: L.cy - H / 2 }, ctx);
-    if (el.orbit) el.orbit.style.rotate = `${(f * 16 + u * 3).toFixed(2)}deg`;
-    put(el.count, { o: furn }, ctx);
-    if (el.arc) el.arc.style.setProperty('--p', (((f + 1) / 4) * 100).toFixed(2));
+    /* ----- States 3–6: line, (n) name, lines, counter ----- */
+    const grow = seg(u, 1.3, 1.85) * (1 - seg(u, 5.05, 5.45));
+    tf(el.line, grow > 0.001 ? 1 - out : 0, `scaleX(${grow.toFixed(4)})`);
+    const furn = seg(u, 1.45, 1.8) * (1 - seg(u, 5.1, 5.4)) * (1 - out);
+    tf(el.count, furn);
+    if (el.arc) el.arc.style.setProperty('--p', (((Math.max(0, f) + 1) / 4) * 100 * seg(u, 1.5, 2)).toFixed(2));
     texts.forEach((t, i) => {
-      const k = clamp01(1 - Math.abs(f - i) * 2.4);
-      put(t, { o: k * furn, y: (1 - k) * 12 * Math.sign(i - f || 1) }, ctx);
+      const inP = i === 0 ? clamp01((u - 1.5) / 0.45) : clamp01((f - i + 0.5) / 0.4);
+      const outP = i === 3 ? clamp01((u - 5.05) / 0.4) : clamp01((f - i - 0.1) / 0.4);
+      const shown = inP > 0 && outP < 1;
+      if (ctx.reduced) {
+        // whole state: no masks moving, a short fade (global.css)
+        const on = inP >= 1 && outP <= 0 ? 1 : 0;
+        tf(t, on * (1 - out));
+        chars[i]?.forEach((c) => tf(c, 1));
+        leftLines[i]?.forEach((l) => tf(l, 1));
+        rightLines[i]?.forEach((l) => tf(l, 1));
+        tf(nums[i], on);
+        return;
+      }
+      tf(t, shown ? 1 - out : 0);
+      if (!shown) return;
+      letters(chars[i] ?? [], inP, outP);
+      lines(leftLines[i] ?? [], inP, outP);
+      lines(rightLines[i] ?? [], inP, outP, 0.08);
+      tf(nums[i], 1, ty((1 - smooth(inP)) * 110 - smooth(outP) * 110));
     });
-    nums.forEach((n, i) => (n.style.opacity = (clamp01(1 - Math.abs(f - i) * 2.4) * 1).toFixed(3)));
-    panels.forEach((p, i) => {
-      const k = clamp01(1 - Math.abs(f - i) * 2.4);
-      put(p, { o: k > 0.35 ? k * furn : 0, y: (1 - k) * 10 }, ctx);
+    if (!ctx.reduced) nums.forEach((n, i) => {
+      const inP = i === 0 ? 1 : clamp01((f - i + 0.5) / 0.4);
+      const outP = i === 3 ? 0 : clamp01((f - i - 0.1) / 0.4);
+      if (inP <= 0 || outP >= 1) tf(n, 0);
     });
 
-    /* state 5: The Everyday opens from the card to full bleed */
-    if (el.every && root) {
-      // full bleed with a thin Sand frame; the frame closes as it darkens toward S08 (no grey edge)
-      const shut = 1 - seg(u, END, END + 0.45);
-      const mx = (m ? 10 : W * 0.026) * shut;
-      const my = (m ? 10 : H * 0.03) * shut;
-      const top = lerp(L.cy - L.fh / 2, my, every);
-      const bot = lerp(H - (L.cy + L.fh / 2), my, every);
-      const lft = lerp(W / 2 - L.fw / 2, mx, every);
+    /* ----- the end: the big photo comes up 1:1, its content slower ----- */
+    const shut = 1 - seg(u, END, END + 0.45); // to S08: the frame opens to full bleed
+    const frameTop = Math.max(L.ey, H - Math.max(0, u - RISE) * vh);
+    const lift = frameTop - L.ey; // px still to go
+    if (el.every) {
+      const ex = m ? 16 : Math.min(40, W * 0.028);
       const es = el.every.style;
-      es.setProperty('--et', `${top.toFixed(1)}px`);
-      es.setProperty('--eb', `${bot.toFixed(1)}px`);
-      es.setProperty('--el', `${lft.toFixed(1)}px`);
-      es.setProperty('--er', `${lft.toFixed(1)}px`);
-      es.setProperty('--erad', `${(lerp(6, 14, every) * shut).toFixed(1)}px`);
-      put(el.every, { o: u > 5 ? 1 : 0 }, ctx);
+      const ins = `${(L.ey * shut).toFixed(1)}px ${(ex * shut).toFixed(1)}px`;
+      if (es.inset !== ins) es.inset = ins;
+      es.borderRadius = `${(14 * shut).toFixed(1)}px`;
+      tf(el.every, u > RISE - 0.02 ? 1 : 0, ctx.reduced ? '' : tr(0, lift));
+      tf(el.par, 1, ctx.reduced ? '' : tr(0, -PAR * lift));
       if (el.dark) el.dark.style.opacity = seg(u, END, END + 0.75).toFixed(3);
     }
-    const et = seg(u, 5.6, 6);
-    put(el.etext, { o: et * (1 - out), y: (1 - et) * 18 }, ctx);
-    put(el.caption, { o: seg(u, 5.75, 6.05) * (1 - out) }, ctx);
+    // "The / Everyday": rises with the frame, centred, drawn over the card (D-151). The caption rides
+    // with it (same lift, so the two never cross during the rise) and stands free under the word,
+    // below the descender of "y" (and below the card)
+    if (el.etext && el.the && el.evword) {
+      const tw = el.evword.offsetWidth;
+      const th = el.the.offsetHeight;
+      const eh = el.evword.offsetHeight;
+      const top = G.textTop; // block top, at rest (endLayout)
+      const rise = ctx.reduced ? 0 : lift;
+      const left = W / 2 - tw / 2;
+      // clipped to the photo frame, so the soft text shadow never spills onto the Sand around it
+      const fx = (m ? 16 : Math.min(40, W * 0.028)) * shut;
+      const fy = L.ey * shut;
+      const bw = el.etext.offsetWidth;
+      const bh = el.etext.offsetHeight;
+      const ty0 = top + rise;
+      const clip = `inset(${(fy + rise - ty0).toFixed(1)}px ${(left + bw - (W - fx)).toFixed(1)}px ${(ty0 + bh - (H - fy + rise)).toFixed(1)}px ${(fx - left).toFixed(1)}px)`;
+      tf(el.etext, (u > RISE ? 1 : 0) * (1 - out), tr(left, ty0), clip);
+      if (el.caption) {
+        const cw = el.caption.offsetWidth;
+        // D-155: desktop just right of the card (clear of the Gold ring in the photo's lower right);
+        // phones: right edge on the ink of the last "y"
+        const x = m ? left + tw - ev.right - cw : G.E.x + G.E.w / 2 + 20 * k;
+        const y = G.capTop;
+        const cp = seg(u, RISE + 0.72, RISE + 1.0);
+        tf(el.caption, cp > 0 ? 1 - out : 0, tr(x, y + rise));
+        tf(el.capi, 1, ctx.reduced ? '' : ty((1 - cp) * 105));
+      }
+    }
   },
   // no 3D ring in S07 (it is only in the card photos)
   ring: () => pose({ x: 0.2, y: 0, w: 0.1, alpha: 0 }),
-  // 06 → 07: the polished ring stays on the finger while the hand photo shrinks into a card
+  // 06 → 07 (D-147): the ring stays on the finger and leaves with the hand, 1:1
   ringIn: (x, ctx) => detailsLeaveRing(x, ctx),
 };
-

@@ -1,59 +1,74 @@
 ---
 /**
- * S08 Features — 21:00 · Night (D-096). References (Figma sticky 40004118:132):
- *  - Shift → composition and rhythm: dark ground, the camera close on one detail, a short title per
- *    state top left, a small block bottom left with a counter chip (1/3).
- *  - Client LED flare → states 2–3: big silver ring at three-quarter, one light in window A with a soft
- *    flare and its bounce on the inner band (ring/stage.ts, pose.led / ledc / flare).
- *  - Ultrahuman sensor glow → the light seen from inside the ring; green → blue → violet by scroll.
- * Story told by scroll only: the legend is labels, not buttons (no chips, no clicks).
- * Motion: scripts/sections/features.ts.
+ * S08 Features — 21:00 · Night (D-154: Figma Design 08 State 1–4, 40004264:914 / :955 / :1009,
+ * 40004334:3583).
+ *  - State 1 "Inside the ring." — the ring floats in the middle, window A a faint green hint.
+ *  - State 2 "One light, tuned to the task." — the camera close to the window (big ring right,
+ *    three-quarter), green = Heart rate; a 3-colour legend (labels, not buttons).
+ * D-156: all text neutral and in Geist (no ochre, no Geist Mono, no [ ] on the kicker).
+ *  - State 3 "Blue at night. Violet by morning." — same place, blue (±75 %) then violet (100 %);
+ *    one small line "Red means it's off."
+ *  - State 4 "Red means it's off." — the small red light in the lower window (off / battery empty);
+ *    the three modes dim.
+ * The lights are mode status, not sensor claims (D-062); LED colours from the --led-* tokens; the
+ * ring stays neutral (D-141) under a weak cocoa light from above (D-139).
+ * Left column: kicker + title + legend + note, centred under the navbar (Figma "Content"); phones:
+ * title on top, legend and note at the bottom, the ring between.
+ * Motion: scripts/sections/features.ts; the ring and its lights: ring/stage.ts (pose.ledc 0 → 3).
  */
 import { features as d } from '../../content/copy';
+
+// reduced motion / no WebGL: the 3D Designer's v3 stills of the close pose (fallback-v3 README):
+// image width 1.2587 × ring width, centred on the ring pivot (W/2 + 0.25 W, H/2 + 0.04 H)
+const stills = [
+  { src: '/ring-fallback/fb-s08-green-polished.webp', range: '0,1' },
+  { src: '/ring-fallback/fb-s08-violet-polished.webp', range: '2,2' },
+  { src: '/ring-fallback/fb-s08-red-polished.webp', range: '3,3' },
+];
 ---
 
 <section class="scene scene--features" data-scene="features" aria-labelledby="features-title">
-  <!-- reduced motion / no WebGL: the polished Night still (no lit window; open question D-096) -->
-  <img class="ring-fallback ft__fb" src="/ring-fallback/fb-s03-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
+  <!-- D-139: a weak --cocoa-300 light from above, behind the ring; kept low so the sensor colours lead -->
+  <div class="scene__back">
+    <canvas class="ft__light" data-f-light data-a aria-hidden="true"></canvas>
+  </div>
+  {stills.map((s) => <img class="ring-fallback ft__fb" src={s.src} alt="" width="1024" height="1024" data-ring-fallback data-fb-range={s.range} data-a loading="lazy" decoding="async" />)}
   <div class="scene__front">
     <p class="sr-only">{d.alt}</p>
-    <h2 id="features-title" class="ft__heads">
-      {
-        d.heads.map((h, i) => (
-          <span class="ft__head" data-f-head={i} data-a>
-            {h}
-          </span>
-        ))
-      }
-    </h2>
-
-    <div class="ft__block">
-      <p class="ft__count t-mono" aria-hidden="true">
-        {d.heads.map((_, i) => <span data-f-count={i} data-a>{i + 1}/3</span>)}
-      </p>
-      <p class="ft__sub" data-f-sub data-a>{d.sub}</p>
-      <div class="ft__legendwrap" data-f-legendwrap data-a>
-        <p class="t-mono ft__tag">{d.tag}</p>
+    <div class="ft__col" data-f-col>
+      <div class="ft__top" data-f-top>
+        <p class="ft__kick" aria-hidden="true">
+          {d.kickers.map((k, i) => <span data-f-kick={i} data-a>{k}</span>)}
+        </p>
+        <h2 id="features-title" class="ft__heads">
+          {
+            d.heads.map((h, i) => (
+              <span class="ft__head" data-f-head={i} data-a>
+                {h}
+              </span>
+            ))
+          }
+        </h2>
+      </div>
+      <div class="ft__bottom" data-f-bottom data-a>
         <ul class="ft__legend">
           {
             d.legend.map((l, i) => (
               <li data-f-leg={i} class={`ft__leg ft__leg--${l.key}`}>
                 <i aria-hidden="true" />
-                {l.label}
+                <span class="ft__label">{l.label}</span>
+                <span class="ft__detail">{l.detail}</span>
               </li>
             ))
           }
         </ul>
-        <div class="ft__bodies">
-          {
-            d.legend.map((l, i) => (
-              <p class="ft__body" data-f-body={i} data-a>
-                {l.body}
-              </p>
-            ))
-          }
-        </div>
-        <p class="ft__off" data-f-off data-a>{d.off}</p>
+        <p class="ft__off" data-f-offwrap data-a>
+          <i aria-hidden="true"></i>
+          <span class="ft__offtxt">
+            <span data-f-off="0" data-a>{d.off}</span>
+            <span data-f-off="1" data-a>{d.offLong}</span>
+          </span>
+        </p>
       </div>
     </div>
   </div>
@@ -61,90 +76,90 @@ import { features as d } from '../../content/copy';
 
 <style>
   .scene--features {
-    color: var(--paper);
+    color: var(--white);
   }
-  .ft__fb {
-    left: 66%;
-    width: min(42vw, 72vh);
-  }
-  .ft__heads {
-    position: absolute;
-    left: var(--margin);
-    top: calc(var(--header-h) + 5vh);
-    width: min(40rem, 46vw);
-    font-size: clamp(2.25rem, 1.2rem + 2.6vw, 3.75rem);
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
-    line-height: 1;
-  }
-  .ft__head {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-  }
-  /* Shift: a small block bottom left with a counter chip, a title and a short body */
-  .ft__block {
-    position: absolute;
-    left: var(--margin);
-    bottom: 8vh;
-    width: min(26rem, 34vw);
-    display: grid;
-    gap: 14px;
-  }
-  .ft__count {
-    position: relative;
-    width: 44px;
-    height: 26px;
-    color: var(--stone-on-night);
-  }
-  /* the chip lives on each number so it fades with it (no empty chip between states) */
-  .ft__count span {
+  .ft__light {
     position: absolute;
     inset: 0;
-    border-radius: 6px;
-    background: rgb(247 245 240 / 0.1);
+    width: 100%;
+    height: 100%;
+  }
+  /* v3 still of the close pose (README: 1160 px at 1440, left 500, top −94) */
+  .ft__fb {
+    left: 75%;
+    top: 54%;
+    width: 80.56vw;
+    max-width: none;
+  }
+
+  /* ---------- the column (Figma "Content": x 40, centred between the navbar and 40 px from the bottom) ---------- */
+  .ft__col {
+    position: absolute;
+    left: var(--margin);
+    top: var(--header-h);
+    bottom: 40px;
+    width: min(520px, calc(100vw - 2 * var(--margin)));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 40px; /* Figma: gap 16 + legend padding 24 */
+    will-change: transform;
+  }
+  .ft__top {
     display: grid;
-    place-items: center;
-    font-size: 11px;
+    gap: 16px;
   }
-  .ft__sub {
-    font-size: var(--fs-h3);
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
-    line-height: 1.15;
-  }
-  .ft__legendwrap {
+  /* Label/X-Small in capitals, Paper 65 % (D-156: neutral, no brackets, no mono) */
+  .ft__kick {
     display: grid;
-    gap: 14px;
-  }
-  .ft__sub,
-  .ft__legendwrap {
-    grid-area: 2 / 1;
-  }
-  .ft__tag {
+    font-weight: var(--w-label);
+    font-size: var(--t-label-xs-size);
+    line-height: var(--t-label-xs-lh);
+    letter-spacing: var(--t-caps-ls);
+    text-transform: uppercase;
     color: var(--stone-on-night);
+    white-space: nowrap;
   }
+  .ft__kick span {
+    grid-area: 1 / 1;
+  }
+  /* Heading/Heading 1, white; the four titles share one cell */
+  .ft__heads {
+    display: grid;
+    font-weight: var(--w-heading);
+    font-size: var(--t-heading-1-size);
+    line-height: var(--t-heading-1-lh);
+    letter-spacing: var(--t-heading-1-ls);
+  }
+  .ft__head {
+    grid-area: 1 / 1;
+  }
+  .ft__bottom {
+    display: grid;
+    gap: 24px;
+  }
+  /* legend: labels, not buttons (Figma gap 12; dot 10; Paragraph/Medium + Mono/Small) */
   .ft__legend {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 8px;
-    font-size: 15px;
+    gap: 12px;
   }
   .ft__leg {
     display: flex;
     align-items: center;
-    gap: 10px;
-    opacity: var(--on, 0.68);
+    gap: 12px;
+    opacity: var(--on, 0.4);
+    white-space: nowrap;
   }
   .ft__leg i {
-    width: 8px;
-    height: 8px;
+    flex: none;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: var(--c);
-    box-shadow: 0 0 calc(10px * (var(--on, 0.68) - 0.6) * 2.5) var(--c);
+    box-shadow: 0 0 calc(10px * var(--glow, 0)) var(--c);
   }
   .ft__leg--green {
     --c: var(--led-heart-rate);
@@ -155,18 +170,43 @@ import { features as d } from '../../content/copy';
   .ft__leg--violet {
     --c: var(--led-recovery);
   }
-  .ft__bodies {
+  .ft__label {
+    font-size: var(--t-para-md-size);
+    line-height: var(--t-para-md-lh);
+    letter-spacing: var(--t-para-md-ls);
+  }
+  /* Label/X-Small, Paper 65 % (Figma Mono/Small, D-156) */
+  .ft__detail {
+    font-weight: var(--w-label);
+    font-size: var(--t-label-xs-size);
+    line-height: var(--t-label-xs-lh);
+    letter-spacing: var(--t-label-xs-ls);
+    color: var(--stone-on-night);
+  }
+  /* off note (D-158): on the legend's grid — the same 10 px dot in the same column, the same 12 px
+     to the text, the same Paragraph/Medium as the labels above */
+  .ft__off {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: var(--t-para-md-size);
+    line-height: var(--t-para-md-lh);
+    letter-spacing: var(--t-para-md-ls);
+  }
+  .ft__off i {
+    flex: none;
+    width: 10px;
+    height: 10px;
+    margin-top: calc((var(--t-para-md-lh) - 10px) / 2);
+    border-radius: 50%;
+    background: var(--led-off);
+    box-shadow: 0 0 calc(8px * var(--glow, 0)) var(--led-off);
+  }
+  .ft__offtxt {
     display: grid;
   }
-  .ft__body {
+  .ft__offtxt span {
     grid-area: 1 / 1;
-    font-size: 15px;
-    line-height: 1.5;
-    color: var(--paper);
-  }
-  .ft__off {
-    font-size: var(--fs-small);
-    color: var(--stone-on-night);
   }
   .sr-only {
     position: absolute;
@@ -177,34 +217,26 @@ import { features as d } from '../../content/copy';
   }
   @media (max-width: 719px) {
     .ft__fb {
-      left: 50%;
-      width: 80vw;
+      left: 72%;
+      top: 52%;
+      width: 132vw;
     }
-    .ft__heads {
-      top: calc(var(--header-h) + 3vh);
-      width: auto;
+    /* phones (Figma pattern): title on top, legend + note at the bottom, the ring between */
+    .ft__col {
+      top: calc(var(--header-h) + 16px);
+      bottom: 24px;
       right: var(--margin);
-      font-size: 2.1rem;
+      width: auto;
+      justify-content: space-between;
     }
-    .ft__block {
-      width: auto;
-      right: var(--margin);
-      bottom: 4vh;
+    .ft__top {
       gap: 10px;
     }
-    .ft__legendwrap {
-      gap: 10px;
+    .ft__bottom {
+      gap: 14px;
     }
     .ft__legend {
-      grid-auto-flow: column;
-      font-size: 12px;
-      gap: 6px;
-    }
-    .ft__leg {
-      gap: 6px;
-    }
-    .ft__body {
-      font-size: 14px;
+      gap: 8px;
     }
   }
 </style>

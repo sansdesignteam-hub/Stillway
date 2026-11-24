@@ -6,9 +6,9 @@
  *  - Oura "Wake up knowing" → order only: the main number first, then the detail (sleep stages as
  *    bars). No score (D-066).
  *  - Dribbble sleep app → one big number per screen; the screen content scrolls, the phone stays.
- * Screen style: Moodboard §5 / Figma Mobile App 40004128:58 — cream cards, Ink type, thin Ink line
- * without a grid, an Ochre dot for "now", an Ochre outline on the active card; the small dot on each
- * card uses the mode light colour (§2.3). Real HTML; every number is simulated data.
+ * Screen: D-162 — Stillway's own calm app screen held in the Visual Director's hand photo B
+ * (AppPhone.astro); no tab pill, no light beam. Real HTML; every number is simulated (the footer
+ * disclaimer says so; no "Simulated data" label, D-160/D-161).
  * Motion: scripts/sections/app.ts.
  */
 import { app as d } from '../../content/copy';
@@ -25,7 +25,7 @@ import AppPhone from '../AppPhone.astro';
       {
         d.states.map((s, i) => (
           <div class="ap__lstate" data-p-left={i} data-a>
-            <p class={`ap__chip t-mono ap__chip--${s.key}`}>
+            <p class={`ap__chip t-caps ap__chip--${s.key}`}>
               <i aria-hidden="true" />
               {s.chip}
             </p>
@@ -46,7 +46,6 @@ import AppPhone from '../AppPhone.astro';
 
     <!-- the phone stays; only its screen content moves -->
     <AppPhone />
-    <p class="ap__sim t-mono" data-p-sim data-a>{d.simulated}</p>
 
     <!-- Sofi footer: active label left; Scroll down + progress + percent right -->
     <div class="ap__foot" data-p-foot data-a>
@@ -69,8 +68,11 @@ import AppPhone from '../AppPhone.astro';
 <style>
   .scene--app {
     color: var(--ink);
-    --ph: min(78svh, 760px);
-    --pw: calc(var(--ph) * 0.485);
+    /* D-160 / D-162: the hand photo (B) is placed by its screen's centre and the photo's height; its
+       bottom runs out of the viewport (and melts into Paper, AppPhone.astro), so no cut shows */
+    --hh: min(100svh, 980px);
+    --p-cx: 50%;
+    --p-cy: calc(50% + 1.5vh);
   }
   .ap__left {
     position: absolute;
@@ -119,8 +121,10 @@ import AppPhone from '../AppPhone.astro';
   /* D-096 r1: body size as S04/S06, full Ink */
   .ap__ltext,
   .ap__rtext {
-    font-size: 16px;
-    line-height: 1.5;
+    /* Paragraph/Medium */
+    font-size: var(--t-para-md-size);
+    line-height: var(--t-para-md-lh);
+    letter-spacing: var(--t-para-md-ls);
     color: var(--ink);
   }
   .ap__right {
@@ -135,13 +139,6 @@ import AppPhone from '../AppPhone.astro';
     top: 0;
     width: 100%;
   }
-  .ap__sim {
-    position: absolute;
-    left: 50%;
-    top: calc(50% + 1vh + var(--ph) / 2 + 10px);
-    translate: -50% 0;
-    color: var(--stone);
-  }
   .ap__foot {
     position: absolute;
     left: var(--margin);
@@ -150,7 +147,10 @@ import AppPhone from '../AppPhone.astro';
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 14px;
+    /* Paragraph/Small */
+    font-size: var(--t-para-sm-size);
+    line-height: var(--t-para-sm-lh);
+    letter-spacing: var(--t-para-sm-ls);
   }
   .ap__flabels {
     position: relative;
@@ -171,7 +171,7 @@ import AppPhone from '../AppPhone.astro';
   .ap__prog {
     width: 120px;
     height: 1px;
-    background: rgb(35 31 32 / 0.2);
+    background: color-mix(in srgb, var(--ink) 20%, transparent);
   }
   .ap__prog b {
     display: block;
@@ -192,7 +192,8 @@ import AppPhone from '../AppPhone.astro';
   }
   @media (max-width: 719px) {
     .scene--app {
-      --ph: min(52svh, 460px);
+      --hh: min(660px, 78svh, 165vw);
+      --p-cy: 49%;
     }
     .ap__left {
       left: var(--margin);
@@ -203,17 +204,6 @@ import AppPhone from '../AppPhone.astro';
     .ap__lstate {
       gap: 8px;
     }
-    .ap__ltext,
-    .ap__rtext {
-      font-size: 15px;
-      line-height: 1.4;
-    }
-    .scene--app :global(.ap__phone) {
-      top: 50%;
-    }
-    .ap__sim {
-      top: calc(50% + var(--ph) / 2 + 6px);
-    }
     .ap__right {
       left: var(--margin);
       right: var(--margin);
@@ -221,9 +211,6 @@ import AppPhone from '../AppPhone.astro';
       bottom: 50px;
       width: auto;
       height: 2.8em;
-    }
-    .ap__foot {
-      font-size: 12px;
     }
     .ap__prog {
       width: 60px;

@@ -63,14 +63,12 @@ export const sleep = {
     { tag: 'Broken', value: '2×', sr: 'Broken twice' },
   ],
   line: 'A picture of the night, not a verdict on it.',
-  simulated: 'Simulated data',
 };
 
 export const activity = {
   status: 'title + body draft; states approved D-066',
   heading: ['Activity', 'and rest.'], // shown as "ACTIVITY" caps + "and rest."
   body: 'Through the day the ring keeps two quiet tallies: the time you spend moving and the moments you stop. Seen together they show the rhythm of a day.',
-  simulated: 'Simulated data',
   // photos: 5 C-02 frames from V1, not retouched (D-073); alt text draft (home-copy-v2), adjusted to the frames
   frames: [
     { key: 's0740', time: '07:40', state: 'Moving', detail: '25 min walk', alt: '07:40 — A man walking outside in early light, the ring on his left index finger.' },
@@ -83,6 +81,7 @@ export const activity = {
 
 export const insight = {
   status: 'draft (numbers approved D-066)',
+  eyebrow: '17:30 · Daily insight', // Figma S05 (D-142), shown in capitals (D-156: no [ ])
   headline: ['Everything it noticed.', 'One calm view.'],
   body: 'In the evening the app gathers the day into one view you can read and put down. It describes what happened. It does not tell you what to fix.',
   card: {
@@ -92,8 +91,7 @@ export const insight = {
     progress: 0.9, // bar length only, rested against a personal target; no percent label (home-copy-v2)
     line: 'Settled 23:10 · Up 06:22',
     insight: 'You took more short pauses this afternoon than on most weekdays.',
-    simulated: 'Simulated data',
-  },
+    },
 };
 
 export const details = {
@@ -104,7 +102,6 @@ export const details = {
     { title: 'Softened edges', body: 'Both edges are bevelled where they meet the finger, so the ring sits easily at night and slides on without catching.' },
   ],
   fits: { title: 'Then, it just fits.', body: 'Slip it on in the morning and stop thinking about it.' },
-  label: '[ SILVER ]', // the photo ring (A-1b) is brushed, the 3D ring polished: no finish named (open question)
   alt: {
     ring: 'The Stillway ring rolling to a stop on a sand-coloured tile.',
     hand: 'A hand on a plain cream background, the ring settling at the base of one raised finger.',
@@ -112,35 +109,31 @@ export const details = {
 };
 
 export const specs = {
-  status: 'draft (home-copy-v2 §07; facts D-067)',
+  status: 'Figma Design 07 State 1–7 (D-149); facts D-067',
   headline: ['Through', 'the day.'],
-  pill: 'Made for every hour',
+  // Figma State 3–6: title above the line, sentence below it (left); spec + small note (right).
+  // '\n' = a line break kept from Figma
   cards: [
-    { key: 'night', n: 'I', name: 'Night', title: "Sleeps with you. Charges while you don't.", tag: '[ BATTERY ]', fact: 'Up to 7 days on a charge. Top up on the dock while you shower.', alt: 'Night: asleep under a linen cover, the ring on the index finger of the resting hand.' },
-    { key: 'desk', n: 'II', name: 'Desk', title: 'Sized to forget.', tag: '[ SIZE ]', fact: 'Sizes 6–13. Try them on with the sizing kit before you choose.', alt: 'Desk: hands on a keyboard, the plain silver ring on the index finger.' },
-    { key: 'move', n: 'III', name: 'Move', title: 'Light enough to lose track of.', tag: '[ WEIGHT · THICKNESS ]', fact: 'About 4 g, 2.6 mm thin.', alt: 'Move: mid-stride on a plain studio floor, the ring on the left hand.' },
-    { key: 'rinse', n: 'IV', name: 'Rinse', title: 'Hands in water. Ring stays on.', tag: '[ WATER RATING ]', fact: 'Water resistant to 100 m. Washing up, rain, a swim.', alt: 'Rinse: hands under running water, the wet ring on the index finger.' },
+    { key: 'night', n: 'I', name: 'Night', title: 'Sleeps with you.\nCharges while you don’t.', spec: 'Up to 7 days on a charge.', note: 'Top up on the dock while you shower.', alt: 'Night: asleep under a linen cover, the ring on the index finger of the resting hand.' },
+    { key: 'desk', n: 'II', name: 'Desk', title: 'Sized to forget.', spec: 'Sizes 6–13.', note: 'Try them on with the sizing kit before you choose.', alt: 'Desk: hands on a keyboard, the plain silver ring on the index finger.' },
+    { key: 'move', n: 'III', name: 'Move', title: 'Light enough to lose track of.', spec: 'About 4 g, 2.6 mm thin.', note: '', alt: 'Move: tying a shoe on a studio floor, the ring on the left hand.' },
+    { key: 'rinse', n: 'IV', name: 'Rinse', title: 'Hands in water. Ring stays on.', spec: 'Water resistant to 100 m.', note: 'Washing up, rain, a swim.', alt: 'Rinse: hands under running water, the wet ring on the index finger.' },
   ],
-  // panel values: battery per day is a display of use, so it is labelled (home-copy-v2); the rest are D-067 facts
-  battery: { days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], simulated: 'Simulated data' },
-  size: { min: 6, max: 13, value: 9 },
-  weight: { g: '4 g', mm: '2.6 mm' },
-  water: { rating: '100 m', uses: ['Washing up', 'Rain', 'A swim'] },
-  everyday: { title: 'The Everyday', caption: "Ring shown where it's worn.", alt: 'A man seated in a calm paper-and-sand studio, the ring small on his left hand.' },
+  everyday: { the: 'The', word: 'Everyday', caption: 'Ring shown where it’s worn.', alt: 'Three Stillway rings on a mossy stone in warm light: silver standing, black in its charging dock, gold lying down.' },
 };
 
 export const features = {
-  status: 'draft (home-copy-v2 §08); claims D-062: colours are mode lights, red only means off',
-  heads: ['Inside the ring.', 'One light, tuned to the task.', 'Blue at night. Violet by morning.'],
-  sub: 'One small window, facing your skin.',
-  tag: '[ SENSOR · LIGHT ]',
+  status: 'Figma Design 08 State 1–4 (D-154); lights are mode status, not sensor claims (D-062); red only means off',
+  kickers: ['Features', 'Sensor · Light'], // shown in capitals (D-156: no [ ])
+  heads: ['Inside the ring.', 'One light, tuned to the task.', 'Blue at night. Violet by morning.', 'Red means it’s off.'],
   legend: [
-    { key: 'green', label: 'Green · Heart rate', body: 'By day, a green light while the ring follows your heart rate.' },
-    { key: 'blue', label: 'Blue · Sleep', body: 'At night it dims to blue while the ring keeps track of your sleep.' },
-    { key: 'violet', label: 'Violet · Recovery', body: 'By morning it turns violet as the night is put together.' },
+    { key: 'green', label: 'Heart rate', detail: 'Green · Heart rate' },
+    { key: 'blue', label: 'Sleep', detail: 'Blue · Sleep' },
+    { key: 'violet', label: 'Recovery', detail: 'Violet · Recovery' },
   ],
-  off: "Red means it's off.",
-  alt: 'The inside of the Stillway ring, one small window lit green, then blue, then violet.',
+  off: 'Red means it’s off.',
+  offLong: 'When the battery runs out, one small red light shows in the lower sensor window.',
+  alt: 'The inside of the Stillway ring, one small window lit green, then blue, then violet; when the ring is off, a small red light in the lower window.',
 };
 
 export const app = {
@@ -151,7 +144,6 @@ export const app = {
     { key: 'violet', chip: 'Violet light · Recovery', left: 'The violet light, read back. How the night sat against the rest of your week.', right: 'HRV across the week, with today in full colour.', label: 'Recovery' },
   ],
   scroll: 'Scroll down',
-  simulated: 'Simulated data',
   heart: { label: 'Resting', value: '58', unit: 'bpm', peak: 'Peak 82 bpm · 15:30 stairs' },
   // stage durations are simulated and add up to 7h 12m (D-066 set)
   sleep: { line: 'Settled 23:10 · Up 06:22', h: '7', m: '12', stages: [{ name: 'Deep', d: '1h 24m', min: 84 }, { name: 'REM', d: '1h 36m', min: 96 }, { name: 'Light', d: '4h 12m', min: 252 }] },

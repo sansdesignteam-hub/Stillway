@@ -1,65 +1,170 @@
 /*
- * Stillway V2 tokens — Moodboard.md §2–§3 (Figma "Website AI - 1 Ring", Moodboard).
- * Five colours and nothing else. Derivatives are mixes of those five, not new colours.
- * Page proportion: Paper ±45% · Night ±30% · Sand ±15% · Ink ±8% · Ochre ≤ 2%.
+ * Stillway V2 tokens — Foundation of Figma "Website AI - 1 Stillway" (page Foundation 64:5:
+ * 🌈 Color Palette 10067:9850, 🎨 Token Color System 10068:11282, 🆃 Typography 10068:12435),
+ * text copy in Moodboard.md §2–§3 v2.1 (D-134, D-135).
+ * No colour is written outside this file: everything else uses these tokens or color-mix() of them.
+ * Page proportion: Paper ±45% · Night ±30% (Cocoa included) · Sand ±15% · Ink ±8% · Ochre ≤ 2%.
  */
 :root {
-  /* 2.1 palette */
-  --paper: #f7f5f0; /* light background */
-  --sand: #efe6db; /* second light background: tiles, cards, panels, chips */
-  --ink: #231f20; /* text + primary button on light */
-  --night: #17120f; /* dark background */
-  --ochre: #b76f20; /* the only accent: labels, [ tags ], active chip, progress, live data, glow. Never a full background, never the primary button */
+  /* 🌈 Primitive Color (Moodboard §2.6–§2.7) */
+  --neutral-0: #ffffff;
+  --neutral-50: #f9f5ef;
+  --neutral-100: #f0e8dd;
+  --neutral-200: #dfd6ca;
+  --neutral-300: #c9bfb5;
+  --neutral-400: #a9a097;
+  --neutral-500: #867f78;
+  --neutral-600: #6b655f;
+  --neutral-700: #554e4a;
+  --neutral-800: #3c3733;
+  --neutral-900: #231f20;
+  --neutral-950: #17120f;
+  --ochre-50: #fef6e7;
+  --ochre-100: #fdeacc;
+  --ochre-200: #fbd6a1;
+  --ochre-300: #f3ba6d;
+  --ochre-400: #e89d3d;
+  --ochre-500: #d5851b;
+  --ochre-600: #b76f20;
+  --ochre-700: #97571c;
+  --ochre-800: #79451c;
+  --ochre-900: #62371c;
+  --ochre-950: #3a1e0e;
+  --cocoa-50: #fdf4ee;
+  --cocoa-100: #f7e6db;
+  --cocoa-200: #e9ccbb;
+  --cocoa-300: #d4aa94;
+  --cocoa-400: #ba886f;
+  --cocoa-500: #a16a50;
+  --cocoa-600: #83513a;
+  --cocoa-700: #653b29;
+  --cocoa-800: #49291b;
+  --cocoa-900: #341c12;
+  --cocoa-950: #1b0b06;
+  --neutral-alpha-12: rgb(35 31 32 / 0.12);
+  --white-alpha-12: rgb(255 255 255 / 0.12);
+
+  /* 2.1 main colors (aliases of the scale) */
+  --paper: var(--neutral-50); /* bg-neutral-weak: light background */
+  --sand: var(--neutral-100); /* bg-neutral-soft: second light background, tiles, cards, chips */
+  --ink: var(--neutral-900); /* text-strong / btn-primary: text + primary button on light */
+  --night: var(--cocoa-950); /* bg-cocoa-strong: dark background */
+  --cocoa: var(--cocoa-900); /* bg-cocoa-surface: panels and cards that already exist on Night/Dusk (D-135) */
+  --ochre: var(--ochre-600); /* the only accent, for non-text only since D-156 (progress, dots, glow, focus ring, borders). Never text, never a full background, never the primary button */
+  --white: var(--neutral-0);
 
   /* 2.2 derivatives */
-  --stone: rgb(35 31 32 / 0.65); /* ink 65%: secondary text, captions (≈ #6B645C on paper) */
-  --line: rgb(35 31 32 / 0.12); /* ink 12%: dividers, card borders (≈ #DBD5CC on paper) */
-  --stone-on-night: rgb(247 245 240 / 0.65); /* paper 65% on night (same rule, flipped) */
-  --line-on-night: rgb(247 245 240 / 0.12);
-  /* glows: one shape per section, behind the ring, never on top of it */
-  --dawn-glow: radial-gradient(closest-side, rgb(183 111 32 / 0.35), rgb(183 111 32 / 0)); /* on paper */
-  --ember-glow: radial-gradient(closest-side, rgb(183 111 32 / 0.4), rgb(183 111 32 / 0)); /* on night, from above */
+  --stone: var(--neutral-600); /* text-surface: secondary text, captions (solid) */
+  --line: var(--neutral-alpha-12); /* stroke-surface: dividers, card borders */
+  --stone-on-night: color-mix(in srgb, var(--paper) 65%, transparent); /* Paper 65% on Night: secondary text (7.71:1, D-135) */
+  --line-on-night: color-mix(in srgb, var(--paper) 12%, transparent);
+  --ochre-on-cocoa: var(--ochre-400); /* kept in the palette; no text uses it since D-156 (text is neutral) */
+  --btn-primary-hover: var(--neutral-800);
+  /* D-139: the lights of the dark sections (S03–S05, S08, S11) are one colour, --cocoa-300, painted
+     with dither by scripts/glow.ts (no CSS gradients: they band on Night). S05 "Dusk" = Night with
+     that light from the lower left (the old Ochre → Night gradient is gone). */
   --glow-blur: 60px;
-  /* only Daily insight (17:30): Ochre → Night with a warm glow from the lower corner (Oryzo ref, D-090) */
-  --dusk: radial-gradient(120% 95% at 0% 100%, rgb(183 111 32 / 0.9) 0%, rgb(183 111 32 / 0.35) 38%, rgb(183 111 32 / 0) 70%),
-    linear-gradient(180deg, rgb(183 111 32 / 0.18) 0%, var(--night) 55%);
 
-  /* 2.3 product LED colours — ring render + small legend/chip dots only.
+  /* 2.3 product LED colours (Accent / sensor-*) — ring render + small legend/chip dots only.
      Never text, background, buttons or UI charts. */
   --led-heart-rate: #34e07a; /* green · day · heart rate */
   --led-sleep: #3b8cff; /* blue · night · sleep */
   --led-recovery: #a06bff; /* violet · morning · recovery / HRV */
   --led-off: #ff3b30; /* red · ring off (one line of copy) */
 
-  /* footer logo hover shine (Storyboard §2, Section 11) — a sweep, not a UI colour */
+  /* non-UI colours kept as they were: photo tint, V1 resting dot (D-092), product finishes (D-100) */
+  --photo-dim: #2a1f14; /* S01 photo dim layer */
+  /* S06 light pine table (D-144). Temporary CSS table until the 3D Designer's s06-table.glb lands;
+     side colour from Figma "Tepi kanan · sisi" */
+  --wood-top: #e8d6b6;
+  --wood-top-far: #ddc7a2;
+  --wood-grain: #c9ad84;
+  --wood-side: #a88f70;
+  --rest-dot: #9aa883; /* S04 "Resting" key dot */
+  --finish-silver: radial-gradient(circle at 35% 30%, #f6f6f7, #b9b9bd 55%, #8c8c90);
+  --finish-black: radial-gradient(circle at 35% 30%, #4a4a4e, #141416 55%, #050506);
+  --finish-gold: radial-gradient(circle at 35% 30%, #fbe7b5, #e0b55e 55%, #a97a2a);
+
+  /* footer logo hover shine (Storyboard §2, Section 11) and the S11 cream headline — a sweep, not a UI colour */
   --shine-cream: #e9dcc8;
   --shine-amber: #f4c98e;
 
-  /* 3 typography: Geist + Geist Mono (Option A) */
+  /* 3 typography: Geist only (D-156: Geist Mono is no longer used) */
   --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
-  /* weights per text role = S01 / Hero V1 (D-082). No Light/thin weights anywhere in V2. */
-  --w-display: 500; /* wordmark and giant words: STILLWAY, "rhythm", "keeps the pattern." */
-  --w-heading: 450; /* statements, section headlines, big sentences, big numbers (S01 statement) */
-  --w-body: 400; /* body copy, paragraphs, data rows (S01 tagline / features) */
-  --w-label: 500; /* labels, tags, nav, CTA, clock, scroll line (S01 foot) */
+  /* weights per text style group (D-134): Display/Heading Medium, Paragraph Regular, Label/Buttons
+     Medium. No Light/thin weights. (The Mono group is gone, D-156.) */
+  --w-display: 500;
+  --w-heading: 500;
+  --w-body: 400;
+  --w-label: 500;
   --w-regular: var(--w-body); /* aliases kept for older rules */
   --w-medium: var(--w-label);
-  --track-tight: -0.03em; /* headings, statements, numbers (S01 statement) */
-  --track-display: -0.02em; /* giant words (wordmark itself is 0, set in Hero) */
-  --track-label: 0.06em; /* uppercase sans labels (S01 foot) */
-  --track-mono: 0.08em; /* [ tags ], clock, live values */
+  /* only for texts that match no text style (reported, D-134): kept as they were */
+  --track-tight: -0.03em; /* big numbers, the logo (D-083) and the scaled app screen */
+  --track-display: -0.02em; /* giant words */
+  --track-label: 0.06em; /* uppercase sans labels (S01 foot, S11 kicker) */
 
-  /* type scale (HANDOFF-v2 §1.2 [U]; desktop 1440 → mobile 390) */
-  --fs-giant: clamp(7rem, 24vw, 23rem); /* hero wordmark, "rhythm", "keeps the pattern." */
-  --fs-display: clamp(2.75rem, 1.6rem + 4.6vw, 6rem); /* 44 → 96 px */
-  --fs-number: clamp(3.5rem, 2.2rem + 5.4vw, 7rem); /* 56 → 112 px */
-  --fs-h3: clamp(1.375rem, 1.1rem + 1vw, 2rem); /* 22 → 32 px */
-  --fs-h2m: 2.25rem; /* mobile big sentence in S02 */
-  --fs-body: clamp(1rem, 0.95rem + 0.15vw, 1.125rem); /* 16 → 18 px */
-  --fs-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem); /* 13 → 14 px */
-  --fs-mono: clamp(0.75rem, 0.73rem + 0.08vw, 0.8125rem); /* 12 → 13 px */
-  --fs-mono-lg: 0.875rem;
+  /* 3.1 text styles (Figma 🆃 Typography, px). Display and Heading run linear from the Mobile value
+     at 390 px to the Desktop value at 1440 px (D-135); Label, Paragraph, Buttons and Mono have one
+     value at every width. Use the three together: font-size / line-height / letter-spacing. */
+  --t-display-1-size: clamp(72px, calc(19.3714vw - 3.5486px), 275.4px);
+  --t-display-1-lh: clamp(54px, calc(14.2857vw - 1.7143px), 204px);
+  --t-display-1-ls: clamp(-8.26px, calc(-0.581vw + 0.1057px), -2.16px);
+  --t-display-2-size: clamp(72px, calc(8.381vw + 39.3143px), 160px);
+  --t-display-2-lh: clamp(68px, calc(8vw + 36.8px), 152px);
+  --t-display-2-ls: clamp(-4.8px, calc(-0.2514vw - 1.1794px), -2.16px);
+  --t-display-3-size: 96px;
+  --t-display-3-lh: 104px;
+  --t-display-3-ls: -2.88px;
+  --t-display-4-size: clamp(48px, calc(2.2857vw + 39.0857px), 72px);
+  --t-display-4-lh: clamp(48px, calc(2.2857vw + 39.0857px), 72px);
+  --t-display-4-ls: clamp(-2.16px, calc(-0.0686vw - 1.1726px), -1.44px);
+  --t-heading-1-size: clamp(36px, calc(1.9048vw + 28.5714px), 56px);
+  --t-heading-1-lh: clamp(40px, calc(1.5238vw + 34.0571px), 56px);
+  --t-heading-1-ls: clamp(-1.68px, calc(-0.0571vw - 0.8571px), -1.08px);
+  --t-heading-2-size: clamp(24px, calc(0.7619vw + 21.0286px), 32px);
+  --t-heading-2-lh: clamp(28px, calc(0.7619vw + 25.0286px), 36px);
+  --t-heading-2-ls: clamp(-0.64px, calc(-0.0152vw - 0.4206px), -0.48px);
+  --t-heading-3-size: 24px;
+  --t-heading-3-lh: 26px;
+  --t-heading-3-ls: -0.48px;
+  --t-label-lg-size: 20px;
+  --t-label-lg-lh: 28px;
+  --t-label-lg-ls: -0.2px;
+  --t-label-md-size: 16px;
+  --t-label-md-lh: 24px;
+  --t-label-md-ls: 0px;
+  --t-label-sm-size: 15px;
+  --t-label-sm-lh: 22px;
+  --t-label-sm-ls: 0px;
+  --t-label-xs-size: 12px;
+  --t-label-xs-lh: 16px;
+  --t-label-xs-ls: 0px;
+  /* D-156: eyebrows, tags, chips and the clock part in capitals use Label/X-Small (or Label/Small)
+     with this small tracking instead of Geist Mono */
+  --t-caps-ls: 0.04em;
+  --t-para-lg-size: 20px;
+  --t-para-lg-lh: 28px;
+  --t-para-lg-ls: -0.2px;
+  --t-para-md-size: 16px;
+  --t-para-md-lh: 24px;
+  --t-para-md-ls: 0px;
+  --t-para-sm-size: 14px;
+  --t-para-sm-lh: 20px;
+  --t-para-sm-ls: 0px;
+  --t-para-xs-size: 12px;
+  --t-para-xs-lh: 16px;
+  --t-para-xs-ls: 0px;
+  --t-btn-md-size: 16px;
+  --t-btn-md-lh: 24px;
+  --t-btn-md-ls: 0px;
+  --t-btn-sm-size: 15px;
+  --t-btn-sm-lh: 22px;
+  --t-btn-sm-ls: -0.15px;
+
+  /* legacy sizes, only for texts that match no text style (reported) or for layout maths */
+  --fs-giant: clamp(7rem, 24vw, 23rem); /* S02 back word "rhythm" */
+  --fs-number: clamp(3.5rem, 2.2rem + 5.4vw, 7rem); /* layout only: S03 number slot height */
 
   /* layout (HANDOFF-v2 §1.3 [U]) */
   --margin: clamp(16px, 2.8vw, 40px);

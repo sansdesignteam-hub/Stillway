@@ -17,6 +17,7 @@
  * Reduced motion: u is snapped to whole states; elements fade over 300 ms; the ring jumps to the
  * pose of the state; no breathing loop.
  */
+import { keepLit, LIGHT } from './glow';
 import { sections, dayparts, type SectionDef } from '../content/sections';
 import { clamp01, seg, lerp, put, window4, type Ctx } from './anim';
 import { lerpPose, type Pose } from './ring/poses';
@@ -42,17 +43,31 @@ export interface SectionMotion {
   theme?: (u: number) => 'photo' | 'light' | 'dark' | null;
   /** clock text (HH:MM) for u, when the section drives its own clock (S04 follows the photo) */
   clock?: (u: number) => string;
+  /** clock text inside the incoming connection, x in [0, 1]; null = the default rule (D-138 lens) */
+  clockIn?: (x: number) => string | null;
   /** custom ring path across the incoming connection, x in [0, 1]; default = lerp in 30–70% */
   ringIn?: (x: number, ctx: Ctx, from: Pose, to: Pose) => Pose;
 }
 const motions: Record<string, SectionMotion> = { hero, why, sleep, activity, insight, details, specs, features, app, finishes, close };
 
-const BG: Record<string, [number, number, number]> = {
-  paper: [0xf7, 0xf5, 0xf0],
-  sand: [0xef, 0xe6, 0xdb],
-  night: [0x17, 0x12, 0x0f],
-  dusk: [0x17, 0x12, 0x0f], // base under the dusk gradient overlay
-};
+/** section backgrounds as RGB for the cross-fade; read from tokens.css (--paper, --sand, --night)
+ *  in initStory, so no colour is written here (D-134). Dusk's base under its overlay is Night. */
+const BG: Record<string, [number, number, number]> = { paper: [0, 0, 0], sand: [0, 0, 0], night: [0, 0, 0], dusk: [0, 0, 0] };
+function readBg() {
+  const probe = document.createElement('i');
+  probe.style.display = 'none';
+  document.body.appendChild(probe);
+  const rgb = (token: string): [number, number, number] => {
+    probe.style.color = `var(${token})`;
+    const m = getComputedStyle(probe).color.match(/[\d.]+/g) ?? ['0', '0', '0'];
+    return [Number(m[0]), Number(m[1]), Number(m[2])];
+  };
+  BG.paper = rgb('--paper');
+  BG.sand = rgb('--sand');
+  BG.night = rgb('--night');
+  BG.dusk = BG.night;
+  probe.remove();
+}
 const isDark = (b: string) => b === 'night' || b === 'dusk';
 const toMin = (s: string) => {
   const [h, m] = s.split(':').map(Number);
@@ -80,11 +95,22 @@ interface Item {
 
 export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) => void }) {
   const { reduced } = opts;
+  readBg();
   const mq = window.matchMedia('(max-width: 719px)');
   const ctx: Ctx = { mobile: mq.matches, reduced };
 
   const bgEl = document.querySelector<HTMLElement>('[data-bg]')!;
   const duskEl = document.querySelector<HTMLElement>('[data-dusk]')!;
+  // S05 Dusk light (D-139): --cocoa-300 from the lower left, where the ochre sunset glow was, and the
+  // Figma "Top shade" upper right (D-142: Night 75%)
+  const duskLight = duskEl.querySelector<HTMLCanvasElement>('[data-dusk-light]');
+  if (duskLight)
+    keepLit(duskLight, () => ({
+      ellipses: [
+        { token: LIGHT, cx: 0, cy: 900, rx: 1210, ry: 640, stops: [[0, 0.45]], power: 1.8 },
+        { token: '--night', cx: 1300, cy: 80, rx: 700, ry: 450, stops: [[0, 0.75], [1, 0]], smooth: true },
+      ],
+    }));
   const wipeEl = document.querySelector<HTMLElement>('[data-wipe]')!;
   const nav = document.querySelector<HTMLElement>('[data-nav]');
   const clockTime = document.querySelectorAll<HTMLElement>('[data-clock-time]');
@@ -163,7 +189,9 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     });
 
     /* background */
-    const mid = inConn && prev ? seg(tinX, 0.3, 0.7) : 1;
+    // D-136: 02 → 03 is a plain scroll; the dark rises behind the content in 15–60% of it
+    const nightRise = !reduced && inConn && prev?.def.id === 'why' && cur.def.id === 'sleep';
+    const mid = inConn && prev ? (nightRise ? seg(tinX, 0.15, 0.6) : seg(tinX, 0.3, 0.7)) : 1;
     // a Dusk side never lerps its base: the base is the other section's colour and the opaque Dusk
     // layer cross-fades over it (D-090 r1: no muddy grey mix between Dusk and Paper)
     let a = prev ? BG[prev.def.bg] : BG[cur.def.bg];
@@ -185,6 +213,12 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       duskO = k < 0.999 ? 1 : 0;
       wipeY = -250 + 250 * k;
       wipeTone = 'warm';
+    } else if (nightRise) {
+      // D-136: Paper → Night as a warm Cocoa gradient rising from below behind the S02 page that
+      // scrolls away (reference video); only tokens, never a grey mix of Paper and Night
+      if (k < 0.999) bgEl.style.backgroundColor = `rgb(${BG.paper.join(' ')})`;
+      wipeY = 100 - 250 * k;
+      wipeTone = 'rise-cocoa';
     } else if (inConn && prev && cur.def.id === 'close' && !isDark(prev.def.bg)) {
       // D-098: Sand → Night for the closing canvas: night rises from below with a warm Ember edge
       if (k < 0.999) bgEl.style.backgroundColor = `rgb(${BG[prev.def.bg].join(' ')})`;
@@ -200,7 +234,7 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       mask = `linear-gradient(to top, #000 ${(p - 20).toFixed(1)}%, transparent ${(p + 20).toFixed(1)}%)`;
     }
     duskEl.style.opacity = duskO.toFixed(3);
-    const wv = wipeY === null || (wipeTone === 'rise' ? wipeY <= -149.99 : wipeY >= -0.01) ? 'hidden' : 'visible';
+    const wv = wipeY === null || (wipeTone.startsWith('rise') ? wipeY <= -149.99 : wipeY >= -0.01) ? 'hidden' : 'visible';
     if (wipeEl.style.visibility !== wv) wipeEl.style.visibility = wv;
     if (wipeY !== null && wipeEl.dataset.tone !== wipeTone) wipeEl.dataset.tone = wipeTone;
     if (wipeY !== null) wipeEl.style.transform = `translate3d(0, ${wipeY.toFixed(2)}lvh, 0)`;
@@ -208,7 +242,8 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       duskEl.style.maskImage = mask;
       duskEl.style.webkitMaskImage = mask;
     }
-    const darkW = (prev && inConn && isDark(prev.def.bg) ? 1 - k : 0) + (isDark(cur.def.bg) ? k : 0);
+    // D-136: the navbar turns dark only once the rising dark has reached the top of the screen
+    const darkW = nightRise ? (k > 0.84 ? 1 : 0) : (prev && inConn && isDark(prev.def.bg) ? 1 - k : 0) + (isDark(cur.def.bg) ? k : 0);
     const theme = (!inConn && cur.m.theme?.(u)) || (darkW > 0.5 ? 'dark' : 'light');
     if (nav && nav.dataset.theme !== theme) nav.dataset.theme = theme;
     document.documentElement.dataset.surface = theme;
@@ -223,9 +258,24 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     }
     let text = fmt(Math.floor(min / 5) * 5);
     if (clockFrom.m.clock) text = clockFrom.m.clock(clockFrom === cur ? u : clockFrom.end);
-    const part = d.part ?? partOf(toMin(text));
-    clockTime.forEach((el) => el.textContent !== text && (el.textContent = text));
-    clockPart.forEach((el) => el.textContent !== part && (el.textContent = part));
+    let part = d.part ?? partOf(toMin(text));
+    const own = inConn ? cur.m.clockIn?.(tinX) : null;
+    if (own) {
+      text = own;
+      part = partOf(toMin(own));
+    }
+    // D-138: in S04 and its lens the navbar time and daypart change with a short upward move
+    const rollClock = !reduced && (cur.def.id === 'activity' || (prev?.def.id === 'activity' && inConn));
+    clockTime.forEach((el) => {
+      if (el.textContent === text) return;
+      el.textContent = text;
+      if (rollClock) el.animate([{ transform: 'translateY(60%)', opacity: 0 }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
+    });
+    clockPart.forEach((el) => {
+      if (el.textContent === part) return;
+      el.textContent = part;
+      if (rollClock) el.animate([{ transform: 'translateY(60%)', opacity: 0 }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
+    });
 
     /* ring */
     if (ring) {

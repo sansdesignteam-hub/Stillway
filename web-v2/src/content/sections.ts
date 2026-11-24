@@ -28,14 +28,14 @@ export interface SectionDef {
 export const sections: SectionDef[] = [
   { n: '01', id: 'hero', name: 'Hero', act: 1, time: '06:50', bg: 'paper', states: 4, tin: 0, hold: 0.5, built: true },
   { n: '02', id: 'why', name: 'Why Stillway', act: 1, time: '07:10', bg: 'paper', states: 4, tin: 0.6, hold: 0.6, built: true },
-  { n: '03', id: 'sleep', name: 'Sleep summary', act: 2, time: '23:10', part: 'Last night', bg: 'night', states: 4, tin: 1, hold: 0.6, built: true },
-  { n: '04', id: 'activity', name: 'Activity & rest', act: 2, time: '07:40', timeEnd: '15:30', bg: 'night', states: 5, tin: 1, hold: 0.6, built: true },
-  { n: '05', id: 'insight', name: 'Daily insight', act: 2, time: '17:30', bg: 'dusk', states: 4, tin: 1, hold: 0.6, built: true },
-  { n: '06', id: 'details', name: 'Product details', act: 3, time: '21:00', bg: 'paper', states: 5, tin: 1, hold: 0.6, built: true },
-  { n: '07', id: 'specs', name: 'Specs & benefits', act: 3, time: '21:00', bg: 'sand', states: 7, tin: 1, hold: 0.6, built: true },
-  { n: '08', id: 'features', name: 'Features', act: 3, time: '21:00', bg: 'night', states: 3, tin: 1, hold: 0.6, built: true },
-  { n: '09', id: 'app', name: 'The app', act: 3, time: '21:00', bg: 'paper', states: 3, tin: 1, hold: 0.6, built: true },
-  { n: '10', id: 'finishes', name: 'Finishes & pricing', act: 4, time: '22:00', bg: 'sand', states: 2, tin: 1, hold: 1, built: true },
+  { n: '03', id: 'sleep', name: 'Sleep summary', act: 2, time: '23:10', part: 'Last night', bg: 'night', states: 4, tin: 2.5, hold: 0.6, built: true }, // D-136: 02 → 03 is 2.5 screens: S02 scrolls out 1:1 (≈ 40%), dark, corner light, green LED
+  { n: '04', id: 'activity', name: 'Activity & rest', act: 2, time: '07:40', timeEnd: '15:30', bg: 'night', states: 5, tin: 2, hold: 0.6, built: true }, // D-138: the 03 → 04 lens is 2 screens
+  { n: '05', id: 'insight', name: 'Daily insight', act: 2, time: '17:30', part: 'Evening', bg: 'dusk', states: 4, tin: 1, hold: 0.6, built: true },
+  { n: '06', id: 'details', name: 'Product details', act: 3, time: '21:00', bg: 'paper', states: 6, tin: 1, hold: 0.6, built: true }, // D-144: roll 1–3, hand A–C
+  { n: '07', id: 'specs', name: 'Specs & benefits', act: 3, time: '21:00', bg: 'sand', states: 7, tin: 1.6, hold: 0.6, built: true }, // D-147: 06 → 07 is a plain scroll; 1.6 screens so the whole hand leaves. D-149: Figma 07 State 1–7, end photo rises (Obsidian)
+  { n: '08', id: 'features', name: 'Features', act: 3, time: '21:00', bg: 'night', states: 4, tin: 1, hold: 0.6, built: true }, // D-154: Figma 08 State 1–4, state 4 red = off
+  { n: '09', id: 'app', name: 'The app', act: 3, time: '21:00', bg: 'paper', states: 7, tin: 1, hold: 0.6, built: true }, // D-161: 2 screens per mode (cards in, numbers count, charts draw, the screen scrolls)
+  { n: '10', id: 'finishes', name: 'Finishes & pricing', act: 4, time: '22:00', bg: 'sand', states: 2, tin: 1.3, hold: 1, built: true }, // D-165: 09 → 10 a plain scroll; 1.3 screens so S09 has left before S10 comes in
   { n: '11', id: 'close', name: 'Closing, FAQ & footer', act: 4, time: '06:50', part: 'Tomorrow', bg: 'night', states: 4, tin: 1, hold: 0.4, built: true },
 ];
 

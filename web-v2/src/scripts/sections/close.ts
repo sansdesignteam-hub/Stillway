@@ -13,12 +13,17 @@ import { put, seg, lerp, clamp01, type Ctx } from '../anim';
 import { pose, ANGLE, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
 import { finishPose } from '../finish';
+import { keepLit, LIGHT } from '../glow';
 
 let root: HTMLElement | null = null;
 let el: Record<string, HTMLElement | null> = {};
 let stops = [0, 0, 0];
 let measured = '';
 let trackY = 0;
+const TAU = Math.PI * 2;
+/** an angle difference brought into −π..π */
+const wrapPi = (a: number) => a - TAU * Math.round(a / TAU);
+const ANGLES = new Set<keyof Pose>(['rx', 'ry', 'rz', 'spin', 'roll', 'pitch']);
 
 function measure() {
   if (!el.faq || !el.foot) return;
@@ -52,9 +57,15 @@ function initFaq(r: HTMLElement) {
         const on = o === b && open;
         o.setAttribute('aria-expanded', String(on));
         const a = document.getElementById(o.getAttribute('aria-controls') ?? '');
-        if (a) a.hidden = !on;
+        if (a) {
+          // D-165: the height animates (CSS grid rows); a closed answer is inert, out of the tab order
+          a.dataset.open = String(on);
+          a.toggleAttribute('inert', !on);
+        }
       });
+      // the page below moves when an answer opens: measure again once the height has settled
       measured = '';
+      window.setTimeout(() => (measured = ''), 360);
     }),
   );
   el.faq?.addEventListener('focusin', () => scrollToState(2));
@@ -97,6 +108,13 @@ export const close: SectionMotion = {
       glow: q('[data-cl-glow]'),
       word: q('[data-cl-word]'),
     };
+    // the light from above (D-139, --cocoa-300): where the ochre Ember glow was — centre 17% down,
+    // 1500 px (120vw on phones) wide, 110vh tall — softer, since the colour is lighter
+    const light = r.querySelector<HTMLCanvasElement>('[data-cl-light]');
+    if (light)
+      keepLit(light, () => ({
+        ellipses: [{ token: LIGHT, cx: 720, cy: 153, rx: window.matchMedia('(max-width: 719px)').matches ? 864 : Math.min(1.2 * window.innerWidth, 1500) / 2 * (1440 / window.innerWidth), ry: 495, stops: [[0, 0.42]], power: 1.8 }],
+      }));
     initFaq(r);
     window.addEventListener('resize', () => (measured = ''));
     document.fonts?.ready.then(() => (measured = ''));
@@ -134,10 +152,15 @@ export const close: SectionMotion = {
     });
   },
   // 10 → 11: the ring in the chosen finish moves to the middle as Sand turns to Night
+  // D-165: however far the ring was turned in S10, the angles go the shortest way (at most ±180°),
+  // both ways of scrolling (the interpolation is the same function of x)
   ringIn(x, _ctx, from, to): Pose {
     const t = seg(x, 0.25, 0.75);
     const o = {} as Pose;
-    for (const k of Object.keys(from) as (keyof Pose)[]) o[k] = from[k] + (to[k] - from[k]) * t;
+    for (const k of Object.keys(from) as (keyof Pose)[]) {
+      const d = ANGLES.has(k) ? wrapPi(from[k] - to[k]) : from[k] - to[k];
+      o[k] = to[k] + d * (1 - t);
+    }
     return o;
   },
 };

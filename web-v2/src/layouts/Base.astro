@@ -1,6 +1,5 @@
 ---
 import '@fontsource-variable/geist/index.css';
-import '@fontsource-variable/geist-mono/index.css';
 import 'lenis/dist/lenis.css';
 import '../styles/global.css';
 import '../styles/nav.css';
@@ -11,6 +10,8 @@ interface Props {
   description?: string;
 }
 const { title = meta.title, description = meta.description } = Astro.props;
+/** production URL of V2 (D-086, D-094): share tags need absolute URLs */
+const SITE = 'https://stillway-two.vercel.app/';
 ---
 
 <!doctype html>
@@ -22,8 +23,21 @@ const { title = meta.title, description = meta.description } = Astro.props;
     <meta name="description" content={description} />
     <!-- Concept project (D-025): keep it out of search indexes. -->
     <meta name="robots" content="noindex, nofollow" />
-    <meta name="theme-color" content="#F7F5F0" />
+    <meta name="theme-color" content="#F9F5EF" /><!-- = --paper (neutral/50); meta tags cannot read CSS tokens -->
+    <!-- favicon and share image (D-132, Visual Director e2d2e5e, design/assets/v2/meta) -->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={SITE} />
+    <meta property="og:image" content={`${SITE}og-image.jpg`} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The Stillway ring in polished silver above a mossy stone, under the STILLWAY wordmark." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={`${SITE}og-image.jpg`} />
     <slot name="head" />
     <script is:inline>
       // .js: scripts run. .reduced: the visitor asked for less motion, every state becomes a

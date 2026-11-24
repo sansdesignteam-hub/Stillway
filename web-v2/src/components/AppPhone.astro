@@ -1,442 +1,1375 @@
 ---
 /**
- * The phone in S09 (D-096, screens rebuilt for D-097): a still frame whose HTML screen scrolls one
- * page per state (Heart rate → Sleep → Recovery). Screen language from Figma Moodboard Mobile App
- * 40004128:58 (six sticky notes):
- *  - Metric detail (Oura 52 bpm): one value very large, the unit small, one line of meaning under it.
- *  - Colour block: one full panel per metric, an Ember/Dawn gradient (Ochre → Night, Ochre → Paper),
- *    never flat orange and never a thin-outlined cream card. Brand rule (Moodboard), so the inspector's
- *    gradient ban is allowed for these three panels only.
- *  - Charts: one thin line, no grid and no axis labels, only key points labelled; an Ochre dot for now.
- *  - Timed insight (Ultrahuman): a nudge with its time stamp on top ("23:10 · Settled"), then 7h 12m.
- *  - Screen set: one strong panel per screen and at most one small data card.
- * Lines of meaning come only from existing copy (home-copy-v2 §03, §09). Every number is simulated.
- * `page` (local review only) renders one page without the scroll.
+ * The phone in S09 (D-162): the Visual Director's hand photo B (right hand, thumb on the right edge,
+ * three fingertips on the left) with the app screen in its screen hole, and the fingertips that cross
+ * the bezel on a front layer above it. No tab pill, no light beam (D-162).
+ *
+ * The screen is Stillway's own, calm language (Moodboard Mobile App, D-097), not a card grid:
+ *  - a noun title, then one big value with one sentence that explains without telling you what to do,
+ *  - ONE signature chart per mode — Heart rate: the day 00–24 as a band with the stairs at 15:30 and
+ *    the "now" dot; Sleep: the night 23:10 → 06:22 as soft blocks of its stages; Recovery: the seven
+ *    days as thin columns with today in full colour,
+ *  - at most two small details, in one strip split by a hairline.
+ * Colour: the mode's light (green / blue / violet) only as a soft corner glow sunk into Night and on
+ * the chart's main element; text in two greys (tasteskill app-screen rules, D-161/D-162).
+ * Motion: scripts/sections/app.ts (in order, count-up, draw, scroll if taller than the screen).
+ * Numbers: the website's simulated set (D-066; copy.ts app, sleep).
+ * D-163: richer — Heart rate adds four small cards (resting this week, daytime HRV, skin temperature,
+ * moving minutes), Sleep turns Settled / Woke briefly into cards and adds cycles, restless periods and
+ * time in bed, Recovery has an HRV dial.
+ * D-164: no photo on Recovery (UI only: a violet-cocoa ground with a soft glow); one chart family of
+ * soft glowing gradients (bright at the top, fading to the ground, no hard edges): the Recovery week
+ * as slim gradient bars with values and day labels, the Sleep cards each with its own small chart
+ * (window band + glowing dot, mini hypnogram with the two wakes, cycle waves, an hourly histogram, a
+ * progress ring), the Heart rate minis with soft area fills.
+ * Placement (D-160): --p-cx / --p-cy (the screen's centre) and --hh (the photo's height) on the section.
+ * `page` (local review only) renders one page.
  */
-import { app as d, sleep as s3 } from '../content/copy';
+import { app as d, sleep as s3, activity as s4 } from '../content/copy';
+import hand1600 from '../../../design/assets/v2/app/A-5-hand-phone-b-1600.webp';
+import hand2400 from '../../../design/assets/v2/app/A-5-hand-phone-b-2400.webp';
+import front1600 from '../../../design/assets/v2/app/A-5-hand-phone-b-front-1600.webp';
+import front2400 from '../../../design/assets/v2/app/A-5-hand-phone-b-front-2400.webp';
 
 interface Props {
   page?: number;
 }
 const { page } = Astro.props;
 
-// simulated heart rate 00:00 → 21:00 (now), 30-minute steps; resting ≈ 58, peak 82 at 15:30 (copy)
+/* ---------- Heart rate: the day 00:00 → 21:00 (now) every 30 min; resting ≈ 58, peak 82 at 15:30 ---------- */
 const HR = [57, 58.2, 56.7, 55.9, 57.6, 58, 56.2, 56.3, 58, 57.5, 55.8, 56.8, 57.2, 60.1, 62.5, 63.5, 63.6, 64.1, 63, 64.7, 68.3, 68.5, 65, 63, 65.4, 68.7, 68.1, 64.5, 63.1, 66, 74, 82, 67.1, 66.1, 66.7, 67.7, 67.6, 66, 64.1, 63.5, 64.4, 65.3, 64.7];
-const CW = 300;
-const CH = 120;
-const xOf = (i: number) => (i / 48) * CW;
-const yOf = (v: number) => CH - 8 - ((v - 52) / 32) * (CH - 16);
-const hrPath = HR.map((v, i) => `${i ? 'L' : 'M'}${xOf(i).toFixed(1)} ${yOf(v).toFixed(1)}`).join(' ');
+const DW = 300; // 24 h across
+const DH = 90;
+const dx = (halfHour: number) => (halfHour / 48) * DW;
+const dy = (v: number) => DH - 10 - ((v - 52) / 34) * (DH - 22);
+const dayPath = HR.map((v, i) => `${i ? 'L' : 'M'}${dx(i).toFixed(1)} ${dy(v).toFixed(1)}`).join(' ');
+const nowX = dx(HR.length - 1);
+const nowY = dy(HR[HR.length - 1]);
+const peakI = HR.indexOf(Math.max(...HR));
+const peak = { x: dx(peakI), y: dy(HR[peakI]), v: Math.round(HR[peakI]) };
+const lowI = HR.indexOf(Math.min(...HR));
+const low = Math.round(HR[lowI]);
+const hhmm = (i: number) => `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`;
 const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(2)}%`;
-const peak = { x: xOf(31), y: yOf(82) };
-const rest = { x: xOf(5), y: yOf(58) };
-const now = { x: xOf(42), y: yOf(HR[42]) };
-const stageMax = Math.max(...d.sleep.stages.map((st) => st.min));
-const nudge = { time: '23:10', what: 'Settled' }; // = "Settled 23:10" (copy), set as the time-stamped nudge
+
+/* ---------- Sleep: 23:10 → 06:22 (432 min), Deep 84 · REM 96 · Light 252; the two wakes ("Broken 2×") ---------- */
+const stages = d.sleep.stages; // Deep, REM, Light
+const NIGHT: Array<[string, number]> = [
+  ['L', 20], ['D', 35], ['L', 15], ['R', 15], ['A', 3], ['L', 30], ['D', 30], ['L', 20], ['R', 25], ['L', 40], ['D', 19], ['L', 25], ['R', 28], ['A', 4], ['L', 50], ['R', 28], ['L', 52],
+];
+const nightMin = NIGHT.reduce((a, [, m]) => a + m, 0);
+let t = 0;
+const blocks = NIGHT.map(([st, m]) => {
+  const b = { st, x: (t / nightMin) * 100, w: (m / nightMin) * 100 };
+  t += m;
+  return b;
+}).filter((b) => b.st !== 'A');
+// hour ticks inside the night (it starts at 23:10)
+const startMin = 23 * 60 + 10;
+const ticks = [0, 2, 4, 6].map((h) => ({ label: `${String(h).padStart(2, '0')}:00`, x: ((((h + 24) * 60 - startMin) % (24 * 60)) / nightMin) * 100 }));
+const STAGE: Record<string, { name: string; d: string; min: number }> = Object.fromEntries(stages.map((s) => [s.name[0], s]));
+const total = stages.reduce((a, s) => a + s.min, 0);
+
+/* ---------- Recovery: HRV this week (D-066 bars; ms = bar × 80, simulated) ---------- */
+const hrv = d.recovery.bars.map((b) => Math.round(b * 80));
+const today = hrv[hrv.length - 1];
+const hMax = 68;
+const hMin = 30;
+// D-164 fix: the week's bars run from just under the week's lowest value, so they fill the chart
+const BAR_FLOOR = 40;
+const BAR_TOP = 66;
+
+/* ---------- D-163 Heart rate cards (simulated, consistent with the site's set) ---------- */
+const MW = 120;
+const MH = 40;
+const mx = (i: number, n: number) => 5 + (i / (n - 1)) * (MW - 10);
+// resting heart rate this week, ends at today's 58
+const WEEK = [60, 59, 58.5, 59, 57.5, 58, 58];
+const ry = (v: number) => 6 + ((61 - v) / 4) * (MH - 12);
+const restPath = WEEK.map((v, i) => `${i ? 'L' : 'M'}${mx(i, 7).toFixed(1)} ${ry(v).toFixed(1)}`).join(' ');
+// HRV through the day, 07:00 → 21:00 hourly (ms)
+const HRV_DAY = [52, 55, 49, 46, 50, 44, 47, 51, 48, 45, 50, 53, 55, 57, 58];
+const hrvDayAvg = Math.round(HRV_DAY.reduce((a, v) => a + v, 0) / HRV_DAY.length);
+const hy = (v: number) => 4 + ((60 - v) / 18) * (MH - 8);
+const hrvDayPath = HRV_DAY.map((v, i) => `${i ? 'L' : 'M'}${((i / (HRV_DAY.length - 1)) * MW).toFixed(1)} ${hy(v).toFixed(1)}`).join(' ');
+// the moving minutes of S04 (07:40 walk 25, 10:30 stretch 15, 15:30 stairs 20) as three arcs of one ring
+const moving = s4.frames.filter((f) => f.state === 'Moving');
+const movingMin = moving.reduce((a, f) => a + parseInt(f.detail, 10), 0);
+const GAP = 7;
+let acc = 0;
+const ringSegs = moving.map((f) => {
+  const len = (parseInt(f.detail, 10) / movingMin) * (100 - GAP * moving.length);
+  const g = { start: acc, len };
+  acc += len + GAP;
+  return g;
+});
+
+/* ---------- D-163 Sleep cards ---------- */
+const at = (min: number) => {
+  const m = (startMin + Math.round((min / nightMin) * 432)) % (24 * 60);
+  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+};
+let tw = 0;
+const wakes = NIGHT.flatMap(([st, m]) => {
+  const x0 = tw;
+  tw += m;
+  return st === 'A' ? [{ x: (x0 / nightMin) * 100, at: at(x0) }] : [];
+});
+// settled 23:10 on a 22:00 → 01:00 line, the usual window 22:50 → 23:30
+const clk = (h: number, m: number) => ((((h + 2) % 24) * 60 + m) / 180) * 100;
+const setX = clk(23, 10);
+const winL = clk(22, 50);
+const winR = clk(23, 30);
+// cycles end after each REM (the night's own order), the last one runs to the wake-up
+let te = 0;
+const ends: number[] = [];
+NIGHT.forEach(([st, m]) => {
+  te += m;
+  if (st === 'R') ends.push(te);
+});
+if (nightMin - ends[ends.length - 1] > 30) ends.push(nightMin);
+const cycles = ends.map((e, i) => {
+  const s0 = i ? ends[i - 1] : 0;
+  const x0 = (s0 / nightMin) * 300;
+  const x1 = (e / nightMin) * 300;
+  const top = 6 + (i % 2) * 5; // a little variety, deeper early cycles lower
+  const span = x1 - x0;
+  const d = `M${(x0 + 1.5).toFixed(1)} 40 C${(x0 + span * 0.32).toFixed(1)} 40 ${(x0 + span * 0.3).toFixed(1)} ${top} ${(x0 + span * 0.55).toFixed(1)} ${top} C${(x0 + span * 0.8).toFixed(1)} ${top} ${(x1 - span * 0.12).toFixed(1)} 40 ${(x1 - 1.5).toFixed(1)} 40 Z`;
+  return { n: i + 1, x: (s0 / nightMin) * 100, w: ((e - s0) / nightMin) * 100, d, top: d.replace(/ Z$/, '') };
+});
+const cycleAvg = Math.round(432 / cycles.length);
+// time in bed 22:58 → 06:22 = 444 min; asleep 432
+const effic = Math.round((432 / 444) * 100);
+
+/* ---------- D-164 Sleep minis ---------- */
+// mini hypnogram: the night's stages as steps (awake at the top, deep at the bottom)
+const HYW = 120;
+const HYH = 34;
+const LV: Record<string, number> = { A: 0, R: 1, L: 2, D: 3 };
+const lvY = (st: string) => 3 + LV[st] * ((HYH - 6) / 3);
+let hx0 = 0;
+const hypSegs = NIGHT.map(([st, m]) => {
+  const x0 = (hx0 / nightMin) * HYW;
+  hx0 += m;
+  return { st, x0, x1: (hx0 / nightMin) * HYW, y: lvY(st) };
+});
+const hypPath = hypSegs.map((g, i) => `${i ? 'L' : 'M'}${g.x0.toFixed(1)} ${g.y.toFixed(1)} L${g.x1.toFixed(1)} ${g.y.toFixed(1)}`).join(' ');
+const hypArea = `${hypPath} L${HYW} ${HYH} L0 ${HYH} Z`;
+// cycles as waves: one hump per cycle, peaking in its REM (lighter sleep)
+const CYW = 300;
+const CYH = 40;
+// restless periods per hour, 23:00 → 06:00 (6 in all, most after 03:00)
+const restHours = [
+  { h: '23', n: 0 },
+  { h: '00', n: 1 },
+  { h: '01', n: 0 },
+  { h: '02', n: 0 },
+  { h: '03', n: 1 },
+  { h: '04', n: 2 },
+  { h: '05', n: 2 },
+  { h: '06', n: 0 },
+];
+const restTotal = restHours.reduce((a, h) => a + h.n, 0);
+const restMax = Math.max(...restHours.map((h) => h.n));
+
+
+/* ---------- D-163 Recovery dial: HRV 30 → 90 ms over a 240° arc, the week's range marked ---------- */
+const H_MIN = 30;
+const H_MAX = 90;
+const DIAL_SWEEP = 240;
+const DC = { x: 100, y: 88, r: 70 };
+const pt = (deg: number, r = DC.r) => {
+  const a = ((deg - 90) * Math.PI) / 180; // 0° = up, clockwise
+  return { x: +(DC.x + r * Math.cos(a)).toFixed(2), y: +(DC.y + r * Math.sin(a)).toFixed(2) };
+};
+const A0 = -DIAL_SWEEP / 2;
+const arcPath = (from: number, to: number) => {
+  const p0 = pt(from);
+  const p1 = pt(to);
+  return `M${p0.x} ${p0.y} A${DC.r} ${DC.r} 0 ${to - from > 180 ? 1 : 0} 1 ${p1.x} ${p1.y}`;
+};
+const dialArc = arcPath(A0, A0 + DIAL_SWEEP);
+const tOf = (v: number) => (v - H_MIN) / (H_MAX - H_MIN);
+const dialT = tOf(hrv[hrv.length - 1]);
+const wkMin = Math.min(...hrv);
+const wkMax = Math.max(...hrv);
+const dialRange = arcPath(A0 + tOf(wkMin) * DIAL_SWEEP, A0 + tOf(wkMax) * DIAL_SWEEP);
+const dialStart = pt(A0);
+const dialEnd = pt(A0 + DIAL_SWEEP);
+const dialTicks = Array.from({ length: 49 }, (_, i) => {
+  const deg = A0 + (i / 48) * DIAL_SWEEP;
+  const major = i % 8 === 0;
+  const a = pt(deg, DC.r + 7);
+  const b = pt(deg, DC.r + (major ? 14 : 11));
+  return { x1: a.x, y1: a.y, x2: b.x, y2: b.y, major };
+});
 ---
 
 <div class="ap__phone" data-p-phone data-a data-only={page}>
-  <div class="ap__screen">
-    <div class="ap__status" aria-hidden="true">
-      <span>21:00</span><i class="ap__island"></i><i class="ap__batt"></i>
-    </div>
-    <div class="ap__viewport">
-      <div class="ap__scroll" data-p-scroll>
-        <!-- 1 · Heart rate: one Ember panel, 58 bpm huge, the day as one thin line -->
-        <section class="ap__page" aria-label="Heart rate, simulated data">
-          <p class="ap__ptitle"><i class="ap__dot ap__dot--green" aria-hidden="true"></i>Heart rate</p>
-          <article class="ap__panel ap__panel--ember" data-p-card="0">
-            <p class="ap__label">{d.heart.label}</p>
-            <p class="ap__big">{d.heart.value}<span class="ap__unit">{d.heart.unit}</span></p>
-            <p class="ap__mean">Peak on the stairs, 15:30.</p>
-            <div class="ap__chart" aria-hidden="true">
-              <svg viewBox={`0 0 ${CW} ${CH}`} preserveAspectRatio="none">
-                <path d={hrPath} class="ap__line" vector-effect="non-scaling-stroke"></path>
-              </svg>
-              <i class="ap__pt" style={`left:${pct(peak.x, CW)};top:${pct(peak.y, CH)}`}></i>
-              <i class="ap__pt ap__pt--now" style={`left:${pct(now.x, CW)};top:${pct(now.y, CH)}`}></i>
-              <span class="ap__key ap__key--peak" style={`left:${pct(peak.x, CW)};top:${pct(peak.y, CH)}`}>82 bpm · 15:30</span>
-              <span class="ap__key ap__key--rest" style={`left:${pct(rest.x, CW)};top:${pct(rest.y, CH)}`}>58 bpm</span>
-            </div>
-          </article>
-        </section>
+  <!-- z1: the app, in the photo's screen hole -->
+  <div class="ap__screen" data-p-screen>
+    <i class="ap__glow ap__glow--green" data-p-glow="0" aria-hidden="true"></i>
+    <i class="ap__glow ap__glow--blue" data-p-glow="1" aria-hidden="true"></i>
+    <!-- D-164: Recovery is UI only — a violet-cocoa ground with a soft glow behind the dial -->
+    <i class="ap__glow ap__glow--rec" data-p-glow="2" aria-hidden="true"></i>
+    <!-- the chart family's gradients (one place; bright top → ground) -->
+    <svg class="ap__defs" width="0" height="0" aria-hidden="true">
+      <defs>
+        <linearGradient id="apg-hr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--led-heart-rate)" stop-opacity="0.45"></stop><stop offset="1" stop-color="var(--led-heart-rate)" stop-opacity="0"></stop></linearGradient>
+        <linearGradient id="apg-white" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.22"></stop><stop offset="1" stop-color="#fff" stop-opacity="0"></stop></linearGradient>
+        <linearGradient id="apg-sleep" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--ap-sleep-hi)"></stop><stop offset="0.45" stop-color="var(--led-sleep)" stop-opacity="0.75"></stop><stop offset="1" stop-color="var(--led-sleep)" stop-opacity="0"></stop></linearGradient>
+        <linearGradient id="apg-sleep-line" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="var(--led-sleep)"></stop><stop offset="1" stop-color="var(--ap-sleep-hi)"></stop></linearGradient>
+        <linearGradient id="apg-dial" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="var(--led-recovery)"></stop><stop offset="1" stop-color="var(--ap-rec-hi)"></stop></linearGradient>
+      </defs>
+    </svg>
 
-        <!-- 2 · Sleep: the time-stamped nudge first, then 7h 12m and the stages (Oura order, no score) -->
-        <section class="ap__page" aria-label="Sleep, simulated data">
-          <p class="ap__ptitle"><i class="ap__dot ap__dot--blue" aria-hidden="true"></i>Sleep</p>
-          <article class="ap__nudge">
-            <p class="ap__stamp"><b>{nudge.time}</b> · {nudge.what}</p>
-            <p class="ap__ntext">{s3.line}</p>
-          </article>
-          <article class="ap__panel ap__panel--night" data-p-card="1">
-            <p class="ap__label">Rested</p>
-            <p class="ap__big ap__big--hm">{d.sleep.h}<span class="ap__unit">h</span> {d.sleep.m}<span class="ap__unit">m</span></p>
-            <p class="ap__mean">{d.sleep.line}</p>
-            <ul class="ap__stages">
+    <div class="ap__status" aria-hidden="true">
+      <span>9:41</span>
+      <span class="ap__icons">
+        <svg viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="0.8"></rect><rect x="4.6" y="5" width="3" height="6" rx="0.8"></rect><rect x="9.2" y="2.6" width="3" height="8.4" rx="0.8"></rect><rect x="13.8" y="0" width="3" height="11" rx="0.8"></rect></svg>
+        <svg viewBox="0 0 15 11"><path d="M7.5 10.6 5.3 8.3a3.1 3.1 0 0 1 4.4 0Z"></path><path d="M3.4 6.4a5.8 5.8 0 0 1 8.2 0l-1.1 1.1a4.3 4.3 0 0 0-6 0Z"></path><path d="M1.2 4.2a8.9 8.9 0 0 1 12.6 0l-1.1 1.1a7.4 7.4 0 0 0-10.4 0Z"></path></svg>
+        <svg viewBox="0 0 26 12" class="ap__batt"><rect x="0.5" y="0.5" width="22" height="11" rx="3.2" fill="none" stroke-opacity="0.45"></rect><rect x="2.2" y="2.2" width="16" height="7.6" rx="1.8"></rect><path d="M24 4v4a2 2 0 0 0 0-4Z" fill-opacity="0.45"></path></svg>
+      </span>
+    </div>
+
+    <div class="ap__pages" data-p-pages>
+      <!-- 1 · Heart rate -->
+      <section class="ap__page ap__page--hr" data-p-page="0" data-a aria-label="Heart rate, simulated data">
+        <div class="ap__pin" data-p-pin>
+          <header class="ap__head" data-p-item>
+            <p class="ap__brand"><i aria-hidden="true"></i>Stillway</p>
+            <h3 class="ap__title">Heart rate</h3>
+            <p class="ap__meta">Today, until 21:00</p>
+          </header>
+          <div class="ap__hero" data-p-item>
+            <p class="ap__label">{d.heart.label}</p>
+            <p class="ap__value"><span data-n={d.heart.value}>{d.heart.value}</span><span class="ap__unit">{d.heart.unit}</span></p>
+            <p class="ap__line">Steady through the day, up once on the stairs.</p>
+          </div>
+          <figure class="ap__panel" data-p-item>
+            <div class="ap__day">
+              <svg viewBox={`0 0 ${DW} ${DH}`} preserveAspectRatio="none" data-draw aria-hidden="true">
+                <line x1="0" x2={DW} y1={dy(58)} y2={dy(58)} class="ap__grid"></line>
+                <line x1={nowX} x2={DW} y1={nowY} y2={nowY} class="ap__grid"></line>
+                <path d={dayPath} class="ap__trace"></path>
+              </svg>
+              <i class="ap__peak" data-p-mark style={`left:${pct(peak.x, DW)};top:${pct(peak.y, DH)}`} aria-hidden="true"><span>Stairs · {peak.v}</span></i>
+              <i class="ap__now" data-p-mark style={`left:${pct(nowX, DW)};top:${pct(nowY, DH)}`} aria-hidden="true"></i>
+            </div>
+            <p class="ap__ticks" aria-hidden="true"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></p>
+          </figure>
+          <dl class="ap__pair" data-p-item>
+            <div><dt>Peak</dt><dd><span data-n={String(peak.v)}>{peak.v}</span> bpm · {hhmm(peakI)}</dd></div>
+            <div><dt>Lowest</dt><dd><span data-n={String(low)}>{low}</span> bpm · {hhmm(lowI)}</dd></div>
+          </dl>
+          <div class="ap__grid2">
+            <article class="ap__card" data-p-item>
+              <p class="ap__clabel">Resting heart rate</p>
+              <p class="ap__cval"><span data-n="58">58</span><span class="ap__unit">bpm</span></p>
+              <p class="ap__cnote">Your usual range</p>
+              <svg class="ap__mini" viewBox={`0 0 ${MW} ${MH}`} data-draw aria-hidden="true">
+                <path d={`${restPath} L${mx(6, 7).toFixed(1)} ${MH} L${mx(0, 7).toFixed(1)} ${MH} Z`} fill="url(#apg-white)"></path>
+                <line x1="0" x2={MW} y1={ry(58.6)} y2={ry(58.6)} class="ap__grid"></line>
+                <path d={restPath} class="ap__thin"></path>
+                {WEEK.map((v, i) => i < 6 && <circle cx={mx(i, 7)} cy={ry(v)} r="2" class="ap__dot" />)}
+                <circle cx={mx(6, 7)} cy={ry(WEEK[6])} r="3.4" class="ap__dot ap__dot--now" />
+              </svg>
+              <p class="ap__cticks" aria-hidden="true"><span>Mon</span><span>Today</span></p>
+            </article>
+            <article class="ap__card" data-p-item>
+              <p class="ap__clabel">HRV, daytime</p>
+              <p class="ap__cval"><span data-n={String(hrvDayAvg)}>{hrvDayAvg}</span><span class="ap__unit">ms</span></p>
+              <p class="ap__cnote">Average today</p>
+              <svg class="ap__mini" viewBox={`0 0 ${MW} ${MH}`} preserveAspectRatio="none" data-draw aria-hidden="true">
+                <path d={`${hrvDayPath} L${MW} ${MH} L0 ${MH} Z`} fill="url(#apg-hr)"></path>
+                <line x1="0" x2={MW} y1={hy(hrvDayAvg)} y2={hy(hrvDayAvg)} class="ap__grid"></line>
+                <path d={hrvDayPath} class="ap__thin ap__thin--c"></path>
+              </svg>
+              <p class="ap__cticks" aria-hidden="true"><span>07</span><span>21</span></p>
+            </article>
+            <article class="ap__card" data-p-item>
+              <p class="ap__clabel">Skin temperature</p>
+              <p class="ap__cval">+0.1<span class="ap__unit">°C</span></p>
+              <p class="ap__cnote">Near your usual</p>
+              <div class="ap__scale" aria-hidden="true">
+                {Array.from({ length: 21 }, (_, i) => <i class={i % 5 === 0 ? 'is-major' : ''} style={`left:${i * 5}%`} />)}
+                <b class="ap__scale-mark" data-p-mark style={`left:${(((0.1 + 1) / 2) * 100).toFixed(1)}%`} />
+              </div>
+              <p class="ap__cticks" aria-hidden="true"><span>−1.0</span><span>0</span><span>+1.0</span></p>
+            </article>
+            <article class="ap__card" data-p-item>
+              <p class="ap__clabel">Moving</p>
+              <p class="ap__cval"><span data-n={String(movingMin)}>{movingMin}</span><span class="ap__unit">min</span></p>
+              <p class="ap__cnote">{moving.length} times today</p>
+              <div class="ap__ringrow">
+                <svg class="ap__ring" viewBox="0 0 40 40" aria-hidden="true">
+                  <circle cx="20" cy="20" r="15" class="ap__ring-track" pathLength="100"></circle>
+                  {ringSegs.map((g) => <circle cx="20" cy="20" r="15" class="ap__ring-seg" pathLength="100" data-arc={g.len.toFixed(2)} stroke-dasharray={`${g.len.toFixed(2)} 100`} stroke-dashoffset={(-g.start).toFixed(2)} />)}
+                </svg>
+                <ul class="ap__ringkey">
+                  {moving.map((f) => <li><span>{f.time}</span><span>{parseInt(f.detail, 10)}</span></li>)}
+                </ul>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2 · Sleep -->
+      <section class="ap__page ap__page--sleep" data-p-page="1" data-a aria-label="Sleep, simulated data">
+        <div class="ap__pin" data-p-pin>
+          <header class="ap__head" data-p-item>
+            <p class="ap__brand"><i aria-hidden="true"></i>Stillway</p>
+            <h3 class="ap__title">Sleep</h3>
+            <p class="ap__meta">Last night</p>
+          </header>
+          <div class="ap__hero" data-p-item>
+            <p class="ap__label">{s3.stats[1].tag}</p>
+            <p class="ap__value"><span data-n={d.sleep.h}>{d.sleep.h}</span><span class="ap__unit">h</span> <span data-n={d.sleep.m}>{d.sleep.m}</span><span class="ap__unit">m</span></p>
+            <p class="ap__line">{s3.line}</p>
+          </div>
+          <figure class="ap__panel" data-p-item>
+            <p class="ap__ends" aria-hidden="true"><b>23:10</b><b>06:22</b></p>
+            <div class="ap__night" data-draw aria-hidden="true">
+              {ticks.map((k) => <i class="ap__tick" style={`left:${k.x.toFixed(2)}%`} />)}
+              {blocks.map((b) => <i class={`ap__blk ap__blk--${b.st}`} style={`left:calc(${b.x.toFixed(2)}% + 1px);width:calc(${b.w.toFixed(2)}% - 2px)`} />)}
+            </div>
+            <p class="ap__ticks ap__ticks--abs" aria-hidden="true">{ticks.map((k) => <span style={`left:${k.x.toFixed(2)}%`}>{k.label}</span>)}</p>
+            <ul class="ap__key">
               {
-                d.sleep.stages.map((st) => (
+                ['D', 'R', 'L'].map((k) => (
                   <li>
-                    <span class="ap__sname">{st.name}</span>
-                    <span class="ap__sdur">{st.d}</span>
-                    <span class="ap__sbar" aria-hidden="true">
-                      <b style={`width:${((st.min / stageMax) * 100).toFixed(1)}%`} />
-                    </span>
+                    <i class={`ap__sw ap__blk--${k}`} aria-hidden="true" />
+                    <span>{STAGE[k].name}</span>
+                    <span class="ap__num">{STAGE[k].d}</span>
+                    <span class="ap__num ap__dim">{Math.round((STAGE[k].min / total) * 100)}%</span>
                   </li>
                 ))
               }
             </ul>
-          </article>
-        </section>
+          </figure>
+          <div class="ap__grid2 ap__grid2--sleep">
+            <article class="ap__card" data-p-item>
+              <p class="ap__clabel">{s3.stats[0].tag}</p>
+              <p class="ap__cval">{s3.stats[0].value}</p>
+              <p class="ap__cnote">Your usual hour</p>
+              <div class="ap__cg ap__settle" aria-hidden="true">
+                {[0, 1, 2, 3].map((h) => <i class="ap__settle-tick" style={`left:${((h * 60) / 180) * 100}%`} />)}
+                <i class="ap__settle-band" style={`left:${winL.toFixed(1)}%;width:${(winR - winL).toFixed(1)}%`}></i>
+                <i class="ap__settle-line"></i>
+                <b class="ap__settle-dot" data-p-mark style={`left:${setX.toFixed(1)}%`}></b>
+              </div>
+              <p class="ap__cticks" aria-hidden="true"><span>22</span><span>23</span><span>00</span><span>01</span></p>
+            </article>
+            <article class="ap__card" data-p-item>
+              <p class="ap__clabel">Woke briefly</p>
+              <p class="ap__cval">{s3.stats[2].value}</p>
+              <p class="ap__cnote">{wakes.map((w) => w.at).join(' · ')}</p>
+              <div class="ap__cg" aria-hidden="true">
+                <svg class="ap__hypno" viewBox={`0 0 ${HYW} ${HYH}`} preserveAspectRatio="none" data-draw>
+                  <path d={hypArea} fill="url(#apg-sleep)" opacity="0.55"></path>
+                  <path d={hypPath} class="ap__hypno-line"></path>
+                </svg>
+                {wakes.map((w) => <b class="ap__wake" data-p-mark style={`left:${w.x.toFixed(2)}%`} />)}
+              </div>
+              <p class="ap__cticks" aria-hidden="true"><span>23:10</span><span>06:22</span></p>
+            </article>
+            <article class="ap__card ap__card--wide" data-p-item>
+              <div class="ap__crow">
+                <p class="ap__clabel">Sleep cycles</p>
+                <p class="ap__cnote">About {cycleAvg} min each</p>
+              </div>
+              <p class="ap__cval"><span data-n={String(cycles.length)}>{cycles.length}</span></p>
+              <div class="ap__cg" aria-hidden="true">
+                <svg class="ap__waves" viewBox={`0 0 ${CYW} ${CYH}`} preserveAspectRatio="none" data-draw>
+                  <line x1="0" x2={CYW} y1={CYH - 0.5} y2={CYH - 0.5} class="ap__base"></line>
+                  {cycles.map((c) => <path d={c.d} fill="url(#apg-sleep)" class="ap__wave" />)}
+                  {cycles.map((c) => <path d={c.top} class="ap__wave-top" />)}
+                </svg>
+              </div>
+              <p class="ap__cticks ap__cticks--abs" aria-hidden="true">{cycles.map((c) => <span style={`left:${(c.x + c.w / 2).toFixed(2)}%`}>{c.n}</span>)}</p>
+            </article>
+            <article class="ap__card" data-p-item>
+              <p class="ap__clabel">Restless periods</p>
+              <p class="ap__cval"><span data-n={String(restTotal)}>{restTotal}</span></p>
+              <p class="ap__cnote">Mostly after 03:00</p>
+              <div class="ap__cg ap__hist" aria-hidden="true">
+                {restHours.map((h) => <span class={h.n ? '' : 'is-zero'}><b data-grow style={`height:${h.n ? Math.max(18, (h.n / restMax) * 100) : 6}%`} /></span>)}
+              </div>
+              <p class="ap__cticks" aria-hidden="true"><span>23</span><span>03</span><span>06</span></p>
+            </article>
+            <article class="ap__card" data-p-item>
+              <p class="ap__clabel">Time in bed</p>
+              <p class="ap__cval"><span data-n="7">7</span><span class="ap__unit">h</span> <span data-n="24">24</span><span class="ap__unit">m</span></p>
+              <p class="ap__cnote">Asleep for {effic}% of it</p>
+              <div class="ap__cg ap__bed" aria-hidden="true">
+                <span class="ap__bedwrap">
+                  <svg class="ap__bedring" viewBox="0 0 40 40">
+                    <circle cx="20" cy="20" r="16" class="ap__ring-track" pathLength="100"></circle>
+                    <circle cx="20" cy="20" r="16" class="ap__bed-arc" pathLength="100" data-arc={String(effic)} stroke-dasharray={`${effic} 100`}></circle>
+                  </svg>
+                  <span class="ap__bedpct">{effic}%</span>
+                </span>
+                <ul class="ap__bedkey">
+                  <li><i class="is-asleep"></i><b>7h 12m</b> asleep</li>
+                  <li><i></i><b>12m</b> awake</li>
+                </ul>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
 
-        <!-- 3 · Recovery: one Dawn panel, the week as seven bars, today in full colour; no score -->
-        <section class="ap__page" aria-label="Recovery, simulated data">
-          <p class="ap__ptitle"><i class="ap__dot ap__dot--violet" aria-hidden="true"></i>Recovery</p>
-          <article class="ap__panel ap__panel--dawn" data-p-card="2">
-            <p class="ap__label">{d.recovery.title}</p>
-            <p class="ap__say">{d.recovery.line}</p>
-            <div class="ap__week" aria-hidden="true">
+      <!-- 3 · Recovery (full photo behind; the dial on it) -->
+      <section class="ap__page ap__page--rec" data-p-page="2" data-a aria-label="Recovery, simulated data">
+        <div class="ap__pin" data-p-pin>
+          <header class="ap__head" data-p-item>
+            <p class="ap__brand"><i aria-hidden="true"></i>Stillway</p>
+            <h3 class="ap__title">Recovery</h3>
+            <p class="ap__meta">HRV this morning</p>
+          </header>
+          <div class="ap__dial" data-p-item data-dial={dialT.toFixed(4)}>
+            <svg viewBox="0 0 200 150" aria-hidden="true">
+              {dialTicks.map((k) => <line x1={k.x1} y1={k.y1} x2={k.x2} y2={k.y2} class={k.major ? 'ap__dt ap__dt--major' : 'ap__dt'} />)}
+              <path d={dialArc} class="ap__darc-track" pathLength="100"></path>
+              <path d={dialRange} class="ap__darc-range" pathLength="100"></path>
+              <path d={dialArc} class="ap__darc" pathLength="100" data-dial-arc stroke-dasharray={`${(dialT * 100).toFixed(2)} 100`}></path>
+              <g class="ap__dneedle" data-dial-needle style={`transform:rotate(${(dialT * DIAL_SWEEP).toFixed(2)}deg)`}>
+                <circle cx={dialStart.x} cy={dialStart.y} r="5.2" class="ap__dknob"></circle>
+              </g>
+              <text x={dialStart.x - 4} y={dialStart.y + 16} class="ap__dlab">{H_MIN}</text>
+              <text x={dialEnd.x + 4} y={dialEnd.y + 16} class="ap__dlab" text-anchor="end">{H_MAX}</text>
+            </svg>
+            <div class="ap__dcenter">
+              <p class="ap__dval"><span data-n={String(today)} data-from={String(H_MIN)}>{today}</span><span class="ap__unit">ms</span></p>
+              <p class="ap__dstatus">Steady</p>
+            </div>
+          </div>
+          <p class="ap__line ap__line--c" data-p-item>{d.recovery.line}</p>
+          <figure class="ap__panel ap__panel--bars" data-p-item>
+            <div class="ap__crow">
+              <p class="ap__clabel">HRV this week</p>
+              <p class="ap__cnote">Your range {wkMin}–{wkMax} ms</p>
+            </div>
+            <div class="ap__gbars" aria-hidden="true">
               {
-                d.recovery.bars.map((b, i) => (
-                  <span class={i === d.recovery.bars.length - 1 ? 'is-today' : ''}>
-                    <b style={`height:${(b * 100).toFixed(0)}%`} />
+                hrv.map((v, i) => (
+                  <span class={i === hrv.length - 1 ? 'is-today' : ''}>
+                    <i class="ap__gcol">
+                      <b data-grow style={`height:${(((v - BAR_FLOOR) / (BAR_TOP - BAR_FLOOR)) * 100).toFixed(1)}%`}>
+                        <em><span data-n={String(v)}>{v}</span></em>
+                      </b>
+                    </i>
+                    <small>{i === hrv.length - 1 ? 'Today' : d.recovery.days[i][0]}</small>
                   </span>
                 ))
               }
             </div>
-            <p class="ap__ends" aria-hidden="true"><span>{d.recovery.days[0]}</span><span>Today</span></p>
-          </article>
-        </section>
-      </div>
+          </figure>
+          <dl class="ap__pair ap__pair--card" data-p-item>
+            <div><dt>Resting heart rate</dt><dd><span data-n="58">58</span> bpm</dd></div>
+            <div><dt>Slept</dt><dd><span data-n={d.sleep.h}>{d.sleep.h}</span>h <span data-n={d.sleep.m}>{d.sleep.m}</span>m</dd></div>
+          </dl>
+        </div>
+      </section>
     </div>
-    <nav class="ap__tabs" aria-hidden="true">
-      {
-        d.states.map((st, i) => (
-          <span data-p-tab={i}>
-            <i class={`ap__dot ap__dot--${st.key}`} />
-            {st.label}
-          </span>
-        ))
-      }
-    </nav>
   </div>
+
+  <!-- z2: the hand and the phone (screen transparent); z3: fingertips over the bezel -->
+  <img class="ap__hand" src={hand1600.src} srcset={`${hand1600.src} 1067w, ${hand2400.src} 1600w`} sizes="(max-width: 719px) 440px, 640px" width="1600" height="2400" alt="" decoding="async" />
+  <img class="ap__front" src={front1600.src} srcset={`${front1600.src} 1067w, ${front2400.src} 1600w`} sizes="(max-width: 719px) 440px, 640px" width="1600" height="2400" alt="" decoding="async" />
 </div>
 
 <style>
-  /* the phone: a still object; a small shadow only (it is the one thing that floats) */
+  /* The photo is 1600 × 2400; its screen hole (variation B, README): x 403, y 175, 784 × 1613, r 100.7.
+     Everything below is in fractions of the photo, so the screen stays in the hole at any size. */
   .ap__phone {
-    --u: calc(var(--ph) / 100); /* 1% of the phone height */
-    --t-s: max(11px, calc(var(--u) * 1.8)); /* small text */
-    --t-m: max(12px, calc(var(--u) * 2.15)); /* body text */
+    --hw: calc(var(--hh) / 1.5);
+    --u: calc(var(--hh) * 0.67208 / 100); /* 1 % of the screen's height */
+    --t-meta: max(9px, calc(var(--u) * 1.75));
+    --t-body: max(10px, calc(var(--u) * 2.1));
+    --t-title: max(13px, calc(var(--u) * 3.3));
+    --pad: calc(var(--u) * 3); /* side padding */
+    --rad: calc(var(--u) * 2.4); /* the one panel radius */
+    /* the bright tops of the chart family (D-164): the mode colours lifted toward white */
+    --ap-sleep-hi: color-mix(in srgb, var(--led-sleep) 45%, var(--white));
+    --ap-rec-hi: color-mix(in srgb, var(--led-recovery) 40%, var(--white));
     position: absolute;
-    left: 50%;
-    top: calc(50% + 1vh);
-    width: var(--pw, calc(var(--ph) * 0.485));
-    height: var(--ph);
-    margin: calc(var(--ph) / -2) 0 0 calc(var(--pw, calc(var(--ph) * 0.485)) / -2);
-    padding: calc(var(--u) * 1.4);
-    border-radius: calc(var(--u) * 7.5);
-    background: var(--ink);
-    box-shadow: 0 6px 16px rgb(35 31 32 / 0.07);
+    /* the screen's centre is (0.4969, 0.4090) of the photo */
+    left: calc(var(--p-cx, 50%) - var(--hw) * 0.4969);
+    top: calc(var(--p-cy, 50%) - var(--hh) * 0.409);
+    width: var(--hw);
+    height: var(--hh);
+  }
+  .ap__hand,
+  .ap__front {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    /* the wrist is cut flat at the bottom of the photo: melt it into Paper */
+    -webkit-mask-image: linear-gradient(180deg, #000 80%, transparent 99%);
+    mask-image: linear-gradient(180deg, #000 80%, transparent 99%);
+  }
+  .ap__hand {
+    z-index: 2;
+  }
+  .ap__front {
+    z-index: 3;
   }
   .ap__screen {
-    position: relative;
-    height: 100%;
-    border-radius: calc(var(--u) * 6.2);
-    background: var(--paper);
-    overflow: hidden;
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-    color: var(--ink);
-  }
-  .ap__status {
-    position: relative;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: calc(var(--u) * 2.2) calc(var(--u) * 4) calc(var(--u) * 1.2);
-    font-size: var(--t-s);
-    font-weight: var(--w-label);
-    font-variant-numeric: tabular-nums;
-  }
-  .ap__island {
     position: absolute;
-    left: 50%;
-    top: calc(var(--u) * 1.6);
-    width: 30%;
-    height: calc(var(--u) * 3.6);
-    translate: -50% 0;
-    border-radius: 99px;
-    background: var(--ink);
-  }
-  .ap__batt {
-    width: calc(var(--u) * 3.4);
-    height: calc(var(--u) * 1.6);
-    border-radius: 3px;
-    background: var(--ink);
-  }
-  .ap__viewport {
-    position: relative;
+    z-index: 1;
+    left: 25.1875%;
+    top: 7.2917%;
+    width: 49%;
+    height: 67.2083%;
+    border-radius: calc(var(--hw) * 100.7 / 1600);
+    background: var(--night);
     overflow: hidden;
-  }
-  .ap__scroll {
-    will-change: transform;
-  }
-  .ap__page {
-    padding: calc(var(--u) * 1.6) calc(var(--u) * 2.6) calc(var(--u) * 4);
     display: grid;
-    align-content: start;
-    gap: calc(var(--u) * 1.8);
+    grid-template-rows: auto 1fr;
+    color: var(--white);
+    isolation: isolate;
   }
-  .ap__ptitle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: max(14px, calc(var(--u) * 2.8));
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
-    padding: 0 calc(var(--u) * 0.6);
+  /* the mode's light: one soft corner glow, sunk into Night (D-139 manner, D-162) */
+  .ap__glow {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(85% 45% at 100% 0%, color-mix(in srgb, var(--c) 22%, transparent), transparent 70%),
+      radial-gradient(70% 30% at 0% 100%, color-mix(in srgb, var(--c) 10%, transparent), transparent 70%);
+    will-change: opacity;
   }
-  .ap__dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--c);
-    flex: none;
-  }
-  .ap__dot--green {
+  .ap__glow--green,
+  .ap__page--hr {
     --c: var(--led-heart-rate);
   }
-  .ap__dot--blue {
+  .ap__glow--blue,
+  .ap__page--sleep {
     --c: var(--led-sleep);
   }
-  .ap__dot--violet {
+  .ap__glow--rec,
+  .ap__page--rec {
     --c: var(--led-recovery);
   }
 
-  /* one strong panel per metric: Ember (Ochre → Night) or Dawn (Ochre → Paper), Moodboard colour block */
-  .ap__panel {
-    position: relative;
-    border-radius: calc(var(--u) * 3.2);
-    padding: calc(var(--u) * 3) calc(var(--u) * 3) calc(var(--u) * 3.2);
-    display: grid;
-    gap: calc(var(--u) * 0.8);
-    overflow: hidden;
-  }
-  .ap__panel--ember {
-    color: var(--paper);
-    background: linear-gradient(180deg, var(--ochre) 0%, color-mix(in srgb, var(--ochre) 45%, var(--night)) 46%, var(--night) 100%);
-  }
-  .ap__panel--night {
-    color: var(--paper);
-    background: linear-gradient(180deg, var(--night) 0%, color-mix(in srgb, var(--ochre) 14%, var(--night)) 58%, color-mix(in srgb, var(--ochre) 70%, var(--night)) 100%);
-  }
-  .ap__panel--dawn {
-    color: var(--ink);
-    background: linear-gradient(180deg, color-mix(in srgb, var(--ochre) 50%, var(--paper)) 0%, color-mix(in srgb, var(--ochre) 20%, var(--paper)) 55%, var(--sand) 100%);
-  }
-  .ap__label {
-    font-size: var(--t-m);
-    opacity: 0.78;
-  }
-  /* metric detail: the value very large, the unit small */
-  .ap__big {
-    white-space: nowrap;
-    font-size: calc(var(--u) * 16);
-    font-weight: var(--w-heading);
-    letter-spacing: -0.045em;
-    line-height: 0.9;
+  /* status bar, centred on the photo's camera pill (3.5 % of the screen down) */
+  .ap__status {
+    height: calc(var(--u) * 7);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 calc(var(--u) * 3.6) 0 calc(var(--u) * 4.4);
+    font-size: max(10px, calc(var(--u) * 1.9));
+    font-weight: var(--w-label);
     font-variant-numeric: tabular-nums;
-    margin-top: calc(var(--u) * 0.6);
   }
-  .ap__big--hm {
-    font-size: calc(var(--u) * 11.5);
+  .ap__icons {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--u) * 0.6);
   }
-  .ap__unit {
-    font-size: 0.24em;
-    margin-left: 0.14em;
-    letter-spacing: 0;
-    opacity: 0.8;
+  .ap__icons svg {
+    height: calc(var(--u) * 1.2);
+    width: auto;
+    fill: var(--white);
   }
-  .ap__mean {
-    font-size: var(--t-m);
-    line-height: 1.35;
+  .ap__icons .ap__batt {
+    height: calc(var(--u) * 1.3);
   }
-  .ap__say {
-    font-size: max(15px, calc(var(--u) * 3.6));
-    font-weight: var(--w-heading);
-    letter-spacing: var(--track-tight);
-    line-height: 1.1;
-    max-width: 11em;
-    margin-top: calc(var(--u) * 0.4);
+  .ap__batt rect:first-child {
+    stroke: var(--white);
   }
 
-  /* chart: one thin line, no grid, no axis; labels only at the key points; Ochre dot for now */
-  .ap__chart {
+  .ap__pages {
     position: relative;
-    height: calc(var(--u) * 27);
-    margin-top: calc(var(--u) * 4);
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 calc(var(--u) * 1.4), #000 100%);
+    mask-image: linear-gradient(180deg, transparent 0, #000 calc(var(--u) * 1.4), #000 100%);
   }
-  .ap__chart svg {
+  .ap__page {
+    position: absolute;
+    inset: 0;
+    will-change: opacity;
+  }
+  .ap__pin {
+    padding: calc(var(--u) * 1.2) var(--pad) calc(var(--u) * 5);
+    display: grid;
+    align-content: start;
+    gap: calc(var(--u) * 3.4);
+    will-change: transform;
+  }
+  .ap__pin > * {
+    will-change: transform, opacity;
+  }
+
+  /* type: two greys only (secondary ≈ 72 %, meta ≈ 58 % white) */
+  .ap__head {
+    display: grid;
+    gap: calc(var(--u) * 0.5);
+  }
+  .ap__brand {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--u) * 0.8);
+    font-size: var(--t-meta);
+    font-weight: var(--w-label);
+    color: color-mix(in srgb, var(--white) 72%, transparent);
+    margin-bottom: calc(var(--u) * 1.4);
+  }
+  /* the product's mark: a ring */
+  .ap__brand i {
+    width: calc(var(--u) * 1.6);
+    height: calc(var(--u) * 1.6);
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 calc(var(--u) * 0.3) color-mix(in srgb, var(--white) 80%, transparent);
+  }
+  .ap__title {
+    font-size: var(--t-title);
+    line-height: 1.15;
+    font-weight: var(--w-heading);
+    letter-spacing: -0.01em;
+  }
+  .ap__meta,
+  .ap__label,
+  .ap__ticks,
+  .ap__pair dt {
+    font-size: var(--t-meta);
+    color: color-mix(in srgb, var(--white) 58%, transparent);
+  }
+  .ap__hero {
+    display: grid;
+    gap: calc(var(--u) * 0.8);
+  }
+  .ap__value {
+    font-size: calc(var(--u) * 7.2);
+    line-height: 1;
+    font-weight: var(--w-body);
+    letter-spacing: -0.035em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .ap__unit {
+    font-size: 0.3em;
+    margin-left: 0.18em;
+    letter-spacing: 0;
+    color: color-mix(in srgb, var(--white) 72%, transparent);
+  }
+  .ap__line {
+    font-size: var(--t-body);
+    line-height: 1.4;
+    color: color-mix(in srgb, var(--white) 72%, transparent);
+    max-width: 20em;
+    text-wrap: pretty;
+  }
+
+  /* the one glass panel per screen, holding the signature chart */
+  .ap__panel {
+    margin: 0;
+    padding: calc(var(--u) * 2.2) calc(var(--u) * 2.2) calc(var(--u) * 1.8);
+    border-radius: var(--rad);
+    background: color-mix(in srgb, var(--white) 5%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--white) 9%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: grid;
+    gap: calc(var(--u) * 1.2);
+  }
+  .ap__ticks {
+    display: flex;
+    justify-content: space-between;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Heart rate: the day band */
+  .ap__day {
+    position: relative;
+    height: calc(var(--u) * 14);
+    margin-top: calc(var(--u) * 2);
+  }
+  .ap__day svg {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     overflow: visible;
   }
-  .ap__line {
+  .ap__trace {
     fill: none;
-    stroke: var(--paper);
-    stroke-width: 1.5px;
+    stroke: var(--white);
+    stroke-width: 1.4;
     stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
   }
-  .ap__pt {
+  .ap__grid {
+    stroke: color-mix(in srgb, var(--white) 22%, transparent);
+    stroke-width: 1;
+    stroke-dasharray: 2 3;
+    vector-effect: non-scaling-stroke;
+  }
+  .ap__peak {
     position: absolute;
-    width: 7px;
-    height: 7px;
-    margin: -3.5px 0 0 -3.5px;
-    border-radius: 50%;
-    background: var(--paper);
+    width: 0;
+    height: 0;
   }
-  .ap__pt--now {
-    width: 10px;
-    height: 10px;
-    margin: -5px 0 0 -5px;
-    background: var(--ochre);
-    box-shadow: 0 0 0 2px var(--night);
+  .ap__peak span {
+    position: absolute;
+    left: 0;
+    bottom: calc(var(--u) * 1);
+    translate: -50% 0;
+    font-size: var(--t-meta);
+    font-style: normal;
+    color: color-mix(in srgb, var(--white) 72%, transparent);
+    white-space: nowrap;
+  }
+  .ap__now {
+    position: absolute;
+    width: calc(var(--u) * 1.4);
+    height: calc(var(--u) * 1.4);
+    translate: -50% -50%;
+    border-radius: 50%;
+    background: var(--c);
+    box-shadow:
+      0 0 0 calc(var(--u) * 0.45) color-mix(in srgb, var(--c) 30%, transparent),
+      0 0 calc(var(--u) * 2.4) color-mix(in srgb, var(--c) 55%, transparent);
+  }
+
+  /* Sleep: the night as soft blocks of its stages (one hue in three steps) */
+  .ap__ends {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--t-body);
+    font-variant-numeric: tabular-nums;
+  }
+  .ap__ends b {
+    font-weight: var(--w-label);
+  }
+  .ap__night {
+    position: relative;
+    height: calc(var(--u) * 7.5);
+  }
+  .ap__tick {
+    position: absolute;
+    top: calc(var(--u) * -0.6);
+    bottom: calc(var(--u) * -0.6);
+    width: 1px;
+    background: color-mix(in srgb, var(--white) 10%, transparent);
+  }
+  .ap__blk {
+    position: absolute;
+    border-radius: calc(var(--u) * 0.6);
+  }
+  .ap__blk--D {
+    top: 62%;
+    bottom: 0;
+    background: color-mix(in srgb, var(--led-sleep) 42%, var(--night));
+  }
+  .ap__blk--L {
+    top: 31%;
+    bottom: 31%;
+    background: color-mix(in srgb, var(--led-sleep) 72%, var(--night));
+  }
+  .ap__blk--R {
+    top: 0;
+    bottom: 62%;
+    background: color-mix(in srgb, var(--led-sleep) 62%, var(--white));
+  }
+  .ap__ticks--abs {
+    position: relative;
+    display: block;
+    height: calc(var(--t-meta) * 1.3);
+  }
+  .ap__ticks--abs span {
+    position: absolute;
+    translate: -50% 0;
   }
   .ap__key {
-    position: absolute;
-    font-size: var(--t-s);
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-  }
-  .ap__key--peak {
-    translate: calc(-100% - 8px) -50%;
-  }
-  .ap__key--rest {
-    translate: -20% calc(100% - 2px);
-    opacity: 0.8;
-  }
-
-  /* timed insight (Ultrahuman): time stamp on top, one sentence */
-  .ap__nudge {
-    border-radius: calc(var(--u) * 2.4);
-    background: var(--sand);
-    padding: calc(var(--u) * 1.8) calc(var(--u) * 2.4);
-    display: grid;
-    gap: calc(var(--u) * 0.6);
-  }
-  .ap__stamp {
-    font-size: var(--t-s);
-    color: var(--stone);
-    font-variant-numeric: tabular-nums;
-  }
-  /* the time in Ink (Ochre on Sand is 3.2:1); the Ochre stays as the one small "now" mark */
-  .ap__stamp b {
-    color: var(--ink);
-    font-weight: 600;
-  }
-  .ap__stamp b::before {
-    content: '';
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    margin: 0 6px 1px 0;
-    border-radius: 50%;
-    background: var(--ochre);
-  }
-  .ap__ntext {
-    font-size: var(--t-m);
-    line-height: 1.35;
-  }
-
-  /* sleep stages as bars (Oura order: the number first, then the detail) */
-  .ap__stages {
     list-style: none;
-    margin: calc(var(--u) * 2.6) 0 0;
+    margin: calc(var(--u) * 0.4) 0 0;
+    padding: calc(var(--u) * 1.4) 0 0;
+    border-top: 1px solid color-mix(in srgb, var(--white) 10%, transparent);
+    display: grid;
+    gap: calc(var(--u) * 1);
+    font-size: var(--t-body);
+  }
+  .ap__key li {
+    display: grid;
+    grid-template-columns: auto 1fr auto 3.2em;
+    align-items: center;
+    gap: calc(var(--u) * 1.2);
+  }
+  .ap__sw {
+    position: static;
+    display: block;
+    width: calc(var(--u) * 1.4);
+    height: calc(var(--u) * 1.4);
+    border-radius: calc(var(--u) * 0.35);
+  }
+  .ap__num {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  .ap__dim {
+    color: color-mix(in srgb, var(--white) 58%, transparent);
+  }
+
+  /* at most two details, one strip split by a hairline (no boxes) */
+  .ap__pair {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid color-mix(in srgb, var(--white) 10%, transparent);
+    padding-top: calc(var(--u) * 1.8);
+  }
+  .ap__pair div {
+    display: grid;
+    gap: calc(var(--u) * 0.5);
+  }
+  .ap__pair div + div {
+    padding-left: calc(var(--u) * 2);
+    border-left: 1px solid color-mix(in srgb, var(--white) 10%, transparent);
+  }
+  .ap__pair dd {
+    margin: 0;
+    font-size: var(--t-body);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+
+  /* ---------- D-163: small glass cards, two columns ---------- */
+  .ap__grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: calc(var(--u) * 1.4);
+    margin-top: calc(var(--u) * -1);
+  }
+  .ap__card {
+    margin: 0;
+    padding: calc(var(--u) * 1.7) calc(var(--u) * 1.7) calc(var(--u) * 1.5);
+    border-radius: var(--rad);
+    background: color-mix(in srgb, var(--white) 5%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--white) 9%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: grid;
+    align-content: start;
+    gap: calc(var(--u) * 0.5);
+    min-width: 0;
+  }
+  .ap__card--wide {
+    grid-column: 1 / -1;
+  }
+  .ap__crow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: calc(var(--u) * 1);
+  }
+  .ap__clabel {
+    font-size: var(--t-meta);
+    color: color-mix(in srgb, var(--white) 72%, transparent);
+  }
+  .ap__cval {
+    font-size: calc(var(--u) * 3.6);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .ap__cval .ap__unit {
+    font-size: 0.42em;
+  }
+  .ap__cnote,
+  .ap__cticks {
+    font-size: max(8px, calc(var(--u) * 1.5));
+    color: color-mix(in srgb, var(--white) 58%, transparent);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ap__cticks {
+    display: flex;
+    justify-content: space-between;
+    font-variant-numeric: tabular-nums;
+  }
+  .ap__mini {
+    display: block;
+    width: 100%;
+    height: calc(var(--u) * 5.2);
+    margin-top: calc(var(--u) * 0.8);
+    overflow: visible;
+  }
+  .ap__thin {
+    fill: none;
+    stroke: color-mix(in srgb, var(--white) 80%, transparent);
+    stroke-width: 1.1;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .ap__thin--c {
+    stroke: var(--c);
+  }
+  .ap__dot {
+    fill: color-mix(in srgb, var(--white) 85%, transparent);
+  }
+  .ap__dot--now {
+    fill: var(--night);
+    stroke: var(--c);
+    stroke-width: 1.6;
+  }
+  /* skin temperature: a scale with ticks and one mark */
+  .ap__scale {
+    position: relative;
+    height: calc(var(--u) * 3.2);
+    margin-top: calc(var(--u) * 1.6);
+  }
+  .ap__scale i {
+    position: absolute;
+    bottom: 0;
+    width: 1px;
+    height: 40%;
+    background: color-mix(in srgb, var(--white) 22%, transparent);
+  }
+  .ap__scale i.is-major {
+    height: 70%;
+    background: color-mix(in srgb, var(--white) 40%, transparent);
+  }
+  .ap__scale-mark {
+    position: absolute;
+    bottom: 0;
+    width: calc(var(--u) * 0.55);
+    height: 100%;
+    translate: -50% 0;
+    border-radius: 2px;
+    background: var(--c);
+    box-shadow: 0 0 calc(var(--u) * 1.2) color-mix(in srgb, var(--c) 55%, transparent);
+  }
+  /* moving: one ring, three arcs (the three moves of the day) */
+  .ap__ringrow {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: calc(var(--u) * 1.2);
+    margin-top: calc(var(--u) * 0.6);
+  }
+  .ap__ring {
+    width: calc(var(--u) * 5.6);
+    height: calc(var(--u) * 5.6);
+    rotate: -90deg;
+  }
+  .ap__ring circle {
+    fill: none;
+    stroke-width: 4;
+  }
+  .ap__ring-track {
+    stroke: color-mix(in srgb, var(--white) 10%, transparent);
+  }
+  .ap__ring-seg {
+    stroke: var(--c);
+  }
+  .ap__ringkey {
+    list-style: none;
+    margin: 0;
     padding: 0;
     display: grid;
-    gap: calc(var(--u) * 1.8);
-    font-size: var(--t-m);
-  }
-  .ap__stages li {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    row-gap: calc(var(--u) * 0.7);
-  }
-  .ap__sdur {
+    gap: calc(var(--u) * 0.2);
+    font-size: max(8px, calc(var(--u) * 1.45));
     font-variant-numeric: tabular-nums;
-    opacity: 0.8;
+    color: color-mix(in srgb, var(--white) 58%, transparent);
   }
-  .ap__sbar {
-    grid-column: 1 / -1;
-    height: calc(var(--u) * 1.1);
-    border-radius: 99px;
-    background: rgb(247 245 240 / 0.16);
-    overflow: hidden;
+  .ap__ringkey li {
+    display: flex;
+    justify-content: space-between;
+    gap: calc(var(--u) * 0.6);
+    white-space: nowrap;
   }
-  .ap__sbar b {
+  .ap__ringkey li span:last-child {
+    color: color-mix(in srgb, var(--white) 85%, transparent);
+  }
+  /* ---------- Recovery: the HRV dial (D-163), UI only (D-164) ---------- */
+  .ap__dial {
+    position: relative;
+    margin: calc(var(--u) * -0.6) calc(var(--u) * -1) calc(var(--u) * -3);
+  }
+  .ap__dial svg {
     display: block;
-    height: 100%;
-    border-radius: inherit;
-    background: var(--paper);
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .ap__dt {
+    stroke: color-mix(in srgb, var(--white) 30%, transparent);
+    stroke-width: 0.8;
+  }
+  .ap__dt--major {
+    stroke: color-mix(in srgb, var(--white) 65%, transparent);
+    stroke-width: 1.1;
+  }
+  .ap__darc-track,
+  .ap__darc-range,
+  .ap__darc {
+    fill: none;
+    stroke-linecap: round;
+  }
+  .ap__darc-track {
+    stroke: color-mix(in srgb, var(--white) 12%, transparent);
+    stroke-width: 2;
+  }
+  .ap__darc-range {
+    stroke: color-mix(in srgb, var(--white) 28%, transparent);
+    stroke-width: 2;
+  }
+  .ap__darc {
+    stroke: url(#apg-dial);
+    stroke-width: 3;
+    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--led-recovery) 80%, transparent));
+  }
+  .ap__dneedle {
+    transform-origin: 100px 88px;
+  }
+  .ap__dknob {
+    fill: var(--white);
+    filter: drop-shadow(0 0 3px var(--white)) drop-shadow(0 0 8px var(--led-recovery));
+  }
+  .ap__dlab {
+    fill: color-mix(in srgb, var(--white) 58%, transparent);
+    font-size: 7.5px;
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+  .ap__dcenter {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 38%;
+    display: grid;
+    justify-items: center;
+    gap: calc(var(--u) * 0.6);
+  }
+  .ap__dval {
+    font-size: calc(var(--u) * 9);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+  .ap__dval .ap__unit {
+    font-size: 0.26em;
+  }
+  .ap__dstatus {
+    padding: calc(var(--u) * 0.35) calc(var(--u) * 1.3);
+    border-radius: 99px;
+    font-size: var(--t-meta);
+    background: color-mix(in srgb, var(--white) 12%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--white) 18%, transparent);
+  }
+  .ap__line--c {
+    justify-self: center;
+    text-align: center;
+  }
+  .ap__pair--card {
+    background: color-mix(in srgb, var(--white) 5%, transparent);
+    border-top: 0;
+    padding: calc(var(--u) * 1.6) calc(var(--u) * 2);
+    border-radius: var(--rad);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--white) 9%, transparent);
   }
 
-  /* recovery: seven bars, today in full Ink; labels only at the two ends */
-  .ap__week {
-    height: calc(var(--u) * 34);
-    margin-top: calc(var(--u) * 4);
+
+  /* ---------- D-164: one chart family — soft glowing gradients ---------- */
+  .ap__defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+  /* Recovery ground: violet sunk into Night with a soft glow behind the dial, cocoa below */
+  .ap__glow--rec {
+    background:
+      radial-gradient(70% 34% at 50% 26%, color-mix(in srgb, var(--led-recovery) 30%, transparent), transparent 72%),
+      radial-gradient(90% 40% at 50% 100%, color-mix(in srgb, var(--cocoa) 60%, transparent), transparent 75%),
+      linear-gradient(180deg, color-mix(in srgb, var(--led-recovery) 12%, var(--night)), var(--night) 60%);
+  }
+  /* every small card: label, value, note, then its chart at the foot (rows align) */
+  .ap__grid2--sleep .ap__card {
+    grid-template-rows: auto auto auto 1fr auto;
+  }
+  .ap__grid2--sleep .ap__card--wide {
+    grid-template-rows: auto auto 1fr auto;
+  }
+  .ap__cg {
+    position: relative;
+    align-self: end;
+    height: calc(var(--u) * 5);
+    margin-top: calc(var(--u) * 1.2);
+  }
+  .ap__cticks--abs {
+    position: relative;
+    display: block;
+    height: 1.4em;
+    line-height: 1.4;
+  }
+  .ap__cticks--abs span {
+    position: absolute;
+    translate: -50% 0;
+  }
+  .ap__cticks span + span {
+    text-align: right;
+  }
+  /* Settled: the 22–01 line, the usual window as a soft band, a glowing dot at 23:10 */
+  .ap__settle-tick {
+    position: absolute;
+    top: 30%;
+    bottom: 30%;
+    width: 1px;
+    background: color-mix(in srgb, var(--white) 14%, transparent);
+  }
+  .ap__settle-tick:last-child {
+    translate: -1px 0;
+  }
+  .ap__settle-band {
+    position: absolute;
+    top: 34%;
+    bottom: 34%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--c) 45%, transparent) 30%, color-mix(in srgb, var(--c) 45%, transparent) 70%, transparent);
+  }
+  .ap__settle-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: color-mix(in srgb, var(--white) 22%, transparent);
+  }
+  .ap__settle-dot {
+    position: absolute;
+    top: 50%;
+    width: calc(var(--u) * 1.4);
+    height: calc(var(--u) * 1.4);
+    translate: -50% -50%;
+    border-radius: 50%;
+    background: var(--ap-sleep-hi);
+    box-shadow:
+      0 0 0 calc(var(--u) * 0.4) color-mix(in srgb, var(--c) 35%, transparent),
+      0 0 calc(var(--u) * 2.2) var(--c);
+  }
+  /* Woke briefly: the night as a small hypnogram, the two wakes as glowing marks */
+  .ap__hypno {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .ap__hypno-line {
+    fill: none;
+    stroke: var(--ap-sleep-hi);
+    stroke-width: 1;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .ap__wake {
+    position: absolute;
+    top: calc(var(--u) * -0.4);
+    width: calc(var(--u) * 1.1);
+    height: calc(var(--u) * 1.1);
+    translate: -50% -50%;
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow: 0 0 calc(var(--u) * 1.6) var(--white), 0 0 calc(var(--u) * 3) var(--c);
+  }
+  /* Sleep cycles: one soft wave per cycle */
+  .ap__waves {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .ap__wave-top {
+    fill: none;
+    stroke: var(--ap-sleep-hi);
+    stroke-width: 1.2;
+    vector-effect: non-scaling-stroke;
+  }
+  .ap__base {
+    stroke: color-mix(in srgb, var(--white) 16%, transparent);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  /* Restless periods: an hourly histogram, gradient bars */
+  .ap__hist {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: calc(var(--u) * 1.2);
+    grid-template-columns: repeat(8, 1fr);
+    gap: calc(var(--u) * 0.5);
     align-items: end;
   }
-  .ap__week span {
+  .ap__hist span {
     height: 100%;
     display: flex;
     align-items: flex-end;
   }
-  .ap__week b {
+  .ap__hist b {
     display: block;
     width: 100%;
-    border-radius: 3px 3px 0 0;
-    background: rgb(35 31 32 / 0.16);
+    border-radius: calc(var(--u) * 0.4) calc(var(--u) * 0.4) 0 0;
+    background: linear-gradient(180deg, var(--ap-sleep-hi), color-mix(in srgb, var(--led-sleep) 70%, transparent) 45%, transparent);
   }
-  .ap__week .is-today b {
-    background: var(--ink);
+  .ap__hist .is-zero b {
+    background: color-mix(in srgb, var(--white) 12%, transparent);
+    border-radius: 1px;
   }
-  .ap__ends {
-    display: flex;
-    justify-content: space-between;
-    font-size: var(--t-s);
-    color: var(--stone);
+  /* Time in bed: a ring of asleep vs awake and its key */
+  .ap__bed {
+    display: grid;
+    grid-template-columns: calc(var(--u) * 6) minmax(0, 1fr);
+    align-items: center;
+    gap: calc(var(--u) * 1.2);
+    height: auto;
   }
-  .ap__ends span:last-child {
-    color: var(--ink);
+  .ap__bedwrap {
+    position: relative;
+    width: calc(var(--u) * 6);
+    height: calc(var(--u) * 6);
   }
-
-  .ap__tabs {
-    display: flex;
-    justify-content: space-around;
-    padding: calc(var(--u) * 1.6) calc(var(--u) * 2) calc(var(--u) * 3);
-    background: var(--sand);
-    font-size: var(--t-s);
-    color: var(--stone);
+  .ap__bedring {
+    display: block;
+    width: 100%;
+    height: 100%;
+    rotate: -90deg;
   }
-  .ap__tabs span {
+  .ap__bedpct {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: max(8px, calc(var(--u) * 1.35));
+    font-variant-numeric: tabular-nums;
+  }
+  .ap__bedring circle {
+    fill: none;
+    stroke-width: 5;
+  }
+  .ap__bed-arc {
+    stroke: var(--ap-sleep-hi);
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 2px var(--c));
+  }
+  .ap__bedkey {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: calc(var(--u) * 0.4);
+    font-size: max(8px, calc(var(--u) * 1.45));
+    color: color-mix(in srgb, var(--white) 58%, transparent);
+  }
+  .ap__bedkey li {
     display: flex;
     align-items: center;
-    gap: 6px;
-    transition: color 0.3s;
+    gap: calc(var(--u) * 0.5);
+    white-space: nowrap;
   }
-  .ap__tabs span.is-on {
-    color: var(--ink);
+  .ap__bedkey i {
+    width: calc(var(--u) * 0.9);
+    height: calc(var(--u) * 0.9);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--white) 18%, transparent);
+  }
+  .ap__bedkey i.is-asleep {
+    background: var(--ap-sleep-hi);
+  }
+  .ap__bedkey b {
+    font-weight: var(--w-body);
+    color: color-mix(in srgb, var(--white) 88%, transparent);
+    font-variant-numeric: tabular-nums;
+  }
+  /* Recovery week: slim gradient bars, value on top, day under, hairlines between */
+  .ap__gbars {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    height: calc(var(--u) * 22);
+    margin-top: calc(var(--u) * 0.8);
+  }
+  .ap__gbars > span {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    justify-items: center;
+    gap: calc(var(--u) * 0.7);
+    min-width: 0;
+  }
+  .ap__gbars > span + span {
+    background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--white) 8%, transparent) 20%, color-mix(in srgb, var(--white) 8%, transparent) 85%, transparent) left / 1px 100% no-repeat;
+  }
+  /* the value rides on the bar's top as it grows */
+  .ap__gbars em {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + var(--u) * 0.6);
+    translate: -50% 0;
+  }
+  .ap__gbars em,
+  .ap__gbars small {
+    font-style: normal;
+    font-size: max(8px, calc(var(--u) * 1.5));
+    font-variant-numeric: tabular-nums;
+    color: color-mix(in srgb, var(--white) 58%, transparent);
+    white-space: nowrap;
+  }
+  .ap__gcol {
+    position: relative;
+    width: 46%;
+    height: calc(100% - var(--u) * 3);
+    margin-top: calc(var(--u) * 3);
+    display: flex;
+    align-items: flex-end;
+  }
+  .ap__gcol b {
+    position: relative;
+    display: block;
+    width: 100%;
+    border-radius: calc(var(--u) * 0.6) calc(var(--u) * 0.6) 0 0;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--ap-rec-hi) 85%, transparent) 0%, color-mix(in srgb, var(--led-recovery) 70%, transparent) 34%, color-mix(in srgb, var(--led-recovery) 22%, transparent) 72%, transparent 100%);
+  }
+  .is-today .ap__gcol b {
+    background: linear-gradient(180deg, var(--white) 0%, var(--ap-rec-hi) 10%, var(--led-recovery) 42%, color-mix(in srgb, var(--led-recovery) 35%, transparent) 78%, transparent 100%);
+  }
+  /* the today bar's glow: a soft light at its top only (no box edges) */
+  .is-today .ap__gcol b::before {
+    content: '';
+    position: absolute;
+    left: -60%;
+    right: -60%;
+    top: calc(var(--u) * -1.6);
+    height: calc(var(--u) * 5);
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--led-recovery) 55%, transparent), transparent);
+    pointer-events: none;
+  }
+  .ap__gbars .is-today em,
+  .ap__gbars .is-today small {
+    color: var(--white);
   }
 
-  /* local review only: one page, no scroll */
-  .ap__phone[data-only='0'] .ap__page:not(:nth-child(1)),
-  .ap__phone[data-only='1'] .ap__page:not(:nth-child(2)),
-  .ap__phone[data-only='2'] .ap__page:not(:nth-child(3)) {
+  /* phones: the section's lower text sits over the wrist, so it melts away sooner */
+  @media (max-width: 719px) {
+    /* the small screen has no room for the ring's key; 97 % in the ring says it */
+    .ap__bedkey {
+      display: none;
+    }
+    .ap__hand,
+    .ap__front {
+      -webkit-mask-image: linear-gradient(180deg, #000 68%, transparent 90%);
+      mask-image: linear-gradient(180deg, #000 68%, transparent 90%);
+    }
+  }
+
+  /* local review only: one page */
+  .ap__phone[data-only='0'] .ap__page:not([data-p-page='0']),
+  .ap__phone[data-only='1'] .ap__page:not([data-p-page='1']),
+  .ap__phone[data-only='2'] .ap__page:not([data-p-page='2']) {
     display: none;
   }
 </style>
