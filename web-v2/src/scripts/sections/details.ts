@@ -2,10 +2,11 @@
  * S06 Product details — 21:00 · Paper (D-144; Figma Design 06 State 1–4 40004263:662 … :794 and
  * 06 · Tangan & ring A–C 40004325:3298 … :3368; final pose design/3d/v2/s06-pose.json).
  * u: -1..0 connection from S05 (the camera backs out of the ring, it lands on the table; Dusk → Paper)
- *  0  State 1  the ring stands upright, opening to the camera, on the pine table; it rolls right,
- *              turning by the distance (angle = distance / radius), two motion ghosts while it moves;
- *              "Made to be forgotten."
- *  1  State 2  nearer the edge; "One quiet band"
+ *  0  State 1  one ring stands upright, opening to the camera, against the left edge of the screen
+ *              on the pine table; from here it rolls on, smoothly with the scroll, turning by the
+ *              distance (angle = distance / radius, no slip) all the way to the table's edge (D-145:
+ *              no motion ghosts, no stops); "Made to be forgotten."
+ *  1  State 2  on its way; "One quiet band"
  *  2  State 3  at the edge (x 720 of 1440); "Softened edges"; it tips over the corner…
  *  3  Hand A   …and drops on the right; the hand (photo A-1, no ring) rises from below the screen,
  *              only the fingertip in view; "Then, it just fits." faint on top
@@ -36,10 +37,10 @@ function layout(ctx: Ctx) {
   const ty = m ? H * 0.6 : 600 * sy; // table top (back edge)
   const contact = ty + 0.47 * (H - ty); // where the ring stands (Figma y ≈ 741)
   const D = m ? Math.min(W * 0.42, H * 0.22) : 316 * s; // ring diameter (Figma 316)
-  // phones: the table is half the screen, so the roll starts at its left edge, fully in view
-  const x0 = m ? 0.55 * D : tx - 250 * s; // State 1 (Figma centre 470)
-  const x1 = m ? tx - 0.42 * D : tx - 108 * s; // State 2 (Figma centre 612)
+  // D-145: one roll from the left edge of the screen (the ring just touching it) to the table edge
+  const x0 = D / 2;
   const x2 = tx - 0.04 * D; // State 3: at the edge
+  const x1 = lerp(x0, x2, 0.5); // the still for reduced motion / no WebGL
   // hand A-1 (579 × 1198 img px). Figma Hand C: A-1 at 0.807 of 900 px, seat (343, 360) at (723, 696)
   const hs = m ? (0.45 * H) / 844 : 0.807 * sy;
   const seatX = m ? W / 2 + 6 : W / 2 + 3 * s;
@@ -100,15 +101,13 @@ function withHand(p: Pose, off: { dx: number; dy: number }, L: L6): Pose {
 const UP = { rx: 0, ry: 0, rz: 0 };
 const TIP = 40 * D2R; // how far it tips over the corner before it lets go
 
-/** ring centre x on the table for u in 0..2 (eased between the states, still at each state) */
+/** ring centre x on the table for u in 0..2: one smooth roll from the left edge to the table edge */
 function rollX(u: number, L: L6) {
-  if (u <= 0) return L.x0;
-  if (u <= 1) return lerp(L.x0, L.x1, seg(u, 0.1, 0.95));
-  return lerp(L.x1, L.x2, seg(u, 1.1, 1.95));
+  return lerp(L.x0, L.x2, seg(u, 0, 2));
 }
 
-/** the rolling ring (u ≤ 2) and the tip over the corner (2 → 2.55): centre, spin, ghost strength */
-function onTable(u: number, ctx: Ctx, L: L6) {
+/** the rolling ring (u ≤ 2) and the tip over the corner (2 → 2.55): centre and spin */
+function onTable(u: number, _ctx: Ctx, L: L6) {
   const r = L.D / 2;
   const x = rollX(Math.min(u, 2), L);
   let cx = x;
@@ -125,11 +124,7 @@ function onTable(u: number, ctx: Ctx, L: L6) {
     cy = L.contact - r * Math.cos(th);
     spin -= th;
   }
-  // ghosts: only while it moves, stronger when faster
-  const e = 0.02;
-  const v = Math.abs(rollX(Math.min(u + e, 2), L) - rollX(Math.max(Math.min(u - e, 2), 0), L)) / (2 * e);
-  const ghost = ctx.reduced ? 0 : clamp01(v / (0.9 * L.D)) * (1 - seg(u, 1.95, 2.1));
-  return { cx, cy, spin, ghost };
+  return { cx, cy, spin };
 }
 
 /** state 4: above the fingertip → seat, onFinger pose with the view correction (s06-pose.json) */
@@ -288,8 +283,7 @@ export const details: SectionMotion = {
       pose({ x: fx(cx, L.W), y: fy(cy, L.H), w: L.D / L.W, ...UP, spin, ...extra });
     if (u <= 2.55) {
       const t = onTable(Math.max(0, u), ctx, L);
-      const ghostDx = (0.46 * L.D) / L.W;
-      return base(t.cx, t.cy, t.spin, { ghost: t.ghost, ghostDx, ghostSpin: (ghostDx * L.W) / r });
+      return base(t.cx, t.cy, t.spin);
     }
     // the fall (oryzo.ai): from the corner down and right onto the fingertip of the rising hand,
     // turning from facing the camera to side-on as it drops, quick at first, slowing near the finger
