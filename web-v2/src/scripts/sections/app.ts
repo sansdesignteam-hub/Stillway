@@ -4,12 +4,13 @@
  *          and leaves upward; Night → Paper; the phone rises to the middle on the Heart rate screen;
  *          chip, texts and footer come in during 70–100%)
  *  0 → 2  Heart rate (green)  ·  2 → 4  Sleep (blue)  ·  4 → 6.6  Recovery (violet)
- * Inside each mode, tied to the scroll (scrub), as in the reference videos:
- *  (a) the glass cards come in one after another, top down;
- *  (b) the numbers count up, the lines draw left to right, the bars grow, the ring fills, the beam
- *      comes down from the panel;
- *  (c) then the screen content scrolls up slowly, like a thumb scrolling the app.
- * Between modes: the page and the light cross-fade, the tab highlight slides. Soft easing, no bounce.
+ * Inside each mode, tied to the scroll (scrub), as in the reference videos (D-161, layout D-162):
+ *  (a) the title, the value, the chart panel and the details come in one after another;
+ *  (b) the numbers count up, the chart draws left to right (the day line, the night's blocks), the
+ *      week's columns grow, then the chart's marks (stairs, now) appear;
+ *  (c) then, if the page is taller than the screen, it scrolls up slowly.
+ * Between modes: the page and the corner light cross-fade (the texts outside the phone change with
+ * them). Soft easing, no bounce.
  * Reduced motion: whole states, every screen shown complete, short opacity fades (global.css).
  *  > 6.6  to S10: the screen fades, the phone slides right and widens into the S10 panel.
  */
@@ -24,21 +25,17 @@ const MODE = 2;
 interface Page {
   el: HTMLElement;
   pin: HTMLElement | null;
-  cards: HTMLElement[];
+  items: HTMLElement[];
   nums: Array<{ el: HTMLElement; to: number; last: string }>;
   draws: HTMLElement[];
-  ends: HTMLElement[];
-  bars: HTMLElement[];
-  grows: HTMLElement[];
-  rings: Array<{ el: SVGCircleElement; len: number; of: number }>;
-  beam: HTMLElement | null;
+  marks: HTMLElement[];
+  grows: Array<{ el: HTMLElement; h: number }>;
   over: number;
 }
 let el: Record<string, HTMLElement | null> = {};
 let lefts: HTMLElement[] = [];
 let rights: HTMLElement[] = [];
 let flabels: HTMLElement[] = [];
-let tabs: HTMLElement[] = [];
 let glows: HTMLElement[] = [];
 let pages: Page[] = [];
 let measured = '';
@@ -79,19 +76,15 @@ export const app: SectionMotion = {
     lefts = all('[data-p-left]');
     rights = all('[data-p-right]');
     flabels = all('[data-p-flabel]');
-    tabs = all('[data-p-tab]');
     glows = all('[data-p-glow]');
     pages = all('[data-p-page]').map((pg) => ({
       el: pg,
       pin: pg.querySelector<HTMLElement>('[data-p-pin]'),
-      cards: all('[data-p-card]', pg),
+      items: all('[data-p-item]', pg),
       nums: all('[data-n]', pg).map((n) => ({ el: n, to: Number(n.dataset.n), last: '' })),
       draws: all('[data-draw]', pg),
-      ends: all('[data-end]', pg),
-      bars: all('[data-bar]', pg),
-      grows: all('[data-grow]', pg),
-      rings: [...pg.querySelectorAll<SVGCircleElement>('[data-ring]')].map((c) => ({ el: c, len: Number(c.dataset.len), of: Number(c.dataset.ring) })),
-      beam: pg.querySelector<HTMLElement>('[data-beam]'),
+      marks: all('[data-p-mark]', pg),
+      grows: all('[data-grow]', pg).map((g) => ({ el: g, h: parseFloat(g.style.height) || 0 })),
       over: 0,
     }));
     const reset = () => (measured = '');
@@ -117,7 +110,6 @@ export const app: SectionMotion = {
     lefts.forEach((l, i) => put(l, { o: near(i) * inn * out, y: (1 - near(i)) * 10 }, ctx));
     rights.forEach((l, i) => put(l, { o: near(i) * inn * out, y: (1 - near(i)) * 10 }, ctx));
     flabels.forEach((l, i) => (l.style.opacity = near(i).toFixed(3)));
-    el.phone?.style.setProperty('--tab', f.toFixed(4));
 
     pages.forEach((pg, k) => {
       const show = ctx.reduced ? (k === f ? 1 : 0) : showOf(k, u);
@@ -126,14 +118,14 @@ export const app: SectionMotion = {
       if (show < 0.002) return;
       // reduced motion: the screen complete, not scrolled
       const p = ctx.reduced ? 1 : playOf(k, u);
-      // (a) cards in, one after another
-      pg.cards.forEach((c, j) => {
-        const e = ctx.reduced ? 1 : smooth(clamp01((p - 0.055 * j) / 0.2));
+      // (a) title, value, chart panel, details: in, one after another
+      pg.items.forEach((c, j) => {
+        const e = ctx.reduced ? 1 : smooth(clamp01((p - 0.07 * j) / 0.2));
         set(c, 'opacity', e.toFixed(3));
-        set(c, 'transform', e > 0.999 ? '' : `translate3d(0, ${((1 - e) * 16).toFixed(1)}px, 0)`);
+        set(c, 'transform', e > 0.999 ? '' : `translate3d(0, ${((1 - e) * 14).toFixed(1)}px, 0)`);
       });
-      // (b) numbers count up, lines draw, bars grow, the ring fills, the beam comes down
-      const count = seg(p, 0.08, 0.45);
+      // (b) numbers count up, the chart draws, the columns grow, then the marks
+      const count = ctx.reduced ? 1 : seg(p, 0.08, 0.45);
       pg.nums.forEach((n) => {
         const v = String(Math.round(n.to * count));
         if (v !== n.last) {
@@ -141,14 +133,14 @@ export const app: SectionMotion = {
           n.el.textContent = v;
         }
       });
-      const draw = seg(p, 0.14, 0.5);
+      const draw = ctx.reduced ? 1 : seg(p, 0.22, 0.58);
       pg.draws.forEach((d) => set(d, 'clipPath', draw > 0.999 ? '' : `inset(-30% ${((1 - draw) * 100).toFixed(2)}% -30% 0)`));
-      pg.ends.forEach((d) => set(d, 'opacity', seg(p, 0.46, 0.54).toFixed(3)));
-      const bar = seg(p, 0.18, 0.5);
-      pg.bars.forEach((b) => set(b, 'clipPath', bar > 0.999 ? '' : `inset(0 ${((1 - bar) * 100).toFixed(2)}% 0 0)`));
-      pg.grows.forEach((b, j) => set(b, 'transform', `scaleY(${seg(p, 0.2 + 0.03 * j, 0.48 + 0.03 * j).toFixed(4)})`));
-      pg.rings.forEach((r) => r.el.setAttribute('stroke-dasharray', `${(r.len * r.of * seg(p, 0.14, 0.5)).toFixed(2)} ${r.len.toFixed(2)}`));
-      if (pg.beam) set(pg.beam, 'transform', `scaleY(${seg(p, 0.28, 0.5).toFixed(4)})`);
+      pg.marks.forEach((m) => set(m, 'opacity', (ctx.reduced ? 1 : seg(p, 0.54, 0.62)).toFixed(3)));
+      pg.grows.forEach((g, j) => {
+        const k = ctx.reduced ? 1 : seg(p, 0.24 + 0.035 * j, 0.5 + 0.035 * j);
+        const v = `${(g.h * k).toFixed(2)}%`;
+        if (g.el.style.height !== v) g.el.style.height = v;
+      });
       // (c) the content scrolls up slowly once everything is in
       if (pg.pin) {
         const sc = ctx.reduced ? 0 : seg(p, 0.56, 0.96) * pg.over;
@@ -159,7 +151,6 @@ export const app: SectionMotion = {
     const idx = Math.round(f);
     if (idx !== lastIdx) {
       lastIdx = idx;
-      tabs.forEach((t, i) => t.classList.toggle('is-on', i === idx));
       if (el.pct) el.pct.textContent = `${[33, 66, 100][idx]}%`;
     }
     el.prog?.style.setProperty('--p', ((f + 1) / 3).toFixed(3));
