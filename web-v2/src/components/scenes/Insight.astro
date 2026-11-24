@@ -153,12 +153,12 @@ const [settled, up] = c.line.split(' · ');
     justify-content: space-between;
     gap: 12px;
   }
-  /* Label/X-Small in capitals in an ochre outline (the outline is not text); the label is Paper
+  /* Label/X-Small in capitals in a thin Paper 45 % outline (D-158); the label is Paper
      (D-156: no ochre text) */
   .ins__chip {
     padding: 6px 14px;
     border-radius: 100px;
-    border: 1px solid color-mix(in srgb, var(--ochre) 50%, transparent);
+    border: 1px solid color-mix(in srgb, var(--paper) 45%, transparent); /* D-158: white, not ochre */
     font-weight: var(--w-label);
     font-size: var(--t-label-xs-size);
     line-height: var(--t-label-xs-lh);

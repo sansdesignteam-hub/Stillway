@@ -183,20 +183,21 @@ const stills = [
     letter-spacing: var(--t-label-xs-ls);
     color: var(--stone-on-night);
   }
-  /* off note: red dot 8 + Paragraph/Small, white */
+  /* off note (D-158): on the legend's grid — the same 10 px dot in the same column, the same 12 px
+     to the text, the same Paragraph/Medium as the labels above */
   .ft__off {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    font-size: var(--t-para-sm-size);
-    line-height: var(--t-para-sm-lh);
-    letter-spacing: var(--t-para-sm-ls);
+    gap: 12px;
+    font-size: var(--t-para-md-size);
+    line-height: var(--t-para-md-lh);
+    letter-spacing: var(--t-para-md-ls);
   }
   .ft__off i {
     flex: none;
-    width: 8px;
-    height: 8px;
-    margin-top: calc((var(--t-para-sm-lh) - 8px) / 2);
+    width: 10px;
+    height: 10px;
+    margin-top: calc((var(--t-para-md-lh) - 10px) / 2);
     border-radius: 50%;
     background: var(--led-off);
     box-shadow: 0 0 calc(8px * var(--glow, 0)) var(--led-off);
