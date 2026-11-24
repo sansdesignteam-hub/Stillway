@@ -1,47 +1,100 @@
 /**
- * S09 The app — 21:00 · Paper (D-096; flow Storyboard §2, look Figma sticky 40004185:54).
+ * S09 The app — 21:00 · Paper (D-096 layout; D-159 app screen; D-161 motion after the app videos).
  * u: -1..0 connection from S08 (the title fades; the violet light dims, a brief green; the ring shrinks
  *          and leaves upward; Night → Paper; the phone rises to the middle on the Heart rate screen;
  *          chip, texts and footer come in during 70–100%)
- *  0  state 1  Heart rate (green)
- *  1  state 2  Sleep (blue)
- *  2  state 3  Recovery (violet)
- *  > 2.6       to S10 (placeholder): everything fades, Paper → Sand
- * The phone stays still; only its screen content scrolls (one page per state, with a dwell).
+ *  0 → 2  Heart rate (green)  ·  2 → 4  Sleep (blue)  ·  4 → 6.6  Recovery (violet)
+ * Inside each mode, tied to the scroll (scrub), as in the reference videos:
+ *  (a) the glass cards come in one after another, top down;
+ *  (b) the numbers count up, the lines draw left to right, the bars grow, the ring fills, the beam
+ *      comes down from the panel;
+ *  (c) then the screen content scrolls up slowly, like a thumb scrolling the app.
+ * Between modes: the page and the light cross-fade, the tab highlight slides. Soft easing, no bounce.
+ * Reduced motion: whole states, every screen shown complete, short opacity fades (global.css).
+ *  > 6.6  to S10: the screen fades, the phone slides right and widens into the S10 panel.
  */
-import { put, seg, lerp, clamp01, smooth, window4, type Ctx } from '../anim';
+import { put, seg, lerp, clamp01, smooth, window4 } from '../anim';
 import { pose, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
 
-const END = 2.6;
+const END = 6.6;
+/** section units per mode */
+const MODE = 2;
+
+interface Page {
+  el: HTMLElement;
+  pin: HTMLElement | null;
+  cards: HTMLElement[];
+  nums: Array<{ el: HTMLElement; to: number; last: string }>;
+  draws: HTMLElement[];
+  ends: HTMLElement[];
+  bars: HTMLElement[];
+  grows: HTMLElement[];
+  rings: Array<{ el: SVGCircleElement; len: number; of: number }>;
+  beam: HTMLElement | null;
+  over: number;
+}
 let el: Record<string, HTMLElement | null> = {};
 let lefts: HTMLElement[] = [];
 let rights: HTMLElement[] = [];
 let flabels: HTMLElement[] = [];
-let cards: HTMLElement[] = [];
 let tabs: HTMLElement[] = [];
-let page = 0;
-let stops: number[] = [];
+let glows: HTMLElement[] = [];
+let pages: Page[] = [];
+let measured = '';
 let lastIdx = -1;
 
-const focusOf = (u: number) => {
-  const raw = clamp01(u / 2) * 2;
-  const base = Math.floor(raw);
-  return Math.min(2, base + smooth(smooth(raw - base)));
-};
+/** the active mode as a continuous value 0..2 (the tab highlight, the texts) */
+const modeOf = (u: number) => seg(u, MODE - 0.2, MODE + 0.15) + seg(u, 2 * MODE - 0.2, 2 * MODE + 0.15);
+/** how far mode k has played, 0..1 (mode 0 starts as the phone lands) */
+const playOf = (k: number, u: number) => clamp01((u - MODE * k + 0.14) / 1.7);
+/** page k's opacity: the old page goes first, then the new one comes (no double exposure) */
+const showOf = (k: number, u: number) =>
+  (k === 0 ? 1 : seg(u, MODE * k - 0.14, MODE * k + 0.06)) * (k === 2 ? 1 : 1 - seg(u, MODE * (k + 1) - 0.28, MODE * (k + 1) - 0.1));
+
+const cache = new WeakMap<Element, string>();
+function set(e: HTMLElement | SVGElement, prop: 'transform' | 'clipPath' | 'opacity', v: string) {
+  const key = `${prop}:${v}`;
+  const k = cache.get(e);
+  if (k === key) return;
+  cache.set(e, key);
+  (e.style as any)[prop] = v;
+}
+
+function measure() {
+  const key = `${window.innerWidth}x${window.innerHeight}`;
+  if (key === measured || !el.pages) return;
+  measured = key;
+  const h = el.pages.clientHeight;
+  pages.forEach((p) => {
+    p.over = p.pin ? Math.max(0, p.pin.offsetHeight - h) : 0;
+  });
+}
 
 export const app: SectionMotion = {
   init(r) {
     const q = (s: string) => r.querySelector<HTMLElement>(s);
-    const all = (s: string) => [...r.querySelectorAll<HTMLElement>(s)];
-    el = { phone: q('[data-p-phone]'), scroll: q('[data-p-scroll]'), sim: q('[data-p-sim]'), foot: q('[data-p-foot]'), prog: q('[data-p-prog]'), pct: q('[data-p-pct]') };
+    const all = (s: string, from: ParentNode = r) => [...from.querySelectorAll<HTMLElement>(s)];
+    el = { phone: q('[data-p-phone]'), pages: q('[data-p-pages]'), foot: q('[data-p-foot]'), prog: q('[data-p-prog]'), pct: q('[data-p-pct]') };
     lefts = all('[data-p-left]');
     rights = all('[data-p-right]');
     flabels = all('[data-p-flabel]');
-    cards = all('[data-p-card]');
     tabs = all('[data-p-tab]');
-    // re-measure the page stops after a resize or when the fonts land
-    const reset = () => (page = 0);
+    glows = all('[data-p-glow]');
+    pages = all('[data-p-page]').map((pg) => ({
+      el: pg,
+      pin: pg.querySelector<HTMLElement>('[data-p-pin]'),
+      cards: all('[data-p-card]', pg),
+      nums: all('[data-n]', pg).map((n) => ({ el: n, to: Number(n.dataset.n), last: '' })),
+      draws: all('[data-draw]', pg),
+      ends: all('[data-end]', pg),
+      bars: all('[data-bar]', pg),
+      grows: all('[data-grow]', pg),
+      rings: [...pg.querySelectorAll<SVGCircleElement>('[data-ring]')].map((c) => ({ el: c, len: Number(c.dataset.len), of: Number(c.dataset.ring) })),
+      beam: pg.querySelector<HTMLElement>('[data-beam]'),
+      over: 0,
+    }));
+    const reset = () => (measured = '');
     window.addEventListener('resize', reset);
     document.fonts?.ready.then(reset);
   },
@@ -54,36 +107,58 @@ export const app: SectionMotion = {
     // into the S10 panel (finishes.ts brings the panel in from the same side)
     const go = seg(u, END + 0.25, END + 0.75);
     put(el.phone, { o: Math.min(1, rise * 1.6) * (1 - seg(u, END + 0.5, END + 0.8)), y: (1 - rise) * H * 0.55, x: go * window.innerWidth * 0.26, s: 1 + 0.12 * go }, ctx);
-    if (el.scroll) el.scroll.style.opacity = (1 - seg(u, END, END + 0.3)).toFixed(3);
-    put(el.sim, { o: inn * out }, ctx);
+    if (el.pages) el.pages.style.opacity = (1 - seg(u, END, END + 0.3)).toFixed(3);
     put(el.foot, { o: inn * out }, ctx);
+    measure();
 
-    const f = focusOf(u);
+    // the mode: continuous for the tab highlight and the side texts; whole under reduced motion
+    const f = ctx.reduced ? Math.min(2, Math.floor(Math.max(0, u) / MODE)) : modeOf(u);
     const near = (i: number) => clamp01(1 - Math.abs(f - i) * 2.2);
     lefts.forEach((l, i) => put(l, { o: near(i) * inn * out, y: (1 - near(i)) * 10 }, ctx));
     rights.forEach((l, i) => put(l, { o: near(i) * inn * out, y: (1 - near(i)) * 10 }, ctx));
     flabels.forEach((l, i) => (l.style.opacity = near(i).toFixed(3)));
+    el.phone?.style.setProperty('--tab', f.toFixed(4));
 
-    // the screen scrolls one page per state; pages are as tall as their content, so the head of the
-    // next page peeks under the current one (D-096 r1). The last stop is capped so Recovery ends at
-    // the bottom of the screen instead of leaving a tall empty space.
-    if (el.scroll) {
-      const vh = el.scroll.parentElement?.offsetHeight ?? 0;
-      if (vh && vh !== page) {
-        page = vh;
-        const pages = [...el.scroll.children] as HTMLElement[];
-        const max = Math.max(0, el.scroll.scrollHeight - vh);
-        stops = pages.map((p) => Math.min(p.offsetTop, max));
+    pages.forEach((pg, k) => {
+      const show = ctx.reduced ? (k === f ? 1 : 0) : showOf(k, u);
+      put(pg.el, { o: show }, ctx);
+      put(glows[k], { o: show }, ctx);
+      if (show < 0.002) return;
+      // reduced motion: the screen complete, not scrolled
+      const p = ctx.reduced ? 1 : playOf(k, u);
+      // (a) cards in, one after another
+      pg.cards.forEach((c, j) => {
+        const e = ctx.reduced ? 1 : smooth(clamp01((p - 0.055 * j) / 0.2));
+        set(c, 'opacity', e.toFixed(3));
+        set(c, 'transform', e > 0.999 ? '' : `translate3d(0, ${((1 - e) * 16).toFixed(1)}px, 0)`);
+      });
+      // (b) numbers count up, lines draw, bars grow, the ring fills, the beam comes down
+      const count = seg(p, 0.08, 0.45);
+      pg.nums.forEach((n) => {
+        const v = String(Math.round(n.to * count));
+        if (v !== n.last) {
+          n.last = v;
+          n.el.textContent = v;
+        }
+      });
+      const draw = seg(p, 0.14, 0.5);
+      pg.draws.forEach((d) => set(d, 'clipPath', draw > 0.999 ? '' : `inset(-30% ${((1 - draw) * 100).toFixed(2)}% -30% 0)`));
+      pg.ends.forEach((d) => set(d, 'opacity', seg(p, 0.46, 0.54).toFixed(3)));
+      const bar = seg(p, 0.18, 0.5);
+      pg.bars.forEach((b) => set(b, 'clipPath', bar > 0.999 ? '' : `inset(0 ${((1 - bar) * 100).toFixed(2)}% 0 0)`));
+      pg.grows.forEach((b, j) => set(b, 'transform', `scaleY(${seg(p, 0.2 + 0.03 * j, 0.48 + 0.03 * j).toFixed(4)})`));
+      pg.rings.forEach((r) => r.el.setAttribute('stroke-dasharray', `${(r.len * r.of * seg(p, 0.14, 0.5)).toFixed(2)} ${r.len.toFixed(2)}`));
+      if (pg.beam) set(pg.beam, 'transform', `scaleY(${seg(p, 0.28, 0.5).toFixed(4)})`);
+      // (c) the content scrolls up slowly once everything is in
+      if (pg.pin) {
+        const sc = ctx.reduced ? 0 : seg(p, 0.56, 0.96) * pg.over;
+        set(pg.pin, 'transform', sc > 0.05 ? `translate3d(0, ${(-sc).toFixed(1)}px, 0)` : '');
       }
-      const fi = ctx.reduced ? Math.round(f) : f;
-      const i0 = Math.min(1, Math.floor(fi));
-      const y = stops.length ? lerp(stops[i0], stops[i0 + 1], fi - i0) : 0;
-      el.scroll.style.transform = `translate3d(0, ${(-y).toFixed(1)}px, 0)`;
-    }
+    });
+
     const idx = Math.round(f);
     if (idx !== lastIdx) {
       lastIdx = idx;
-      cards.forEach((c, i) => c.classList.toggle('is-active', i === idx));
       tabs.forEach((t, i) => t.classList.toggle('is-on', i === idx));
       if (el.pct) el.pct.textContent = `${[33, 66, 100][idx]}%`;
     }
@@ -91,8 +166,8 @@ export const app: SectionMotion = {
   },
   // no ring in S09
   ring: () => pose({ x: 0, y: 0.6, w: 0.12, alpha: 0, light: 0 }),
-  // 08 → 09: the violet light dims, the light flashes green for a moment, then the ring shrinks and
-  // leaves upward before Night turns to Paper
+  // 08 → 09: the light dims, the light flashes green for a moment, then the ring shrinks and leaves
+  // upward before Night turns to Paper
   ringIn(x, _ctx, from): Pose {
     const flash = window4(x, 0.16, 0.22, 0.28, 0.36);
     const go = seg(x, 0.28, 0.62);

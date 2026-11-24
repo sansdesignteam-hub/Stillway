@@ -63,14 +63,12 @@ export const sleep = {
     { tag: 'Broken', value: '2×', sr: 'Broken twice' },
   ],
   line: 'A picture of the night, not a verdict on it.',
-  simulated: 'Simulated data',
 };
 
 export const activity = {
   status: 'title + body draft; states approved D-066',
   heading: ['Activity', 'and rest.'], // shown as "ACTIVITY" caps + "and rest."
   body: 'Through the day the ring keeps two quiet tallies: the time you spend moving and the moments you stop. Seen together they show the rhythm of a day.',
-  simulated: 'Simulated data',
   // photos: 5 C-02 frames from V1, not retouched (D-073); alt text draft (home-copy-v2), adjusted to the frames
   frames: [
     { key: 's0740', time: '07:40', state: 'Moving', detail: '25 min walk', alt: '07:40 — A man walking outside in early light, the ring on his left index finger.' },
@@ -93,8 +91,7 @@ export const insight = {
     progress: 0.9, // bar length only, rested against a personal target; no percent label (home-copy-v2)
     line: 'Settled 23:10 · Up 06:22',
     insight: 'You took more short pauses this afternoon than on most weekdays.',
-    simulated: 'Simulated data',
-  },
+    },
 };
 
 export const details = {
@@ -147,7 +144,6 @@ export const app = {
     { key: 'violet', chip: 'Violet light · Recovery', left: 'The violet light, read back. How the night sat against the rest of your week.', right: 'HRV across the week, with today in full colour.', label: 'Recovery' },
   ],
   scroll: 'Scroll down',
-  simulated: 'Simulated data',
   heart: { label: 'Resting', value: '58', unit: 'bpm', peak: 'Peak 82 bpm · 15:30 stairs' },
   // stage durations are simulated and add up to 7h 12m (D-066 set)
   sleep: { line: 'Settled 23:10 · Up 06:22', h: '7', m: '12', stages: [{ name: 'Deep', d: '1h 24m', min: 84 }, { name: 'REM', d: '1h 36m', min: 96 }, { name: 'Light', d: '4h 12m', min: 252 }] },

@@ -47,7 +47,6 @@ const [settled, up] = c.line.split(' · ');
         <div class="ins__in" data-i-in>
         <div class="ins__top" data-i-st>
           <p class="ins__chip">{c.label}</p>
-          <p class="ins__sim">{c.simulated}</p>
         </div>
         <p class="ins__value" aria-label={c.sr} data-i-st>
           <span>7</span><span class="ins__unit">h</span><span>12</span><span class="ins__unit">m</span>
@@ -165,16 +164,6 @@ const [settled, up] = c.line.split(' · ');
     letter-spacing: var(--t-caps-ls);
     text-transform: uppercase;
     color: var(--paper);
-    white-space: nowrap;
-  }
-  /* Label/X-Small in capitals, white 50% (D-156) */
-  .ins__sim {
-    font-weight: var(--w-label);
-    font-size: var(--t-label-xs-size);
-    line-height: var(--t-label-xs-lh);
-    letter-spacing: var(--t-caps-ls);
-    text-transform: uppercase;
-    color: color-mix(in srgb, var(--white) 50%, transparent);
     white-space: nowrap;
   }
   /* Display/Display 4 with Heading/Heading 2 units at 60% */

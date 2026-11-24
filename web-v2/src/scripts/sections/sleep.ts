@@ -53,7 +53,7 @@ const DARK_DIM = 1.36;
 export const sleep: SectionMotion = {
   init(r) {
     const q = (s: string) => r.querySelector<HTMLElement>(s);
-    el = { head: q('[data-s-head]'), line: q('[data-s-line]'), sim: q('[data-s-sim]'), light: q('[data-s-light]') };
+    el = { head: q('[data-s-head]'), line: q('[data-s-line]'), light: q('[data-s-light]') };
     stats = [...r.querySelectorAll<HTMLElement>('[data-s-stat]')];
     measureVh();
     window.addEventListener('resize', measureVh);
@@ -81,7 +81,6 @@ export const sleep: SectionMotion = {
       put(s, { o: inn * (1 - 0.72 * back) * (1 - gone) * out, y, s: scale }, ctx);
       s.classList.toggle('is-active', u >= a + 0.2 && (i === stats.length - 1 || u < a + 1.2));
     });
-    put(el.sim, { o: seg(u, 0.6, 1) * out, y: up }, ctx);
     put(el.line, { o: seg(u, 2.6, 3) * out, y: up }, ctx);
   },
   ring(u, ctx: Ctx) {

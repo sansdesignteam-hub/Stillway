@@ -38,7 +38,6 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
       </dl>
       <div class="sleep__foot">
         <p class="sleep__line" data-s-line data-a>{sleep.line}</p>
-        <p class="t-caps sleep__sim" data-s-sim data-a>{sleep.simulated}</p>
       </div>
     </div>
   </div>
@@ -132,9 +131,6 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
     font-size: var(--t-para-sm-size);
     line-height: var(--t-para-sm-lh);
     letter-spacing: var(--t-para-sm-ls);
-  }
-  .sleep__sim {
-    color: var(--stone-on-night);
   }
   .sleep__fb {
     --rw: min(56vw, 82vh);
