@@ -45,7 +45,7 @@ export const why = {
       small: 'Scores, streaks and red alerts can make rest feel like homework.',
     },
     {
-      big: 'Stillway just keeps the pattern.',
+      big: 'Stillway notes the days and stays quiet.',
       small: 'No score to chase. Just what your days look like, kept quietly.',
     },
   ],

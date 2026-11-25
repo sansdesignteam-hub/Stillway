@@ -52,6 +52,7 @@ export const why: SectionMotion = {
   init(root) {
     const q = (s: string) => root.querySelector<HTMLElement>(s);
     el = {
+      label: q('[data-w-label]'),
       word: q('[data-w-word]'),
       wide: q('[data-w-wide]'),
       wideL: q('[data-w-wide-l]'),
@@ -73,6 +74,8 @@ export const why: SectionMotion = {
     const up = ctx.reduced ? 0 : -Math.max(0, u - END) * vhPx; // px
     // "rhythm": shows while the ring zooms out of S01 (u ≈ −1.1 … −0.4), gone on the way to state 2
     put(el.word, { o: seg(u, -1.1, -0.4) * (1 - seg(u, 0.25, 0.8)) }, ctx);
+    // QA W-01: the small label of State 1 (Figma Design · 02 State 1)
+    put(el.label, { o: seg(u, -0.45, -0.05) * (1 - seg(u, 0.1, 0.35)) }, ctx);
 
     // statements and paragraphs: light up / go out per character (reduced: whole-block fades)
     // QA R-04 / M-01: statement 1 is fully out before statement 2 starts (they share one slot)

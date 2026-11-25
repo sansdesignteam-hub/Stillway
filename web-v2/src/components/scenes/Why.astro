@@ -28,7 +28,7 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
   </div>
   <img class="ring-fallback why__fb" src="/ring-fallback/fb-s02-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
   <div class="scene__front">
-    <h2 id="why-title" class="sr-only">{why.label}</h2>
+    <h2 id="why-title" class="why__label t-caps" data-w-label data-a>{why.label}</h2>
     <p class="why__final" data-w-final data-a>{last.big}</p>
     <div class="why__left">
       {
@@ -67,6 +67,13 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
     place-items: center;
     --giant-o: 0.1;
   }
+  .why__label {
+    position: absolute;
+    left: var(--margin);
+    top: calc(var(--header-h) + 68px); /* Figma y 144 */
+    margin: 0;
+    color: var(--stone);
+  }
   .why__wide {
     position: absolute;
     left: 0;
@@ -91,7 +98,11 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
   .why__final {
     position: absolute;
     left: var(--margin);
-    top: calc(50% - 12vw * 0.82);
+    bottom: calc(50% + 12vw * 0.58);
+    /* left of the ring (its edge ≈ 32 vw): the line breaks in two rather than run into it */
+    width: calc(30vw - var(--margin));
+    min-width: 15em;
+    text-wrap: balance;
     /* Heading/Heading 2 */
     font-weight: var(--w-heading);
     font-size: var(--t-heading-2-size);
@@ -166,8 +177,16 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
       width: 0;
       height: 60vw; /* ring at 52vw wide (≈ 56vw tall at this angle) + air */
     }
+    .why__label {
+      top: calc(var(--header-h) + 16px);
+    }
     .why__final {
       top: calc(var(--header-h) + 40px);
+      bottom: auto;
+      width: auto;
+      min-width: 0;
+      right: var(--margin);
+      text-wrap: balance;
     }
     .why__left {
       top: calc(var(--header-h) + 40px);
