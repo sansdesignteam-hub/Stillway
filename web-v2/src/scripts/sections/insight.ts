@@ -60,8 +60,9 @@ export const insight: SectionMotion = {
     const t2 = seg(u, 0.25, 1);
     const textIn = seg(u, -0.2, 0.1);
     const down = ctx.mobile ? 0 : (200 / 900) * H; // State 1 sits 250 px up, State 2 50 px (at 900)
-    put(el.text, { o: textIn * (1 - seg(u, 1.3, 1.75)), y: -down * (1 - t2) }, ctx);
-    if (el.head) el.head.style.opacity = lerp(1, 0.5, t2).toFixed(3);
+    // QA I-02: never dimmed over the ring — full strength beside it in State 2, and fully gone before
+    // the camera goes into the opening
+    put(el.text, { o: textIn * (1 - seg(u, 1.05, 1.4)), y: -down * (1 - t2) }, ctx);
     words.forEach((w, i) => step(w, ctx.reduced ? (u >= 0.7 ? 1 : 0) : seg(u, 0.45 + i * 0.12, 0.8 + i * 0.12), 12));
 
     // the glass card (D-143), tied to the scroll, done at State 4 (u = 3): it rises, fades in and
@@ -109,7 +110,7 @@ export const insight: SectionMotion = {
     return along(u, [
       [0, start],
       // State 2 (Figma): the ring grows toward the centre (centre ≈ 900 / 450, 1042 wide at 1440)
-      [1, pose({ ...start, x: m ? 0.06 : 0.125, y: m ? 0.08 : 0, w: m ? 1.15 : 0.72, ...ANGLE.threeQuarter, ry: ANGLE.threeQuarter.ry + 0.3, uncap: 1, ...DUSK })],
+      [1, pose({ ...start, x: m ? 0.06 : 0.18, y: m ? 0.08 : 0, w: m ? 1.15 : 0.7, ...ANGLE.threeQuarter, ry: ANGLE.threeQuarter.ry + 0.3, uncap: 1, ...DUSK })],
       [2, inside],
       [3, inside],
     ]);

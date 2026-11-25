@@ -90,7 +90,7 @@ export const insight = {
     sr: 'Rested 7 hours 12 minutes',
     progress: 0.9, // bar length only, rested against a personal target; no percent label (home-copy-v2)
     line: 'Settled 23:10 · Up 06:22',
-    insight: 'You took more short pauses this afternoon than on most weekdays.',
+    insight: 'You woke briefly twice, both before 03:00.',
     },
 };
 

@@ -25,6 +25,11 @@ let steps: HTMLElement[] = [];
 let ticks: HTMLElement[] = [];
 let root: HTMLElement | null = null;
 export const DETAILS_END = 5.6;
+/** QA D-04: the table and the ring go down and fade out first (DROP), only then the hand rises */
+const DROP: [number, number] = [2.55, 2.85];
+const HAND_IN = 2.84;
+/** the ring comes back above the hand, with nothing but Paper behind it */
+const RING_BACK: [number, number] = [2.9, 3.05];
 const D2R = Math.PI / 180;
 
 /** layout in px: table, ring, roll stops, hand box (s06-pose.json image px × hs) */
@@ -86,7 +91,7 @@ function handOff(u: number, L: L6, m: boolean) {
   const dyB = 0.84 * L.H - tipY;
   const below = L.H - tipY + 40; // fingertip just under the bottom edge
   if (u <= 4) {
-    const t = seg(u, 2.55, 4);
+    const t = seg(u, HAND_IN, 3.5);
     const e = 1 - (1 - t) * (1 - t);
     return { dx: dxB, dy: lerp(below, dyB, e) };
   }
@@ -181,10 +186,11 @@ function tableOf(u: number, L: L6): Partial<Pose> {
   // 05 → 06: the table rises from below with the Paper ground and arrives exactly when the ring
   // lands on it (ringIn reaches the State 1 pose at 85% of the connection = u −0.15)
   const rise = seg(u, -0.55, -0.15);
+  const drop = seg(u, DROP[0], DROP[1]);
   return {
-    table: Math.min(1, rise * 2.5) * (1 - seg(u, 4.2, 4.7)),
+    table: Math.min(1, rise * 2.5) * (1 - drop),
     tableD: L.D,
-    tableY: fy(L.contact + (1 - rise) * 0.5 * L.H, L.H),
+    tableY: fy(L.contact + (1 - rise + drop) * 0.5 * L.H, L.H),
     tableShadow: u < 0 ? seg(u, -0.2, -0.05) : u <= 2.6 ? 1 - seg(u, 2.1, 2.45) : 0,
   };
 }
@@ -202,6 +208,11 @@ function ringPose(u: number, ctx: Ctx, L: L6): Pose {
   const above = withHand(fingerPose(0, L, { fing: 0 }), handOff(4, L, ctx.mobile), L);
   const turns = Math.round(from.spin / (2 * Math.PI)) * 2 * Math.PI; // lands without unwinding
   const start = base(from.cx, from.cy, from.spin);
+  if (u < RING_BACK[0]) {
+    // off the corner and down with the table, fading out
+    const drop = seg(u, DROP[0], DROP[1]);
+    return base(from.cx + 0.2 * L.D * drop, from.cy + 0.45 * L.H * drop, from.spin - drop, { alpha: 1 - drop });
+  }
   if (u < 4) {
     const t = seg(u, 2.55, 4);
     const k = 1 - Math.pow(1 - t, 2.4); // eases out: slows near the finger
@@ -209,7 +220,7 @@ function ringPose(u: number, ctx: Ctx, L: L6): Pose {
     p.w = lerp(start.w, above.w, k * k); // stays larger longer, smaller as it reaches the finger
     // a soft arc: it leaves the corner outward before it drops in over the finger
     const sx = (p.x + 0.5) * L.W + Math.sin(Math.PI * k) * 0.25 * L.D;
-    return { ...p, x: fx(sx, L.W), fing: 0 };
+    return { ...p, x: fx(sx, L.W), fing: 0, alpha: seg(u, RING_BACK[0], RING_BACK[1]) };
   }
   // onto the finger and down to the seat while the hand settles at its final place
   const slide = seg(u, 4.05, 4.95);
@@ -245,7 +256,8 @@ export const details: SectionMotion = {
     // the table: in with the end of the connection, out once the ring is in the hand
     // (the CSS stand-in table, until the GLB is in) rises with the same timing as the GLB table
     const tableIn = ctx.reduced ? (u >= -0.5 ? 1 : 0) : seg(u, -0.55, -0.15);
-    put(el.table, { o: Math.min(1, tableIn * 2.5) * (1 - seg(u, 4.2, 4.7)), y: (1 - tableIn) * 0.5 * L.H }, ctx);
+    const drop = ctx.reduced ? (u >= 3 ? 1 : 0) : seg(u, DROP[0], DROP[1]);
+    put(el.table, { o: Math.min(1, tableIn * 2.5) * (1 - drop), y: (1 - tableIn + drop) * 0.5 * L.H }, ctx);
     // contact shadow (Figma 300 × 30 under the 316 ring): follows the roll, fades as it tips
     if (el.shadow) {
       const t = onTable(Math.max(0, Math.min(u, 2.6)), ctx, L);
@@ -272,7 +284,7 @@ export const details: SectionMotion = {
 
     // the hand rises from below the screen right of the table (fingertip in view at A), the ring
     // lands on it (B), then both settle at the final place (C)
-    const rise = seg(u, 2.55, 4);
+    const rise = seg(u, HAND_IN, 3.5);
     const off = handOff(u, L, ctx.mobile);
     // D-093 r1: the polished 3D ring stays on the finger (D-085); A-1b only without WebGL / reduced
     const live = document.documentElement.classList.contains('ring-ready');
