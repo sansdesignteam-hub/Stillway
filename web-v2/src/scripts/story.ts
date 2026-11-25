@@ -150,6 +150,8 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
 
   let ring: RingStage | null = null;
   let lastPoseKey = '';
+  const progDots = [...document.querySelectorAll<HTMLElement>('[data-gprog] i')];
+  let progAt = -1;
   const poseOf = (it: Item, u: number): Pose => (it.m.ring ?? placeholder.ring!)(u, ctx);
 
   /** snap to whole states for reduced motion; connections switch at their middle */
@@ -285,6 +287,12 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     // QA G-15: in 02 → 03 the clock changes to 23:10 · Last night as the ground starts to go dark
     const switched = nightRise ? k >= 0.35 : tinX >= 0.7;
     const clockFrom = inConn && !switched && prev ? prev : cur;
+    // QA HE-02: the global progress follows the same section as the clock and the navbar chapter
+    const at0 = items.indexOf(clockFrom);
+    if (at0 !== progAt) {
+      progAt = at0;
+      progDots.forEach((p, i) => p.classList.toggle('is-on', i === at0));
+    }
     const d = clockFrom.def;
     let min = toMin(d.time);
     if (d.timeEnd) {

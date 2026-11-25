@@ -1,0 +1,67 @@
+---
+/**
+ * QA HE-02 (D-169): global page progress, VITURE Mobile Dock Mini pattern. A thin vertical row of
+ * 11 dots fixed on the left edge, one per section; the current section becomes a filled pill in
+ * Cocoa (D-168 tokens: Cocoa/400 on light grounds, Cocoa/300 on Night and on the photo).
+ * A position marker only: no links, hidden from assistive tech (the navbar chapter, the clock and
+ * the URL hash already say where you are). Driven by story.ts from the same scroll flow as the
+ * clock and the navbar chapter, so deep links, resize and scrolling back stay in sync.
+ * S09 keeps its own local progress.
+ */
+import { sections } from '../content/sections';
+---
+
+<div class="gprog" data-gprog aria-hidden="true">
+  {sections.map((d, i) => <i class:list={{ 'is-on': i === 0 }} data-id={d.id}></i>)}
+</div>
+
+<style>
+  .gprog {
+    --dot: 6px;
+    --pill: 24px;
+    --off: var(--text-surface);
+    --on: var(--cocoa-400);
+    position: fixed;
+    z-index: 40; /* above the stage, under the navbar and its menu */
+    left: calc((var(--margin) - var(--dot)) / 2);
+    top: 50%;
+    translate: 0 -50%;
+    display: grid;
+    justify-items: center;
+    gap: var(--space-2);
+    pointer-events: none;
+  }
+  html[data-surface='dark'] .gprog,
+  html[data-surface='photo'] .gprog {
+    --off: var(--text-night-soft);
+    --on: var(--cocoa-300);
+  }
+  html[data-surface='photo'] .gprog {
+    --off: var(--white-alpha-70);
+  }
+  .gprog i {
+    display: block;
+    width: var(--dot);
+    height: var(--dot);
+    border-radius: var(--radius-pill);
+    background: var(--off);
+    transition:
+      height 0.4s var(--ease-out),
+      background-color 0.4s ease;
+  }
+  .gprog i.is-on {
+    height: var(--pill);
+    background: var(--on);
+  }
+  @media (max-width: 719px) {
+    .gprog {
+      --dot: 4px;
+      --pill: 16px;
+      gap: var(--space-1);
+      left: 4px;
+    }
+  }
+  html.reduced .gprog i {
+    transition: none;
+  }
+</style>
