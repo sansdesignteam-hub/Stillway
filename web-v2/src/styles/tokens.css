@@ -226,9 +226,28 @@
   --fs-giant: clamp(7rem, 24vw, 23rem); /* S02 back word "rhythm" */
   --fs-number: clamp(3.5rem, 2.2rem + 5.4vw, 7rem); /* layout only: S03 number slot height */
 
-  /* layout (HANDOFF-v2 §1.3 [U]) */
+  /* layout grid (QA G-10, D-169): at 1440 × 900, 12 columns of 84 px, margin 40, gutter 32;
+     content top at y 144, bottom row on y 860. Spacing in multiples of 4/8 (--space-*).
+     Mobile and short viewports scale down (see the media query below). */
   --margin: clamp(16px, 2.8vw, 40px);
-  --gutter: clamp(12px, 1.4vw, 20px);
+  --gutter: clamp(16px, 2.2223vw, 32px);
+  --columns: 12;
+  --col: calc((100vw - 2 * var(--margin) - 11 * var(--gutter)) / 12);
+  --grid: repeat(12, minmax(0, 1fr));
+  /* 144 at 900 tall (76 navbar + 68); less on short screens so nothing is cut */
+  --content-top: calc(var(--header-h) + clamp(24px, 7.5556svh, 68px));
+  /* bottom row: 40 px from the bottom (y 860 of 900) */
+  --content-bottom: clamp(24px, 4.4445svh, 40px);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 40px;
+  --space-8: 48px;
+  --space-9: 64px;
+  --space-10: 96px;
   --header-h: 76px; /* V1 navbar (D-075): 52 px bar + 12 px inset */
   --radius-s: 8px;
   --radius-m: 16px;
@@ -242,5 +261,11 @@
 @media (max-width: 760px) {
   :root {
     --header-h: 60px;
+  }
+}
+@media (max-width: 719px) {
+  :root {
+    --content-top: calc(var(--header-h) + var(--space-4));
+    --content-bottom: var(--space-5);
   }
 }

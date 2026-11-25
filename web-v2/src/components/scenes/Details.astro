@@ -217,7 +217,7 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
   .det__step {
     position: absolute;
     left: var(--margin);
-    top: calc(var(--header-h) + 68px);
+    top: var(--content-top);
   }
   .det__head,
   .det__stitle {
@@ -248,7 +248,7 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     position: absolute;
     left: var(--margin);
     right: var(--margin);
-    top: calc(var(--header-h) + 44px);
+    top: var(--content-top);
     display: grid;
     justify-items: center;
     gap: 20px;
@@ -267,7 +267,7 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
   .det__progress {
     position: absolute;
     left: var(--margin);
-    bottom: 57px;
+    bottom: var(--content-bottom);
     display: flex;
     gap: 8px;
   }
@@ -293,18 +293,18 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
   @media (max-width: 719px) {
     .det__head,
     .det__step {
-      top: calc(var(--header-h) + 16px);
+      top: var(--content-top);
       right: var(--margin);
     }
     .det__step {
-      gap: 10px;
+      gap: var(--space-2);
     }
     .det__fits {
-      top: calc(var(--header-h) + 16px);
-      gap: 10px;
+      top: var(--content-top);
+      gap: var(--space-2);
     }
     .det__progress {
-      bottom: 24px;
+      bottom: var(--content-bottom);
     }
   }
 </style>

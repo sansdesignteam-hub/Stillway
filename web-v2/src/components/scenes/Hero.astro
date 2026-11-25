@@ -132,8 +132,8 @@ const icons = [
     top: calc(var(--header-h) + var(--t-display-1-lh) + 2.8vw + 18px);
     padding-inline: var(--margin);
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: clamp(16px, 1.6vw, 24px);
+    grid-template-columns: var(--grid);
+    gap: var(--gutter);
     /* Paragraph/Small */
     font-size: var(--t-para-sm-size);
     line-height: var(--t-para-sm-lh);
@@ -145,7 +145,7 @@ const icons = [
   .hero__features {
     grid-column: 10 / span 2;
     display: grid;
-    gap: 10px;
+    gap: var(--space-2);
     margin: 0;
     padding: 0;
     list-style: none;

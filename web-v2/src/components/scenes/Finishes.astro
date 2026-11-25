@@ -125,7 +125,7 @@ import { finishes as d } from '../../content/copy';
   .fn__heads {
     position: absolute;
     left: var(--margin);
-    top: calc(var(--header-h) + 4vh);
+    top: var(--content-top);
     width: min(46rem, 58vw);
     /* Heading/Heading 1 */
     font-weight: var(--w-heading);
@@ -156,11 +156,11 @@ import { finishes as d } from '../../content/copy';
   .fn__turn {
     position: absolute;
     left: 32%;
-    bottom: 4vh;
+    bottom: var(--content-bottom);
     translate: -50% 0;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: var(--space-4);
     /* Paragraph/Small */
     font-size: var(--t-para-sm-size);
     line-height: var(--t-para-sm-lh);
@@ -189,10 +189,10 @@ import { finishes as d } from '../../content/copy';
   .fn__panel {
     position: absolute;
     right: var(--margin);
-    top: calc(var(--header-h) + 3vh);
+    top: var(--content-top);
     width: min(30rem, 36vw);
-    max-height: calc(100svh - var(--header-h) - 4vh);
-    padding: 26px 28px 24px;
+    max-height: calc(100svh - var(--content-top) - var(--content-bottom));
+    padding: var(--space-5) var(--space-6);
     border-radius: var(--radius-m);
     background: var(--panel);
     transition: background 0.6s ease;
@@ -230,7 +230,7 @@ import { finishes as d } from '../../content/copy';
   }
   .fn__group {
     display: grid;
-    gap: 10px;
+    gap: var(--space-2);
   }
   /* Paragraph/Medium; the finish name in it = Label/Medium (same size, Medium weight) */
   .fn__label {
@@ -243,12 +243,12 @@ import { finishes as d } from '../../content/copy';
   }
   .fn__swatches {
     display: flex;
-    gap: 18px;
+    gap: var(--space-4);
   }
   .fn__swatch {
     display: grid;
     justify-items: center;
-    gap: 6px;
+    gap: var(--space-2);
     padding: 0;
     border: 0;
     background: none;
@@ -288,14 +288,14 @@ import { finishes as d } from '../../content/copy';
   }
   .fn__seg {
     display: flex;
-    gap: 6px;
+    gap: var(--space-2);
     padding: 4px;
     border-radius: var(--radius-pill);
     background: color-mix(in srgb, var(--ink) 6%, transparent);
     justify-self: start;
   }
   .fn__seg button {
-    padding: 7px 14px;
+    padding: var(--space-2) var(--space-4);
     border-radius: var(--radius-pill);
     border: 0;
     background: transparent;
@@ -319,7 +319,7 @@ import { finishes as d } from '../../content/copy';
   .fn__sizes {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
-    gap: 6px;
+    gap: var(--space-2);
   }
   .fn__sizes button {
     height: 40px;
@@ -419,17 +419,17 @@ import { finishes as d } from '../../content/copy';
       left: 12px;
       right: 12px;
       top: auto;
-      bottom: 12px;
+      bottom: var(--space-3);
       width: auto;
       max-height: none;
-      padding: 14px 14px 10px;
+      padding: var(--space-4) var(--space-4) var(--space-3);
       gap: 8px;
     }
     .fn__more {
       gap: 8px;
     }
     .fn__group {
-      gap: 6px;
+      gap: var(--space-2);
     }
     .fn__muted {
       font-size: var(--t-para-sm-size);
@@ -451,7 +451,7 @@ import { finishes as d } from '../../content/copy';
       clip-path: inset(50%);
     }
     .fn__seg button {
-      padding: 5px 12px;
+      padding: var(--space-1) var(--space-3);
     }
     .fn__note:empty {
       min-height: 0;

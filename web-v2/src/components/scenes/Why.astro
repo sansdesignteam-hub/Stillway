@@ -70,7 +70,7 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
   .why__label {
     position: absolute;
     left: var(--margin);
-    top: calc(var(--header-h) + 68px); /* Figma y 144 */
+    top: var(--content-top); /* Figma y 144 */
     margin: 0;
     color: var(--stone);
   }
@@ -141,7 +141,7 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
   .why__end {
     position: absolute;
     right: var(--margin);
-    bottom: clamp(32px, 9vh, 96px);
+    bottom: var(--content-bottom);
     width: calc((100vw - 2 * var(--margin)) * 3 / 12);
   }
   /* character reveal (oryzo): each character goes from dim to full with the scroll */
@@ -178,7 +178,7 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
       height: 60vw; /* ring at 52vw wide (≈ 56vw tall at this angle) + air */
     }
     .why__label {
-      top: calc(var(--header-h) + 16px);
+      top: var(--content-top);
     }
     .why__final {
       top: calc(var(--header-h) + 40px);
@@ -199,7 +199,7 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
       top: auto;
       translate: none;
       right: var(--margin);
-      bottom: 28px;
+      bottom: var(--content-bottom);
       left: var(--margin);
       width: auto;
     }

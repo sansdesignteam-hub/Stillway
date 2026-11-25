@@ -93,7 +93,7 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   .stat {
     grid-area: 1 / 1;
     display: grid;
-    gap: 6px;
+    gap: var(--space-2);
     transform-origin: 0 100%;
     will-change: transform, opacity;
   }
@@ -123,7 +123,7 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   }
   .sleep__foot {
     display: grid;
-    gap: 6px;
+    gap: var(--space-2);
     min-height: 3.2em;
   }
   /* Paragraph/Small */
@@ -143,14 +143,14 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   @media (max-width: 719px) {
     .sleep__col {
       top: auto;
-      bottom: 24px;
+      bottom: var(--content-bottom);
       translate: none;
       right: var(--margin);
       width: auto;
       gap: 12px;
     }
     .sleep__slot {
-      margin-top: 52px;
+      margin-top: var(--space-8);
     }
     .sleep__col {
       --n: min(25.6vw, 96px); /* QA M-03: the big number ≈ 96 px at most */

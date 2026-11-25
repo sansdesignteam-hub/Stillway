@@ -151,16 +151,16 @@ import { close as d, finishes as f } from '../../content/copy';
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 12vh;
+    bottom: calc(var(--content-bottom) + var(--space-10));
     display: grid;
     justify-items: center;
-    gap: 14px;
+    gap: var(--space-4);
   }
   .cl__btn {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    padding: 15px 26px;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-6);
     border-radius: var(--radius-pill);
     background: var(--paper);
     color: var(--ink);
@@ -190,10 +190,10 @@ import { close as d, finishes as f } from '../../content/copy';
   .cl__block--faq {
     width: min(40rem, 100%);
     margin: 0 auto;
-    padding-top: calc(var(--header-h) + 6vh);
+    padding-top: var(--content-top);
     padding-bottom: 14vh;
     display: grid;
-    gap: 22px;
+    gap: var(--space-5);
     justify-items: start;
   }
   /* Heading/Heading 1 */
@@ -222,7 +222,7 @@ import { close as d, finishes as f } from '../../content/copy';
     justify-content: space-between;
     align-items: center;
     gap: 20px;
-    padding: 18px 0;
+    padding: var(--space-4) 0;
     border: 0;
     background: none;
     color: var(--paper);
@@ -340,7 +340,7 @@ import { close as d, finishes as f } from '../../content/copy';
   .cl__cols {
     margin-top: clamp(64px, 19.3vh, 174px);
     display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-columns: var(--grid);
     column-gap: 20px;
     /* Paragraph/Small */
     font-size: var(--t-para-sm-size);
@@ -349,7 +349,7 @@ import { close as d, finishes as f } from '../../content/copy';
   }
   .cl__col {
     display: grid;
-    gap: 6px;
+    gap: var(--space-2);
     align-content: start;
   }
   .cl__cols > :nth-child(1) {

@@ -172,10 +172,10 @@ const digits = Array.from({ length: 20 }, (_, i) => i % 10); // 0–9 twice: a d
   .act__intro {
     position: absolute;
     left: var(--margin);
-    top: calc(var(--header-h) + 68px);
+    top: var(--content-top);
     width: min(416px, calc(100vw - 2 * var(--margin)));
     display: grid;
-    gap: 18px;
+    gap: var(--space-4);
   }
   /* Heading/Heading 1: "Activity" neutral/400, "and rest." Paper */
   .act__title {
@@ -205,7 +205,7 @@ const digits = Array.from({ length: 20 }, (_, i) => i % 10); // 0–9 twice: a d
     top: 0;
     display: grid;
     justify-items: center;
-    gap: 6px;
+    gap: var(--space-2);
     will-change: transform, opacity;
   }
   /* Display/Display 4; each digit rolls on its own strip (line height = size for Display 4) */
@@ -236,7 +236,7 @@ const digits = Array.from({ length: 20 }, (_, i) => i % 10); // 0–9 twice: a d
   .act__status {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-2);
     font-weight: var(--w-label);
     font-size: var(--t-label-lg-size);
     line-height: var(--t-label-lg-lh);
@@ -269,7 +269,7 @@ const digits = Array.from({ length: 20 }, (_, i) => i % 10); // 0–9 twice: a d
   }
   @media (max-width: 719px) {
     .act__intro {
-      top: calc(var(--header-h) + 16px);
+      top: var(--content-top);
       gap: 8px;
     }
     .act__body {

@@ -88,9 +88,9 @@ const [settled, up] = c.line.split(' · ');
   .ins__text {
     position: absolute;
     left: var(--margin);
-    bottom: calc(100svh * 50 / 900);
+    bottom: var(--content-bottom);
     display: grid;
-    gap: 18px;
+    gap: var(--space-4);
     will-change: transform, opacity;
   }
   /* Label/X-Small in capitals, neutral/400 (D-156) */
@@ -122,7 +122,7 @@ const [settled, up] = c.line.split(' · ');
   .ins__group {
     position: absolute;
     left: 50%;
-    top: calc((100svh + 144px - 40px) / 2);
+    top: calc((100svh + var(--content-top) - var(--content-bottom)) / 2);
     width: min(432px, calc(100vw - 2 * var(--margin)));
     translate: -50% -50%;
     display: grid;
@@ -155,7 +155,7 @@ const [settled, up] = c.line.split(' · ');
   /* Label/X-Small in capitals in a thin Paper 45 % outline (D-158); the label is Paper
      (D-156: no ochre text) */
   .ins__chip {
-    padding: 6px 14px;
+    padding: var(--space-1) var(--space-3);
     border-radius: 100px;
     border: 1px solid color-mix(in srgb, var(--paper) 45%, transparent); /* D-158: white, not ochre */
     font-weight: var(--w-label);
@@ -288,11 +288,11 @@ const [settled, up] = c.line.split(' · ');
       border-radius: 32px;
     }
     .ins__in {
-      gap: 18px;
+      gap: var(--space-4);
     }
     .ins__group {
       top: calc((100svh + var(--header-h) - 16px) / 2);
-      gap: 18px;
+      gap: var(--space-4);
     }
     .ins__body {
       font-size: var(--t-para-sm-size);
