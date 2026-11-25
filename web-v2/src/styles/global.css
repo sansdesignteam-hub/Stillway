@@ -257,3 +257,10 @@ html.reduced .scene [data-a] {
     scroll-behavior: auto !important;
   }
 }
+/* D-171: the S10 column scrolls like a page on phones, so it fades out under the navbar too */
+@media (max-width: 719px) {
+  html.js .scene--finishes .scene__front {
+    -webkit-mask-image: linear-gradient(to bottom, transparent calc(var(--header-h) - 12px), #000 calc(var(--header-h) + 8px));
+    mask-image: linear-gradient(to bottom, transparent calc(var(--header-h) - 12px), #000 calc(var(--header-h) + 8px));
+  }
+}
