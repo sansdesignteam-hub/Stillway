@@ -113,8 +113,10 @@ export const app: SectionMotion = {
     const H = window.innerHeight;
     // 09 → 10 (D-165): a plain scroll, like 06 → 07 — the hand, the phone and the texts go up 1:1
     // with the page, no fade; the photo's melted foot keeps its cut out of sight. Reduced motion: fade.
-    const out = ctx.reduced ? 1 - seg(u, END, END + 0.3) : 1;
-    const up = ctx.reduced ? 0 : Math.max(0, u - END) * (vhPx || H);
+    // QA M-05: phones — nothing goes up behind the navbar; the screen stays centred and fades
+    const fade = ctx.reduced || ctx.mobile;
+    const out = fade ? 1 - seg(u, END, END + (ctx.reduced ? 0.3 : 0.6)) : 1;
+    const up = fade ? 0 : Math.max(0, u - END) * (vhPx || H);
     const rise = ctx.reduced ? (u >= -0.5 ? 1 : 0) : seg(u, -0.5, -0.05);
     const inn = seg(u, -0.3, 0); // 70–100%: chip, texts, footer
     put(el.phone, { o: Math.min(1, rise * 1.6) * out, y: (1 - rise) * H * 0.55 - up }, ctx);

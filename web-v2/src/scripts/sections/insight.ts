@@ -74,14 +74,15 @@ export const insight: SectionMotion = {
     const cardIn = R ? (u >= 1.5 ? 1 : 0) : seg(u, 1.5, 2.4);
     put(el.group, { o: cardIn * out, y: 28 * (1 - seg(u, 1.5, 2.5)), s: 0.96 + 0.04 * seg(u, 1.5, 2.6) }, ctx);
     if (el.inner) {
-      const b = R ? 0 : 8 * (1 - seg(u, 1.6, 2.4));
+      const b = R || ctx.mobile ? 0 : 8 * (1 - seg(u, 1.6, 2.4));
       const f = b > 0.05 ? `blur(${b.toFixed(2)}px)` : '';
       if (el.inner.style.filter !== f) el.inner.style.filter = f;
     }
-    const at = (a: number, len = 0.3) => (R ? (u >= a ? 1 : 0) : seg(u, a, a + len));
+    // QA M-09: phones — the content comes with the card, never an empty card
+    const at = (a: number, len = 0.3) => (R ? (u >= (ctx.mobile ? 1.5 : a) ? 1 : 0) : ctx.mobile ? cardIn : seg(u, a, a + len));
     step(stages[0], at(1.85)); // chip + simulated
     step(stages[1], at(1.95)); // 7h 12m
-    const draw = at(2.05, 0.55);
+    const draw = ctx.mobile && !R ? seg(u, 1.7, 2.4) : at(2.05, 0.55);
     if (line) line.style.setProperty('--draw', (1 - draw).toFixed(4));
     if (el.area) {
       const a = at(2.15, 0.55);

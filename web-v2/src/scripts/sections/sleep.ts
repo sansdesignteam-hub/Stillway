@@ -89,7 +89,8 @@ export const sleep: SectionMotion = {
     const tq = ANGLE.threeQuarter;
     // ref 1: big ring on the right, may be cut by the edge; phones: upper half
     // the number takes ~half the width (Ultrahuman big-number ref), so the ring sits further right
-    const side = m ? { x: 0, y: 0.22, w: 0.72 } : { x: 0.33, y: -0.03, w: 0.48 };
+    // QA M-03: phones — the ring keeps to the top ≈ 35 % of the screen
+    const side = m ? { x: 0, y: 0.25, w: 0.56 } : { x: 0.33, y: -0.03, w: 0.48 };
     // D-136: corner light and the green sensor light (heart-rate LED, ledc 0) stay on through S03.
     // D-137: a warm ring — the warm Paper studio env kept (dimmed on Night) with the ochre rim and the
     // corner light, instead of the night env and the cold rim; still silver_polished, never Gold
@@ -97,7 +98,7 @@ export const sleep: SectionMotion = {
     // slow continuous turn (no stops), ending at the reference pose where "Stillway" reads
     const drift = (k: number) => tq.ry + 0.55 * (1 - k);
     return along(u, [
-      [0, pose({ x: 0, y: m ? 0.05 : 0, w: m ? 0.72 : 0.46, ...tq, ry: drift(0), rx: -0.2, ...night })],
+      [0, pose({ x: 0, y: m ? 0.05 : 0, w: m ? 0.66 : 0.46, ...tq, ry: drift(0), rx: -0.2, ...night })],
       [1, pose({ ...side, ...tq, ry: drift(0.4), rx: -0.18, ...night })],
       [2, pose({ ...side, ...tq, ry: drift(0.75), rx: -0.16, ...night })],
       // state 4: a little further in and smaller so the engraving on the band is fully in view

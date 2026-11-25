@@ -31,9 +31,9 @@ const INSIDE = { rx: -0.3, ry: -0.42, rz: 0.1, spin: -0.3 };
 
 // Figma State 1: the ring about 0.47 of the width, centred
 const centre = (ctx: Ctx, u = 0): Pose =>
-  pose({ x: 0, y: (ctx.mobile ? 0.02 : 0) + 0.012 * Math.sin(u * Math.PI * 1.5), w: ctx.mobile ? 0.72 : 0.46, ...INSIDE, ...NIGHT, led: 0.25, flare: 0.12 });
+  pose({ x: 0, y: (ctx.mobile ? -0.1 : 0) + 0.012 * Math.sin(u * Math.PI * 1.5), w: ctx.mobile ? 0.72 : 0.46, ...INSIDE, ...NIGHT, led: 0.25, flare: 0.12 });
 const close = (ctx: Ctx): Pose =>
-  pose({ x: ctx.mobile ? 0.22 : 0.25, y: ctx.mobile ? 0.02 : -0.04, w: ctx.mobile ? 1.05 : 0.64, rx: -0.36, ry: -0.5, rz: 0.12, spin: -0.36, uncap: 1, ...NIGHT, led: 1, flare: 1 });
+  pose({ x: ctx.mobile ? 0.22 : 0.25, y: ctx.mobile ? (window.innerHeight < 740 ? -0.3 : -0.2) : -0.04, w: ctx.mobile ? 0.92 : 0.64, rx: -0.36, ry: -0.5, rz: 0.12, spin: -0.36, uncap: 1, ...NIGHT, led: 1, flare: 1 });
 
 export const features: SectionMotion = {
   init(r) {
@@ -114,7 +114,7 @@ export const features: SectionMotion = {
     const t = seg(x, 0.3, 1);
     return {
       ...to,
-      y: lerp(ctx.mobile ? 0.07 : 0, to.y, t),
+      y: lerp(ctx.mobile ? -0.05 : 0, to.y, t),
       w: to.w * lerp(0.4, 1, t),
       alpha: seg(x, 0.3, 0.55),
       led: to.led * seg(x, 0.7, 1),

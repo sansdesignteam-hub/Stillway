@@ -238,8 +238,11 @@ const icons = [
       aspect-ratio: var(--m-ratio);
       background-image: var(--ph-m);
     }
+    /* QA M-08: the wordmark keeps 20 px on both sides (sized from the width, STILLWAY ≈ 4.9em) */
     .hero__word {
       top: calc(var(--header-h) + 18px);
+      padding-inline: 20px;
+      font-size: min(var(--t-display-1-size), calc((100vw - 40px) / 4.95));
     }
     .hero__meta {
       top: calc(var(--header-h) + 18px + var(--t-display-1-lh) + 2.8vw + 14px);

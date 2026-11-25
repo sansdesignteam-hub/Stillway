@@ -218,16 +218,18 @@ const stills = [
   @media (max-width: 719px) {
     .ft__fb {
       left: 72%;
-      top: 52%;
-      width: 132vw;
+      top: 70%;
+      width: 116vw;
     }
     /* phones (Figma pattern): title on top, legend + note at the bottom, the ring between */
     .ft__col {
       top: calc(var(--header-h) + 16px);
-      bottom: 24px;
+      bottom: auto;
       right: var(--margin);
       width: auto;
-      justify-content: space-between;
+      /* QA M-04: the legend sits above the ring, so all of it is always on screen */
+      justify-content: flex-start;
+      gap: 20px;
     }
     .ft__top {
       gap: 10px;

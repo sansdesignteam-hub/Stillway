@@ -153,12 +153,12 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
       margin-top: 52px;
     }
     .sleep__col {
-      --n: 27vw;
+      --n: min(25.6vw, 96px); /* QA M-03: the big number ≈ 96 px at most */
     }
     .sleep__fb {
-      --rw: 80vw;
+      --rw: 56vw;
       left: 50%;
-      top: calc(28% - var(--rw) * 1.6 * 0.4316);
+      top: calc(25% - var(--rw) * 1.6 * 0.4316);
     }
   }
 </style>

@@ -443,12 +443,29 @@ import { close as d, finishes as f } from '../../content/copy';
     .cl__q {
       padding: 15px 0;
     }
+    /* QA M-07: the closing line never runs past 335 px */
+    .cl__title {
+      width: min(335px, calc(100vw - 40px));
+      margin-inline: auto;
+    }
+    .cl__line {
+      font-size: min(var(--t-display-2-size), 16.5vw);
+      line-height: 0.98;
+      text-wrap: balance;
+    }
 
     .cl__block--foot {
       padding-top: calc(var(--header-h) + 40px);
     }
     .cl__statement {
       width: 100%;
+    }
+    /* QA M-07: the spread wordmark must not widen the footer past the screen */
+    .cl__block--foot {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .cl__word {
+      font-size: min(var(--t-display-1-size), calc((100vw - 2 * var(--margin)) / 4.95));
     }
     .cl__cols {
       margin-top: 48px;
