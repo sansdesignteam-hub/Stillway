@@ -319,11 +319,13 @@ import { close as d, finishes as f } from '../../content/copy';
   /* footer on the same canvas — Figma Design "11 · Closing, FAQ & footer" State 4 (40004265:1480):
      the line right at the top, three columns on the 12-column grid (1–5, 6–9, 10–12), the wordmark
      in capitals across the full width at the foot (D-165) */
+  /* D-171: the footer is as tall as its content (no full-screen height, no empty band above the
+     wordmark); the last scroll stop puts its bottom on the bottom of the screen (close.ts) */
   .cl__block--foot {
-    min-height: 100svh;
-    padding-top: calc(var(--header-h) + 100px);
+    padding-top: calc(var(--header-h) + var(--space-10));
     display: grid;
-    grid-template-rows: auto auto 1fr auto;
+    grid-template-rows: auto auto auto;
+    row-gap: var(--space-9);
     overflow: hidden;
   }
   /* Heading/Heading 1, cream, right (Figma 1000 px box) */
@@ -338,10 +340,10 @@ import { close as d, finishes as f } from '../../content/copy';
     color: var(--cream);
   }
   .cl__cols {
-    margin-top: clamp(64px, 19.3vh, 174px);
+    margin-top: var(--space-6);
     display: grid;
     grid-template-columns: var(--grid);
-    column-gap: 20px;
+    column-gap: var(--gutter);
     /* Paragraph/Small */
     font-size: var(--t-para-sm-size);
     line-height: var(--t-para-sm-lh);
@@ -456,7 +458,8 @@ import { close as d, finishes as f } from '../../content/copy';
     }
 
     .cl__block--foot {
-      padding-top: calc(var(--header-h) + 40px);
+      padding-top: calc(var(--header-h) + var(--space-7));
+      row-gap: var(--space-8);
     }
     .cl__statement {
       width: 100%;
@@ -469,7 +472,7 @@ import { close as d, finishes as f } from '../../content/copy';
       font-size: min(var(--t-display-1-size), calc((100vw - 2 * var(--margin)) / 4.95));
     }
     .cl__cols {
-      margin-top: 48px;
+      margin-top: 0;
       grid-template-columns: 1fr 1fr;
       gap: 28px 20px;
     }
