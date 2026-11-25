@@ -145,6 +145,11 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const cornerLight = new THREE.DirectionalLight(cocoa(200), 0);
   cornerLight.position.set(700, 900, 350);
   scene.add(cornerLight);
+  // S03 state 1 (QA SL-02): one cold light from behind on the left — only that edge of the band
+  // catches it; no fill light, no env lift
+  const coldEdge = new THREE.DirectionalLight(0xdfe8ff, 0);
+  coldEdge.position.set(-1000, 260, -760);
+  scene.add(coldEdge);
   // V1 live cast shadow on the stone (D-051): a shadow-only light and a transparent catcher plane
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -473,6 +478,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     deskFill.position.set(pivot.position.x - w * 1.1, pivot.position.y + w * 0.45, w * 0.6);
     deskFill.distance = w * 2.6;
     cornerLight.intensity = 14 * Math.min(1, Math.max(0, p.corner));
+    coldEdge.intensity = 34 * Math.min(1, Math.max(0, p.edge));
     const sh = Math.max(0, p.shadow);
     catcher.visible = sh > 0.005;
     shadowSun.castShadow = catcher.visible;

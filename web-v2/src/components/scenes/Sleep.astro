@@ -19,6 +19,8 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   <div class="scene__back">
     <div class="sleep__light" data-s-light data-a aria-hidden="true"><canvas class="sleep__beam" data-s-beam></canvas></div>
   </div>
+  <!-- QA SL-02: this still is already the night look of state 1 (dark band, one cold edge); there is
+       no warm/green still yet for states 2–4 (3D Designer asset) -->
   <img class="ring-fallback sleep__fb" src="/ring-fallback/fb-s03-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
   <div class="scene__front">
     <div class="sleep__col">

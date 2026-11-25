@@ -4,10 +4,13 @@
  * u: -2.5..0 connection from S02 (D-136, x = 0..1 of it): S02 scrolls out 1:1 (≈ 0–42%, why.ts) while
  *          a warm Cocoa → Night gradient rises from below (15–60%, story.ts); the ring stays centred
  *          and keeps turning; it goes dark with the ground, almost a silhouette (D-140, 15–55%); then
- *          one soft light from the upper right corner (62–80%) lights it, the facing side first, then
- *          warm all over (68–84%, D-137); the green sensor light last (82–95%); clock 07:10 → 23:10 ·
- *          Last night (70–100%). The green stays on to the end of S03.
- *  0 state 1  dark (the navbar clock reads "23:10 · Last night"); ring centred, edge lit, slow turn
+ *          one cold light catches ONE edge of the band (62–84%, QA SL-02); clock 07:10 → 23:10 ·
+ *          Last night (70–100%).
+ *  0 state 1  dark (the navbar clock reads "23:10 · Last night"); ring centred, only one edge lit
+ *             cold, the rest sunk in Night, slow turn (QA SL-02, Ultrahuman rim ref)
+ *  0..1       on the way to state 2 (QA SL-02 keeps the D-137/D-140 order): the corner light comes
+ *             in (5–40%), the ring comes up warm while the cold edge goes (15–60%), then the green
+ *             sensor light (50–80%). Warm + green stay to the end of S03.
  *  1 state 2  headline + SETTLED 23:10 big in the slot; ring moves right (ref 1 composition)
  *  2 state 3  RESTED 7h 12m takes the slot; 23:10 shrinks upward and dims
  *  3 state 4  BROKEN 2× takes the slot, small line + Simulated data; ring at the reference
@@ -18,19 +21,20 @@
 import { put, seg, window4, clamp01, lerp, type Ctx } from '../anim';
 import { along, pose, ANGLE, lerpPose, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
-import { sections } from '../../content/sections';
 import { keepLit, LIGHT, type LightSpec } from '../glow';
 
 let el: Record<string, HTMLElement | null> = {};
 let stats: HTMLElement[] = [];
 const END = 3.6;
-const TIN = sections.find((d) => d.id === 'sleep')!.tin;
 /** 100svh in px (the scroll length of one u) */
 let vhPx = 0;
 const measureVh = () => (vhPx = (document.querySelector('[data-vh]') as HTMLElement | null)?.offsetHeight || window.innerHeight);
 /** D-136 timing inside the 02 → 03 connection (x 0..1) */
-const CORNER: [number, number] = [0.62, 0.8];
-const GREEN: [number, number] = [0.82, 0.95];
+const EDGE: [number, number] = [0.62, 0.84];
+/** QA SL-02: state 1 → 2 (u 0..1) — corner light, then the warm ring, then the green LED */
+const CORNER: [number, number] = [0.05, 0.4];
+const WARM: [number, number] = [0.15, 0.6];
+const GREEN: [number, number] = [0.5, 0.8];
 /**
  * S03 corner light (D-136; Avoly ref): a soft glow in the upper right corner and a wedge falling from
  * it toward the ring, blur 30. The only section with a wedge (D-139: "the lamp comes on at night").
@@ -49,6 +53,19 @@ const S03_LIGHT_PHONE: LightSpec = {
 export const S03_WARM = { light: 0, rim: 0, warm: 1, envDim: 0.45 };
 /** D-140: the ring before the corner light reaches it — env almost off (stage.ts: 1 − 0.7 × envDim) */
 const DARK_DIM = 1.36;
+/** QA SL-02: the S03 ring lights by u — state 1 one cold edge on Night, warm + green from state 2 */
+const lightAt = (u: number) => {
+  const lit = seg(u, WARM[0], WARM[1]);
+  const led = seg(u, GREEN[0], GREEN[1]);
+  return {
+    edge: 1 - lit,
+    warm: lerp(0, S03_WARM.warm, lit),
+    envDim: lerp(DARK_DIM, S03_WARM.envDim, lit),
+    corner: seg(u, CORNER[0], CORNER[1]),
+    led,
+    flare: 0.22 * led,
+  };
+};
 
 export const sleep: SectionMotion = {
   init(r) {
@@ -66,8 +83,7 @@ export const sleep: SectionMotion = {
     const out = ctx.reduced ? 1 - seg(u, END, END + 0.3) : 1;
     const up = ctx.reduced ? 0 : -Math.max(0, u - END) * vhPx;
     // corner light: comes in once Night is in, stays through S03, gives way to the dawn in the lens
-    const x = (u + TIN) / TIN;
-    put(el.light, { o: seg(x, CORNER[0], CORNER[1]) * (1 - seg(u, END, END + 0.7)) }, ctx);
+    put(el.light, { o: seg(u, CORNER[0], CORNER[1]) * (1 - seg(u, END, END + 0.7)) }, ctx);
     put(el.head, { o: seg(u, 0.45, 0.95) * out, y: up, yv: 0.02 * (1 - seg(u, 0.45, 0.95)) }, ctx);
     stats.forEach((s, i) => {
       const a = 0.5 + i; // number i arrives on the way to state i + 2
@@ -99,13 +115,14 @@ export const sleep: SectionMotion = {
     const night = { ...S03_WARM, uncap: 1, corner: 1, led: 1, ledc: 0, flare: 0.22 };
     // slow continuous turn (no stops), ending at the reference pose where "Stillway" reads
     const drift = (k: number) => tq.ry + 0.55 * (1 - k);
-    return along(u, [
+    const p = along(u, [
       [0, pose({ x: 0, y: m ? 0.05 : 0, w: m ? 0.66 : 0.46, ...tq, ry: drift(0), rx: -0.2, ...night })],
       [1, pose({ ...side, ...tq, ry: drift(0.4), rx: -0.18, ...night })],
       [2, pose({ ...side, ...tq, ry: drift(0.75), rx: -0.16, ...night })],
       // state 4: a little further in and smaller so the engraving on the band is fully in view
       [3, pose({ ...side, x: m ? 0 : 0.25, w: m ? side.w : 0.4, ...tq, ry: drift(1) - 0.05, rx: -0.15, ...night })],
     ]);
+    return { ...p, ...lightAt(u) };
   },
   // 02 → 03 (D-136): the ring stays centred and moves to the S03 state 1 pose over the whole
   // connection (no jump), turning on as a turntable with the scroll (one full turn, ends where S03
@@ -116,18 +133,19 @@ export const sleep: SectionMotion = {
   ringIn(x, _ctx, from: Pose, to: Pose) {
     const p = lerpPose(from, to, seg(x, 0.08, 0.95));
     const dark = seg(x, 0.15, 0.55); // with the ground
-    const lit = seg(x, 0.68, 0.84); // the room comes up after the key light has touched the ring
+    const edge = seg(x, EDGE[0], EDGE[1]); // QA SL-02: one cold edge, the rest stays in Night
     return {
       ...p,
       ry: p.ry + Math.PI * 2 * x,
       rim: 0,
       light: 0,
-      warm: lerp(0.22 * dark, S03_WARM.warm, lit),
-      envDim: lerp(DARK_DIM * dark, S03_WARM.envDim, lit),
-      corner: seg(x, CORNER[0], 0.74),
-      led: seg(x, GREEN[0], GREEN[1]),
+      warm: 0.22 * dark * (1 - edge),
+      envDim: DARK_DIM * dark,
+      edge,
+      corner: 0,
+      led: 0,
       ledc: 0,
-      flare: 0.22 * seg(x, GREEN[0], GREEN[1]),
+      flare: 0,
     };
   },
 };
