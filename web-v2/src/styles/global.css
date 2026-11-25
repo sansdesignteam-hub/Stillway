@@ -100,7 +100,7 @@ html[data-surface='photo'],
   line-height: var(--t-heading-1-lh);
   letter-spacing: var(--t-heading-1-ls);
 }
-/* D-156: eyebrow, tag, chip — Label/X-Small in capitals, Geist (no Geist Mono, no [ ], no ochre:
+/* D-156: eyebrow, tag, chip — Label/X-Small in capitals, Hanken Grotesk (no Geist Mono, no [ ], no ochre:
    the colour is the section's neutral text colour) */
 .t-caps,
 .t-tag {
@@ -117,12 +117,12 @@ html[data-surface='photo'],
   color: var(--stone);
 }
 
-/* S01 label style (uppercase sans, Hero foot). Matches no text style (caps are for Mono only):
-   kept as it was and reported (D-134). */
+/* Mono/Medium in capitals (QA G-09): the small uppercase labels */
 .t-label {
-  font-size: 13px;
   font-weight: var(--w-label);
-  letter-spacing: var(--track-label);
+  font-size: var(--t-mono-md-size);
+  line-height: var(--t-mono-md-lh);
+  letter-spacing: var(--t-mono-md-ls);
   text-transform: uppercase;
 }
 

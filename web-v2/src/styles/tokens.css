@@ -135,8 +135,8 @@
   --shine-cream: #e9dcc8;
   --shine-amber: #f4c98e;
 
-  /* 3 typography: Geist only (D-156: Geist Mono is no longer used) */
-  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* 3 typography: Hanken Grotesk for every text style (QA G-09, D-169; replaces Geist) */
+  --font-sans: 'Hanken Grotesk Variable', 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   /* weights per text style group (D-134): Display/Heading Medium, Paragraph Regular, Label/Buttons
      Medium. No Light/thin weights. (The Mono group is gone, D-156.) */
   --w-display: 500;
@@ -207,6 +207,20 @@
   --t-btn-sm-size: 15px;
   --t-btn-sm-lh: 22px;
   --t-btn-sm-ls: -0.15px;
+  /* Mono group (QA G-09): same family as the rest (Hanken Grotesk), wide tracking, for the small
+     capitals labels that matched no style before */
+  --t-mono-lg-size: 16px;
+  --t-mono-lg-lh: 22px;
+  --t-mono-lg-ls: 1.28px;
+  --t-mono-md-size: 13px;
+  --t-mono-md-lh: 20px;
+  --t-mono-md-ls: 1.04px;
+  --t-mono-sm-size: 13px;
+  --t-mono-sm-lh: 20px;
+  --t-mono-sm-ls: 1.04px;
+  --t-mono-xs-size: 11px;
+  --t-mono-xs-lh: 16px;
+  --t-mono-xs-ls: 0.88px;
 
   /* legacy sizes, only for texts that match no text style (reported) or for layout maths */
   --fs-giant: clamp(7rem, 24vw, 23rem); /* S02 back word "rhythm" */

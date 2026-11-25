@@ -1,7 +1,7 @@
 ---
 /**
  * S11 Closing, FAQ & footer — 06:50 tomorrow · Night + a soft light from above (D-098, D-099; colour D-139). References (Figma
- * sticky 40004118:150, Oryzo ×3), Geist with D-082 weights (not Oryzo's heavy face):
+ * sticky 40004118:150, Oryzo ×3), Hanken Grotesk with D-082 weights (not Oryzo's heavy face):
  *  - "Choose your own" → states 1–2: the ring in the middle under a warm glow from above (behind the
  *    ring, never over it), one closing line across it — a small caps kicker and one very large line —
  *    then one button and one small line.
@@ -131,11 +131,12 @@ import { close as d, finishes as f } from '../../content/copy';
     text-align: center;
     color: var(--cream);
   }
-  /* uppercase sans label: matches no text style, kept, reported */
+  /* Mono/Large in capitals (QA G-09) */
   .cl__kicker {
-    font-size: clamp(14px, 1.2vw, 18px);
     font-weight: var(--w-label);
-    letter-spacing: var(--track-label);
+    font-size: var(--t-mono-lg-size);
+    line-height: var(--t-mono-lg-lh);
+    letter-spacing: var(--t-mono-lg-ls);
     text-transform: uppercase;
     margin-bottom: 0.4em;
   }
@@ -360,12 +361,12 @@ import { close as d, finishes as f } from '../../content/copy';
   .cl__cols > :nth-child(3) {
     grid-column: 10 / span 3;
   }
-  /* Label/X-Small, as written in capitals (Figma Mono/Medium; Geist only, D-156) */
+  /* Mono/Medium (Figma), Hanken Grotesk (QA G-09) */
   .cl__sig {
     font-weight: var(--w-label);
-    font-size: var(--t-label-xs-size);
-    line-height: var(--t-para-sm-lh);
-    letter-spacing: var(--t-caps-ls);
+    font-size: var(--t-mono-md-size);
+    line-height: var(--t-mono-md-lh);
+    letter-spacing: var(--t-mono-md-ls);
   }
   .cl__disc,
   .cl__dim {

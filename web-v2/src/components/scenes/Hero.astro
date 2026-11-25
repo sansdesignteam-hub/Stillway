@@ -102,7 +102,7 @@ const icons = [
     inset: 0;
     background: var(--photo-dim); /* photo tint, unchanged */
   }
-  /* V1 wordmark: Geist Medium, justified across the width, behind the ring.
+  /* V1 wordmark: Hanken Grotesk Medium, justified across the width, behind the ring.
      Display/Display 1 size and line height; its letter spacing does not apply (the letters are
      spread with space-between, a negative tracking would only push the last letter out). */
   .hero__word {
@@ -180,12 +180,13 @@ const icons = [
     line-height: var(--t-heading-2-lh);
     letter-spacing: var(--t-heading-2-ls);
   }
-  /* matches no text style (uppercase sans label): kept, reported (D-134) */
+  /* Mono/Medium in capitals (QA G-09) */
   .hero__foot {
     flex: none;
-    font-size: 13px;
     font-weight: var(--w-label);
-    letter-spacing: var(--track-label);
+    font-size: var(--t-mono-md-size);
+    line-height: var(--t-mono-md-lh);
+    letter-spacing: var(--t-mono-md-ls);
     text-transform: uppercase;
   }
   .dot {

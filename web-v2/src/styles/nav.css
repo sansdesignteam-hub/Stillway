@@ -126,7 +126,7 @@
   display: flex;
   align-items: baseline;
   gap: 8px;
-  /* Label/Small in capitals (navbar clock; D-156: Geist, no mono) */
+  /* Label/Small in capitals (navbar clock; D-156: Hanken Grotesk, no mono) */
   font-weight: var(--w-label);
   font-size: var(--t-label-sm-size);
   line-height: var(--t-label-sm-lh);
