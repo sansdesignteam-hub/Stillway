@@ -25,7 +25,7 @@ const [settled, up] = c.line.split(' · ');
   <div class="scene__front">
     <div class="ins__text" data-i-text data-a>
       <p class="ins__eyebrow">{d.eyebrow}</p>
-      <h2 id="insight-title" class="ins__head" data-i-head>
+      <h2 id="insight-title" class="ins__head" data-i-head aria-label={d.headline.join(' ')}>
         <span>{d.headline[0]}</span>{' '}
         {
           /* D-143: "One calm view." word by word (inline-block), always in the layout so the three lines

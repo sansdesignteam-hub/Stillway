@@ -48,8 +48,8 @@ const digits = Array.from({ length: 20 }, (_, i) => i % 10); // 0–9 twice: a d
   </div>
   <div class="scene__front">
     <div class="act__intro" data-a-intro data-a>
-      <h2 id="activity-title" class="act__title">
-        <span class="act__t1">{d.heading[0]}</span>
+      <h2 id="activity-title" class="act__title" aria-label={d.heading.join(' ')}>
+        <span class="act__t1">{d.heading[0]}</span>{' '}
         <span>{d.heading[1]}</span>
       </h2>
       <p class="act__body">{d.body}</p>
