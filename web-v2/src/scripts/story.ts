@@ -241,30 +241,30 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       // D-093: Dusk → Paper as light sweeping down (Stage .stage__wipe): Paper, Sand, a warm ochre
       // edge over the Dusk glow. A masked dissolve or a straight mix passes through a grey band.
       duskO = k < 0.999 ? 1 : 0;
-      wipeY = -250 + 250 * k;
+      wipeY = -300 + 300 * k;
       wipeTone = 'warm';
     } else if (nightRise) {
       // D-136: Paper → Night as a warm Cocoa gradient rising from below behind the S02 page that
       // scrolls away (reference video); only tokens, never a grey mix of Paper and Night
       if (k < 0.999) bgEl.style.backgroundColor = `rgb(${BG.paper.join(' ')})`;
-      wipeY = 100 - 250 * k;
+      wipeY = 100 - 300 * k;
       wipeTone = 'rise-cocoa';
     } else if (inConn && prev && cur.def.id === 'close' && !isDark(prev.def.bg)) {
       // D-098: Sand → Night for the closing canvas: night rises from below with a warm Ember edge
       if (k < 0.999) bgEl.style.backgroundColor = `rgb(${BG[prev.def.bg].join(' ')})`;
-      wipeY = 100 - 250 * k;
+      wipeY = 100 - 300 * k;
       wipeTone = 'rise';
     } else if (inConn && prev && prev.def.bg === 'night' && !isDark(cur.def.bg)) {
       // D-096: Night → Paper (08 → 09) the same way, light sweeping down, with a plain Sand edge
       if (k < 0.999) bgEl.style.backgroundColor = `rgb(${BG.night.join(' ')})`;
-      wipeY = -250 + 250 * k;
+      wipeY = -300 + 300 * k;
       wipeTone = 'plain';
     } else if (inConn && prev && cur.def.bg === 'dusk' && prev.def.bg !== 'dusk') {
       const p = -20 + 140 * k; // dusk edge moves up
       mask = `linear-gradient(to top, #000 ${(p - 20).toFixed(1)}%, transparent ${(p + 20).toFixed(1)}%)`;
     }
     duskEl.style.opacity = duskO.toFixed(3);
-    const wv = wipeY === null || (wipeTone.startsWith('rise') ? wipeY <= -149.99 : wipeY >= -0.01) ? 'hidden' : 'visible';
+    const wv = wipeY === null || (wipeTone.startsWith('rise') ? wipeY <= -199.99 : wipeY >= -0.01) ? 'hidden' : 'visible';
     if (wipeEl.style.visibility !== wv) wipeEl.style.visibility = wv;
     if (wipeY !== null && wipeEl.dataset.tone !== wipeTone) wipeEl.dataset.tone = wipeTone;
     if (wipeY !== null) wipeEl.style.transform = `translate3d(0, ${wipeY.toFixed(2)}lvh, 0)`;
@@ -272,9 +272,12 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       duskEl.style.maskImage = mask;
       duskEl.style.webkitMaskImage = mask;
     }
-    // D-136: the navbar turns dark only once the rising dark has reached the top of the screen
-    const darkW = nightRise ? (k > 0.84 ? 1 : 0) : (prev && inConn && isDark(prev.def.bg) ? 1 - k : 0) + (isDark(cur.def.bg) ? k : 0);
-    const theme = (!inConn && cur.m.theme?.(u)) || (darkW > 0.5 ? 'dark' : 'light');
+    // D-136: the navbar turns dark only once the dark of the ramp has reached the top of the screen
+    // (thresholds follow the geometry of Stage .stage__wipe: rising 100 → −200 lvh, light −300 → 0)
+    let dark = (prev && inConn && isDark(prev.def.bg) ? 1 - k : 0) + (isDark(cur.def.bg) ? k : 0) > 0.5;
+    if (wipeY !== null && wipeTone.startsWith('rise')) dark = k > 0.65;
+    else if (wipeY !== null) dark = k < 0.4;
+    const theme = (!inConn && cur.m.theme?.(u)) || (dark ? 'dark' : 'light');
     if (nav && nav.dataset.theme !== theme) nav.dataset.theme = theme;
     document.documentElement.dataset.surface = theme;
 
