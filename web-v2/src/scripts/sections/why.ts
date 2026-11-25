@@ -75,14 +75,15 @@ export const why: SectionMotion = {
     put(el.word, { o: seg(u, -1.1, -0.4) * (1 - seg(u, 0.25, 0.8)) }, ctx);
 
     // statements and paragraphs: light up / go out per character (reduced: whole-block fades)
+    // QA R-04 / M-01: statement 1 is fully out before statement 2 starts (they share one slot)
     const steps: Array<[number, number]> = [
-      [0.15, 1.35], // statement 1 lit over 0.15 → 0.85, out over 1.35 → 1.85
-      [1.4, 2.35],
+      [0.15, 1.1], // statement 1 lit over 0.15 → 0.75, out over 1.1 → 1.5
+      [1.55, 2.3],
     ];
     steps.forEach(([a, b], i) => {
-      const inP = seg(u, a, a + 0.7);
-      const outP = seg(u, b, b + 0.5);
-      const vis = u > a - 0.05 && u < b + 0.55;
+      const inP = seg(u, a, a + 0.55);
+      const outP = seg(u, b, b + 0.4);
+      const vis = u > a && u < b + 0.45;
       if (ctx.reduced) {
         put(bigWraps[i], { o: vis && u >= a + 0.35 && u < b + 0.25 ? 1 : 0 }, ctx);
         put(smallWraps[i], { o: vis && u >= a + 0.35 && u < b + 0.25 ? 1 : 0 }, ctx);
@@ -92,7 +93,7 @@ export const why: SectionMotion = {
       put(bigWraps[i], { o: vis ? 1 : 0 }, ctx);
       put(smallWraps[i], { o: vis ? 1 : 0 }, ctx);
       reveal(bigs[i], inP, outP, 6);
-      reveal(smalls[i], seg(u, a + 0.1, a + 0.85), seg(u, b + 0.05, b + 0.55), 10);
+      reveal(smalls[i], seg(u, a + 0.05, a + 0.6), seg(u, b, b + 0.45), 10);
     });
 
     // end state: the big words move in from the sides and flank the ring
@@ -101,8 +102,8 @@ export const why: SectionMotion = {
     put(el.wide, { o: Math.min(1, mv * 1.6) * out, y: up }, ctx);
     put(el.wideL, { x: -off }, ctx);
     put(el.wideR, { x: off }, ctx);
-    put(el.final, { o: seg(u, 2.55, 3) * out, y: up, yv: 0.02 * (1 - seg(u, 2.55, 3)) }, ctx);
-    put(el.end, { o: seg(u, 2.7, 3.1) * out, y: up, yv: 0.02 * (1 - seg(u, 2.7, 3.1)) }, ctx);
+    put(el.final, { o: seg(u, 2.75, 3.05) * out, y: up, yv: 0.02 * (1 - seg(u, 2.75, 3.05)) }, ctx);
+    put(el.end, { o: seg(u, 2.8, 3.15) * out, y: up, yv: 0.02 * (1 - seg(u, 2.8, 3.15)) }, ctx);
   },
   ring(u, ctx: Ctx): Pose {
     const m = ctx.mobile;

@@ -56,7 +56,8 @@ export const features: SectionMotion = {
   },
   update(u, ctx) {
     const out = 1 - seg(u, FEATURES_END, FEATURES_END + 0.3); // the words fade first in 08 → 09
-    const win = [window4(u, -0.3, 0, 0.35, 0.6), window4(u, 0.55, 0.85, 1.15, 1.35), window4(u, 1.3, 1.55, 2.35, 2.55), seg(u, 2.5, 2.75)];
+    // QA R-04: one title is gone before the next comes in
+    const win = [window4(u, -0.3, 0, 0.35, 0.55), window4(u, 0.57, 0.85, 1.1, 1.28), window4(u, 1.3, 1.55, 2.3, 2.5), seg(u, 2.52, 2.77)];
     heads.forEach((h, i) => put(h, { o: win[i] * out, y: (1 - Math.min(1, win[i] * 1.5)) * 12 }, ctx));
     put(kicks[0], { o: win[0] * out }, ctx);
     put(kicks[1], { o: Math.max(win[1], win[2], win[3]) * out }, ctx);
@@ -86,7 +87,7 @@ export const features: SectionMotion = {
     // the note: the short line in state 3, the long one in state 4
     put(el.offwrap, { o: seg(u, 1.6, 1.9) }, ctx);
     el.offwrap?.style.setProperty('--glow', red.toFixed(3));
-    put(offs[0], { o: 1 - seg(u, 2.45, 2.65) }, ctx);
+    put(offs[0], { o: 1 - seg(u, 2.4, 2.58) }, ctx);
     put(offs[1], { o: seg(u, 2.6, 2.85) }, ctx);
     // the light comes with the Night ground and leaves before the Paper sweeps in (08 → 09)
     put(el.light, { o: window4(u, -0.5, 0, FEATURES_END, FEATURES_END + 0.45) }, ctx);

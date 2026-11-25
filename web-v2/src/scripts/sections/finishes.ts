@@ -143,7 +143,7 @@ export const finishes: SectionMotion = {
     const inn = seg(u, -0.3, 0);
     const out = seg(u, FINISHES_END, FINISHES_END + 0.45); // 10 → 11: the panel leaves right
     put(heads[0], { o: window4(u, -0.25, 0.05, 0.45, 0.7) }, ctx);
-    put(heads[1], { o: seg(u, 0.55, 0.9) * (1 - out) }, ctx);
+    put(heads[1], { o: seg(u, 0.72, 0.95) * (1 - out) }, ctx);
     put(el.panel, { o: inn * (1 - out), x: (1 - inn) * W * 0.12 + out * W * 0.4 }, ctx);
     // desktop: the whole panel from state 1 (Shift PDP); phone: size, box and button join at state 4
     const more = ctx.mobile ? seg(u, 0.5, 0.95) : 1;

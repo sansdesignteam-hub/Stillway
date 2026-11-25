@@ -71,9 +71,10 @@ export const sleep: SectionMotion = {
     put(el.head, { o: seg(u, 0.45, 0.95) * out, y: up, yv: 0.02 * (1 - seg(u, 0.45, 0.95)) }, ctx);
     stats.forEach((s, i) => {
       const a = 0.5 + i; // number i arrives on the way to state i + 2
-      const inn = seg(u, a, a + 0.45);
-      const back = seg(u, a + 1, a + 1.45); // the next number arrives: shrink upward, dim
-      const gone = seg(u, a + 2, a + 2.45); // two numbers later: out
+      // QA R-04: the number before moves out of the slot first, only then does the next one come in
+      const inn = seg(u, i ? a + 0.22 : a, a + 0.5);
+      const back = seg(u, a + 1, a + 1.22); // the next number arrives: shrink upward, dim
+      const gone = seg(u, a + 2, a + 2.2); // two numbers later: out
       const scale = 1 - 0.76 * back; // the previous number ends small (≈ a quarter) and dim
       // the dimmed number moves up by the height of the block that replaces it, so they never overlap
       const lift = (stats[i + 1]?.offsetHeight ?? s.offsetHeight) + 14;

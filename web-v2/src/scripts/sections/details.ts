@@ -257,10 +257,10 @@ export const details: SectionMotion = {
 
     // text: headline (State 1), the two steps (States 2, 3), then "Then, it just fits." on top —
     // faint at A, clearer at B, full at C
-    put(el.head, { o: window4(u, ctx.reduced ? -0.5 : -0.3, 0.05, 0.55, 0.8), y: (1 - seg(u, -0.3, 0.05)) * 16 }, ctx);
+    put(el.head, { o: window4(u, ctx.reduced ? -0.5 : -0.3, 0.05, 0.5, 0.72), y: (1 - seg(u, -0.3, 0.05)) * 16 }, ctx);
     steps.forEach((st, i) => {
       const a = 0.75 + i;
-      put(st, { o: window4(u, a, a + 0.25, a + 0.8, a + 1.05), y: (1 - seg(u, a, a + 0.25)) * 14 }, ctx);
+      put(st, { o: window4(u, a, a + 0.25, a + 0.75, a + 0.96), y: (1 - seg(u, a, a + 0.25)) * 14 }, ctx);
     });
     const fits = 0.35 * seg(u, 2.85, 3.2) + 0.35 * seg(u, 3.6, 4) + 0.3 * seg(u, 4.5, 4.9);
     put(el.fits, { o: fits * (1 - gone), y: (1 - seg(u, 2.85, 3.3)) * 16 - up }, ctx);
