@@ -156,7 +156,7 @@ import { finishes as d } from '../../content/copy';
   .fn__turn {
     position: absolute;
     left: 32%;
-    bottom: 7vh;
+    bottom: 4vh;
     translate: -50% 0;
     display: flex;
     align-items: center;
@@ -402,7 +402,7 @@ import { finishes as d } from '../../content/copy';
     .fn__turn {
       left: 50%;
       bottom: auto;
-      top: calc(var(--header-h) + 40vh);
+      top: 58vh;
     }
     .fn__hint-d {
       display: none;
@@ -414,6 +414,7 @@ import { finishes as d } from '../../content/copy';
       width: 36px;
       height: 36px;
     }
+    /* QA M-06: a compact panel, so title, ring and panel each have their own room */
     .fn__panel {
       left: 12px;
       right: 12px;
@@ -421,11 +422,39 @@ import { finishes as d } from '../../content/copy';
       bottom: 12px;
       width: auto;
       max-height: none;
-      padding: 16px 16px 14px;
-      gap: 10px;
+      padding: 14px 14px 10px;
+      gap: 8px;
     }
     .fn__more {
-      gap: 10px;
+      gap: 8px;
+    }
+    .fn__group {
+      gap: 6px;
+    }
+    .fn__muted {
+      font-size: var(--t-para-sm-size);
+      line-height: var(--t-para-sm-lh);
+    }
+    .fn__swatches {
+      gap: 16px;
+    }
+    .fn__swatch i {
+      width: 30px;
+      height: 30px;
+    }
+    /* the chosen finish is named above; the swatch names stay for screen readers */
+    .fn__swatch span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    .fn__seg button {
+      padding: 5px 12px;
+    }
+    .fn__note:empty {
+      min-height: 0;
     }
     .fn__sizes button {
       height: 36px;

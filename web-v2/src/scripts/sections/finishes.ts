@@ -156,8 +156,20 @@ export const finishes: SectionMotion = {
   },
   ring(u, ctx) {
     const m = ctx.mobile;
-    const s1 = { x: m ? 0 : -0.17, y: m ? 0.2 : -0.05, w: m ? 0.62 : 0.34 };
-    const s4 = { x: m ? 0 : -0.17, y: m ? 0.25 : -0.05, w: m ? 0.34 : 0.34 };
+    // QA F-17: smaller and a little lower, with air to the title above and the arrows below
+    // QA M-06: phones — the ring sits in the gap between the title and the panel, never under it
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    const desk = { x: -0.17, y: -0.065, w: Math.min(0.28, (0.5 * H) / W) };
+    const phone = () => {
+      const h = heads[u < 0.6 ? 0 : 1];
+      const top = (h?.parentElement?.offsetTop ?? 0) + (h?.offsetHeight ?? 0);
+      const bottom = Math.min(el.panel?.offsetTop ?? H, u < 0.6 ? H * 0.58 : H); // state 1: the arrows sit above the panel
+      const zone = Math.max(60, bottom - top);
+      return { x: 0, y: 0.5 - (top + zone / 2) / H, w: Math.min(0.56, (zone * 0.78) / W) };
+    };
+    const s1 = m ? phone() : desk;
+    const s4 = s1;
     const k = seg(u, 0.4, 1);
     return pose({
       x: lerp(s1.x, s4.x, k),
