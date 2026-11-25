@@ -28,7 +28,8 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
   </div>
   <img class="ring-fallback why__fb" src="/ring-fallback/fb-s02-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
   <div class="scene__front">
-    <h2 id="why-title" class="why__label t-caps" data-w-label data-a>{why.label}</h2>
+    <!-- D-171: no visible label; the heading stays as the section's accessible name -->
+    <h2 id="why-title" class="sr-only">{why.label}</h2>
     <p class="why__final" data-w-final data-a>{last.big}</p>
     <div class="why__left">
       {
