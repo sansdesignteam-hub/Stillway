@@ -12,7 +12,7 @@
  * uncap: 0 = width capped at 82% of the viewport height, 1 = no cap (S01 zoom in).
  * dusk: 1 = the Dusk env (S05), swapped in with an intensity dip like night.
  * rim: 0..1 strength of the cold rim light that grazes the band edge in S03 (Ultrahuman ref).
- * warm: 0..1 weak ochre rim from the lower left (S05 Dusk glow side); the body stays neutral silver.
+ * warm: 0..1 weak warm (Cocoa) rim from the lower left (S05 Dusk glow side); the body stays neutral silver.
  * light: 0 = Day studio (Paper), 1 = Night rim light (S03).
  * led: 0..1 glow of the green light in sensor window A (S01 close-up shows it, as in the reference).
  * gloss: 1 = polished silver (finishes.json silver_polished) — every V2 section (D-085);

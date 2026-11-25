@@ -97,7 +97,7 @@ import { finishes as d } from '../../content/copy';
     --panel: color-mix(in srgb, var(--paper) 60%, transparent);
   }
   .scene--finishes[data-lamp='1'] {
-    --panel: color-mix(in srgb, var(--paper) 86%, var(--ochre) 14%);
+    --panel: color-mix(in srgb, var(--paper) 86%, var(--cocoa-300) 14%);
   }
   .fn__dim {
     position: absolute;
@@ -105,8 +105,8 @@ import { finishes as d } from '../../content/copy';
     opacity: 0;
     transition: opacity 0.6s ease;
     background:
-      radial-gradient(55% 70% at 4% 34%, color-mix(in srgb, var(--ochre) 20%, transparent), transparent 70%),
-      color-mix(in srgb, var(--night) 72%, var(--ochre) 28%);
+      radial-gradient(55% 70% at 4% 34%, color-mix(in srgb, var(--cocoa-300) 32%, transparent), transparent 70%),
+      color-mix(in srgb, var(--night) 72%, var(--cocoa-400) 28%);
   }
   .scene--finishes[data-lamp='1'] .fn__dim {
     opacity: 0.17;
@@ -372,7 +372,7 @@ import { finishes as d } from '../../content/copy';
     color: var(--ink);
   }
   .scene--finishes button:focus-visible {
-    outline: 2px solid var(--ochre);
+    outline: 2px solid var(--focus);
     outline-offset: 3px;
   }
   .sr-only {

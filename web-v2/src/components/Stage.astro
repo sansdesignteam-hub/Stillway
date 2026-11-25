@@ -45,11 +45,11 @@
     height: 100%;
   }
   /* QA G-16: every light ↔ dark change is the same ramp — 12 stops (Neutral/50 → Neutral/100 →
-     Cocoa/100–900 → Night, the section's own ground) at smootherstep positions (Figma "Design -
+     Cocoa/100–900 → Neutral/950 = bg-night-strong) at smootherstep positions (Figma "Design -
      25 Nov" 02 → 03), with a fine grain over the ramp only, so both ends merge with no seam */
   .stage__wipe {
     --light-end: var(--paper);
-    --light-next: color-mix(in srgb, var(--neutral-100) 60%, var(--neutral-50));
+    --light-next: var(--neutral-100);
     position: absolute;
     left: 0;
     right: 0;

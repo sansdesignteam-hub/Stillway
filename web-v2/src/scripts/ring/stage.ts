@@ -127,8 +127,10 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const rimFill = new THREE.DirectionalLight(0xdfe8ff, 0);
   rimFill.position.set(-700, 260, 900);
   scene.add(rim, rimFill);
-  // S05: one weak ochre rim from the Dusk glow (lower left); the env stays neutral (D-090 r1)
-  const warmRim = new THREE.DirectionalLight(0xe0a35c, 0);
+  /** a Cocoa primitive from tokens.css: the warm lights of the dark sections use that ramp (D-168) */
+  const cocoa = (step: number) => new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue(`--cocoa-${step}`).trim());
+  // S05: one weak warm rim from the Dusk glow (lower left); the env stays neutral (D-090 r1)
+  const warmRim = new THREE.DirectionalLight(cocoa(300), 0);
   warmRim.position.set(-900, -520, 260);
   scene.add(warmRim);
   // S10 Lamp light (D-100): one warm desk lamp from the side — an amber highlight along the band edge
@@ -140,7 +142,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   scene.add(deskLamp, deskFill);
   // S03 corner light (D-136, Avoly ref): one soft warm light from the upper right corner, above and
   // a little in front, so the band catches a warm sheen on its top edge; low, the silver stays silver
-  const cornerLight = new THREE.DirectionalLight(0xffd2a8, 0);
+  const cornerLight = new THREE.DirectionalLight(cocoa(200), 0);
   cornerLight.position.set(700, 900, 350);
   scene.add(cornerLight);
   // V1 live cast shadow on the stone (D-051): a shadow-only light and a transparent catcher plane
@@ -463,14 +465,14 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     hemi.intensity = 0.35 * p.photo;
     rim.intensity = 14 * p.rim;
     rimFill.intensity = 3.2 * p.rim;
-    warmRim.intensity = 7 * p.warm;
+    warmRim.intensity = 10 * p.warm;
     const lp = Math.min(1, Math.max(0, p.lamp));
     deskLamp.intensity = 9 * lp;
     // a soft close fill on the lamp side so the edge glows rather than shows one sharp line
     deskFill.intensity = 2.2 * lp;
     deskFill.position.set(pivot.position.x - w * 1.1, pivot.position.y + w * 0.45, w * 0.6);
     deskFill.distance = w * 2.6;
-    cornerLight.intensity = 9 * Math.min(1, Math.max(0, p.corner));
+    cornerLight.intensity = 14 * Math.min(1, Math.max(0, p.corner));
     const sh = Math.max(0, p.shadow);
     catcher.visible = sh > 0.005;
     shadowSun.castShadow = catcher.visible;

@@ -238,7 +238,7 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     let wipeTone = 'warm';
     let mask = 'none';
     if (inConn && prev && prev.def.bg === 'dusk' && cur.def.bg !== 'dusk') {
-      // D-093: Dusk → Paper as light sweeping down (Stage .stage__wipe): Paper, Sand, a warm ochre
+      // D-093: Dusk → Paper as light sweeping down (Stage .stage__wipe): Paper, Sand, a warm
       // edge over the Dusk glow. A masked dissolve or a straight mix passes through a grey band.
       duskO = k < 0.999 ? 1 : 0;
       wipeY = -300 + 300 * k;

@@ -32,7 +32,7 @@ function step(it: HTMLElement | null | undefined, t: number, rise = 10) {
 }
 const END = 3.6;
 // D-090 r1: the ring must read neutral silver (not copper) — neutral paper-polished env, no Dusk
-// env, plus one weak ochre rim from the glow side (lower left)
+// env, plus one weak warm rim from the glow side (lower left)
 const DUSK = { dusk: 0, light: 0, rim: 0, warm: 1 };
 
 export const insightStart = (ctx: Ctx): Pose =>

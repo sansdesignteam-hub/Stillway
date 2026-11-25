@@ -44,8 +44,28 @@ button {
   font: inherit;
   color: inherit;
 }
+/* G-13: the focus ring is white wherever it sits on a dark surface */
+html[data-surface='dark'],
+html[data-surface='photo'],
+.scene--sleep,
+.scene--activity,
+.scene--insight,
+.scene--features,
+.scene--close,
+.site-header[data-theme='dark'],
+.site-header[data-theme='photo'] {
+  --focus: var(--stroke-white);
+}
+/* light panels keep the dark ring, whatever the page behind them is */
+.menu__panel,
+.scene--finishes,
+.scene--details,
+.scene--app,
+.scene--why {
+  --focus: var(--stroke-strong);
+}
 :focus-visible {
-  outline: 2px solid var(--ochre);
+  outline: 2px solid var(--focus);
   outline-offset: 3px;
 }
 

@@ -45,7 +45,7 @@ const S03_LIGHT_PHONE: LightSpec = {
   wedge: { token: LIGHT, ox: 0.96, oy: -0.04, from: 196, s1: 8, s2: 12, s3: 22, a: 0.3, in: 0.35, out: 0.85 },
   blur: 30,
 };
-/** D-137 warm S03 ring: Paper env dimmed, ochre rim; no night env, no cold rim */
+/** D-137 warm S03 ring: Paper env dimmed, warm rim; no night env, no cold rim */
 export const S03_WARM = { light: 0, rim: 0, warm: 1, envDim: 0.45 };
 /** D-140: the ring before the corner light reaches it — env almost off (stage.ts: 1 − 0.7 × envDim) */
 const DARK_DIM = 1.36;
@@ -94,7 +94,7 @@ export const sleep: SectionMotion = {
     // QA M-03: phones — the ring keeps to the top ≈ 35 % of the screen
     const side = m ? { x: 0, y: 0.25, w: 0.56 } : { x: 0.33, y: -0.03, w: 0.48 };
     // D-136: corner light and the green sensor light (heart-rate LED, ledc 0) stay on through S03.
-    // D-137: a warm ring — the warm Paper studio env kept (dimmed on Night) with the ochre rim and the
+    // D-137: a warm ring — the warm Paper studio env kept (dimmed on Night) with the warm rim and the
     // corner light, instead of the night env and the cold rim; still silver_polished, never Gold
     const night = { ...S03_WARM, uncap: 1, corner: 1, led: 1, ledc: 0, flare: 0.22 };
     // slow continuous turn (no stops), ending at the reference pose where "Stillway" reads

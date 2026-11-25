@@ -11,7 +11,7 @@ Screenshot: `<kode>_<bagian>_<lebar>.jpg` (1512×827 dan 375×812), dari preview
 | G-15 | Selesai | 84ef94b | Jam ganti saat gelap mulai terlihat dari bawah. |
 | HE-01 | Selesai | 84ef94b | `aria-current="location"`. |
 | HE-06 | Selesai | 84ef94b | Hash = id section (`#why` …, `#faq`); reload mengikuti posisi scroll browser. |
-| G-16 | Selesai, 1 deviasi | 60b26ac | 12 stop + grain untuk 02→03, →S11, Dusk→Paper, Night→Paper. Ujung gelap memakai Night (Cocoa/950), bukan Neutral/950, supaya menyatu dengan latar section. Nilai hex token di Figma berbeda dari `tokens.css` (token warna = MAYOR, tidak disentuh). |
+| G-16 | Selesai | 60b26ac | 12 stop + grain untuk 02→03, →S11, Dusk→Paper, Night→Paper. Deviasi sudah dituntaskan (D-168): Night = Neutral/950, token warna disinkronkan; lihat `color/REPORT.md`. |
 | HR-02, W-01, W-05 | Selesai | d47409c | Kalimat W-05 lebih panjang: di desktop jadi dua baris supaya tidak menabrak ring. |
 | A-01 | Selesai | d40966a | AVIF/WebP 540, 800, 1060 w. |
 | I-02 | Selesai | d40966a | Redup State 2 dihapus, ring digeser ke kanan, teks hilang penuh sebelum kamera masuk lubang. |
@@ -23,6 +23,6 @@ Screenshot: `<kode>_<bagian>_<lebar>.jpg` (1512×827 dan 375×812), dari preview
 | M-04 | Selesai | c0a8b99 | Terpotong tidak tereproduksi di 375×812; legenda tetap dipindah ke atas ring. |
 | M-07 | Selesai | c0a8b99 | Wordmark footer ikut dirapikan agar tidak melebarkan layar. |
 | G-07 | Selesai | 87cf80e | Belum diuji dengan screen reader asli. |
-| HE-07 | Selesai | 87cf80e | Teks baru "This page is not here." / "Back to the start" = draf, perlu persetujuan. Belum dicek di staging. |
+| HE-07 | Selesai | 87cf80e | Teks "This page is not here." / "Back to the start" disetujui (25 Nov). Belum dicek di staging. |
 
 Belum diuji: perangkat fisik dan Safari/iOS. Tidak di-merge ke `main`.
