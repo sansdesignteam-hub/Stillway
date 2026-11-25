@@ -79,7 +79,9 @@ export const sleep: SectionMotion = {
       // the dimmed number moves up by the height of the block that replaces it, so they never overlap
       const lift = (stats[i + 1]?.offsetHeight ?? s.offsetHeight) + 14;
       const y = (1 - inn) * 40 - back * lift + up;
-      put(s, { o: inn * (1 - 0.72 * back) * (1 - gone) * out, y, s: scale }, ctx);
+      // reduced motion has no transforms, so a dimmed older number would sit on the new one: it goes
+      const dim = ctx.reduced ? back : 0.72 * back;
+      put(s, { o: inn * (1 - dim) * (1 - gone) * out, y, s: scale }, ctx);
       s.classList.toggle('is-active', u >= a + 0.2 && (i === stats.length - 1 || u < a + 1.2));
     });
     put(el.line, { o: seg(u, 2.6, 3) * out, y: up }, ctx);
