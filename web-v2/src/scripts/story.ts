@@ -152,6 +152,15 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
   let lastPoseKey = '';
   const progDots = [...document.querySelectorAll<HTMLElement>('[data-gprog] i')];
   let progAt = -1;
+  // D-171: the progress shows while the page moves and hides after 2.5 s without scrolling
+  const prog = document.querySelector<HTMLElement>('[data-gprog]');
+  let progY = -1;
+  let progTimer = 0;
+  const wakeProg = () => {
+    prog?.classList.add('is-awake');
+    clearTimeout(progTimer);
+    progTimer = window.setTimeout(() => prog?.classList.remove('is-awake'), 2500);
+  };
   const poseOf = (it: Item, u: number): Pose => (it.m.ring ?? placeholder.ring!)(u, ctx);
 
   /** snap to whole states for reduced motion; connections switch at their middle */
@@ -289,6 +298,10 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     const clockFrom = inConn && !switched && prev ? prev : cur;
     // QA HE-02: the global progress follows the same section as the clock and the navbar chapter
     const at0 = items.indexOf(clockFrom);
+    if (Math.abs(y - progY) > 0.5) {
+      if (progY >= 0) wakeProg();
+      progY = y;
+    }
     if (at0 !== progAt) {
       progAt = at0;
       progDots.forEach((p, i) => p.classList.toggle('is-on', i === at0));

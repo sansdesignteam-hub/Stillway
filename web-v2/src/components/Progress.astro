@@ -1,12 +1,11 @@
 ---
 /**
- * QA HE-02 (D-169): global page progress, VITURE Mobile Dock Mini pattern. A thin vertical row of
- * 11 dots fixed on the left edge, one per section; the current section becomes a filled pill in
- * Cocoa (D-168 tokens: Cocoa/400 on light grounds, Cocoa/300 on Night and on the photo).
+ * QA HE-02 (D-169, revised D-171): global page progress, minimal like VITURE Mobile Dock Mini.
+ * 11 small dots in a column fixed on the left edge, one per section; the current section is a short
+ * horizontal line. Black on light grounds, white on dark ones and on the photo; inactive dots at a
+ * soft opacity. It shows while the page scrolls and hides after 2.5 s without scrolling (story.ts).
  * A position marker only: no links, hidden from assistive tech (the navbar chapter, the clock and
- * the URL hash already say where you are). Driven by story.ts from the same scroll flow as the
- * clock and the navbar chapter, so deep links, resize and scrolling back stay in sync.
- * S09 keeps its own local progress.
+ * the URL hash already say where you are). Driven by story.ts from the same section as the clock.
  */
 import { sections } from '../content/sections';
 ---
@@ -17,51 +16,54 @@ import { sections } from '../content/sections';
 
 <style>
   .gprog {
-    --dot: 6px;
-    --pill: 24px;
-    --off: var(--text-surface);
-    --on: var(--cocoa-400);
+    --c: var(--text-strong);
     position: fixed;
     z-index: 40; /* above the stage, under the navbar and its menu */
-    left: calc((var(--margin) - var(--dot)) / 2);
+    left: calc((var(--margin) - 8px) / 2);
     top: 50%;
     translate: 0 -50%;
     display: grid;
-    justify-items: center;
-    gap: var(--space-2);
+    justify-items: start;
+    gap: 12px;
     pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
   }
-  html[data-surface='dark'] .gprog,
-  html[data-surface='photo'] .gprog {
-    --off: var(--text-night-soft);
-    --on: var(--cocoa-300);
+  .gprog:global(.is-awake) {
+    opacity: 1;
   }
-  html[data-surface='photo'] .gprog {
-    --off: var(--white-alpha-70);
+  :global(html[data-surface='dark']) .gprog,
+  :global(html[data-surface='photo']) .gprog {
+    --c: var(--text-white);
   }
   .gprog i {
     display: block;
-    width: var(--dot);
-    height: var(--dot);
+    width: 3px;
+    height: 3px;
     border-radius: var(--radius-pill);
-    background: var(--off);
+    background: var(--c);
+    opacity: 0.4;
     transition:
-      height 0.4s var(--ease-out),
-      background-color 0.4s ease;
+      width 0.3s var(--ease-out),
+      opacity 0.3s ease,
+      background-color 0.3s ease;
   }
   .gprog i.is-on {
-    height: var(--pill);
-    background: var(--on);
+    width: 8px;
+    height: 2px;
+    opacity: 1;
   }
   @media (max-width: 719px) {
     .gprog {
-      --dot: 4px;
-      --pill: 16px;
-      gap: var(--space-1);
       left: 4px;
+      gap: 8px;
+    }
+    .gprog i.is-on {
+      width: 6px;
     }
   }
-  html.reduced .gprog i {
+  :global(html.reduced) .gprog,
+  :global(html.reduced) .gprog i {
     transition: none;
   }
 </style>
