@@ -2,7 +2,7 @@
 /**
  * S09 The app — 21:00 · Paper (D-096). References (Figma sticky 40004185:54):
  *  - Sofi → main layout: the phone still in the middle on Paper, one short text top left, one bottom
- *    right; footer with the active label left and "Scroll down" + progress + percent right. No ring.
+ *    right; no footer: the bottom labels and the local progress were removed (D-171). No ring.
  *  - Oura "Wake up knowing" → order only: the main number first, then the detail (sleep stages as
  *    bars). No score (D-066).
  *  - Dribbble sleep app → one big number per screen; the screen content scrolls, the phone stays.
@@ -47,21 +47,6 @@ import AppPhone from '../AppPhone.astro';
     <!-- the phone stays; only its screen content moves -->
     <AppPhone />
 
-    <!-- Sofi footer: active label left; Scroll down + progress + percent right -->
-    <div class="ap__foot" data-p-foot data-a>
-      <p class="ap__flabels">
-        {
-          d.states.map((s, i) => (
-            <span data-p-flabel={i}>{s.label}</span>
-          ))
-        }
-      </p>
-      <p class="ap__fright">
-        <span>{d.scroll}</span>
-        <i class="ap__prog" aria-hidden="true"><b data-p-prog></b></i>
-        <span class="ap__pct" data-p-pct>33%</span>
-      </p>
-    </div>
   </div>
 </section>
 
@@ -138,50 +123,6 @@ import AppPhone from '../AppPhone.astro';
     left: 0;
     top: 0;
     width: 100%;
-  }
-  .ap__foot {
-    position: absolute;
-    left: var(--margin);
-    right: var(--margin);
-    bottom: 18px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    /* Paragraph/Small */
-    font-size: var(--t-para-sm-size);
-    line-height: var(--t-para-sm-lh);
-    letter-spacing: var(--t-para-sm-ls);
-  }
-  .ap__flabels {
-    position: relative;
-    min-width: 8em;
-    height: 1.4em;
-  }
-  .ap__flabels span {
-    position: absolute;
-    left: 0;
-    top: 0;
-    white-space: nowrap;
-  }
-  .ap__fright {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-  }
-  .ap__prog {
-    width: 120px;
-    height: 1px;
-    background: color-mix(in srgb, var(--ink) 20%, transparent);
-  }
-  .ap__prog b {
-    display: block;
-    height: 100%;
-    width: calc(var(--p, 0.33) * 100%);
-    background: var(--ink);
-  }
-  .ap__pct {
-    min-width: 3ch;
-    font-variant-numeric: tabular-nums;
   }
   .sr-only {
     position: absolute;

@@ -38,11 +38,9 @@ interface Page {
 let el: Record<string, HTMLElement | null> = {};
 let lefts: HTMLElement[] = [];
 let rights: HTMLElement[] = [];
-let flabels: HTMLElement[] = [];
 let glows: HTMLElement[] = [];
 let pages: Page[] = [];
 let measured = '';
-let lastIdx = -1;
 let vhPx = 0;
 
 /** the active mode as a continuous value 0..2 (the tab highlight, the texts) */
@@ -81,10 +79,9 @@ export const app: SectionMotion = {
   init(r) {
     const q = (s: string) => r.querySelector<HTMLElement>(s);
     const all = (s: string, from: ParentNode = r) => [...from.querySelectorAll<HTMLElement>(s)];
-    el = { phone: q('[data-p-phone]'), pages: q('[data-p-pages]'), foot: q('[data-p-foot]'), prog: q('[data-p-prog]'), pct: q('[data-p-pct]') };
+    el = { phone: q('[data-p-phone]'), pages: q('[data-p-pages]') };
     lefts = all('[data-p-left]');
     rights = all('[data-p-right]');
-    flabels = all('[data-p-flabel]');
     glows = all('[data-p-glow]');
     pages = all('[data-p-page]').map((pg) => ({
       el: pg,
@@ -120,7 +117,6 @@ export const app: SectionMotion = {
     const rise = ctx.reduced ? (u >= -0.5 ? 1 : 0) : seg(u, -0.5, -0.05);
     const inn = seg(u, -0.3, 0); // 70–100%: chip, texts, footer
     put(el.phone, { o: Math.min(1, rise * 1.6) * out, y: (1 - rise) * H * 0.55 - up }, ctx);
-    put(el.foot, { o: inn * out, y: -up }, ctx);
     measure();
 
     // the mode: continuous for the tab highlight and the side texts; whole under reduced motion
@@ -128,7 +124,6 @@ export const app: SectionMotion = {
     const near = (i: number) => clamp01(1 - Math.abs(f - i) * 2.2);
     lefts.forEach((l, i) => put(l, { o: near(i) * inn * out, y: (1 - near(i)) * 10 - up }, ctx));
     rights.forEach((l, i) => put(l, { o: near(i) * inn * out, y: (1 - near(i)) * 10 - up }, ctx));
-    flabels.forEach((l, i) => (l.style.opacity = near(i).toFixed(3)));
 
     pages.forEach((pg, k) => {
       const show = ctx.reduced ? (k === f ? 1 : 0) : showOf(k, u);
@@ -183,12 +178,6 @@ export const app: SectionMotion = {
       }
     });
 
-    const idx = Math.round(f);
-    if (idx !== lastIdx) {
-      lastIdx = idx;
-      if (el.pct) el.pct.textContent = `${[33, 66, 100][idx]}%`;
-    }
-    el.prog?.style.setProperty('--p', ((f + 1) / 3).toFixed(3));
   },
   // no ring in S09
   ring: () => pose({ x: 0, y: 0.6, w: 0.12, alpha: 0, light: 0 }),
