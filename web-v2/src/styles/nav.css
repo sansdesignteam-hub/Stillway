@@ -6,7 +6,7 @@
 .site-header {
   --header-ink: var(--ink);
   --bar-bg: color-mix(in srgb, var(--white) 55%, transparent);
-  --bar-rule: color-mix(in srgb, var(--ink) 12%, transparent);
+  --bar-active: color-mix(in srgb, var(--ink) 9%, transparent);
   position: fixed;
   inset: 12px 0 auto 0;
   z-index: 50;
@@ -17,13 +17,13 @@
 .site-header[data-theme='dark'] {
   --header-ink: var(--paper);
   --bar-bg: color-mix(in srgb, var(--white) 8%, transparent);
-  --bar-rule: color-mix(in srgb, var(--white) 14%, transparent);
+  --bar-active: color-mix(in srgb, var(--white) 14%, transparent);
 }
 .site-header[data-theme='photo'] {
   /* over the S01 photograph (V1 'photo' theme) */
   --header-ink: var(--white);
   --bar-bg: color-mix(in srgb, var(--white) 14%, transparent);
-  --bar-rule: color-mix(in srgb, var(--white) 25%, transparent);
+  --bar-active: color-mix(in srgb, var(--white) 22%, transparent);
 }
 .site-header__inner {
   padding-inline: var(--margin);
@@ -94,15 +94,25 @@
   line-height: var(--t-label-sm-lh);
   letter-spacing: var(--t-label-sm-ls);
 }
-.site-nav li + li {
-  border-left: 1px solid var(--bar-rule);
+/* QA HR-01: no dividers, spacing only */
+.site-nav ul {
+  gap: 4px;
 }
 .site-nav a {
   display: block;
   padding: 10px 22px;
   text-decoration: none;
   border-radius: 999px;
-  transition: opacity 0.3s;
+  transition: opacity 0.3s, background-color 0.3s;
+}
+/* QA HE-01: the chapter on screen (aria-current set by story.ts) */
+.site-nav a[aria-current] {
+  background: var(--bar-active);
+}
+.menu__list a[aria-current] {
+  text-decoration: underline;
+  text-underline-offset: 8px;
+  text-decoration-thickness: 2px;
 }
 .site-nav a:hover {
   opacity: 0.6;

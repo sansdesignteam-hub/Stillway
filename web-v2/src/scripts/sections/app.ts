@@ -202,7 +202,7 @@ export const app: SectionMotion = {
       flare: from.flare * (1 - seg(x, 0, 0.16)) + flash * 0.8,
       y: from.y + go * 0.75,
       w: from.w * lerp(1, 0.45, go),
-      alpha: 1 - seg(x, 0.42, 0.62),
+      alpha: 1 - seg(x, 0.32, 0.48), // QA G-14: gone before it reaches the navbar
     };
   },
 };

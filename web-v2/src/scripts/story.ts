@@ -83,6 +83,15 @@ const partOf = (min: number) => {
   return label;
 };
 
+/** QA HE-01: the navbar link of each chapter (S01 has none) */
+const CHAPTER: Record<string, string> = {
+  why: '#sleep', sleep: '#sleep', activity: '#sleep', insight: '#sleep', // Rhythm, S02–S05
+  details: '#details', specs: '#details', features: '#details', // The ring, S06–S08
+  app: '#app',
+  finishes: '#finishes',
+  close: '#faq',
+};
+
 interface Item {
   def: SectionDef;
   m: SectionMotion;
@@ -150,6 +159,27 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     if (u < 0) return u < -it.def.tin / 2 ? -it.def.tin : 0;
     if (u > it.end) return u - it.end < 0.15 ? it.end : it.end + 1; // leaving: fully out
     return Math.min(it.def.states - 1, Math.round(u));
+  };
+
+  const navLinks = [...document.querySelectorAll<HTMLAnchorElement>('.site-nav a, .menu__list a')];
+  let chapter: string | null = null;
+  const setChapter = (href: string) => {
+    if (href === chapter) return;
+    chapter = href;
+    navLinks.forEach((a) => {
+      if (a.getAttribute('href') === href) a.setAttribute('aria-current', 'location');
+      else a.removeAttribute('aria-current');
+    });
+  };
+  // QA HE-06: the hash follows the section (replaceState: no history entries); S01 has none
+  let hash: string | null = null;
+  const setHash = (next: string) => {
+    if (next === hash) return;
+    const first = hash === null;
+    hash = next;
+    // the first frame must not wipe a deep link before motion.ts has followed it
+    if (first && location.hash) return;
+    if (location.hash !== next) history.replaceState(history.state, '', location.pathname + location.search + next);
   };
 
   let t0 = performance.now();
@@ -249,7 +279,9 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     document.documentElement.dataset.surface = theme;
 
     /* clock: changes in the last 30% of a connection (Storyboard §3) */
-    const clockFrom = inConn && tinX < 0.7 && prev ? prev : cur;
+    // QA G-15: in 02 → 03 the clock changes to 23:10 · Last night as the ground starts to go dark
+    const switched = nightRise ? k >= 0.35 : tinX >= 0.7;
+    const clockFrom = inConn && !switched && prev ? prev : cur;
     const d = clockFrom.def;
     let min = toMin(d.time);
     if (d.timeEnd) {
@@ -276,6 +308,11 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       el.textContent = part;
       if (rollClock) el.animate([{ transform: 'translateY(60%)', opacity: 0 }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
     });
+
+    /* navbar chapter + URL hash follow the same section as the clock */
+    const at = clockFrom.def.id;
+    setChapter(CHAPTER[at] ?? '');
+    setHash(at === 'hero' ? '' : at === 'close' && clockFrom === cur && u >= 1.5 ? '#faq' : `#${at}`);
 
     /* ring */
     if (ring) {

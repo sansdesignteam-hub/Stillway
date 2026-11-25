@@ -171,7 +171,9 @@ export function detailsLeaveRing(x: number, ctx: Ctx): Pose {
   const p = fingerPose(1, L, { shadow: 0 });
   if (!vhPx) measureVh();
   const up = ctx.reduced ? 0 : (x * SPECS_TIN * vhPx) / L.H; // fraction of the height, y up
-  return { ...p, y: p.y + up, fy: p.fy + up, alpha: ctx.reduced ? 1 - seg(x, 0.3, 0.6) : 1 };
+  // QA G-14: the ring (WebGL, not under the CSS fade) is gone before it reaches the navbar
+  const fromTop = (0.5 - (p.y + up)) * L.H;
+  return { ...p, y: p.y + up, fy: p.fy + up, alpha: ctx.reduced ? 1 - seg(x, 0.3, 0.6) : seg(fromTop, 80, 180) };
 }
 
 /** the pine table GLB (D-146) in the ring stage: at the same contact line and scale as the ring */

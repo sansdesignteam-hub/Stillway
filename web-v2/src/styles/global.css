@@ -158,6 +158,19 @@ html.js .scene--hero [data-a] {
   opacity: 1;
 }
 
+/* QA G-14: copy and images that scroll up with the page (02→03, 06→07, 09→10, the S11 column)
+   fade out before they reach the navbar, so nothing ever sits under the logo or the bar */
+html.js .scene--why .scene__front,
+html.js .scene--why .scene__back,
+html.js .scene--sleep .scene__front,
+html.js .scene--details .scene__front,
+html.js .scene--details .scene__back,
+html.js .scene--app .scene__front,
+html.js .scene--close .scene__front {
+  -webkit-mask-image: linear-gradient(to bottom, transparent calc(var(--header-h) - 12px), #000 calc(var(--header-h) + 8px));
+  mask-image: linear-gradient(to bottom, transparent calc(var(--header-h) - 12px), #000 calc(var(--header-h) + 8px));
+}
+
 /* ---------- ring stills (3D fallback/): between the back and front layers ---------- */
 .ring-fallback {
   position: absolute;
