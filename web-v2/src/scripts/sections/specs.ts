@@ -229,7 +229,8 @@ function endLayout(L: L7) {
   const ch = el.caption?.offsetHeight ?? 0;
   const h = L.E.h;
   // offsets from the card centre
-  const textTop = h * 0.12 - eh / 2 - th;
+  // D-175: one line "The everyday." across the middle of the card, a little below its centre (State 15)
+  const textTop = h * 0.06 - eh / 2 - th;
   const desc = textTop + th + ev.base + ev.desc;
   const capTop = Math.max(desc, h / 2) + (L.m ? 14 : 22);
   const gTop = Math.min(-h / 2, textTop);
@@ -457,9 +458,8 @@ export const specs: SectionMotion = {
       tf(el.etext, (u > RISE ? 1 : 0) * (1 - out), tr(left, ty0), clip);
       if (el.caption) {
         const cw = el.caption.offsetWidth;
-        // D-155: desktop just right of the card (clear of the Gold ring in the photo's lower right);
-        // phones: right edge on the ink of the last "y"
-        const x = m ? left + tw - ev.right - cw : G.E.x + G.E.w / 2 + 20 * k;
+        // D-175: centred under the card (State 15)
+        const x = W / 2 - cw / 2;
         const y = G.capTop;
         const cp = seg(u, RISE + 0.72, RISE + 1.0);
         tf(el.caption, cp > 0 ? 1 - out : 0, tr(x, y + rise));

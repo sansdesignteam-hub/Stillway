@@ -20,18 +20,21 @@
  */
 import Img from '../Img.astro';
 import { specs as d } from '../../content/copy';
-import night from '../../../../design/assets/v2/A-2-card-night.png';
-import desk from '../../../../design/assets/v2/A-2-card-desk.png';
-import move from '../../../../design/assets/v2/A-2-card-move.png';
-import rinse from '../../../../design/assets/v2/A-2-card-rinse.png';
+// D-175: card photos and the end photo from Figma State 9 / State 15 (design/assets/v2/s07)
+import night from '../../../../design/assets/v2/s07/s07-night.png';
+import desk from '../../../../design/assets/v2/s07/s07-desk.png';
+import move from '../../../../design/assets/v2/s07/s07-move.png';
+import rinse from '../../../../design/assets/v2/s07/s07-rinse.png';
+import everyday from '../../../../design/assets/v2/s07/s07-everyday.png';
+import { getImage } from 'astro:assets';
 // D-155: Visual Director's A-11b variation C (dock + Black top right, Silver standing top left, Gold
 // lying bottom right, the middle of the stone empty); the two web sizes as they are (PNG = master)
-import ev1920 from '../../../../design/assets/v2/everyday/A-11b-everyday-c-1920.webp';
-import ev2880 from '../../../../design/assets/v2/everyday/A-11b-everyday-c-2880.webp';
 
 const img: Record<string, any> = { night, desk, move, rinse };
 // Figma: the Desk note wraps in a 217 px box, the others sit in 316
 const noteW: Record<string, number> = { desk: 217 };
+const evS = await getImage({ src: everyday, width: 960, format: 'webp' });
+const evL = await getImage({ src: everyday, width: 1672, format: 'webp' });
 ---
 
 <section class="scene scene--specs" data-scene="specs" aria-labelledby="specs-title">
@@ -39,7 +42,7 @@ const noteW: Record<string, number> = { desk: 217 };
   <div class="scene__back">
     <div class="sp__every" data-s-every data-a>
       <div class="sp__par" data-s-par>
-        <img class="sp__everyimg" src={ev1920.src} srcset={`${ev1920.src} 1920w, ${ev2880.src} 2880w`} sizes="100vw" width={ev2880.width} height={ev2880.height} alt={d.everyday.alt} decoding="async" />
+        <img class="sp__everyimg" src={evL.src} srcset={`${evS.src} 960w, ${evL.src} 1672w`} sizes="100vw" width={everyday.width} height={everyday.height} alt={d.everyday.alt} decoding="async" />
       </div>
       <i class="sp__evshade" aria-hidden="true"></i>
       <i class="sp__dark" data-s-dark></i>
@@ -100,7 +103,8 @@ const noteW: Record<string, number> = { desk: 217 };
 
     <!-- D-151: the words are drawn over the card (obsidianassembly.com "The Connection") -->
     <div class="sp__everytext" data-s-etext data-a>
-      <p class="sp__the" data-s-the>{d.everyday.the}</p>
+      <!-- D-175: one line, one size, centred: "The everyday." (the old small "The" stays empty) -->
+      <p class="sp__the" data-s-the hidden></p>
       <p class="sp__evword" data-s-evword>{d.everyday.word}</p>
     </div>
     <p class="sp__caption" data-s-caption data-a><span class="sp__capi" data-s-capi>{d.everyday.caption}</span></p>
@@ -184,11 +188,11 @@ const noteW: Record<string, number> = { desk: 217 };
     letter-spacing: var(--t-display-4-ls);
     margin-left: var(--the-x, 0px);
   }
-  /* D-171: sized to the photo, not to a text style — the word spans about 80 % of the photo's
-     width ("Everyday" is ≈ 3.93 em wide in Hanken Grotesk 500): ≈ 277 px at 1440, ≈ 70 px at 375.
+  /* D-171/D-175: sized to the photo, not to a text style — "The everyday." spans about 86 % of the
+     photo's width on one line (measured 5.93 em wide in Hanken Grotesk 500 with −3 % tracking).
      Line height and tracking keep the Display proportions (204 / 275.4, −3 %). */
   .sp__evword {
-    --ev-size: calc((100vw - 2 * var(--margin)) * 0.8 / 3.93);
+    --ev-size: calc((100vw - 2 * var(--margin)) * 0.86 / var(--ev-em, 5.93));
     font-weight: var(--w-display);
     font-size: var(--ev-size);
     line-height: calc(var(--ev-size) * 0.7407);
@@ -363,9 +367,10 @@ const noteW: Record<string, number> = { desk: 217 };
     position: absolute;
     left: 0;
     top: 0;
-    width: 7em;
+    width: auto;
     overflow: hidden;
-    text-align: left;
+    text-align: center;
+    white-space: nowrap;
     color: var(--white);
     text-shadow:
       0 0 1px color-mix(in srgb, var(--photo-dim) 60%, transparent),
@@ -410,9 +415,10 @@ const noteW: Record<string, number> = { desk: 217 };
       width: 56px;
       height: 56px;
     }
+    /* D-175: centred under the card on phones too, one line */
     .sp__caption {
-      width: 9em;
-      text-align: right;
+      font-size: var(--t-para-md-size);
+      line-height: var(--t-para-md-lh);
     }
   }
 </style>

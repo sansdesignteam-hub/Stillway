@@ -114,12 +114,12 @@ export const specs = {
   // Figma State 3–6: title above the line, sentence below it (left); spec + small note (right).
   // '\n' = a line break kept from Figma
   cards: [
-    { key: 'night', n: 'I', name: 'Night', title: 'Sleeps with you.\nCharges while you don’t.', spec: 'Up to 7 days on a charge.', note: 'Top up on the dock while you shower.', alt: 'Night: asleep under a linen cover, the ring on the index finger of the resting hand.' },
-    { key: 'desk', n: 'II', name: 'Desk', title: 'Sized to forget.', spec: 'Sizes 6–13.', note: 'Try them on with the sizing kit before you choose.', alt: 'Desk: hands on a keyboard, the plain silver ring on the index finger.' },
-    { key: 'move', n: 'III', name: 'Move', title: 'Light enough to lose track of.', spec: 'About 4 g, 2.6 mm thin.', note: '', alt: 'Move: tying a shoe on a studio floor, the ring on the left hand.' },
-    { key: 'rinse', n: 'IV', name: 'Rinse', title: 'Hands in water. Ring stays on.', spec: 'Water resistant to 100 m.', note: 'Washing up, rain, a swim.', alt: 'Rinse: hands under running water, the wet ring on the index finger.' },
+    { key: 'night', n: 'I', name: 'Night', title: 'Sleeps with you.\nCharges while you don’t.', spec: 'Up to 7 days on a charge.', note: 'Top up on the dock while you shower.', alt: 'Night: asleep on a pillow, the ring on the hand under his cheek.' },
+    { key: 'desk', n: 'II', name: 'Desk', title: 'Sized to forget.', spec: 'Sizes 6–13.', note: 'Try them on with the sizing kit before you choose.', alt: 'Desk: the ring charging in its dock on a wooden bedside table, lamp light behind.' },
+    { key: 'move', n: 'III', name: 'Move', title: 'Light enough to lose track of.', spec: 'About 4 g, 2.6 mm thin.', note: '', alt: 'Move: a man in sunglasses, hand at his temple, the black ring on his finger.' },
+    { key: 'rinse', n: 'IV', name: 'Rinse', title: 'Hands in water. Ring stays on.', spec: 'Water resistant to 100 m.', note: 'Washing up, rain, a swim.', alt: 'Rinse: a wet hand on the stone edge of a pool, the silver ring on one finger.' },
   ],
-  everyday: { the: 'The', word: 'Everyday', caption: 'Ring shown where it’s worn.', alt: 'Three Stillway rings on a mossy stone in warm light: silver standing, black in its charging dock, gold lying down.' },
+  everyday: { the: '', word: 'The everyday.', caption: 'Ring shown where it’s worn.', alt: 'Three Stillway rings, silver, gold and black, on a warm wooden desk by a laptop and a lamp.' },
 };
 
 export const features = {
