@@ -170,14 +170,21 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const LAMP_GAIN = 1;
   const RING_DESK_ENV = 1.85;
   const DESK_PAPER = 0.6;
+  const DESK_EXPOSURE = 1.9;
+  /** the poster band is a touch warmer than the live one (lamp-lit oak in its reflections) */
+  const BAND_DESK = new THREE.Color().setRGB(1, 0.94, 0.9);
+  /** the liner must not follow that exposure: the poster's inner wall stays dark. Its base colour is
+   *  near black, so what shows is its reflection of the env: that is what is held back on the desk */
+  const LINER_DESK_ENV = 0.3;
   const SHADOW_RADIUS = 24;
   /* D-181b catcher density, measured from the 3D Designer's ring overlay (ring-overlay-s01-3632 of
-     0742ce3; the alpha of its #2A1608 shadow = the Cycles ring shadow): 0.40–0.70 on the desk (0.55 used),
+     0742ce3; the alpha of its #2A1608 shadow = the Cycles ring shadow): 0.40–0.45 on the desk where the spill lamp also reaches and 0.70–0.74 inside the pedestal's spill
+     shadow (front-left blob),
      0.30–0.35 on the pedestal top, ~0.15 on the front face. Lower than the first D-181 drop (0.8)
      because the plate now has a second, plate-only lamp spill that the ring does not block, so the
      ring's shadow only takes the key away. Not in the JSON; a later JSON can set
      desk.catcher_opacity / pedestal.catcher_opacity / pedestal.catcher_side_opacity. */
-  const CATCH = { desk: 0.55, top: 0.34, side: 0.15 };
+  const CATCH = { desk: 0.5, top: 0.34, side: 0.1, deskSpillShade: 0.8 };
   let LAMP = 2.6;
   /* D-181: the pedestal is no longer shaded here. It is rendered once in Cycles INTO the photo (the
      plate: oak, contact shadow, bounce, AO), and this stage only keeps its shape as an invisible
@@ -206,6 +213,11 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     uToPed: { value: new THREE.Matrix4() }, // world → pedestal local
     uPedL: { value: new THREE.Vector3(0.57, 0.738, -0.36) }, // unit vector toward the key light
     uPedBox: { value: new THREE.Vector4(0.0205, 0.0068, 0.0128, 0.0053) }, // half width, top y, half depth, corner radius
+    /* the plate-only lamp spill (JSON lights.plate_only_lamp_spill: Blender mm [125, 50, 58], disk Ø60
+       → three.js (0.125, 0.058, −0.05) m). NOT a light here: only its direction, to know where the
+       pedestal shades it in the plate */
+    uSpillL: { value: new THREE.Vector3(0.125, 0.04, -0.047).normalize() },
+    uSpillTan: { value: 0.1 }, // by eye against the still (the true disk gives 0.2, too soft a mask here)
   };
   const PCSS_N = isPhone() ? 12 : 24; // PCF taps
   const PCSS_B = isPhone() ? 8 : 16; // blocker-search taps
@@ -268,28 +280,36 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
         .replace('#include <shadowmap_pars_fragment>', pcssChunk)
         .replace(
           'void main() {',
-          `uniform vec3 uPedL; uniform vec4 uPedBox; uniform float uKeyRatio; uniform float uSideFloor; varying vec3 vPedPos; varying vec3 vPedN;
+          `uniform vec3 uPedL; uniform vec4 uPedBox; uniform float uKeyRatio; uniform float uSideFloor; uniform vec3 uSpillL; uniform float uSpillTan; varying vec3 vPedPos; varying vec3 vPedN;
           // 1 where the key light reaches the desk, 0 inside the pedestal's own shadow (soft edge that
           // widens with the distance to the casting edge, like the PCSS penumbra)
-          float pedLit( vec3 P ) {
-            float tTop = uPedBox.y / uPedL.y;
+          float pedLit( vec3 P, vec3 L, float tanA ) {
+            float tTop = uPedBox.y / L.y;
             float best = 1.0; float bt = 0.0;
             for ( int i = 0; i < 12; i ++ ) {
               float t = tTop * ( float( i ) + 0.5 ) / 12.0;
-              vec2 q = abs( P.xz + uPedL.xz * t ) - ( uPedBox.xz - uPedBox.w );
+              vec2 q = abs( P.xz + L.xz * t ) - ( uPedBox.xz - uPedBox.w );
               float d = length( max( q, 0.0 ) ) + min( max( q.x, q.y ), 0.0 ) - uPedBox.w;
               if ( d < best ) { best = d; bt = t; }
             }
-            float pw = max( 0.00025, uLightTan * bt );
+            float pw = max( 0.00025, tanA * bt );
             return smoothstep( - pw, pw, best );
           }
           void main() {`,
         )
         .replace(
           'gl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) );',
-          `float nl = ${ped ? 'max( dot( normalize( vPedN ), uPedL ), 0.0 )' : 'uPedL.y * pedLit( vPedPos )'};
+          `float nl = ${ped ? 'max( dot( normalize( vPedN ), uPedL ), 0.0 )' : 'uPedL.y'};
           float key = uKeyRatio * nl;
-          gl_FragColor = vec4( color, opacity * max( key / ( 1.0 + key ), uSideFloor ) * ( 1.0 - getShadowMask() ) );`,
+          float a = max( key / ( 1.0 + key ), ${ped ? 'uSideFloor' : '0.0'} );
+          ${
+            ped
+              ? ''
+              : `// where the pedestal shades the plate-only spill lamp the key is the only light left, so the
+          // ring's shadow is denser there (uSideFloor carries that density on the desk catcher)
+          a = mix( uSideFloor, a, pedLit( vPedPos, uSpillL, uSpillTan ) ) * pedLit( vPedPos, uPedL, uLightTan );`
+          }
+          gl_FragColor = vec4( color, opacity * a * ( 1.0 - getShadowMask() ) );`,
         );
       if (!sh.fragmentShader.includes('uKeyRatio * nl')) console.warn('catcher: ShadowMaterial not patched');
     };
@@ -346,6 +366,44 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   contact.rotation.x = -Math.PI / 2;
   contact.renderOrder = -1;
   desk.add(contact);
+  // D-181b polish: the tight, dark core of that contact (Figma shows it where the band touches the top)
+  const coreMat = contactMat.clone();
+  const core = new THREE.Mesh(contact.geometry, coreMat);
+  core.renderOrder = -1;
+  desk.add(core);
+  const _inv = new THREE.Matrix4();
+  const _toDesk = new THREE.Matrix4();
+  /** where the ring touches the pedestal top right now (desk space), from its vertices as posed this
+   *  frame, hover tilt included: centre, direction and half-length of the strip of the band within
+   *  CONTACT_BAND of the top, and the gap between the lowest vertex and the top (0 while it rests) */
+  const CONTACT_BAND = 0.0007;
+  const touch = { x: 0, z: 0, ang: 0, len: 0, gap: 0, ok: false };
+  const findTouch = () => {
+    touch.ok = false;
+    if (!deskPose || !ringPts.length) return touch;
+    const top = deskPose.pedestal.top_y ?? 0;
+    pivot.updateMatrix();
+    _toDesk.multiplyMatrices(pivot.matrix, spinner.matrix).premultiply(_inv.copy(desk.matrix).invert());
+    let minY = Infinity;
+    const P: number[] = [];
+    for (const v of ringPts) {
+      _v.copy(v).applyMatrix4(_toDesk);
+      if (_v.y < minY) minY = _v.y;
+      if (_v.y < top + 0.004) P.push(_v.x, _v.y, _v.z);
+    }
+    let n = 0, sx = 0, sz = 0;
+    for (let i = 0; i < P.length; i += 3) if (P[i + 1] < minY + CONTACT_BAND) (n++, (sx += P[i]), (sz += P[i + 2]));
+    if (!n) return touch;
+    const cx = sx / n, cz = sz / n;
+    let xx = 0, zz = 0, xz = 0;
+    for (let i = 0; i < P.length; i += 3) if (P[i + 1] < minY + CONTACT_BAND) { const dx = P[i] - cx, dz = P[i + 2] - cz; xx += dx * dx; zz += dz * dz; xz += dx * dz; }
+    touch.x = cx; touch.z = cz;
+    touch.ang = 0.5 * Math.atan2(2 * xz, xx - zz); // major axis of the strip in the XZ plane
+    touch.len = Math.sqrt((xx + zz) / n);
+    touch.gap = Math.max(0, minY - top);
+    touch.ok = true;
+    return touch;
+  };
   let contactKey = '';
   let contactLow: THREE.Vector3 | null = null;
   /** the ring's lowest point at rest (desk space, from the JSON pose + ring vertices): contact shade
@@ -439,6 +497,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const _m = new THREE.Matrix4();
   const _q = new THREE.Quaternion();
   const _v = new THREE.Vector3();
+  const _c = new THREE.Color();
   /** the photo camera on screen: focal length (px) and principal point (px from the centre, y down),
    *  through the photo's cover size and its CSS zoom around heroBg.anchor */
   const photoCam = (zoom: number) => {
@@ -512,11 +571,13 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const ringSize = box.getSize(new THREE.Vector3()).x; // outer diameter
   const M = RING_MODEL.materials;
   const shells: THREE.MeshStandardMaterial[] = [];
+  const liners = new Map<THREE.MeshStandardMaterial, number>();
   ring.traverse((o) => {
     if (!o.isMesh) return;
     const m = o.material;
     o.castShadow = true;
     if (M.shell.test(m.name)) shells.push(m); // brushed silver as authored in the GLB
+    if (M.liner.test(m.name) && !liners.has(m)) liners.set(m, m.envMapIntensity ?? 1);
   });
   // polished (S01, D-081) vs brushed (authored). Values = finishes.json "silver_polished" from the
   // 3D Designer, applied to this same GLB (normal map and anisotropy off), so S01 → S02 can blend the
@@ -839,7 +900,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     }
 
     // finish: brushed → polished (V1)
-    const finKey = `${p.gloss}|${p.custom.toFixed(3)}|${p.finA}|${p.finB}|${p.finT.toFixed(3)}|${dsk.toFixed(3)}`;
+    const finKey = `${p.gloss}|${p.custom.toFixed(3)}|${p.finA}|${p.finB}|${p.finT.toFixed(3)}|${dsk.toFixed(3)}|${rest.toFixed(3)}`;
     if (finKey !== lastFin) {
       lastFin = finKey;
       mix(band, brushed.band, POLISHED.band, p.gloss);
@@ -854,6 +915,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       // takes more of the warm env to match the poster's bright silver; fades out with the desk
       const rg = 1 + (RING_DESK_ENV - 1) * dsk;
       if (band) band.envMapIntensity *= rg;
+      if (band && p.custom <= 0.001) band.color.multiply(_c.setRGB(1, 1, 1).lerp(BAND_DESK, rest));
+      liners.forEach((base, m) => (m.envMapIntensity = base * (1 + (LINER_DESK_ENV - 1) * rest)));
       if (engrave) engrave.envMapIntensity *= rg;
     }
 
@@ -885,12 +948,26 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       setCatch(deskMat, deskPose.desk.catcher_opacity ?? CATCH.desk, sh * dsk);
       setCatch(pedCatch, deskPose.pedestal.catcher_opacity ?? CATCH.top, sh * dsk);
       pedCatch.userData.floor.value = deskPose.pedestal.catcher_side_opacity ?? CATCH.side;
-      const low = restLow();
-      if (low) {
-        contact.position.set(low.x, (deskPose.pedestal.top_y ?? low.y) + 0.00005, low.z);
-        contact.scale.set(0.016, 0.009, 1); // ~11 × 6 mm soft oval under the touching band
+      deskMat.userData.floor.value = deskPose.desk.catcher_spill_shade_opacity ?? CATCH.deskSpillShade;
+      // ring → pedestal contact: a soft oval and a tight dark core under the strip of the band that
+      // touches the top this frame (follows the hover tilt), fading as the ring lifts off
+      const t = findTouch();
+      const topY = (deskPose.pedestal.top_y ?? 0) + 0.00005;
+      const near = t.ok ? 1 - Math.min(1, t.gap / 0.0015) : 0; // gone 1.5 mm above the top
+      const ck = dsk * Math.min(1, Math.max(0, p.rest)) * near;
+      if (t.ok) {
+        const along = Math.min(0.006, Math.max(0.0022, t.len * 2.2));
+        // PlaneGeometry lies in XY; turned flat, its local X runs along the strip (−ang: Z maps to −Y)
+        contact.position.set(t.x, topY, t.z);
+        contact.rotation.set(-Math.PI / 2, 0, -t.ang);
+        contact.scale.set(along * 2 + 0.008, 0.0075, 1);
+        core.position.set(t.x, topY + 0.00002, t.z);
+        core.rotation.set(-Math.PI / 2, 0, -t.ang);
+        core.scale.set(along * 2 + 0.002, 0.0034, 1);
       }
-      contactMat.opacity = 0.45 * dsk * Math.min(1, Math.max(0, p.rest));
+      contactMat.opacity = 0.5 * ck;
+      coreMat.opacity = 0.8 * ck;
+      contact.visible = core.visible = ck > 0.003;
       // shadow camera in world units (the group is scaled by deskK)
       const L = deskPose.lights.key.shadow;
       const kk = deskK;
@@ -923,7 +1000,11 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       lastEnv = key;
       scene.environment = key === 'dusk' ? envs.dusk! : key === 'night' ? envs.night! : step >= 0 ? blends[step] : envs.paper ?? null;
     }
-    renderer.toneMappingExposure = 1.0 + 0.15 * ph; // V1 hero exposure 1.15 → 1.0, continuous
+    // D-181b polish: on the desk the live ring is exposed up to the 3D Designer's poster ring (measured
+    // on the ring pixels, poster vs live); only the ring is tone mapped here (catchers are not), and
+    // the gain follows `rest`, so it is there only while the ring stands on the pedestal (the frame the
+    // poster shows) and eases out as the ring lifts off: the close-up and S02 keep their look
+    renderer.toneMappingExposure = (1.0 + 0.15 * ph) * (1 + (DESK_EXPOSURE - 1) * rest); // V1 hero exposure 1.15 → 1.0, continuous
     const dip = Math.min(1, Math.abs(n - 0.5) * 2.5, Math.abs(dk - 0.5) * 2.5);
     // on Night the polished env is almost black: lift it with the rim so the band keeps a silver gradient
     // the swap dip never goes below 0.45, so the ring is never a black shape in a connection (D-090 r1)

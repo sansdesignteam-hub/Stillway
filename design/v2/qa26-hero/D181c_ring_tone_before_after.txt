@@ -1,0 +1,16 @@
+ring pixels, 1440@2x, poster vs live (classes by poster luminance: dark <70, mid 70-160, bright >=160)
+BEFORE (fe96176)
+all     n  311993 poster 133.1 118.5 109.0 | live 108.4 97.5 89.0 | live/poster 0.814 0.823 0.816
+dark    n   50859 poster 43.7 36.0 30.9 | live 39.1 33.7 29.6 | live/poster 0.895 0.936 0.960
+mid     n  198907 poster 130.1 113.4 102.1 | live 110.9 98.8 89.2 | live/poster 0.853 0.871 0.874
+bright  n   62227 poster 215.7 202.1 194.8 | live 156.9 145.6 136.8 | live/poster 0.727 0.720 0.702
+AFTER
+all     n  321382 poster 133.0 118.0 108.2 | live 130.9 118.4 108.9 | live/poster 0.984 1.004 1.006
+dark    n   52509 poster 45.1 36.4 30.7 | live 61.9 55.2 50.1 | live/poster 1.374 1.516 1.634
+mid     n  205244 poster 130.0 113.0 101.5 | live 132.4 118.7 108.1 | live/poster 1.019 1.050 1.065
+bright  n   63629 poster 215.4 201.5 193.9 | live 182.9 169.7 159.9 | live/poster 0.849 0.843 0.825
+375@3x AFTER
+all     n  226633 poster 136.9 118.4 106.2 | live 136.2 122.2 111.6 | live/poster 0.995 1.032 1.050
+dark    n   33204 poster 44.1 36.0 30.8 | live 62.0 55.2 50.1 | live/poster 1.408 1.532 1.626
+mid     n  151424 poster 135.4 113.3 98.3 | live 139.7 124.0 112.0 | live/poster 1.032 1.094 1.139
+bright  n   42005 poster 215.9 201.7 194.3 | live 182.2 168.8 158.7 | live/poster 0.844 0.837 0.817

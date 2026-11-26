@@ -76,3 +76,34 @@ Yang diunduh (Chrome, dicek dari network): 1440@1x → plate 1920; 1440@2x → p
 - Tidak ada frame Figma 375; 375 dibandingkan dengan still ponsel 3D Designer.
 
 Bukti: `D181b_1440_2x_vs_figma.jpg`, `D181b_onion_figma_vs_live_1440.jpg`, `D181b_onion_poster_vs_live_1440.jpg` / `_375.jpg`, `D181b_375_live_vs_3d_still.jpg`, `D181b_pedestal_closeup_poster_live_figma.jpg`, `D181b_frames_1440.jpg` / `_375.jpg`, `D181b_tilt_strip.jpg`.
+
+---
+
+# D-181c: polish (nada ring, kontak, bayangan meja)
+
+## 1. Nada ring (hidup vs poster, piksel ring)
+- Hanya saat ring berdiri di alas (mengikuti `rest`, memudar saat ring terangkat; close-up dan S02 tidak berubah): exposure ring ×1,9, pantulan env pada liner ×0,3, pita sedikit lebih hangat (×1 / 0,94 / 0,90).
+- Rata-rata RGB semua piksel ring, hidup ÷ poster (`D181c_ring_tone_before_after.txt`):
+
+| | R | G | B |
+| --- | --- | --- | --- |
+| 1440@2x sebelum (`fe96176`) | 0,814 | 0,823 | 0,816 |
+| 1440@2x sesudah | **0,984** | **1,004** | **1,006** |
+| 375@3x sesudah | 0,995 | 1,032 | 1,050 |
+
+- Yang belum cocok: distribusinya. Piksel yang gelap di poster 37–63% lebih terang di web (liner dan pantulan gelap di pita), piksel yang terang di poster 15–18% lebih gelap. Rata-ratanya cocok, kontras ring hidup lebih rendah daripada poster. Pada 375 kanal biru 5% di atas poster (target ±3% tidak tercapai di kanal itu).
+
+## 2. Kontak ring → alas
+- Inti kontak gelap dan sempit ditambahkan di bawah bagian pita yang menyentuh sisi atas, dihitung dari vertex ring pada pose frame itu (termasuk hover tilt), ditambah oval lembut yang sudah ada. Keduanya memudar saat ring terangkat (hilang 1,5 mm di atas alas).
+- `D181c_contact_closeup_before_after_figma.jpg`, `D181c_tilt_contact_strip.jpg` (kontak mengikuti tilt).
+- **Untuk 3D Designer:** overlay poster belum punya kontak gelap ini (bayangannya tipis), jadi saat cross-fade poster → hidup kontaknya muncul. Overlay perlu kontak yang sama. Kontak di Figma masih lebih besar dan lebih gelap daripada versi web; sebagian besar karena sisi bawah ring Figma memantulkan gelap.
+
+## 3. Bayangan meja kiri-depan
+- **Penyebab:** bukan jangkauan catcher atau PCSS. Bentuk bayangan hidup dan Cycles berimpit. Di plate ada lampu spill kedua; di area yang tertutup alas dari lampu itu (kiri-depan), lampu kunci menjadi satu-satunya cahaya, sehingga bayangan ring di still lebih pekat di sana (alpha overlay 0,70–0,74 vs 0,40–0,45 di tempat lain).
+- **Perbaikan:** catcher meja sekarang memakai mask analitik kedua (bayangan alas dari arah lampu spill) untuk menaikkan kepadatan hanya di area itu (0,80 vs 0,50). Tidak ada lampu yang ditambahkan.
+- Hasil (sampel meja kiri, poster vs hidup; plate tanpa bayangan 51,0): sebelum 39,7 vs 45,2; sesudah 39,7 vs **42,7**. Selisih turun dari 5,5 ke 3,0 tingkat, belum nol. Arah dan penumbra lampu spill saya setel dengan mata terhadap still (posisi lampu hanya ada sebagai teks di JSON).
+- Sisi depan alas: `side` 0,15 → 0,10.
+
+## Lain-lain
+- fps dua kali jalan: 60,1–60,4 di semua kondisi termasuk throttle 4× (`D181c_perf.txt`). Clearance tidak berubah (`D181c_clearance_check.txt`).
+- Bukti: `D181c_onion_poster_vs_live_1440.jpg`, `_375.jpg`, `D181c_frames_1440.jpg`.
