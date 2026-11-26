@@ -102,63 +102,63 @@
   "file": "ring-s01-1280",
   "width": 1280,
   "height": 730,
-  "avifKB": 16.6,
+  "avifKB": 15.7,
   "avifQ": 70,
   "budgetKB": 200,
-  "webpKB": 45.9
+  "webpKB": 46.9
  },
  {
   "file": "ring-s01-1920",
   "width": 1920,
   "height": 1095,
-  "avifKB": 26.8,
+  "avifKB": 25.6,
   "avifQ": 70,
   "budgetKB": 200,
-  "webpKB": 86.1
+  "webpKB": 89.3
  },
  {
   "file": "ring-s01-3632",
   "width": 3632,
   "height": 2072,
-  "avifKB": 48.2,
+  "avifKB": 48.7,
   "avifQ": 70,
   "budgetKB": 200,
-  "webpKB": 212.9
+  "webpKB": 229
  },
  {
   "file": "ring-s01-m-1280",
   "width": 1280,
   "height": 730,
-  "avifKB": 9.6,
+  "avifKB": 9.4,
   "avifQ": 70,
   "budgetKB": 200,
-  "webpKB": 25.1
+  "webpKB": 25.6
  },
  {
   "file": "ring-s01-m-1920",
   "width": 1920,
   "height": 1095,
-  "avifKB": 15.4,
+  "avifKB": 14.7,
   "avifQ": 70,
   "budgetKB": 200,
-  "webpKB": 46.3
+  "webpKB": 47.5
  },
  {
   "file": "ring-s01-mp-908",
   "width": 908,
   "height": 1036,
-  "avifKB": 14.7,
+  "avifKB": 14,
   "avifQ": 70,
   "budgetKB": 200,
-  "webpKB": 40.9
+  "webpKB": 41.6
  },
  {
   "file": "ring-s01-mp-1816",
   "width": 1816,
   "height": 2072,
-  "avifKB": 30.8,
+  "avifKB": 31.2,
   "avifQ": 70,
   "budgetKB": 200,
-  "webpKB": 105
+  "webpKB": 111.9
  }
 ]

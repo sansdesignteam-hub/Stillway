@@ -1,0 +1,7 @@
+1440@2x, mean 0-255: region (x,y,w,h) | plate (no ring shadow) | poster | live
+desk_front_left (500,1560,300,160) | 51.0 | 39.7 | 42.4
+desk_far_left (300,1640,300,140) | 47.7 | 40.3 | 44.0
+desk_front_strip (1000,1700,400,80) | 50.0 | 38.0 | 38.3
+top_left_of_ring (1010,1330,200,50) | 126.6 | 95.7 | 97.8
+top_right_end (1720,1310,120,50) | 139.4 | 49.3 | 52.3
+top_left_front (1250,1400,200,30) | 121.6 | 66.7 | 57.5

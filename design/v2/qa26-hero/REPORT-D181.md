@@ -107,3 +107,51 @@ Bukti: `D181b_1440_2x_vs_figma.jpg`, `D181b_onion_figma_vs_live_1440.jpg`, `D181
 ## Lain-lain
 - fps dua kali jalan: 60,1–60,4 di semua kondisi termasuk throttle 4× (`D181c_perf.txt`). Clearance tidak berubah (`D181c_clearance_check.txt`).
 - Bukti: `D181c_onion_poster_vs_live_1440.jpg`, `_375.jpg`, `D181c_frames_1440.jpg`.
+
+---
+
+# D-181d: final (3D-Designer `82f67c3` + `4cbf9fd`)
+
+Overlay/still baru disalin dan `hero-plate.mjs` dijalankan ulang; plate, GLB tidak berubah, JSON kini berisi `lights.spill`.
+
+## 1. Bayangan meja: model lampu spill dari JSON
+- Mask yang disetel dengan mata diganti model fisik di catcher: `alpha = K / (K + S + A)`. K = lampu kunci (n·l), S = lampu spill di titik itu dari `lights.spill` (nilai hadap 2,374 × (d0/d)² × cos, nol di tempat alas menutupinya, penumbra dari disk Ø60 mm), A = ambient. Hanya A yang disetel: meja 0,15, atas alas 0,58. Tidak ada lampu yang ditambahkan; ring tidak diterangi spill.
+- Hasil (`D181d_shadow_regions.txt`, rata-rata 0–255, plate tanpa bayangan → poster → hidup):
+
+| Area | Plate | Poster | Hidup |
+| --- | --- | --- | --- |
+| Meja kiri-depan | 51,0 | 39,7 | 42,4 |
+| Meja kiri jauh | 47,7 | 40,3 | 44,0 |
+| Meja strip depan | 50,0 | 38,0 | 38,3 |
+| Atas alas, kiri ring | 126,6 | 95,7 | 97,8 |
+| Atas alas, ujung kanan | 139,4 | 49,3 | 52,3 |
+| Atas alas, kiri-depan | 121,6 | 66,7 | 57,5 |
+
+- **Belum tertutup:** meja kiri-depan masih 2,7 tingkat lebih terang dari poster (awal 5,5), kiri jauh 3,7. A fisik dari overlay adalah 0,29; saya memakai 0,15 untuk mengimbangi penumbra PCSS yang melebar jauh dari ring, jadi ini kompensasi, bukan angka terukur.
+
+## 2. Kontak ring → alas
+- Dua oval datar diganti oklusi di dalam catcher alas: jarak 3D ke strip pita yang menyentuh sisi atas (dari vertex per frame, mengikuti tilt), alpha 1 dalam ±2 mm, hilang di ±11,5 mm, ditambah oklusi lebih lebar sepanjang garis singgung pita. Ukurannya diambil dari alpha overlay `82f67c3`. Karena ada di catcher, oklusi tidak keluar dari alas.
+- Pusat oklusi digeser 3,5 mm ke sisi lampu sepanjang pita, karena di overlay oklusinya condong ke sana. Ini penyesuaian terhadap gambar, bukan turunan geometri.
+- Ujung kanan atas alas cocok (49,3 vs 52,3); kiri-depan atas alas hidup lebih gelap (57,5 vs 66,7).
+- `D181d_contact_closeup_poster_live_figma.jpg`, `D181d_tilt_strip.jpg`.
+
+## 3. Nada ring vs poster `4cbf9fd`
+- Cara: kurva luma pada output material ring sendiri (setelah tone mapping), aktif hanya saat ring berdiri (`rest`) dan memudar saat terangkat. Lima simpul memetakan persentil luma ring hidup ke persentil poster. Ini grade, bukan perubahan pencahayaan; exposure tambahan dan tint pita dari D-181c dicabut.
+- Persentil luma piksel ring (`D181d_ring_percentiles.txt`):
+
+| | p05 | p25 | p50 | p75 | p95 | rata-rata RGB |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1440@2x poster | 2 | 17 | 100 | 117 | 252 | 99 / 92 / 87 |
+| 1440@2x hidup | 3 | 16 | 99 | 118 | 251 | 101 / 94 / 88 |
+| 375@3x poster | 2 | 23 | 101 | 116 | 250 | 102 / 93 / 86 |
+| 375@3x hidup | 4 | 17 | 100 | 121 | 248 | 103 / 94 / 87 |
+
+- Desktop: p50/p75/p95 dalam 1%; p25 16 vs 17 (−6%, satu tingkat); p05 3 vs 2. **Ponsel: p25 17 vs 23 (−26%), di luar target 5%**; p75 +4%. Simpul kurva disetel pada 1440 saja.
+- **Sebaran di ruang tidak sama walau persentilnya cocok:** sisi bawah pita poster gelap (memantulkan alas), pita bawah ring hidup terang. Kurva luma tidak bisa memindahkan pantulan. Cross-fade poster → hidup karena itu masih terlihat di pita bawah.
+
+## Lain-lain (terukur)
+- AVIF 2560 = 142,0 KB, 3632 = 269,6 KB, 1920 = 89,1 KB, 960 = 28,5 KB, potret ponsel 1816 = 74,7 KB; poster ring AVIF 3632 = 48,7 KB (`D181d_file_sizes.json`).
+- fps dua kali jalan: 60,0–60,3 di semua kondisi termasuk throttle 4× (`D181d_perf.txt`).
+- Wordmark 1440×900 149,6 px, jarak bbox 33 px; clearance diam −0,0002 mm (pembulatan JSON), tidak berubah.
+- Tidak ada frame Figma 375; 375 dibandingkan dengan still ponsel 3D Designer (`D181d_375_live_vs_3d_still.jpg`).
+- Bukti lain: `D181d_1440_2x_vs_figma.jpg`, `D181d_onion_figma_vs_live_1440.jpg`, `D181d_onion_poster_vs_live_1440.jpg` / `_375.jpg`, `D181d_pedestal_closeup_poster_live_figma.jpg`, `D181d_shadow_only_poster_top_live_bottom.jpg`, `D181d_frames_1440.jpg` / `_375.jpg`.
