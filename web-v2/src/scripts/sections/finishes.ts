@@ -142,13 +142,19 @@ const flowTrack = () => {
   if (!track || !front) return;
   if (!phoneMq.matches) {
     track.style.height = '';
+    track.dataset.tin = String(TIN);
     return;
   }
   const H = vhNow();
-  track.style.height = `${Math.round(TIN * H + Math.max(0, front.offsetHeight - H) + 0.25 * H)}px`;
+  // the column starts right under S09 as it leaves (FLOW screens after the track top), so 09 → 10
+  // reads as one page; at least TIN + a rest, so u still reaches the S10 states (clock, hash, nav)
+  track.style.height = `${Math.round(Math.max((TIN + 0.25) * H, FLOW * H + Math.max(0, front.offsetHeight - H) + 0.25 * H))}px`;
+  track.dataset.tin = String(FLOW); // deep links / nav land with the column's top at the top
 };
-/** the column's screen y: the page position of the S10 content (u = 0 puts it at the top) */
-const flowY = () => (track ? track.getBoundingClientRect().top + TIN * vhNow() : 0);
+/** D-172: phones — S09 goes up 1:1 at the start of the S10 track, the column follows straight on */
+const FLOW = 1;
+/** the column's screen y: the page position of the S10 content */
+const flowY = () => (track ? track.getBoundingClientRect().top + FLOW * vhNow() : 0);
 /** fully shown, no motion offset ([data-a] starts at opacity 0 in CSS, so 1 is written inline) */
 const clearInline = (n: HTMLElement | null) => {
   if (!n) return;

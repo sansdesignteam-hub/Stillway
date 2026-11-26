@@ -12,7 +12,7 @@
  * Between modes: the page and the corner light cross-fade (the texts outside the phone change with
  * them). Soft easing, no bounce.
  * Reduced motion: whole states, every screen shown complete, short opacity fades (global.css).
- *  > 6.6  to S10 (D-165): a plain scroll — the hand, phone and texts go up 1:1 with the page.
+ *  > 6.6  to S10 (D-165, D-172 phones too): a plain scroll — the hand, phone and texts go up 1:1.
  */
 import { put, seg, lerp, clamp01, smooth, window4 } from '../anim';
 import { pose, type Pose } from '../ring/poses';
@@ -110,8 +110,9 @@ export const app: SectionMotion = {
     const H = window.innerHeight;
     // 09 → 10 (D-165): a plain scroll, like 06 → 07 — the hand, the phone and the texts go up 1:1
     // with the page, no fade; the photo's melted foot keeps its cut out of sight. Reduced motion: fade.
-    // QA M-05: phones — nothing goes up behind the navbar; the screen stays centred and fades
-    const fade = ctx.reduced || ctx.mobile;
+    // D-172: phones too go up 1:1 (no fade); the navbar mask (global.css, QA G-14) hides what passes
+    // under the bar. Only reduced motion fades.
+    const fade = ctx.reduced;
     const out = fade ? 1 - seg(u, END, END + (ctx.reduced ? 0.3 : 0.6)) : 1;
     const up = fade ? 0 : Math.max(0, u - END) * (vhPx || H);
     const rise = ctx.reduced ? (u >= -0.5 ? 1 : 0) : seg(u, -0.5, -0.05);
