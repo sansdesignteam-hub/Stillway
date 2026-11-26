@@ -89,8 +89,11 @@ export const sleep: SectionMotion = {
       const a = 0.5 + i; // number i arrives on the way to state i + 2
       // QA R-04: the number before moves out of the slot first, only then does the next one come in
       const inn = seg(u, i ? a + 0.22 : a, a + 0.5);
-      const back = seg(u, a + 1, a + 1.22); // the next number arrives: shrink upward, dim
-      const gone = seg(u, a + 2, a + 2.2); // two numbers later: out
+      // D-172: the last number (2×) has no next one — it stays full size, in its slot, undimmed,
+      // through the close of S03 and while the page leaves for S04
+      const last = i === stats.length - 1;
+      const back = last ? 0 : seg(u, a + 1, a + 1.22); // the next number arrives: shrink upward, dim
+      const gone = last ? 0 : seg(u, a + 2, a + 2.2); // two numbers later: out
       const scale = 1 - 0.76 * back; // the previous number ends small (≈ a quarter) and dim
       // the dimmed number moves up by the height of the block that replaces it, so they never overlap
       const lift = (stats[i + 1]?.offsetHeight ?? s.offsetHeight) + 14;
