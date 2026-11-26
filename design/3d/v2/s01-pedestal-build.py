@@ -519,6 +519,56 @@ def write_pose(S):
         json.dump(data, f, indent=2)
 
 
+
+def poster_silver():
+    """Fallback stills with the ring re-lit bright neutral silver (matches the live web ring, D-179 QA).
+    Oak, desk shadow and pose stay identical: the base render (warm world) is kept everywhere except
+    the ring pixels, which come from a render where glossy rays see the untinted, brighter paper env.
+    Mask = ring-only coverage (pedestal + desk as holdout)."""
+    S = scene_setup()
+    bg = load_px(BG); BH, BW = bg.shape[:2]
+    place_camera(S["cam"], **CAM)
+    base = REN + "/s01-pedestal-hero-rgba.png"
+    render_rgba(base, BW, BH)
+    w = bpy.context.scene.world; nt = w.node_tree
+    env = [n for n in nt.nodes if n.type == 'TEX_ENVIRONMENT'][0]
+    out = [n for n in nt.nodes if n.type == 'OUTPUT_WORLD'][0]
+    warm = [n for n in nt.nodes if n.type == 'BACKGROUND'][0]
+    cool = nt.nodes.new("ShaderNodeBackground"); cool.inputs["Strength"].default_value = float(os.environ.get("SILVER_ENV", "1.1"))
+    cg = nt.nodes.new("ShaderNodeMix"); cg.data_type = 'RGBA'; cg.blend_type = 'MULTIPLY'
+    cg.inputs["Factor"].default_value = 1.0; cg.inputs["B"].default_value = (0.97, 0.99, 1.03, 1)
+    nt.links.new(env.outputs[0], cg.inputs["A"]); nt.links.new(cg.outputs["Result"], cool.inputs[0])
+    lp = nt.nodes.new("ShaderNodeLightPath")
+    mx = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(lp.outputs["Is Glossy Ray"], mx.inputs[0])
+    nt.links.new(warm.outputs[0], mx.inputs[1]); nt.links.new(cool.outputs[0], mx.inputs[2])
+    nt.links.new(mx.outputs[0], out.inputs[0])
+    S["key"].data.color = (1.0, 0.86, 0.72)     # key highlight on the ring a little cooler
+    silver = REN + "/s01-pedestal-hero-silver-rgba.png"
+    render_rgba(silver, BW, BH)
+    for o in list(S["ped"].children_recursive) + [S["desk"]]:
+        o.is_holdout = True
+    mask = REN + "/s01-pedestal-hero-ringmask-rgba.png"
+    bpy.context.scene.cycles.samples = 32
+    render_rgba(mask, BW, BH)
+    A, B, M = load_px(base), load_px(silver), load_px(mask)[..., 3:4]
+    rgba = A * (1 - M) + B * M
+    full = comp_arr(rgba, bg)
+    save_px(full, REN + "/s01-pedestal-hero-1818.png")
+    save_px(cover_crop(full, 1440, 900), REN + "/s01-pedestal-review-1440x900.png")
+    save_px(cover_crop(full, 1440, 900), FB + "/fb-s01-pedestal.webp", 'WEBP', 84)
+    save_px(cover_crop(full, 960, 600), FB + "/fb-s01-pedestal-960.webp", 'WEBP', 82)
+    save_px(rgba, FB + "/fb-s01-pedestal-alpha.png")
+    save_px(rgba, FB + "/fb-s01-pedestal-alpha.webp", 'WEBP', 86)
+    for f in (silver, mask):
+        os.remove(f)
+
+
+def comp_arr(fg, bg_arr):
+    a = fg[..., 3:4]
+    return np.concatenate([fg[..., :3] * a + bg_arr[..., :3] * (1 - a), np.ones_like(a)], axis=-1)
+
+
 if __name__ == "__main__":
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else ["all"]
     mode = argv[0]
@@ -526,6 +576,8 @@ if __name__ == "__main__":
         build()
     if mode in ("renders", "all"):
         renders()
+    if mode == "poster":
+        poster_silver()
     if mode == "quick":
         S = scene_setup(); bpy.context.scene.cycles.samples = 24
         place_camera(S["cam"], **CAM)
