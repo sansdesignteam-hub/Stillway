@@ -164,10 +164,17 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
      Y up); the group is placed so the 3D Designer's camera, matched to the photo (heroBg.cam), is
      this stage's camera (see placeDesk). Pose values (ring rest height included) come from the JSON
      at runtime, so a revised GLB + JSON swap in without code changes. */
-  const LAMP = 8; // lamp key intensity, matched by eye to the 3D Designer's poster
-  const PED_ENV = 0.55;
+  /* D-179 1b: light values come from the pose JSON (lights.key.intensity, lights.fill,
+     lights.pedestal_envMapIntensity); these are only the fallbacks and one gain each, tuned by eye
+     against the 3D Designer's poster, so a new JSON drop retunes itself */
+  const LAMP_GAIN = 2;
+  /** Cycles' warm desk bounce lights the shaded faces; the web has no GI, so the env stands in */
+  const PED_ENV_GAIN = 5;
+  const SHADOW_RADIUS = 40;
+  let LAMP = 2.6;
+  let PED_ENV = 0.35;
   /** warm-yellow multiply on the oak: AgX turns the lamp-lit oak pinkish; matched by eye to the poster */
-  const PED_TINT = new THREE.Color().setRGB(1, 0.88, 0.58);
+  const PED_TINT = new THREE.Color().setRGB(1, 0.93, 0.5);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.VSMShadowMap; // smooth penumbra, no PCF noise or banding
   const desk = new THREE.Group();
@@ -176,10 +183,13 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   scene.add(desk);
   const lampKey = new THREE.DirectionalLight(0xffb370, 0);
   lampKey.castShadow = true;
-  lampKey.shadow.mapSize.set(isPhone() ? 1024 : 2048, isPhone() ? 1024 : 2048);
-  lampKey.shadow.radius = 18;
-  lampKey.shadow.blurSamples = 24;
+  lampKey.shadow.mapSize.set(1024, 1024); // D-179 1b: VSM blurs in texels, so a coarser map gives the wide Cycles penumbra
+  lampKey.shadow.radius = SHADOW_RADIUS;
+  lampKey.shadow.blurSamples = 32;
   desk.add(lampKey, lampKey.target);
+  const deskHemi = new THREE.HemisphereLight(0xffd9b0, 0x3a2414, 0); // JSON lights.fill, no front fill
+  let deskHemiI = 0.25;
+  desk.add(deskHemi);
   const deskMat = new THREE.ShadowMaterial({ color: 0x2a1608, opacity: 0, transparent: true, depthWrite: false });
   const deskPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.2), deskMat);
   deskPlane.rotation.x = -Math.PI / 2;
@@ -216,6 +226,15 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     deskCam.lookAt(new THREE.Vector3().fromArray(c.lookAt));
     deskCam.updateMatrixWorld(true);
     const L = deskPose.lights.key;
+    LAMP = (L.intensity ?? LAMP) * LAMP_GAIN;
+    lampKey.color.set(L.color ?? '#FFB370');
+    PED_ENV = (deskPose.lights.pedestal_envMapIntensity ?? PED_ENV) * PED_ENV_GAIN;
+    const Fl = deskPose.lights.fill;
+    if (Fl?.type === 'HemisphereLight') {
+      deskHemi.color.set(Fl.skyColor ?? '#FFD9B0');
+      deskHemi.groundColor.set(Fl.groundColor ?? '#3A2414');
+      deskHemiI = typeof Fl.intensity === 'number' ? Fl.intensity : 0.25;
+    }
     lampKey.position.fromArray(L.position);
     lampKey.target.position.fromArray(L.target);
     const b = L.shadow.camera_bounds_m ?? 0.06;
@@ -620,7 +639,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     // V1 rig and cast shadow, S01 only
     // D-179: on the desk the lamp key (lampKey) takes over from the D-177 rig, so the shadows it casts
     // are the dominant shade on the pedestal (a shadow only removes the light that casts it)
-    const rig = p.photo * (1 - 0.6 * dsk);
+    const rig = p.photo * (1 - dsk); // JSON: key + hemisphere only, no front fill
     sun.intensity = 2.6 * rig;
     hemi.intensity = 0.55 * rig;
     fill.intensity = 0.35 * rig;
@@ -641,6 +660,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     if (desk.visible) {
       const sh = Math.max(0, p.shadow);
       lampKey.intensity = LAMP * dsk;
+      deskHemi.intensity = deskHemiI * dsk;
       deskMat.opacity = (deskPose.desk.opacity ?? 0.5) * sh * dsk;
       aoMat.opacity = 0.32 * dsk;
       pedMats.forEach((m) => {
@@ -663,7 +683,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
         sc.updateProjectionMatrix();
         lampKey.shadow.normalBias = (L.normalBias ?? 0.0004) * kk;
       }
-    } else lampKey.intensity = 0;
+    } else lampKey.intensity = deskHemi.intensity = 0;
 
     // env: night when light ≥ .5, else photo when photo ≥ .5, else paper; intensity dips around a swap
     const n = Math.min(1, Math.max(0, p.light));

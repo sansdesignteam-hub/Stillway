@@ -18,11 +18,12 @@
     "size_mm": {
       "width_x": 41.0,
       "depth_z": 25.6,
-      "height_y": 5.2,
-      "corner_radius": 7.0,
-      "edge_fillet": 1.8
+      "height_y": 6.8,
+      "corner_radius": 4.3,
+      "top_roundover": 0.7,
+      "bottom_roundover": 0.35
     },
-    "top_y": 0.0052,
+    "top_y": 0.0068,
     "castShadow": true,
     "receiveShadow": true
   },
@@ -30,7 +31,7 @@
     "glb": "stillway-ring-v2-silver-polished_web.glb",
     "position": [
       0.0015,
-      0.01712,
+      0.01872,
       -0.0015
     ],
     "quaternion": [
@@ -68,9 +69,9 @@
     "key": {
       "type": "DirectionalLight (or SpotLight) warm, from the lamp: back-right, high",
       "position": [
-        0.15,
-        0.15,
-        -0.17
+        0.19,
+        0.25,
+        -0.12
       ],
       "target": [
         0,
@@ -78,22 +79,27 @@
         0
       ],
       "color": "#FFB370",
+      "intensity": 2.6,
       "castShadow": true,
+      "threejs_note": "DirectionalLight, renderer AgX exposure 1.0, physically correct units (r155+). Elevation ~50 deg so the ring shadow lands on the pedestal top.",
       "shadow": {
         "mapSize": 2048,
         "bias": -0.0002,
         "normalBias": 0.0004,
         "radius_PCFSoft": 6,
         "camera_bounds_m": 0.06,
-        "note": "Blender area light \u00d850 mm at ~270 mm -> soft penumbra; in three.js use PCFSoftShadowMap or VSM"
+        "note": "Blender area light \u00d855 mm at ~340 mm -> soft penumbra; in three.js use PCFSoftShadowMap or VSM"
       }
     },
     "fill": {
-      "type": "HemisphereLight or env only",
-      "color": "#FFCC9E",
-      "intensity": "low"
+      "type": "HemisphereLight",
+      "skyColor": "#FFD9B0",
+      "groundColor": "#3A2414",
+      "intensity": 0.25,
+      "note": "no front fill: left and front faces of the pedestal must stay in shade"
     },
-    "environment": "env/v2-env-paper.exr tinted warm (#FFB87A multiply), intensity ~0.45 for ring reflections"
+    "pedestal_envMapIntensity": 0.35,
+    "environment": "env/v2-env-paper.exr tinted warm (#FFB87A multiply), intensity ~0.28 for ring reflections"
   },
   "desk": {
     "type": "ShadowMaterial plane at y = 0",

@@ -27,3 +27,10 @@ Commit kode: `4766476` (branch Developer). Aset 3D: 3D-Designer `e7337a6`. Build
 - Env pantulan ring (`hero-env-warm.jpg`) masih berasal dari foto lama yang ada alasnya. Tidak diganti di tahap ini.
 - Di 375, teks intro lama menumpuk di bagian bawah alas. Struktur teks diatur di Tahap 2.
 - Preview Vercel: lihat status pada laporan worker_done.
+
+## Tahap 1b (bcd0960)
+- Alas, pose JSON, dan still alpha dari 3D Designer bcd0960 sudah terpasang: tebal 6,8 mm, sisi tegak, top_y 0,0068, ring y 0,01872. Ring otomatis duduk di permukaan atas yang baru dan kode tidak berubah.
+- Lampu dibaca dari JSON: key #FFB370 2,6 di [0,19, 0,25, −0,12], hemisphere 0,25, pedestal env 0,35. Rig depan D-177 dimatikan saat adegan meja ditampilkan (tanpa front fill). Di atas nilai JSON hanya ada tiga gain yang diatur dengan mata: `LAMP_GAIN 2`, `PED_ENV_GAIN 5` (pengganti pantulan meja dari GI Cycles, karena web tidak punya GI), dan tint oak `(1, 0.93, 0.5)`. Setelan baseColor sudah benar (sRGB, dicek di runtime). Warna peach/merah muda muncul karena tone mapping AgX mendesaturasi oranye. Tint mengembalikan warna honey. Serat kayu sekarang terbaca.
+- Bayangan: VSM dengan map 1024 dan radius 40. VSM mem-blur dalam satuan texel, jadi map yang lebih kasar menghasilkan penumbra lebar seperti Cycles. Densitas turun karena env lebih terang. Bandingkan di `D179b_shadow_closeup_poster_vs_3d.jpg`: tepinya sekarang lembut dan nilainya mendekati poster. Bentuknya masih sedikit lebih panjang dan sempit daripada poster.
+- Frame: `D179b_frames.jpg`, berisi 3D 1440 vs poster, u 0,5, exit, serta 3D 375 vs poster.
+- Env ring `hero-env-warm.jpg` **tidak dibangun ulang**. Env ini dipakai sebagai equirect yang diputar 0,6π lalu di-blur oleh PMREM. Alas di foto lama hanya menempati area kecil, sehingga pantulan ring didominasi warna meja, lampu, dan dinding yang sama di foto lama maupun baru. Perbedaannya tidak terlihat di close-up maupun frame u 1,5.
