@@ -31,17 +31,18 @@
     "glb": "stillway-ring-v2-silver-polished_web.glb",
     "position": [
       0.003,
-      0.018997,
+      0.022955,
       -0.001
     ],
     "quaternion": [
-      -0.342653,
-      -0.04484,
-      -0.915502,
-      0.205997
+      -0.477263,
+      -0.148561,
+      -0.830874,
+      0.244539
     ],
     "scale": 1,
-    "note": "ring leans back-right resting on its lower edge (lowest vertex at top_y), opening toward camera-right, logo lower-left front (Figma 40004725:5602). Blender axis (-0.6, 0.75, -0.22), logo dir (-0.85, -0.3, -0.4)",
+    "s01_scale": 1.35,
+    "note": "position/quaternion already assume s01_scale. ring leans back-right resting on its lower edge (lowest vertex at top_y), opening toward camera-right, logo lower-left front (Figma 40004725:5602). Blender axis (-0.72, 0.5, -0.48), logo dir (-0.7, -0.55, -0.45)",
     "castShadow": true,
     "receiveShadow": false
   },

@@ -13,9 +13,9 @@ Status: **draf, menunggu tinjauan pengguna** (bayangan harus dinilai halus dulu 
 | `s01-pedestal.blend` | File kerja (mesh + material sumber prosedural `S01_Pedestal_Oak_src`, fake user) | 118 KB |
 | `s01-pedestal-review.blend` | Scene review: GLB alas + GLB ring + kamera + lampu + shadow catcher | 1,2 MB |
 | `tex/s01-pedestal-{basecolor,roughness,normal}.png` | Master atlas 1024 px (sudah tertanam di GLB sebagai WebP) | |
-| `fallback/fb-s01-pedestal.webp` | Still 1440×900: ring + alas + bayangan di atas latar baru | 64 KB |
+| `fallback/fb-s01-pedestal.webp` | Still 1440×900: ring + alas + bayangan di atas latar baru | 65 KB |
 | `fallback/fb-s01-pedestal-960.webp` | Sama, 960×600 untuk mobile | 33 KB |
-| `fallback/fb-s01-pedestal-alpha.webp` / `.png` | Ring + alas + bayangan meja **transparan**, frame foto 1818×1037 (letakkan dengan `background-size: cover` yang sama seperti foto) | 86 KB / 0,8 MB |
+| `fallback/fb-s01-pedestal-alpha.webp` / `.png` | Ring + alas + bayangan meja **transparan**, frame foto 1818×1037 (letakkan dengan `background-size: cover` yang sama seperti foto) | 94 KB / 0,8 MB |
 | `renders/s01-pedestal/s01-pedestal-review-1440x900.png` | Review desktop di atas latar baru | |
 | `renders/s01-pedestal/s01-pedestal-shadow-closeup.png` | Close-up bayangan: ring → atas alas → sisi depan alas → meja | |
 | `renders/s01-pedestal/s01-pedestal-material.png` | Alas saja (cek serat dan fillet) | |
@@ -37,7 +37,7 @@ Latar: `design/assets/v2/s01/hero-warm-desk-v2-1818.webp` / `-960.webp` (dari Vi
 
 ## Pose (`s01-pedestal-pose.json`)
 
-- Alas di `[0, 0, 0]` tanpa rotasi. Ring bersandar ke belakang-kanan, bertumpu pada tepi bawah band di atas alas (titik terendah tepat di `top_y`, tanpa tembus), sedikit di kanan tengah. Bukaan menghadap kamera-kanan sehingga sisi dalam, dua jendela sensor, dan titik LED terlihat. "Stillway" ada di band kiri-bawah depan dan terbaca atas→bawah, seperti Figma `40004725:5602`. Posisi `[0.003, 0.018997, -0.001]`, quaternion `[-0.342653, -0.04484, -0.915502, 0.205997]` (xyzw, Y-up). Bandingkan di `renders/s01-pedestal/s01-pedestal-review-vs-figma.png`. Dengan skala ring tetap (Ø 0,58 × lebar alas), ring tampak lebih kecil daripada di Figma, dan puncaknya belum menyentuh huruf 'y'. Kalau perlu, perbesar dengan kamera/crop di web, bukan dengan skala ring.
+- Alas di `[0, 0, 0]` tanpa rotasi. **Ring S01 diperbesar `ring.s01_scale` = 1,35** (hanya S01, agar proporsinya sama dengan Figma `40004725:5602`; section lain tetap skala 1). Ring condong ±25–30° ke belakang-kanan dan bertumpu pada tepi bawah band di atas alas, tanpa tembus. Bukaan menghadap penonton/kanan-atas sehingga kedua jendela sensor dan titik LED terlihat. "Stillway" berada diagonal di band kiri-bawah depan. Posisi `[0.003, 0.022955, -0.001]`, quaternion `[-0.477263, -0.148561, -0.830874, 0.244539]` (xyzw, Y-up). Posisi dan quaternion sudah memperhitungkan skala 1,35, jadi set `ring.scale.setScalar(1.35)`. Bandingkan di `renders/s01-pedestal/s01-pedestal-review-vs-figma.png` dan overlay `s01-pedestal-review-onion-figma.png`.
 - Kamera: 70 mm (sensor 36 mm), elevasi 19°, jarak 232 mm, FOV vertikal 16,7° pada rasio foto 1818×1037, dengan geser optik ke bawah (Blender `shift_y` 0,135) supaya alas duduk di ±82% tinggi frame. Nilai posisi/lookAt ada di JSON.
 - Lampu kunci: hangat (#FFB370) dari kanan belakang atas, posisi `[0.19, 0.25, -0.12]`, elevasi ±50° (searah lampu meja di foto; dinaikkan agar bayangan ring jatuh di atas alas). Three.js: `DirectionalLight` #FFB370 intensitas 2,6, `HemisphereLight` #FFD9B0/#3A2414 0,25, alas `envMapIntensity` 0,35, tanpa fill depan. Bayangan alas dan ring jatuh ke **kiri depan**.
 
