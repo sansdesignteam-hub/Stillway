@@ -1,0 +1,31 @@
+{
+ "proxy_overlay_mobile_band_max_px_at_1818": 0.5,
+ "proxy_overlay": {
+  "frame": [
+   3632,
+   2072
+  ],
+  "plate_pedestal_bbox_px": [
+   1188,
+   1460,
+   2474,
+   1943
+  ],
+  "proxy_glb_bbox_px": [
+   1188,
+   1461,
+   2474,
+   1942
+  ],
+  "mismatch_pixels": 339,
+  "mismatch_band_max_px_at_frame": 1,
+  "mismatch_band_max_px_at_1818": 0.5,
+  "bbox_delta_px_at_1818": [
+   0.0,
+   -0.5,
+   0.0,
+   0.5
+  ]
+ },
+ "json_camera_vs_blender_max_px_at_1818": 0.001
+}

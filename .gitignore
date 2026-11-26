@@ -3,3 +3,6 @@
 
 # Blender autosave backups (files already tracked stay tracked)
 *.blend1
+
+# D-181 plate: intermediate Cycles passes (rebuild with s01-plate-build.py -- render)
+design/3d/v2/renders/s01-plate/passes/

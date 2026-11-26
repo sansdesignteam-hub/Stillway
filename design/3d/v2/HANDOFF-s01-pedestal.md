@@ -1,5 +1,78 @@
 # Handoff: alas cincin hero S01 3D (D-179)
 
+## D-181: plate foto + proxy tak terlihat (menggantikan alas yang di-shade real-time)
+
+Dari: 3D Designer · Untuk: Developer (`web-v2/`) · 26 November 2026
+Status: **draf, menunggu tinjauan pengguna.** Bagian D-179/D-180 di bawah tetap berlaku untuk pose ring, kamera, dan lampu kunci. Yang berubah: alas tidak lagi di-shade di web.
+
+### File
+
+Semua 3632×2072, frame dan kamera sama dengan foto latar. Folder `plate/`:
+
+| File | Isi | Ukuran |
+| --- | --- | --- |
+| `plate-s01-3632.png` | **Plate desktop**: foto upscaled + alas Cycles (bayangan kontak, AO, bounce). Tanpa ring, tanpa bayangan ring | 5,5 MB |
+| `plate-s01-mobile-3632.png` | **Plate ponsel**: alas + bayangannya dengan transform 0,62× / −14% di sekitar O = (0,5 W; 0,86 H) | 5,5 MB |
+| `still-s01-3632.png` / `still-s01-mobile-3632.png` | Gambar diam cadangan: plate + ring pose Figma + bayangan ring | 5,7 / 5,6 MB |
+| `ring-overlay-s01-3632.webp` (`.png`) | **Lapisan poster RGBA**: ring + bayangan ring, transparan, di frame plate. Pengganti `fb-s01-pedestal-alpha.webp` | 242 KB (838 KB) |
+| `ring-overlay-s01-mobile-3632.webp` (`.png`) | Sama, untuk transform ponsel | 145 KB (455 KB) |
+| `layer-pedestal-rgba-3632.png`, `layer-desk-multiply-3632.png` (+ `-mobile-`) | Pass terpisah: alas RGBA dan lapisan multiply bayangan meja | 0,2–0,5 MB |
+
+Lainnya: `s01-pedestal-pose.json` (diperbarui), `s01-plate-build.py` (skrip), `s01-plate.blend` (scene), bukti di `renders/s01-plate/`.
+
+- `still` = `plate` + `ring-overlay` (source-over di sRGB), identik sampai pembulatan 8-bit. Jadi poster = plate + overlay, dan overlay bisa memudar ke ring 3D tanpa loncatan pada alas.
+- Bayangan ring di overlay berwarna `#2A1608` (warna catcher web) dengan alpha yang luminansinya sama dengan render Cycles, di meja **dan** di atas/bibir/sisi depan alas.
+- PNG adalah master. Set responsif AVIF/WebP dibuat Developer dari sini.
+
+### Kamera (hasil kalibrasi ulang)
+
+- Foto upscaled **adalah foto 1818×1037 yang diregangkan ke seluruh frame**, bukan crop. Diukur dengan phase correlation pada 44 patch: `u = 1,99768·x − 0,09`, `v = 1,99800·y + 0,03`, sisa 0,3 px rms.
+- Karena itu semua **fraksi frame tidak berubah**, dan kamera D-179 tetap: 70 mm, `shiftY` 0,135, posisi dan `lookAt` sama. `heroBg.cam` tidak perlu diubah; cukup tata plate dengan kotak `cover` yang sama.
+- Rasio piksel plate (3632/2072) berbeda 0,014% dari 1818/1037, yaitu 0,25 px pada 3632. Abaikan.
+- `camera.check_points` di JSON berisi 9 titik alas (koordinat three.js) beserta posisinya di plate dalam fraksi. Pakai untuk menguji kamera web. Angka kamera di JSON saya proyeksikan ulang dengan matematika gaya three.js: selisih terhadap Blender 0,001 px pada 1818.
+
+### Proxy
+
+- Mesh: `s01-pedestal.glb` yang sama, posisi `[0, 0, 0]`, tanpa rotasi, skala 1 (tidak berubah).
+- Tidak di-shade: `colorWrite = false`, `depthWrite = true`, ditambah catcher bayangan multiply untuk bayangan ring.
+- **`castShadow` proxy = false.** Bayangan alas ke meja sudah ada di plate. Kalau proxy ikut menjatuhkan bayangan, catcher meja menggelapkannya dua kali.
+- Kecocokan siluet (`renders/s01-plate/s01-plate-proxy-overlay.webp`, garis cyan = GLB): selisih bbox 0 / 0,5 px, pita selisih maksimum **0,5 px pada 1818** (batas brief ≤ 1 px). Versi ponsel juga 0,5 px.
+
+### Ponsel
+
+- Transform `p' = O + 0,62·(p − O) + (0; −0,14·H)` **dirender langsung di kamera** (lensa × 0,62 = 43,4 mm, `shift_y` 0,081875), bukan di-resample dari pass desktop. Secara geometri sama persis dengan CSS scale + translate.
+- Alasannya: bayangan ring keluar dari tepi bawah frame desktop. Kalau lapisan desktop diperkecil, bayangan itu terpotong lurus di tengah meja. Render langsung menghasilkan bayangan utuh dan alas yang tajam.
+- Akibatnya untuk web: di ponsel, catcher meja perlu menjangkau area di bawah tepi frame desktop (bukan dipotong pada kotak frame).
+
+### Material dan cahaya plate
+
+- Oak: Poly Haven *Oak Veneer 01* 2K (CC0), diffuse + roughness + normal, diproyeksikan dari tiga sumbu di ruang objek dan dicampur menurut normal. Sambungan UV di sudut denah dan bibir dari D-179 hilang.
+- Pori terbuka: guratan gelap pendek searah serat, ikut menekan normal. Figur scan diredam 30% agar tidak terbaca sebagai veneer bergaris.
+- Bibir R 1,1 sedikit lebih terang dan lebih halus (roughness −0,16), coat tipis 0,04.
+- Cahaya: lampu kunci yang sama dengan JSON (disk Ø55 mm, arah dan penumbra 9,4° sama), jadi bayangan ring hidup menyambung bayangan alas di plate. Env untuk pass alas 0,14 (pass ring tetap 0,28 seperti poster D-179).
+- Bayangan dan bounce di meja dihitung sebagai rasio dua render (meja dengan alas ÷ meja kosong) lalu dikalikan ke foto dalam cahaya linear. Foto di luar area itu tidak disentuh.
+
+### Bukti (`renders/s01-plate/`)
+
+- `s01-plate-vs-figma.webp`, `s01-plate-still-vs-figma.webp`: berdampingan dengan Figma `40004725:5602` pada framing web (cover 1440×900 @2x).
+- `s01-plate-vs-figma-closeup.png`, `s01-plate-still-vs-figma-closeup.png`: close-up alas.
+- `s01-plate-proxy-overlay.webp`, `-closeup.png`, `s01-plate-report.json`: siluet proxy dan angkanya.
+- `s01-plate-mobile-1816.png`, `s01-plate-mobile-still-375.png`: versi ponsel.
+
+### Terbukti vs usulan
+
+- **Terbukti (Cycles + pengukuran):** plate, still, overlay, kecocokan proxy 0,5 px, registrasi foto upscaled, angka kamera di JSON.
+- **Usulan, belum diuji di `web-v2/`:** flag material proxy, opacity catcher, dan kepadatan bayangan ring hidup. Cocokkan dengan `still-s01-3632.png`.
+
+### Keterbatasan
+
+- Bentuk alas tetap slab 41 × 25,6 × 6,8 mm (sama dengan GLB). Alas di Figma lebih dalam, sudutnya lebih bulat, dan warnanya sedikit lebih merah muda; itu tidak saya ubah karena geometri proxy harus sama.
+- Latar Figma memakai foto dengan zoom ±1,10 (diukur), sedangkan web memakai cover zoom 1. Jadi buku dan laptop di perbandingan berdampingan tidak berimpit; alas dan ring yang dibandingkan.
+- Lapisan `layer-desk-multiply` dipotong di 1, jadi bounce hangat beberapa persen di sisi terang alas hanya ada di plate, bukan di lapisan itu.
+- Pose ring di still sama dengan D-179. Kecocokan ring vs Figma tidak dikerjakan ulang di tugas ini.
+
+---
+
 Dari: 3D Designer · Untuk: Developer (`web-v2/`) · 26 November 2026
 Status: **draf, menunggu tinjauan pengguna** (bayangan harus dinilai halus dulu sebelum struktur teks hero diganti, D-179 poin 3).
 
