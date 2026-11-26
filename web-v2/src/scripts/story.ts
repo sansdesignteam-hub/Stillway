@@ -150,7 +150,7 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
 
   let ring: RingStage | null = null;
   let lastPoseKey = '';
-  const progDots = [...document.querySelectorAll<HTMLElement>('[data-gprog] i')];
+  const progDots = [...document.querySelectorAll<HTMLElement>('[data-gprog] a')];
   let progAt = -1;
   // D-171: the progress shows while the page moves and hides after 2.5 s without scrolling
   const prog = document.querySelector<HTMLElement>('[data-gprog]');
@@ -304,7 +304,12 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     }
     if (at0 !== progAt) {
       progAt = at0;
-      progDots.forEach((p, i) => p.classList.toggle('is-on', i === at0));
+      progDots.forEach((p, i) => {
+        p.classList.toggle('is-on', i === at0);
+        // D-176: the current section, for assistive tech too
+        if (i === at0) p.setAttribute('aria-current', 'location');
+        else p.removeAttribute('aria-current');
+      });
     }
     const d = clockFrom.def;
     let min = toMin(d.time);
