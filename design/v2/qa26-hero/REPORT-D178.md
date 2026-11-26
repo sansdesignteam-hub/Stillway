@@ -45,3 +45,25 @@ Baseline `293337a`, commit `16a7bfe`. `npm run build` lulus. Diuji dengan Chrome
 - Belum diuji di Safari/iOS dan perangkat fisik. "Loading lambat" disimulasikan dengan memblokir WebGL (poster bertahan), bukan dengan throttle jaringan.
 - Handoff 3D (`design/3d/v2/HANDOFF-v2-ring.md`) masih menyebut poster lama `fb-s01-polished`; file web-nya sudah diganti.
 - Production menunggu pengguna.
+
+## Revisi setelah review PM (commit `00ddcfe`)
+**Diagnosis (dari render aktual):**
+- Penerima atas berbentuk persegi panjang membulat di bidang miring. Bentuk ini tidak cocok dengan kontur perspektif alas di foto, sehingga melewati sudut kiri atas alas yang asli dan muncul sebagai patch keras di atas-kiri alas.
+- Lubang penerima meja juga hanya perkiraan.
+- Lihat `D178b_before_after_shadow.jpg`: kiri sebelum, kanan sesudah.
+
+**Perbaikan:**
+- Kedua penerima kini bidang besar yang dibatasi stencil mask di ruang layar, dijiplak langsung dari kontur alas di foto (`heroBg.pedestal.top` dan `.body`, piksel foto).
+- Bayangan di bidang atas hanya digambar di dalam kontur permukaan atas; di bidang meja hanya di luar siluet alas; sisi alas yang terlihat tidak mendapat bayangan.
+- Mask mengikuti ukuran cover dan zoom foto.
+- Hasilnya bayangan mengikuti tepi alas yang sebenarnya, tanpa patch geometris, tanpa tepi terpotong dan tanpa bayangan ganda (`D178b_shadow_zoom_topleft.png`).
+
+**Proxy 3D:**
+- Tidak dibutuhkan. Proxy rounded box di kamera three.js tetap tidak akan cocok dengan perspektif foto tanpa kalibrasi kamera. Mask dari foto memberi oklusi yang tepat dengan biaya hampir nol: dua bentuk 2D dan stencil buffer.
+- Yang belum ada: bayangan di sisi depan dan kiri alas. Di foto acuan sisi depan pun tidak terkena bayangan cincin, jadi ini tidak terlihat sebagai kekurangan.
+
+**Status:**
+- Ring melayang dan tidak pernah mendarat di S01; state yang diperiksa adalah u 0 (awal) dan u 0.25 / 0.5 / 0.75 (mendekat lalu zoom). Bayangan memudar seiring tinggi ring (`D178b_closeup_poster_vs_3d_motion.jpg`, frame pertama = poster/no-WebGL).
+- Mobile tetap tanpa bayangan; ring melayang jauh di atas alas, sesuai keputusan sebelumnya.
+- Perbaikan poster hangat tetap utuh.
+- Still bayangan fallback dirender ulang dari pass baru.
