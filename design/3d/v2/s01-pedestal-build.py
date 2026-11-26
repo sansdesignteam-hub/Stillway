@@ -37,7 +37,7 @@ OAK_TILE_MM = 260.0   # one texture tile = 260 mm (scaled down from the 1.83 m s
 ATLAS = 1024
 
 # ring pose relative to pedestal origin (mm / degrees, Blender Z-up)
-RING_LOC = (1.5, 1.5)          # x, y on the top
+RING_LOC = (3.0, 1.0)          # x, y on the top
 RING_ROT = (0.0, 8.0, 236.0)   # XYZ euler deg: ring axis horizontal, lean 8 deg, logo side to camera-left
 # camera (desktop hero, matches the warm-desk photo: slightly high, long lens)
 CAM = dict(lens=70.0, elev=19.0, azim=-6.0, dist=232.0, target=(0.0, 0.0, 9.0), shift=(0.0, 0.135))
@@ -281,10 +281,16 @@ def import_glb(path, name):
     return root, new
 
 
+RING_AXIS = tuple(float(x) for x in os.environ.get("RING_AXIS", "-0.6,0.75,-0.22").split(","))   # opening direction (Blender Z-up)
+RING_LOGO = tuple(float(x) for x in os.environ.get("RING_LOGO", "-0.85,-0.3,-0.4").split(","))    # centre -> logo, lower-left front
+
+
 def ring_pose():
-    rx, ry, rz = (math.radians(a) for a in RING_ROT)
-    rot = Euler((rx, ry, rz), 'XYZ').to_matrix().to_4x4()
-    return rot
+    """ring local Y = axis (opening), local +X = logo side; built from two world directions"""
+    a = Vector(RING_AXIS).normalized()
+    d = Vector(RING_LOGO); d = (d - a * d.dot(a)).normalized()
+    z = d.cross(a)
+    return Matrix((d, a, z)).transposed().to_4x4()
 
 
 def scene_setup():
@@ -485,7 +491,7 @@ def write_pose(S):
                       "size_mm": {"width_x": W, "depth_z": D, "height_y": H, "corner_radius": R_CORNER, "top_roundover": R_FILLET, "bottom_roundover": R_FILLET_BOT},
                       "top_y": round(H * MM, 6), "castShadow": True, "receiveShadow": True},
         "ring": {"glb": "stillway-ring-v2-silver-polished_web.glb", "position": v2t(loc), "quaternion": q2t(rq), "scale": 1,
-                 "note": "ring rests on its band on the pedestal top (lowest vertex at top_y). Euler XYZ deg in Blender Z-up: %s" % (list(RING_ROT),),
+                 "note": "ring leans back-right resting on its lower edge (lowest vertex at top_y), opening toward camera-right, logo lower-left front (Figma 40004725:5602). Blender axis %s, logo dir %s" % (RING_AXIS, RING_LOGO),
                  "castShadow": True, "receiveShadow": False},
         "camera": {"type": "PerspectiveCamera", "position": v2t(cam.location),
                    "lookAt": v2t(Vector(CAM["target"]) * MM),
@@ -519,3 +525,7 @@ if __name__ == "__main__":
         build()
     if mode in ("renders", "all"):
         renders()
+    if mode == "quick":
+        S = scene_setup(); bpy.context.scene.cycles.samples = 24
+        place_camera(S["cam"], **CAM)
+        render_rgba(os.environ.get("QOUT", "/tmp/q.png"), 909, 518)
