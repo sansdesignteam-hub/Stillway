@@ -32,7 +32,7 @@ Semua file di `plate/`, `s01-pedestal.glb`, dan `s01-pedestal-pose.json` **digan
 ### D-181c: kontak ring, angka lampu spill, kontras ring
 
 - **Kontak ring → alas:** still dan kedua `ring-overlay` sekarang memuat oklusi kontak gelap dan sempit di bawah pita yang menyentuh. Sumbernya pass AO Cycles jarak pendek (jangkauan 12 mm, dengan ÷ tanpa ring), gamma 2,8, lantai 0,10. Kontak ini bagian dari alpha bayangan overlay, **bukan** bagian plate. Bukti: `renders/s01-plate/s01-plate-contact-closeup-vs-figma.png`.
-- **Lampu spill (`lights.spill` di JSON, ruang meja three.js, konvensi sama dengan `lights.key`):** posisi `[0.125, 0.058, -0.05]`, target `[0, 0.004, 0]`, arah `[-0.8805, -0.3804, 0.2829]`, elevasi 22,4°, jarak 142 mm, disk Ø60 mm (kerucut penumbra 23,9°), warna linear `(1; 0,62; 0,34)`. Intensitas relatif terhadap lampu kunci: 2,48× pada permukaan yang menghadap lampu, 1,28× pada sisi atas datar di target, dengan falloff kuadrat terbalik dari posisi lampu. Hanya menerangi alas + meja; ring tidak menerima dan tidak menghalanginya.
+- **Lampu spill (`lights.spill` di JSON, ruang meja three.js, konvensi sama dengan `lights.key`):** posisi `[0.125, 0.058, -0.05]`, target `[0, 0.004, 0]`, arah `[-0.8617, -0.3723, 0.3447]`, elevasi 21,9°, jarak 145 mm, disk Ø60 mm (kerucut penumbra 23,4°), warna linear `(1; 0,62; 0,34)`. Intensitas relatif terhadap lampu kunci: 2,37× pada permukaan yang menghadap lampu, 1,20× pada sisi atas datar di target, dengan falloff kuadrat terbalik dari posisi lampu. Hanya menerangi alas + meja; ring tidak menerima dan tidak menghalanginya.
 - **Kontras ring (luma 8-bit pada piksel ring, frame diam web):**
 
 | | p05 | p25 | p50 | p75 | p95 | rata-rata |
