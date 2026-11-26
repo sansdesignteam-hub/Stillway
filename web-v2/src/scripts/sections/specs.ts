@@ -4,7 +4,8 @@
  * u: -1.6..0 connection from S06 (D-147, unchanged: the hand goes up 1:1 — details.ts — and
  *          "Through the day." comes in at the end)
  *  0     State 1  "Through the day." in the middle
- *  0 → 1 State 2  the words part, cut at the cards' edges; the four cards rise from below into a row
+ *  0 → 1 State 2  the words part and shrink to fit beside the row (D-172); the four cards scale up
+ *                 and fade in where they stand, left to right
  *  1 → 2 State 3  the cards close into a stack, the words leave sideways, the line grows from the
  *                 middle; (I) Night: title letter by letter from behind the line, lines rise
  *  2 → 5 States 4–6  the front card rises behind the stack, the next comes forward (II)–(IV); the
@@ -281,6 +282,7 @@ export const specs: SectionMotion = {
     const all = (s: string, from: ParentNode = r) => [...from.querySelectorAll<HTMLElement>(s)];
     cards = all('[data-s-card]');
     words = all('[data-s-w]');
+    words.forEach((w) => (w.style.transformOrigin = '0 0')); // D-172: the parts shrink from their top left
     texts = all('[data-s-text]');
     nums = all('[data-s-num]');
     chars = texts.map((t) => all('[data-s-ch]', t));
@@ -330,31 +332,35 @@ export const specs: SectionMotion = {
     const inn = seg(u, -0.3, 0); // 70–100 % of the incoming connection (D-147)
 
     /* ----- States 1–2: the words ----- */
-    const split = seg(u, 0.22, 0.9);
+    const split = seg(u, 0.1, 0.62); // D-172: the words are apart before the cards come in
     const leave = seg(u, 1.05, 1.6); // out to the sides as the cards close
     const [w0, w1] = wordW;
     const space = wordFs * 0.24;
+    // D-172 (Obsidian Assembly "Origin Objects"): the two parts move apart and shrink in proportion,
+    // so each stays whole beside (desktop) or above/below (phones) the row — never cut, never covered
+    const tsl = (x: number, y: number, sc: number) => `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale(${sc.toFixed(4)})`;
     if (m) {
       // phones: two lines in the middle → above / below the row → out to the sides
       const rowH = L.row(0).h;
-      const y0 = lerp(L.cy - wordH, L.cy - rowH / 2 - 12 - wordH, split);
-      const y1 = lerp(L.cy, L.cy + rowH / 2 + 4, split);
-      tf(words[0], inn * (1 - leave), tr(W / 2 - w0 / 2 - leave * (W / 2 + w0 / 2), y0 + (1 - inn) * 20));
-      tf(words[1], inn * (1 - leave), tr(W / 2 - w1 / 2 + leave * (W / 2 + w1 / 2), y1 + (1 - inn) * 20));
+      const fit = Math.min(1, (W - 32) / Math.max(w0, w1, 1), (L.cy - rowH / 2 - headerH - 16) / Math.max(wordH, 1));
+      const sc = lerp(1, Math.min(fit, 0.8), split);
+      const h = wordH * sc;
+      const y0 = lerp(L.cy - wordH, L.cy - rowH / 2 - 12 - h, split);
+      const y1 = lerp(L.cy, L.cy + rowH / 2 + 12, split);
+      tf(words[0], inn * (1 - leave), tsl(W / 2 - (w0 * sc) / 2 - leave * (W / 2 + w0 / 2), y0 + (1 - inn) * 20, sc));
+      tf(words[1], inn * (1 - leave), tsl(W / 2 - (w1 * sc) / 2 + leave * (W / 2 + w1 / 2), y1 + (1 - inn) * 20, sc));
     } else {
       // State 1: one line centred on the stack line; State 2: 'Through' at the left margin, 'the
-      // day.' at the right one, each cut 20 px short of the row (Figma "clip di tepi kartu")
+      // day.' at the right one, each scaled to fit the room between the margin and the row (20 px air)
       const margin = Math.min(40, W * 0.028);
+      const room = W / 2 - L.rowW / 2 - 20 * k - margin;
+      const sc = lerp(1, Math.min(1, room / Math.max(w0, w1, 1)), split);
       const s0 = W / 2 - (w0 + space + w1) / 2;
-      const x0 = lerp(s0, margin, split) - leave * (w0 + margin);
-      const x1 = lerp(s0 + w0 + space, W - margin - w1, split) + leave * (w1 + margin);
-      const y = L.cy - wordH / 2 + (1 - inn) * 20;
-      const edgeL = lerp(W, W / 2 - L.rowW / 2 - 20 * k, split);
-      const edgeR = lerp(0, W / 2 + L.rowW / 2 + 20 * k, split);
-      const cutR = Math.max(0, x0 + w0 - edgeL);
-      const cutL = Math.max(0, edgeR - x1);
-      tf(words[0], inn * (1 - leave), tr(x0, y), cutR > 0 ? `inset(-40% ${cutR.toFixed(1)}px -40% 0)` : '');
-      tf(words[1], inn * (1 - leave), tr(x1, y), cutL > 0 ? `inset(-40% 0 -40% ${cutL.toFixed(1)}px)` : '');
+      const x0 = lerp(s0, margin, split) - leave * (w0 * sc + margin);
+      const x1 = lerp(s0 + w0 + space, W - margin - w1 * sc, split) + leave * (w1 * sc + margin);
+      const y = L.cy - (wordH * sc) / 2 + (1 - inn) * 20;
+      tf(words[0], inn * (1 - leave), tsl(x0, y, sc));
+      tf(words[1], inn * (1 - leave), tsl(x1, y, sc));
     }
 
     /* ----- the cards ----- */
@@ -364,15 +370,22 @@ export const specs: SectionMotion = {
     const G = endLayout(L);
     const backsGo = 1 - seg(f, 2.1, 2.9); // Figma State 6: only Rinse is left
     cards.forEach((c, i) => {
-      const rise = seg(u, 0.22 + 0.08 * i, 0.75 + 0.08 * i);
+      // D-172: the intro cards scale up and fade in where they stand (no rise from below), left to right
+      const rise = seg(u, 0.45 + 0.07 * i, 0.85 + 0.07 * i);
       const rw = L.row(i);
-      rw.y += (1 - rise) * H * 0.85;
+      const grow = lerp(0.72, 1, smooth(rise));
+      rw.w *= grow;
+      rw.h *= grow;
+      rw.s *= grow;
+      rw.o *= rise;
       const [st, z] = stackSlot(i, f, L);
       let r = lerpSlot(rw, st, close);
       if (i !== 3) r.o *= backsGo;
       if (i === 3) r = lerpSlot(r, G.E, pe);
       r.o *= 1 - out;
-      placeCard(c, r, k, close < 0.5 ? 40 : i === 3 && pe > 0 ? 60 : Math.round(z));
+      // D-172: while the row closes, the leftmost card (Night) is on top, then Desk, Move, Rinse —
+      // the same order the stack keeps, so the last card left in front is Rinse for "Everyday"
+      placeCard(c, r, k, close < 0.5 ? 40 - i : i === 3 && pe > 0 ? 60 : Math.round(z));
     });
 
     /* ----- States 3–6: line, (n) name, lines, counter ----- */
