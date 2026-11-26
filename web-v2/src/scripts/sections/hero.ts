@@ -58,6 +58,9 @@ const floatPose = (ctx: Ctx): Pose => {
   });
 };
 
+if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('inspect'))
+  (window as any).__heroRing = (u: number, mobile: boolean) => hero.ring!(u, { mobile, reduced: true } as Ctx);
+
 export const hero: SectionMotion = {
   init(root) {
     const q = (s: string) => root.querySelector<HTMLElement>(s);
@@ -97,10 +100,10 @@ export const hero: SectionMotion = {
     const end = why.ring!(0, ctx); // = S02 state 1 (frame end = frame start)
     const p = along(u, [
       [0, floatPose(ctx)],
-      [0.9, pose({ ...floatPose(ctx), y: m ? 0.12 : 0.01, w: m ? 0.72 : 0.34, rx: -0.55, ry: 0.15, rz: -1.2, spin: 0.2, uncap: 1, rest: 0 })],
+      [0.9, pose({ ...floatPose(ctx), y: m ? 0.12 : 0.01, w: m ? 0.72 : 0.34, rx: -0.55, ry: 0.15, rz: -1.2, spin: 0.2, uncap: 1, rest: 0, fwd: 0.35 })],
       // close-up (s01-state3-zoom-in.png): opening toward the camera, the sensors and the green
       // light on the inner wall, the band running off the edge
-      [2, pose({ x: m ? 0.34 : 0.12, y: 0.02, w: m ? 1.9 : 0.95, rx: -0.3, ry: -0.42, rz: 0.1, spin: -0.3, photo: 1, desk: 1, shadow: 1, uncap: 1, led: 0.6 })],
+      [2, pose({ x: m ? 0.34 : 0.12, y: 0.02, w: m ? 1.9 : 0.95, rx: -0.3, ry: -0.42, rz: 0.1, spin: -0.3, photo: 1, desk: 1, shadow: 1, uncap: 1, led: 0.6, fwd: 0.5 })],
       [3, end],
     ]);
     // mouse tilt in state 1 only (V1 heroRing: ±0.22 / ±0.32 rad, eased)
@@ -124,6 +127,8 @@ export const hero: SectionMotion = {
       uncap: u < 2 ? p.uncap : 1,
       // the pedestal leaves with the photo (same window as the CSS fade below), so S02 is unchanged
       desk: 1 - seg(u, 2.05, 2.8),
+      // D-179: the ring stays in front of the 3D pedestal (toward the camera) until the pedestal has gone
+      fwd: u < 2 ? p.fwd : 0.5 * (1 - seg(u, 2.75, 3)),
       deskZoom: photoZoom(u, ctx),
     };
   },

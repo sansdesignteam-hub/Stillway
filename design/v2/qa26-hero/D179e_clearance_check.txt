@@ -1,0 +1,4 @@
+1440 BEFORE (fwd 0) {"restContact_mm":0.0003396105930607296,"minAfterRest_mm":-40.22884434452279,"at_u":2.7750000000000004,"overlapSamples":370}
+1440 AFTER {"restContact_mm":0.0003396105930607296,"minAfterRest_mm":0.0004537820552695873,"at_u":0.0075,"overlapSamples":69}
+375 BEFORE (fwd 0) {"restContact_mm":0.0003396105930581275,"minAfterRest_mm":-27.854662194469192,"at_u":2.0025,"overlapSamples":370}
+375 AFTER {"restContact_mm":0.0003396105930581275,"minAfterRest_mm":0.002412098235525864,"at_u":0.0075,"overlapSamples":70}

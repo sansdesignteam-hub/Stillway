@@ -217,6 +217,14 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   ao.position.y = 0.0001;
   ao.renderOrder = -1;
   desk.add(ao);
+  // ring → pedestal contact shade (Cycles' contact occlusion that a blurred VSM cannot give), placed
+  // under the ring's lowest point in its JSON rest pose; fades as the ring lifts
+  const contactMat = new THREE.MeshBasicMaterial({ map: aoTex, color: 0x140a03, transparent: true, opacity: 0, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2 });
+  const contact = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), contactMat);
+  contact.rotation.x = -Math.PI / 2;
+  contact.renderOrder = -1;
+  desk.add(contact);
+  let contactKey = '';
   let deskPose: any = null;
   let pedestal: THREE.Object3D | null = null;
   const pedMats: THREE.MeshStandardMaterial[] = [];
@@ -413,6 +421,14 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     m.emissiveIntensity = 0;
   }
   spinner.add(ring);
+  // ring outer-shell points in ring space (pivot/spinner are identity here), for the contact point
+  const ringPts: THREE.Vector3[] = [];
+  ring.updateMatrixWorld(true);
+  ring.traverse((o) => {
+    if (!o.isMesh || !/Shell/i.test(o.name)) return;
+    const a = o.geometry.attributes.position;
+    for (let i = 0; i < a.count; i += 5) ringPts.push(new THREE.Vector3().fromBufferAttribute(a, i).applyMatrix4(o.matrixWorld));
+  });
 
   /* S06 pine table (D-146, HANDOFF-s06-table.md). Its own scene and lights, drawn before the ring with
      the same camera (depth cleared in between: the ring is always in front), so the warm key +
@@ -589,6 +605,14 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     pivot.rotation.set(p.rx, p.ry, p.rz, 'YXZ');
     if (p.pitch) pivot.quaternion.premultiply(rollQ.setFromAxisAngle(X_AXIS, p.pitch));
     if (p.roll) pivot.quaternion.premultiply(rollQ.setFromAxisAngle(Z_AXIS, p.roll));
+    // fwd: toward the camera, same screen size and place (screen = P + (x, −y)·F/(F − z))
+    const fw = Math.min(0.9, Math.max(0, p.fwd));
+    if (fw > 0) {
+      pivot.position.x *= 1 - fw;
+      pivot.position.y *= 1 - fw;
+      pivot.position.z = fw * F;
+      pivot.scale.multiplyScalar(1 - fw);
+    }
     // the ring standing on the pedestal: the JSON ring pose, through the desk group
     const rest = deskPose && dsk > 0 ? Math.min(1, Math.max(0, p.rest)) : 0;
     if (rest > 0) {
@@ -678,6 +702,21 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       deskHemi.intensity = deskHemiI * dsk;
       deskMat.opacity = (deskPose.desk.opacity ?? 0.5) * sh * dsk;
       aoMat.opacity = 0.32 * dsk;
+      const R = deskPose.ring;
+      const ck = JSON.stringify([R.position, R.quaternion, R.scale, R.s01_scale]);
+      if (ck !== contactKey && ringPts.length) {
+        contactKey = ck;
+        const q = new THREE.Quaternion().fromArray(R.quaternion);
+        const sc = (R.scale ?? 1) * (R.s01_scale ?? 1);
+        let low: THREE.Vector3 | null = null;
+        for (const v of ringPts) {
+          const w = v.clone().multiplyScalar(sc).applyQuaternion(q).add(_v.fromArray(R.position));
+          if (!low || w.y < low.y) low = w;
+        }
+        contact.position.set(low!.x, (deskPose.pedestal.top_y ?? low!.y) + 0.00005, low!.z);
+        contact.scale.set(0.011, 0.006, 1); // ~11 × 6 mm soft oval under the touching band
+      }
+      contactMat.opacity = 0.55 * dsk * Math.min(1, Math.max(0, p.rest));
       pedMats.forEach((m) => {
         m.opacity = dsk;
         if (m.transparent !== dsk < 1) {
@@ -798,6 +837,23 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     litLed(ledPower, color === 'off' ? LED_RED : null, intensity);
   };
 
+  /** D-179 QA: lowest ring point above the pedestal top (m, desk space) while the XZ footprints overlap;
+   *  null when the desk is hidden or they do not overlap. Used by the automated clearance check. */
+  const clearance = () => {
+    if (!deskPose || !desk.visible) return null;
+    scene.updateMatrixWorld(true);
+    const inv = desk.matrix.clone().invert();
+    const M = new THREE.Matrix4().multiplyMatrices(pivot.matrixWorld, spinner.matrix);
+    const sz = deskPose.pedestal.size_mm;
+    const hx = sz.width_x / 2000, hz = sz.depth_z / 2000, top = deskPose.pedestal.top_y;
+    let min: number | null = null;
+    for (const v of ringPts) {
+      const d = v.clone().applyMatrix4(M).applyMatrix4(inv);
+      if (Math.abs(d.x) <= hx && Math.abs(d.z) <= hz) min = min === null ? d.y - top : Math.min(min, d.y - top);
+    }
+    return min;
+  };
+  if (new URLSearchParams(location.search).has('inspect')) (window as any).__ringClearance = (pose: Pose) => (apply(pose), clearance());
   await deskReady; // the first frame already shows the pedestal (the poster cross-fades to it)
   return { apply, render, setLed, canvas, three: THREE, pivot };
 }
