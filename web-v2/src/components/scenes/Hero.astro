@@ -21,13 +21,13 @@ const icons = [
   class="scene scene--hero"
   data-scene="hero"
   aria-labelledby="hero-title"
-  style={`--ph-d:url(${D.placeholder}); --ph-m:url(${M.placeholder}); --v1-ratio:${heroBg.v1Ratio}; --d-ratio:${D.width / D.height}; --d-orig:${D.origW}; --m-ratio:${M.width / M.height}; --m-orig:${M.origW}`}
+  style={`--ph-d:url(${D.placeholder}); --ph-m:url(${M.placeholder}); --v1-ratio:${heroBg.v1Ratio}; --d-ratio:${D.width / D.height}; --d-orig:${D.origW}; --m-ratio:${M.width / M.height}; --m-orig:${M.origW}; --anchor-x:${heroBg.anchor.x * 100}%; --anchor-y:${heroBg.anchor.y * 100}%`}
 >
   <div class="scene__back">
     <div class="hero__photo" data-h-photo data-a>
       <picture>
-        <source media={M.media} type="image/webp" srcset={M.srcset} sizes="max(85vw, 150lvh)" />
-        <img src={D.src} srcset={D.srcset} sizes="max(226vw, 400lvh)" width={D.width} height={D.height} alt="" fetchpriority="low" decoding="async" data-h-img />
+        <source media={M.media} type="image/webp" srcset={M.srcset} sizes="max(100vw, 178lvh)" />
+        <img src={D.src} srcset={D.srcset} sizes="max(100vw, 178lvh)" width={D.width} height={D.height} alt="" fetchpriority="low" decoding="async" data-h-img />
       </picture>
       <div class="hero__dim" style={`opacity:${heroBg.dim}`}></div>
     </div>
@@ -84,7 +84,8 @@ const icons = [
     width: calc(var(--cover) / var(--d-orig));
     aspect-ratio: var(--d-ratio);
     translate: -50% -50%;
-    transform-origin: 50% 50%;
+    /* D-177: zoom around the pedestal, so the landing point stays put */
+    transform-origin: var(--anchor-x) var(--anchor-y);
     will-change: transform, opacity;
     background: var(--ph-d) center / 100% 100% no-repeat; /* light first paint under the full image */
   }
@@ -96,6 +97,16 @@ const icons = [
   }
   .hero__photo img {
     object-fit: cover;
+  }
+  /* D-177: the polished stills were rendered over the moss photo (green reflections); neutralised and
+     warmed toward the lamp-lit desk until a warm-desk still exists (3D Designer) */
+  /* D-177: the still's shadow was cut for the V1 stone and falls the other way; off until a
+     warm-desk still pair exists (the live 3D shadow is drawn on the pedestal) */
+  .hero__fb--shadow {
+    display: none;
+  }
+  .hero__fb:not(.hero__fb--shadow):not(.hero__fb--end) {
+    filter: grayscale(0.75) sepia(0.28) brightness(0.95) contrast(1.05);
   }
   .hero__dim {
     position: absolute;

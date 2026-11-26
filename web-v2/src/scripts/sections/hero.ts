@@ -33,14 +33,19 @@ const canTilt = () => matchMedia('(hover: hover) and (pointer: fine)').matches &
  */
 const V1 = { rx: -0.6977, ry: 0.5757, rz: -2.3613 };
 const LOGO_FRONT = 0; // psi 0
-/** the stone top in the V1 photo (fractions of the 2556 × 1448 photo), from V1's contact shade */
-const STONE = { x: 0.48, y: 0.745 };
+/** D-177: the pedestal top in the warm desk photo (fractions of the photo) — the landing point */
+const STONE = heroBg.anchor;
 const stoneAt = (zoom = 1) => {
   const W = window.innerWidth;
   const H = window.innerHeight;
   const coverW = Math.max(W, H * heroBg.v1Ratio);
   const coverH = coverW / heroBg.v1Ratio;
-  return { shadowX: ((STONE.x - 0.5) * coverW * zoom) / W, shadowY: (-(STONE.y - 0.5) * coverH * zoom) / H };
+  // D-177: the pedestal top is 0.33 of the photo wide and 0.082 deep on screen; the catcher is tilted
+  // (sin 0.32 ≈ 0.31), so its own depth is 0.08 / 0.31 of the photo height
+  // the photo zooms around the pedestal (heroBg.anchor), so its place does not depend on the zoom
+  // the top face runs from y 0.71 (back edge) to 0.792 (front edge) of the photo: centre 0.751
+  const topY = 0.751;
+  return { shadowX: ((STONE.x - 0.5) * coverW) / W, shadowY: (-(topY - 0.5) * coverH) / H, shadowW: (0.33 * coverW * zoom) / W, shadowD: ((0.082 / 0.31) * coverH * zoom) / H };
 };
 const floatPose = (ctx: Ctx): Pose => {
   const W = window.innerWidth;
@@ -55,7 +60,7 @@ const floatPose = (ctx: Ctx): Pose => {
     gloss: 1,
     // phones float the ring far above the stone, where a sharp ring-shaped shadow reads wrong
     shadow: ctx.mobile ? 0 : 1,
-    ...stoneAt(),
+    ...stoneAt(ctx.mobile ? heroBg.mobile.zoomFrom : heroBg.desktop.zoomFrom),
   });
 };
 
@@ -94,8 +99,9 @@ export const hero: SectionMotion = {
     put(el.statement, { o: 1 - k, x: -120 * k }, ctx);
     put(el.foot, { o: 1 - seg(u, 0.05, 0.5) }, ctx);
 
-    // 1 → 2: the photo zooms out behind the ring; 2 → 3: it fades to Paper
-    const z = lerp(1, ctx.mobile ? heroBg.mobile.zoomTo : heroBg.desktop.zoomTo, seg(u, 0.9, 2.2));
+    // 1 → 2: the photo zooms out behind the ring (D-177: from a little zoomed in down to cover, around
+    // the pedestal, so no edge ever shows); 2 → 3: it fades to Paper
+    const z = lerp(ctx.mobile ? heroBg.mobile.zoomFrom : heroBg.desktop.zoomFrom, 1, seg(u, 0.9, 2.2));
     put(el.photo, { o: 1 - seg(u, 2.05, 2.8), s: z }, ctx);
   },
   theme: (u) => (u < 2.45 ? 'photo' : null),

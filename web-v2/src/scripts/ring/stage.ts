@@ -114,11 +114,16 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     });
   scene.environment = blends[0] ?? envs.paper ?? null;
 
-  // V1 hero rig for S01 (heroRing.ts): warm morning sun upper left + hemisphere, faded in with pose.photo
-  const sun = new THREE.DirectionalLight(0xffe2b8, 0);
-  sun.position.set(-600, 700, 500);
-  const hemi = new THREE.HemisphereLight(0xfff1dc, 0x3b3a1c, 0);
-  scene.add(sun, hemi);
+  // S01 rig, faded in with pose.photo (so S02 and the rest never see it). D-177, the warm desk photo:
+  // the lamp is the key, upper right and a little in front (a warm highlight along the right of the
+  // band); the hemisphere gives a dim warm wall above and the wood's warm bounce from below; the
+  // dark (left) side only gets a soft fill. Replaces the V1 morning sun upper left / moss green.
+  const sun = new THREE.DirectionalLight(0xffdcb2, 0);
+  sun.position.set(720, 640, 420);
+  const hemi = new THREE.HemisphereLight(0x5a4a3e, 0x8a6040, 0);
+  const fill = new THREE.DirectionalLight(0xffe7cf, 0);
+  fill.position.set(-700, 120, 600);
+  scene.add(sun, hemi, fill);
   // S03 (Ultrahuman ref): one cold light grazing the band edge from behind one side, so a dark
   // polished ring still reads as silver along its bevel
   const rim = new THREE.DirectionalLight(0xdfe8ff, 0);
@@ -159,12 +164,29 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   shadowSun.shadow.bias = -0.0005;
   scene.add(shadowSun, shadowSun.target);
   const catcherMat = new THREE.ShadowMaterial({ color: 0x1c140b, opacity: 0, transparent: true, depthWrite: false });
-  const catcher = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), catcherMat);
+  // D-177: a rounded rectangle like the pedestal top (unit size, scaled per frame), so the shadow
+// stops at the pedestal's own edges
+const catcherShape = (() => {
+  const r = 0.14;
+  const sh = new THREE.Shape();
+  sh.moveTo(-0.5 + r, -0.5);
+  sh.lineTo(0.5 - r, -0.5);
+  sh.quadraticCurveTo(0.5, -0.5, 0.5, -0.5 + r);
+  sh.lineTo(0.5, 0.5 - r);
+  sh.quadraticCurveTo(0.5, 0.5, 0.5 - r, 0.5);
+  sh.lineTo(-0.5 + r, 0.5);
+  sh.quadraticCurveTo(-0.5, 0.5, -0.5, 0.5 - r);
+  sh.lineTo(-0.5, -0.5 + r);
+  sh.quadraticCurveTo(-0.5, -0.5, -0.5 + r, -0.5);
+  return new THREE.ShapeGeometry(sh, 8);
+})();
+const catcher = new THREE.Mesh(catcherShape, catcherMat);
   catcher.receiveShadow = true;
   catcher.renderOrder = -1;
   catcher.visible = false;
   scene.add(catcher);
-  const SHADOW_DIR = new THREE.Vector3(0.55, 1, 0.75).normalize(); // V1 value
+  // D-177: from the lamp (upper right, behind the ring), so the shadow falls left and forward, away from it
+const SHADOW_DIR = new THREE.Vector3(0.9, 1, -0.45).normalize(); // the lamp stands at the back of the desk
 
   /* S06 finger proxy (s06-pose.json fingerProxy): lathe around +Y in hand-photo px, y = 0 at the
      ring seat (profile reversed so the faces point outward, as ring-test/s06.html); depth only, drawn before the ring so the back of the band hides behind the finger */
@@ -466,8 +488,9 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     }
 
     // V1 rig and cast shadow, S01 only
-    sun.intensity = 2.2 * p.photo;
-    hemi.intensity = 0.35 * p.photo;
+    sun.intensity = 2.6 * p.photo;
+    hemi.intensity = 0.55 * p.photo;
+    fill.intensity = 0.35 * p.photo;
     rim.intensity = 14 * p.rim;
     rimFill.intensity = 3.2 * p.rim;
     warmRim.intensity = 10 * p.warm;
@@ -483,10 +506,14 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     catcher.visible = sh > 0.005;
     shadowSun.castShadow = catcher.visible;
     if (catcher.visible) {
-      catcherMat.opacity = 0.55 * sh;
       catcher.position.set(p.shadowX * W, p.shadowY * H, 0);
-      catcher.rotation.set(-Math.PI / 2 + 0.32, 0, 0); // stone top, foreshortened like the photo
-      catcher.scale.set(w * 3.2, w * 2.2, 1);
+      // D-177: the further the ring is above the pedestal, the lighter its shadow (a soft key light)
+      const lift = Math.min(1, Math.abs(pivot.position.y - catcher.position.y) / (1.5 * w));
+      catcherMat.opacity = 0.42 * sh * (1 - 0.6 * lift);
+      catcher.rotation.set(-Math.PI / 2 + 0.32, 0, 0); // the receiving top, foreshortened like the photo
+      // only the pedestal top receives it (no shadow past its edges); V1 size when not given
+      if (p.shadowW > 0) catcher.scale.set(p.shadowW * W, p.shadowD * H, 1);
+      else catcher.scale.set(w * 3.2, w * 2.2, 1);
       shadowSun.target.position.copy(catcher.position);
       shadowSun.position.copy(catcher.position).addScaledVector(SHADOW_DIR, w * 4);
       const c = shadowSun.shadow.camera;

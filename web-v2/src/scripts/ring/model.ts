@@ -31,6 +31,6 @@ export const RING_MODEL = {
     paper: '/env/v2-env-paper-polished.exr', // S02 (3D Designer 16cfbaf: made for the polished finish)
     night: '/env/v2-env-night-polished.exr', // S03
     dusk: '/env/v2-env-dusk.exr', // S05 (3D Designer: low ochre sun and glow, dark sky)
-    photo: '/env/hero-env.jpg', // S01 over the moss photograph (V1 approach, D-080)
+    photo: '/env/hero-env-warm.jpg', // S01: the warm desk photo as the env (V1 approach, D-080; D-177)
   },
 } as const;

@@ -7,7 +7,7 @@
  * spin: turn about the ring's own axis (radians); brings the engraved logo (outer band, opposite
  *       the sensor window) toward or away from the viewer.
  * roll: turn in the screen plane (radians), applied after rx/ry/rz (default 0).
- * photo: 1 = environment from the hero photograph (V1 hero-env.jpg) so the ring sits in the moss
+ * photo: 1 = environment from the hero photograph (D-177: hero-env-warm.jpg, the warm desk) so the ring sits in the
  *        scene of S01 (D-080); 0 = the V2 env picked by `light`.
  * uncap: 0 = width capped at 82% of the viewport height, 1 = no cap (S01 zoom in).
  * dusk: 1 = the Dusk env (S05), swapped in with an intensity dip like night.
@@ -66,6 +66,9 @@ export interface Pose {
   shadow: number;
   shadowX: number;
   shadowY: number;
+  /** D-177: size of the surface that receives the S01 shadow (the pedestal top), fractions of W / H; 0 = the V1 size */
+  shadowW: number;
+  shadowD: number;
   pitch: number;
   fing: number;
   fx: number;
@@ -132,4 +135,4 @@ export function along(u: number, frames: Array<[number, Pose]>): Pose {
   return frames[frames.length - 1][1];
 }
 
-export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, shadowX: 0, shadowY: -0.3, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, ledc: 0, flare: 0, custom: 0, finA: 0, finB: 0, finT: 0, lamp: 0, corner: 0, edge: 0, envDim: 0, blur: 0, table: 0, tableD: 0, tableY: 0, tableShadow: 0, alpha: 1, ...p });
+export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, shadowX: 0, shadowY: -0.3, shadowW: 0, shadowD: 0, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, ledc: 0, flare: 0, custom: 0, finA: 0, finB: 0, finT: 0, lamp: 0, corner: 0, edge: 0, envDim: 0, blur: 0, table: 0, tableD: 0, tableY: 0, tableShadow: 0, alpha: 1, ...p });
