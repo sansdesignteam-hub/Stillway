@@ -271,7 +271,7 @@ def scene_setup():
     tint = nt.nodes.new("ShaderNodeMix"); tint.data_type = 'RGBA'; tint.blend_type = 'MULTIPLY'
     tint.inputs["Factor"].default_value = 1.0; tint.inputs["B"].default_value = (1.0, 0.72, 0.48, 1)
     nt.links.new(env.outputs[0], tint.inputs["A"]); nt.links.new(tint.outputs["Result"], warm.inputs[0])
-    cool = nt.nodes.new("ShaderNodeBackground"); cool.inputs["Strength"].default_value = float(os.environ.get("RING_ENV", "1.55"))   # D-181b: whiter, like the live web ring (was 1.1)
+    cool = nt.nodes.new("ShaderNodeBackground"); cool.inputs["Strength"].default_value = float(os.environ.get("RING_ENV", "1.5"))   # D-181d: Figma chrome (D-181b had 1.55 for a whiter ring)
     cg = nt.nodes.new("ShaderNodeMix"); cg.data_type = 'RGBA'; cg.blend_type = 'MULTIPLY'
     cg.inputs["Factor"].default_value = 1.0; cg.inputs["B"].default_value = (0.97, 0.99, 1.03, 1)
     nt.links.new(env.outputs[0], cg.inputs["A"]); nt.links.new(cg.outputs["Result"], cool.inputs[0])
@@ -299,15 +299,19 @@ def scene_setup():
     col = bpy.data.collections.new("SpillSet"); sc.collection.children.link(col)
     col.objects.link(pd); col.objects.link(desk)
     spill.light_linking.receiver_collection = col
-    spill.light_linking.blocker_collection = col
+    bcol = bpy.data.collections.new("SpillBlockers"); sc.collection.children.link(bcol)
+    bcol.objects.link(pd); bcol.objects.link(desk)
+    spill.light_linking.blocker_collection = bcol
     cd = bpy.data.cameras.new("Cam_S01"); cam = bpy.data.objects.new("Cam_S01", cd); sc.collection.objects.link(cam)
     sc.camera = cam
     ped.place_camera(cam, **ped.CAM)
     bpy.context.view_layer.update()
     return dict(ped=[pd], proxy=[o for o in proxy_objs if o.type == 'MESH'], ring=[o for o in ring_objs if o.type == 'MESH'],
-                ring_root=ring, desk=[desk], key=key, cam=cam, switch=sw, warm=warm)
+                ring_root=ring, desk=[desk], key=key, cam=cam, switch=sw, warm=warm, spill_blockers=bcol)
 
 
+RING_DESK_RGB = tuple(int(v) for v in os.environ.get("RING_DESK", "78,56,40").split(","))
+RING_LOOK = os.environ.get("RING_LOOK", "AgX - High Contrast")   # D-181d: Figma-like chrome contrast (was None)
 CONTACT_DIST = float(os.environ.get("CONTACT_DIST", "12.0"))     # mm: reach of the contact occlusion around the touch point
 
 
@@ -334,6 +338,15 @@ def render_pass(name, S, pd, ring, desk, proxy='off', exr=False, silver=False, s
     bpy.context.view_layer.material_override = S["contact_mat"] if contact else None
     show(S["ped"], pd); show(S["ring"], ring); show(S["desk"], desk); show(S["proxy"], proxy)
     S["switch"].inputs[1].default_value = 1.0 if silver else 0.0
+    # ring pass only (D-181d): the ring also blocks the lamp spill, so the wood right under it is in shade and the
+    # ring's underside reflects dark, like Figma. The plate and shadow passes keep the ring out of the spill.
+    # ... and the desk it mirrors is the dim, desaturated foreground of the photo, not the flat lit desk tone
+    dcol = RING_DESK_RGB if silver else DESK_RGB
+    S["desk"][0].data.materials[0].node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (*ped.srgb(dcol), 1)
+    for o in S["ped"]: o.visible_glossy = not silver      # the underside mirrors the dim desk, not the lit oak top
+    for o in S["ring"]:
+        if silver and o.name not in S["spill_blockers"].objects: S["spill_blockers"].objects.link(o)
+        if not silver and o.name in S["spill_blockers"].objects: S["spill_blockers"].objects.unlink(o)
     S["warm"].inputs["Strength"].default_value = ENV_STRENGTH_RING if silver else ENV_STRENGTH
     S["key"].data.color = (1.0, 0.86, 0.72) if silver else ped.KEY["color"]
     S["key"].data.energy = KEY_POWER_RING if silver else KEY_POWER
@@ -345,8 +358,8 @@ def render_pass(name, S, pd, ring, desk, proxy='off', exr=False, silver=False, s
     else:
         s.file_format = 'PNG'; s.color_mode = 'RGBA'; s.color_depth = '16'; s.compression = 15
         sc.view_settings.view_transform = 'AgX'
-        sc.view_settings.look = 'None' if silver else P_LOOK       # ring: exactly the D-179 poster grade
-        sc.view_settings.exposure = float(os.environ.get("RING_EXPOSURE", "0.2")) if silver else P_EXPOSURE
+        sc.view_settings.look = RING_LOOK if silver else P_LOOK
+        sc.view_settings.exposure = float(os.environ.get("RING_EXPOSURE", "0.0")) if silver else P_EXPOSURE
     sc.render.filepath = f"{PASS}/{name}.{'exr' if exr else 'png'}"
     bpy.ops.render.render(write_still=True)
     print("PLATE pass", name, "done")
@@ -515,6 +528,20 @@ def fit():
     save(hstack(ours, fig), f"{REN}/fit-side.png")
 
 
+def ringstat():
+    """quick look at the ring pass alone against Figma (any pass resolution)"""
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    RG = load(f"{PASS}/RG.png"); Hh, Ww = RG.shape[:2]
+    plate = resize(load(f"{OUT}/still-s01-3632.png")[..., :3], Ww, Hh)
+    fig = resize(load(FIGMA)[..., :3], 1440, 900)
+    ours = webframe(over(RG, plate), 1440, 900)
+    m = webframe(RG[..., 3:4], 1440, 900)[..., 0] > 0.98
+    L_ = lambda im: (im[..., :3] * np.array([0.2126, 0.7152, 0.0722], np.float32)).sum(-1)[m] * 255
+    for n, v in (("poster", L_(ours)), ("figma", L_(fig))):
+        print("RINGSTAT", n, [round(float(np.percentile(v, q))) for q in (5, 25, 50, 75, 95)], "mean", round(float(v.mean())))
+    save(hstack(ours[250:760, 500:960], fig[250:760, 500:960]), f"{REN}/ringstat.png")
+
+
 def erode(m):
     p = np.pad(m, 1, mode='constant')
     return p[1:-1, 1:-1] & p[:-2, 1:-1] & p[2:, 1:-1] & p[1:-1, :-2] & p[1:-1, 2:]
@@ -659,6 +686,8 @@ def comp():
     L_ = lambda im: (im[..., :3] * np.array([0.2126, 0.7152, 0.0722], np.float32)).sum(-1)[rmask] * 255
     pct = lambda v: {k: round(float(np.percentile(v, q)), 1) for k, q in (("p05", 5), ("p25", 25), ("p50", 50), ("p75", 75), ("p95", 95))} | {"mean": round(float(v.mean()), 1)}
     report["ring_luma_8bit_web_rest_frame"] = {"poster": pct(L_(ours_s)), "figma": pct(L_(fig))}
+    rq = tuple(round(v * fw / 2880) for v in (1000, 1900, 520, 1500))
+    save(hstack(ours_s[rq[2]:rq[3], rq[0]:rq[1]], fig[rq[2]:rq[3], rq[0]:rq[1]]), f"{REN}/s01-plate-ring-closeup-vs-figma{tag}.png")
     save(cover(still_m, 750, 1624) if SCALE == 1 else cover(still_m, 375, 812), f"{REN}/s01-plate-mobile-still-375{tag}.png")
     save(resize(plate_m, 1816, 1036) if SCALE == 1 else plate_m, f"{REN}/s01-plate-mobile-1816{tag}.png")
     with open(f"{REN}/s01-plate-report{tag}.json", "w") as f: json.dump(report, f, indent=1)
@@ -768,3 +797,4 @@ if __name__ == "__main__":
     if argv[0] in ("render", "all"): render()
     if argv[0] in ("comp", "all"): comp()
     if argv[0] == "fit": fit()
+    if argv[0] == "ringstat": ringstat()

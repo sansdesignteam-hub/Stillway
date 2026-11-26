@@ -42,6 +42,25 @@ Semua file di `plate/`, `s01-pedestal.glb`, dan `s01-pedestal-pose.json` **digan
 
   Ring Figma lebih gelap di bagian gelap dan tengah daripada poster, dan sedikit lebih redup di highlight. Poster tidak diubah. Saran: **web yang bergerak** di bagian gelap (liner dan pantulan gelap diturunkan ke arah poster). Highlight web (15–18% di bawah poster) sudah setingkat Figma, jadi biarkan. Kalau kesetiaan penuh ke Figma diinginkan, poster dan web sama-sama perlu nada tengah yang lebih gelap; itu membalik permintaan "lebih putih" D-181b, jadi perlu keputusan PM.
 
+### D-181d: ring poster ke kesetiaan Figma (keputusan PM)
+
+Hanya pass ring yang dirender ulang. Plate tidak berubah. `still-s01(-mobile)-3632.png` dan `ring-overlay-s01(-mobile)-3632` diganti dengan nama yang sama. Bagian "lebih putih" dari D-181b dan tabel kontras D-181c di bawah tidak berlaku lagi.
+
+- Krom lebih kontras: look AgX High Contrast, env glossy netral 1,5, exposure 0.
+- Sisi bawah ring memantulkan gelap seperti Figma: di pass ring, ring ikut menghalangi lampu spill, alas tidak terlihat oleh sinar glossy, dan meja yang dipantulkan memakai nada redup latar depan foto.
+- Kontak AO D-181c tetap.
+- Luma 8-bit pada piksel ring, frame diam web:
+
+| | p05 | p25 | p50 | p75 | p95 | rata-rata |
+| --- | --- | --- | --- | --- | --- | --- |
+| Poster baru | 1,8 | 16,8 | 93,2 | 114,2 | 254,4 | 86,9 |
+| Figma | 8,8 | 25,8 | 58,1 | 158,2 | 210,0 | 89,8 |
+| Poster D-181c | 26,6 | 52,4 | 117,0 | 140,5 | 243,1 | 110,3 |
+
+- Rata-rata sekarang setingkat Figma. Yang belum: bagian gelap sedikit lebih hitam daripada Figma, nada tengah masih lebih terang (p50 93 vs 58), dan highlight lebih terang (p95 254 vs 210).
+- Bukti: `renders/s01-plate/s01-plate-ring-closeup-vs-figma.png`.
+- **Akibat untuk web:** pencocokan nada ring hidup vs poster dari D-181c perlu diulang terhadap poster baru.
+
 ### File
 
 Semua 3632×2072, frame dan kamera sama dengan foto latar. Folder `plate/`:
