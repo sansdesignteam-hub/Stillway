@@ -22,6 +22,13 @@ export const heroBg = {
   /** where the pedestal's origin (bottom centre, on the desk) falls in the photo (fractions): phones
    *  scale ring + pedestal + shadows about this point (`subject` below), 3D and poster alike */
   subjectOrigin: { x: 0.5, y: 0.86 },
+  /**
+   * D-180: left edge of the resting ring's screen bbox, maximum hover tilt included, as a fraction of
+   * the photo width (measured with ?inspect __ringScreenBox at 43f5c91's pose; re-measure if the pose
+   * JSON changes). The desktop wordmark is sized so its right edge stays wordGap px left of it.
+   */
+  ringLeft: 0.3897,
+  wordGap: 36,
   /** transparent ring + pedestal + shadows in the photo's own frame (the poster) */
   poster: '/ring-fallback/fb-s01-pedestal-alpha.webp',
   desktop: {

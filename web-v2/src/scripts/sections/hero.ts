@@ -20,6 +20,8 @@ import type { SectionMotion } from '../story';
 let el: Record<string, HTMLElement | null> = {};
 const mouse = { x: 0, y: 0 };
 const tilt = { x: 0, y: 0 };
+/** pitch share of the tilt while resting (yaw is full): keeps the band on the pedestal */
+const REST_PITCH = 0.5;
 const canTilt = () => matchMedia('(hover: hover) and (pointer: fine)').matches && window.innerWidth >= 720;
 
 /**
@@ -71,6 +73,27 @@ export const hero: SectionMotion = {
       statement: q('[data-h-statement]'),
       foot: q('[data-h-foot]'),
     };
+    // D-180: the wordmark stays fully readable left of the ring (departs from Figma on purpose)
+    const fitWord = () => {
+      const word = el.word;
+      if (!word) return;
+      const W = window.innerWidth;
+      const H = window.innerHeight;
+      if (W <= 760) {
+        word.style.fontSize = '';
+        return;
+      }
+      const cw = Math.max(W, H * heroBg.v1Ratio);
+      const ax = (heroBg.anchor.x - 0.5) * cw;
+      const z = heroBg.desktop.zoomFrom; // the rest frame (u 0)
+      const ringLeft = W / 2 + ax + ((heroBg.ringLeft - 0.5) * cw - ax) * z;
+      const left = word.getBoundingClientRect().left;
+      const EM = 3.0665; // "Stillway" width in em with the Figma tracking
+      word.style.fontSize = `${Math.max(64, Math.min(193.59, (ringLeft - heroBg.wordGap - left) / EM)).toFixed(2)}px`;
+    };
+    fitWord();
+    window.addEventListener('resize', fitWord);
+    document.fonts?.ready.then(fitWord);
     window.addEventListener('pointermove', (e) => {
       mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouse.y = (e.clientY / window.innerHeight) * 2 - 1;
@@ -108,8 +131,13 @@ export const hero: SectionMotion = {
     ]);
     // mouse tilt in state 1 only (V1 heroRing: ±0.22 / ±0.32 rad, eased)
     // no mouse tilt or bob while the ring stands on the pedestal (it lifts off from 0 to 0.9)
-    const w = (1 - seg(u, 0, 0.8)) * (1 - p.rest);
-    const tk = canTilt() && !ctx.reduced ? 1 : 0;
+    // D-180: hover tilt again (production D-051/D-052 feel), also while resting: there stage.ts turns
+    // the ring about its contact point (tiltX/tiltY). Starts after the poster cross-fade (ring-live),
+    // eased in from zero by the same 0.06 follow; never on touch, phones or reduced motion.
+    const w0 = 1 - seg(u, 0, 0.8);
+    const w = w0 * (1 - p.rest);
+    const live = document.documentElement.classList.contains('ring-live');
+    const tk = canTilt() && !ctx.reduced && live ? 1 : 0;
     tilt.x += (mouse.y * 0.22 * tk - tilt.x) * 0.06;
     tilt.y += (mouse.x * 0.32 * tk - tilt.y) * 0.06;
     const bob = Math.sin(performance.now() / 1000 * 1.3) * 0.008 * w * (ctx.reduced ? 0 : 1);
@@ -121,6 +149,8 @@ export const hero: SectionMotion = {
       ...p,
       rx: p.rx + tilt.x * w,
       ry: p.ry + tilt.y * w,
+      tiltX: tilt.x * w0 * REST_PITCH,
+      tiltY: tilt.y * w0,
       y: p.y + bob,
       photo: u < 2 ? 1 : 1 - out,
       led: u < 2 ? p.led : 0.6 * (1 - seg(u, 2, 2.6)),

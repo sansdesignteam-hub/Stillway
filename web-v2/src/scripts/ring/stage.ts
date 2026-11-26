@@ -167,12 +167,12 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   /* D-179 1b: light values come from the pose JSON (lights.key.intensity, lights.fill,
      lights.pedestal_envMapIntensity); these are only the fallbacks and one gain each, tuned by eye
      against the 3D Designer's poster, so a new JSON drop retunes itself */
-  const LAMP_GAIN = 2.3;
+  const LAMP_GAIN = 3.2;
   const RING_DESK_ENV = 1.6;
   const DESK_PAPER = 0.35;
   /** Cycles' warm desk bounce lights the shaded faces; the web has no GI, so the env stands in */
-  const PED_ENV_GAIN = 2.6;
-  const SHADOW_RADIUS = 40;
+  const PED_ENV_GAIN = 1.3;
+  const SHADOW_RADIUS = 24;
   let LAMP = 2.6;
   let PED_ENV = 0.35;
   /** warm-yellow multiply on the oak: AgX turns the lamp-lit oak pinkish; matched by eye to the poster */
@@ -225,6 +225,26 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   contact.renderOrder = -1;
   desk.add(contact);
   let contactKey = '';
+  let contactLow: THREE.Vector3 | null = null;
+  /** the ring's lowest point at rest (desk space, from the JSON pose + ring vertices): contact shade
+   *  position and the pivot of the D-180 hover tilt while the ring rests */
+  const restLow = () => {
+    if (!deskPose || !ringPts.length) return null;
+    const R = deskPose.ring;
+    const ck = JSON.stringify([R.position, R.quaternion, R.scale, R.s01_scale]);
+    if (ck !== contactKey) {
+      contactKey = ck;
+      const q = new THREE.Quaternion().fromArray(R.quaternion);
+      const sc = (R.scale ?? 1) * (R.s01_scale ?? 1);
+      const pos = new THREE.Vector3().fromArray(R.position);
+      contactLow = null;
+      for (const v of ringPts) {
+        const w = v.clone().multiplyScalar(sc).applyQuaternion(q).add(pos);
+        if (!contactLow || w.y < contactLow.y) contactLow = w;
+      }
+    }
+    return contactLow;
+  };
   let deskPose: any = null;
   let pedestal: THREE.Object3D | null = null;
   const pedMats: THREE.MeshStandardMaterial[] = [];
@@ -623,6 +643,27 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       // ring.s01_scale (optional, JSON): larger ring only while it rests; the rest blend takes it back to the lift-off size, no pop
       _q.copy(deskCam.quaternion).invert().multiply(new THREE.Quaternion().fromArray(R.quaternion));
       pivot.quaternion.slerp(_q, rest);
+      /* D-180 hover tilt while resting: yaw about the desk's vertical axis and a small pitch about the
+         camera-right horizontal axis, both through the contact point, so the ring turns in place on
+         the pedestal (never lifts or sinks: see design/v2/scripts/d179-ring-clearance.mjs) */
+      const low = restLow();
+      if (low && (p.tiltX || p.tiltY)) {
+        const C = low.clone().applyMatrix4(desk.matrix);
+        const U = new THREE.Vector3(0, 1, 0).transformDirection(desk.matrix);
+        const X = new THREE.Vector3(1, 0, 0);
+        X.addScaledVector(U, -X.dot(U)).normalize();
+        const qt = new THREE.Quaternion().setFromAxisAngle(U, p.tiltY * rest).multiply(new THREE.Quaternion().setFromAxisAngle(X, p.tiltX * rest));
+        pivot.quaternion.premultiply(qt);
+        pivot.position.sub(C).applyQuaternion(qt).add(C);
+        // pitching about the contact line can dip the curved band a hair below the top: lift by
+        // exactly that much (desk space), so the ring keeps touching and never sinks
+        pivot.updateMatrix();
+        const M = new THREE.Matrix4().multiplyMatrices(pivot.matrix, spinner.matrix).premultiply(new THREE.Matrix4().copy(desk.matrix).invert());
+        let minY = Infinity;
+        for (const v of ringPts) minY = Math.min(minY, _v.copy(v).applyMatrix4(M).y);
+        const dip = (deskPose.pedestal.top_y ?? low.y) - minY;
+        if (dip > 0) pivot.position.addScaledVector(U, (dip + 0.00003) * deskK); // + 0.03 mm: float margin
+      }
     }
     finger.visible = p.fing > 0.5;
     if (finger.visible) {
@@ -702,21 +743,12 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       deskHemi.intensity = deskHemiI * dsk;
       deskMat.opacity = (deskPose.desk.opacity ?? 0.5) * sh * dsk;
       aoMat.opacity = 0.32 * dsk;
-      const R = deskPose.ring;
-      const ck = JSON.stringify([R.position, R.quaternion, R.scale, R.s01_scale]);
-      if (ck !== contactKey && ringPts.length) {
-        contactKey = ck;
-        const q = new THREE.Quaternion().fromArray(R.quaternion);
-        const sc = (R.scale ?? 1) * (R.s01_scale ?? 1);
-        let low: THREE.Vector3 | null = null;
-        for (const v of ringPts) {
-          const w = v.clone().multiplyScalar(sc).applyQuaternion(q).add(_v.fromArray(R.position));
-          if (!low || w.y < low.y) low = w;
-        }
-        contact.position.set(low!.x, (deskPose.pedestal.top_y ?? low!.y) + 0.00005, low!.z);
-        contact.scale.set(0.011, 0.006, 1); // ~11 × 6 mm soft oval under the touching band
+      const low = restLow();
+      if (low) {
+        contact.position.set(low.x, (deskPose.pedestal.top_y ?? low.y) + 0.00005, low.z);
+        contact.scale.set(0.016, 0.009, 1); // ~11 × 6 mm soft oval under the touching band
       }
-      contactMat.opacity = 0.55 * dsk * Math.min(1, Math.max(0, p.rest));
+      contactMat.opacity = 0.85 * dsk * Math.min(1, Math.max(0, p.rest));
       pedMats.forEach((m) => {
         m.opacity = dsk;
         if (m.transparent !== dsk < 1) {
@@ -853,7 +885,23 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     }
     return min;
   };
-  if (new URLSearchParams(location.search).has('inspect')) (window as any).__ringClearance = (pose: Pose) => (apply(pose), clearance());
+  /** D-180 QA: the ring's screen bbox (CSS px) for a pose */
+  const screenBox = () => {
+    scene.updateMatrixWorld(true);
+    camera.updateMatrixWorld(true);
+    const M = new THREE.Matrix4().multiplyMatrices(pivot.matrixWorld, spinner.matrix);
+    let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+    for (const v of ringPts) {
+      const q = v.clone().applyMatrix4(M).project(camera);
+      const x = (q.x + 1) / 2 * W, y = (1 - q.y) / 2 * H;
+      l = Math.min(l, x); r = Math.max(r, x); t = Math.min(t, y); b = Math.max(b, y);
+    }
+    return { l, t, r, b };
+  };
+  if (new URLSearchParams(location.search).has('inspect')) {
+    (window as any).__ringClearance = (pose: Pose) => (apply(pose), clearance());
+    (window as any).__ringScreenBox = (pose: Pose) => (apply(pose), screenBox());
+  }
   await deskReady; // the first frame already shows the pedestal (the poster cross-fades to it)
   return { apply, render, setLed, canvas, three: THREE, pivot };
 }
