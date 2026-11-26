@@ -6,7 +6,7 @@
  *  0     State 1  "Through the day." in the middle
  *  0 → 1 State 2  the words part and shrink to fit beside the row (D-172); the four cards scale up
  *                 and fade in where they stand, left to right
- *  1 → 2 State 3  the cards close into a stack, the words leave sideways, the line grows from the
+ *  1 → 2 State 3  the words fade where they stand, then the cards close into a stack, the line grows from the
  *                 middle; (I) Night: title letter by letter from behind the line, lines rise
  *  2 → 5 States 4–6  the front card rises behind the stack, the next comes forward (II)–(IV); the
  *                 counter circle fills; by (IV) Rinse the cards behind it are gone (Figma State 6)
@@ -333,7 +333,9 @@ export const specs: SectionMotion = {
 
     /* ----- States 1–2: the words ----- */
     const split = seg(u, 0.1, 0.62); // D-172: the words are apart before the cards come in
-    const leave = seg(u, 1.05, 1.6); // out to the sides as the cards close
+    // D-172 PM review: after State 2 the two parts fade out where they stand — whole, inside the
+    // screen — and are gone before the cards start to close (close below starts at 1.1)
+    const leave = seg(u, 1.0, 1.1);
     const [w0, w1] = wordW;
     const space = wordFs * 0.24;
     // D-172 (Obsidian Assembly "Origin Objects"): the two parts move apart and shrink in proportion,
@@ -347,8 +349,8 @@ export const specs: SectionMotion = {
       const h = wordH * sc;
       const y0 = lerp(L.cy - wordH, L.cy - rowH / 2 - 12 - h, split);
       const y1 = lerp(L.cy, L.cy + rowH / 2 + 12, split);
-      tf(words[0], inn * (1 - leave), tsl(W / 2 - (w0 * sc) / 2 - leave * (W / 2 + w0 / 2), y0 + (1 - inn) * 20, sc));
-      tf(words[1], inn * (1 - leave), tsl(W / 2 - (w1 * sc) / 2 + leave * (W / 2 + w1 / 2), y1 + (1 - inn) * 20, sc));
+      tf(words[0], inn * (1 - leave), tsl(W / 2 - (w0 * sc) / 2, y0 + (1 - inn) * 20, sc));
+      tf(words[1], inn * (1 - leave), tsl(W / 2 - (w1 * sc) / 2, y1 + (1 - inn) * 20, sc));
     } else {
       // State 1: one line centred on the stack line; State 2: 'Through' at the left margin, 'the
       // day.' at the right one, each scaled to fit the room between the margin and the row (20 px air)
@@ -356,8 +358,8 @@ export const specs: SectionMotion = {
       const room = W / 2 - L.rowW / 2 - 20 * k - margin;
       const sc = lerp(1, Math.min(1, room / Math.max(w0, w1, 1)), split);
       const s0 = W / 2 - (w0 + space + w1) / 2;
-      const x0 = lerp(s0, margin, split) - leave * (w0 * sc + margin);
-      const x1 = lerp(s0 + w0 + space, W - margin - w1 * sc, split) + leave * (w1 * sc + margin);
+      const x0 = lerp(s0, margin, split);
+      const x1 = lerp(s0 + w0 + space, W - margin - w1 * sc, split);
       const y = L.cy - (wordH * sc) / 2 + (1 - inn) * 20;
       tf(words[0], inn * (1 - leave), tsl(x0, y, sc));
       tf(words[1], inn * (1 - leave), tsl(x1, y, sc));
@@ -365,7 +367,7 @@ export const specs: SectionMotion = {
 
     /* ----- the cards ----- */
     const f = focusOf(u);
-    const close = seg(u, 1.05, 1.7);
+    const close = seg(u, 1.1, 1.75);
     const pe = seg(u, RISE, RISE + 0.98); // the end
     const G = endLayout(L);
     const backsGo = 1 - seg(f, 2.1, 2.9); // Figma State 6: only Rinse is left
