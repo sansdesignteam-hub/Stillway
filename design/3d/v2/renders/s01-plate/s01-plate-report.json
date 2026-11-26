@@ -6,26 +6,53 @@
    2072
   ],
   "plate_pedestal_bbox_px": [
-   1188,
-   1460,
-   2474,
-   1943
+   1260,
+   1488,
+   2358,
+   1864
   ],
   "proxy_glb_bbox_px": [
-   1188,
-   1461,
-   2474,
-   1942
+   1260,
+   1489,
+   2357,
+   1864
   ],
-  "mismatch_pixels": 339,
+  "mismatch_pixels": 386,
   "mismatch_band_max_px_at_frame": 1,
   "mismatch_band_max_px_at_1818": 0.5,
   "bbox_delta_px_at_1818": [
    0.0,
    -0.5,
-   0.0,
-   0.5
+   0.5,
+   0.0
   ]
  },
- "json_camera_vs_blender_max_px_at_1818": 0.001
+ "json_camera_vs_blender_max_px_at_1818": 0.001,
+ "web_rest_frame_2880x1800": {
+  "pedestal_bbox_px": [
+   888,
+   1272,
+   1976,
+   1645
+  ],
+  "figma_pedestal_bbox_px": [
+   886,
+   1266,
+   1982,
+   1640
+  ],
+  "ring_bbox_px": [
+   1105,
+   570,
+   1807,
+   1408
+  ],
+  "figma_ring_bbox_px": [
+   1088,
+   598,
+   1805,
+   1408
+  ],
+  "note": "Figma boxes read off hero-text-layout-ref.png by eye (+-6 px)"
+ }
 }

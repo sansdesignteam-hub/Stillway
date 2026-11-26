@@ -30,15 +30,17 @@ OUT_BLEND = V2 + "/s01-pedestal.blend"
 POSE = V2 + "/s01-pedestal-pose.json"
 
 MM = 0.001
-W, D, H = 41.0, 25.6, 6.8
-R_CORNER, R_FILLET, R_FILLET_BOT = 5.3, 1.1, 0.35
+# D-181b: fitted to the Figma pedestal silhouette in the web rest frame (photo cover x 1.14)
+W, D, H = (float(v) for v in os.environ.get("PED_WDH", "36.4,18.6,6.2").split(","))
+R_CORNER, R_FILLET, R_FILLET_BOT = float(os.environ.get("PED_RC", "7.5")), 1.1, 0.35
 OAK = V2 + "/tex/src-oak-veneer-01/oak_veneer_01_{}_2k.jpg"   # Poly Haven 'Oak Veneer 01', CC0
 OAK_TILE_MM = 260.0   # one texture tile = 260 mm (scaled down from the 1.83 m scan for a finer figure)
 ATLAS = 1024
 
 # ring pose relative to pedestal origin (mm / degrees, Blender Z-up)
-RING_LOC = (3.0, 1.0)
-RING_S01_SCALE = float(os.environ.get("RING_SCALE", "1.35"))   # S01-only enlargement (Figma proportion)          # x, y on the top
+PED_POS = tuple(float(v) for v in os.environ.get("PED_POS", "0,2.7").split(","))   # pedestal origin on the desk (Blender x, y mm)
+RING_LOC = tuple(float(v) for v in os.environ.get("RING_LOC", "1.0,-1.4").split(","))
+RING_S01_SCALE = float(os.environ.get("RING_SCALE", "1.125"))   # S01-only enlargement (Figma proportion)          # x, y on the top
 RING_ROT = (0.0, 8.0, 236.0)   # XYZ euler deg: ring axis horizontal, lean 8 deg, logo side to camera-left
 # camera (desktop hero, matches the warm-desk photo: slightly high, long lens)
 CAM = dict(lens=70.0, elev=19.0, azim=-6.0, dist=232.0, target=(0.0, 0.0, 9.0), shift=(0.0, 0.135))

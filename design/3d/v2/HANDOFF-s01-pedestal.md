@@ -5,6 +5,30 @@
 Dari: 3D Designer · Untuk: Developer (`web-v2/`) · 26 November 2026
 Status: **draf, menunggu tinjauan pengguna.** Bagian D-179/D-180 di bawah tetap berlaku untuk pose ring, kamera, dan lampu kunci. Yang berubah: alas tidak lagi di-shade di web.
 
+### D-181b: alas dan ring dicocokkan ke Figma di frame web (revisi PM)
+
+Semua file di `plate/`, `s01-pedestal.glb`, dan `s01-pedestal-pose.json` **diganti dengan nama yang sama**. Nilai di bawah menggantikan angka D-181 awal dan D-179 yang bertentangan.
+
+- **Acuan ukur = frame diam web**: foto `cover` × zoom 1,14 di sekitar `heroBg.anchor` (0,503; 0,8). Perbandingan D-181 awal memakai cover zoom 1, sehingga di web alas dan ring tampil ±15% lebih besar daripada Figma.
+- **Alas (GLB baru, pivot tetap tengah-bawah):** 36,4 × 18,6 × 6,2 mm, sudut denah R 7,5, bibir R 1,1. `pedestal.position` = `[0, 0, -0.0027]` (2,7 mm menjauh dari kamera), `top_y` = 0,0062.
+- **Ring:** `s01_scale` 1,35 → **1,125**, posisi `[0.001, 0.019662, -0.0013]`, quaternion sama (kemiringan Figma tetap). Titik terendah menumpu di bagian datar sisi atas, tanpa tembus.
+- **Kecocokan di frame web 2880×1800** (kotak Figma dibaca dari gambar, ±6 px):
+
+| | Kita | Figma |
+| --- | --- | --- |
+| Alas (x0, y0, x1, y1) | 888, 1272, 1976, 1645 | 886, 1266, 1982, 1640 |
+| Ring (x0, y0, x1, y1) | 1105, 570, 1807, 1408 | 1088, 598, 1805, 1408 |
+
+- Lebar ring 702 px = 24,4% frame (Figma 24,9%). Ring kita ±28 px lebih tinggi di bagian atas karena kemiringannya dipertahankan.
+- **Penyimpangan dari catatan PM, perlu keputusan:** PM meminta alas lebih dalam (±1,3 : 1) dengan lebar di layar tetap. Dengan kamera kita (elevasi 19°), balok sedalam itu menampilkan sisi atas jauh lebih dalam daripada Figma, dan lebar lama 16% lebih besar daripada Figma di frame web. Saya mencocokkan **siluet di layar** (onion-skin), sehingga balok 3D-nya 1,96 : 1 dan lebih sempit. Kalau proporsi 3D 1,3 : 1 yang diinginkan, ubah `PED_WDH` di `s01-pedestal-build.py` lalu jalankan ulang (±35 menit).
+- **Cahaya:** tambahan lampu "spill" hangat rendah dari kanan, **hanya di plate** (jangan ditambahkan di web). Sisi kanan atas lebih terang, bibir kanan mendapat highlight, sisi kiri dan depan teduh, bayangan alas panjang dan lembut ke kiri-depan. Lampu ini tidak mengenai ring dan ring tidak menjatuhkan bayangan darinya, jadi bayangan ring hidup tetap dari `lights.key`.
+- **Kayu:** lebih hangat (madu/rose), kontras serat lebih tinggi, pori lebih gelap.
+- **Nada ring poster:** dibuat lebih putih agar mendekati ring hidup (env glossy netral 1,1 → 1,55, exposure +0,2). Belum dibandingkan piksel dengan ring hidup; cek cross-fade di web.
+- **Kecocokan proxy:** pita selisih 0,5 px pada 1818, desktop dan ponsel.
+- **Bukti baru:** `renders/s01-plate/s01-plate-still-onion-figma.webp` (onion-skin still vs Figma). Semua perbandingan berdampingan sekarang memakai frame diam web.
+- **Akibat untuk web:** `heroBg.ringLeft` perlu diukur ulang (ring lebih kecil), dan pada ponsel alas kini lebih kecil pada faktor 0,62 yang sama.
+- Ukuran file baru: plate 5,5 MB, plate ponsel 5,5 MB, still 5,7 / 5,6 MB, overlay ring WebP 220 KB (ponsel 119 KB), GLB 77 KB.
+
 ### File
 
 Semua 3632×2072, frame dan kamera sama dengan foto latar. Folder `plate/`:

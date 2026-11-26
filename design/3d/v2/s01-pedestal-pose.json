@@ -4,9 +4,9 @@
   "pedestal": {
     "glb": "s01-pedestal.glb",
     "position": [
+      0.0,
       0,
-      0,
-      0
+      -0.0027
     ],
     "quaternion": [
       0,
@@ -16,14 +16,15 @@
     ],
     "scale": 1,
     "size_mm": {
-      "width_x": 41.0,
-      "depth_z": 25.6,
-      "height_y": 6.8,
-      "corner_radius": 5.3,
+      "width_x": 36.4,
+      "depth_z": 18.6,
+      "height_y": 6.2,
+      "corner_radius": 7.5,
       "top_roundover": 1.1,
-      "bottom_roundover": 0.35
+      "bottom_roundover": 0.35,
+      "note": "D-181b: fitted to the Figma pedestal silhouette in the web rest frame (cover x 1.14 about heroBg.anchor); was 41 x 25.6 x 6.8, corner R 5.3. Lip and bottom-centre pivot unchanged."
     },
-    "top_y": 0.0068,
+    "top_y": 0.0062,
     "castShadow": false,
     "receiveShadow": true,
     "role": "PROXY (D-181): invisible. material.colorWrite = false, depthWrite = true (occludes the ring), plus a multiply shadow catcher (PCSS) on the same mesh for the ring's shadow. Do NOT shade it: the pedestal the user sees is in the plate.",
@@ -35,47 +36,49 @@
         2072
       ],
       "plate_pedestal_bbox_px": [
-        1188,
-        1460,
-        2474,
-        1943
+        1260,
+        1488,
+        2358,
+        1864
       ],
       "proxy_glb_bbox_px": [
-        1188,
-        1461,
-        2474,
-        1942
+        1260,
+        1489,
+        2357,
+        1864
       ],
-      "mismatch_pixels": 339,
+      "mismatch_pixels": 386,
       "mismatch_band_max_px_at_frame": 1,
       "mismatch_band_max_px_at_1818": 0.5,
       "bbox_delta_px_at_1818": [
         0.0,
         -0.5,
-        0.0,
-        0.5
+        0.5,
+        0.0
       ],
       "json_camera_vs_blender_max_px_at_1818": 0.001
-    }
+    },
+    "position_note": "D-181b: the block sits 2.7 mm further from the camera than the old origin so its silhouette lands on Figma's; the GLB pivot is still the bottom centre."
   },
   "ring": {
     "glb": "stillway-ring-v2-silver-polished_web.glb",
     "position": [
-      0.003,
-      0.022955,
-      -0.001
+      0.001,
+      0.019662,
+      -0.0013
     ],
     "quaternion": [
       -0.477263,
       -0.148561,
       -0.830874,
-      0.244539
+      0.244538
     ],
     "scale": 1,
-    "s01_scale": 1.35,
+    "s01_scale": 1.125,
     "note": "position/quaternion already assume s01_scale. ring leans back-right resting on its lower edge (lowest vertex at top_y), opening toward camera-right, logo lower-left front (Figma 40004725:5602). Blender axis (-0.72, 0.5, -0.48), logo dir (-0.7, -0.55, -0.45)",
     "castShadow": true,
-    "receiveShadow": false
+    "receiveShadow": false,
+    "seat_note": "D-181b: s01_scale 1.35 -> 1.125 and re-seated so the ring's screen box matches Figma in the web rest frame (see renders/s01-plate/s01-plate-report.json). Same lean/quaternion as D-179. Lowest vertex rests exactly on top_y, on the flat part of the top (no intersection). position already assumes s01_scale."
   },
   "camera": {
     "type": "PerspectiveCamera",
@@ -114,87 +117,87 @@
       "note": "world points (three.js Y-up, metres, pedestal space) and where they fall in the plate (u right, v down, fractions of the frame). Use them to assert the web camera.",
       "three_m": {
         "origin_bottom_centre": [
+          0.0,
           0,
-          0,
-          0
+          -0.0027
         ],
         "top_centre": [
-          0,
-          0.0068,
-          0
+          0.0,
+          0.006200000000000001,
+          -0.0027
         ],
         "top_left_mid": [
-          -0.0205,
-          0.0068,
-          0
+          -0.0182,
+          0.006200000000000001,
+          -0.0027
         ],
         "top_right_mid": [
-          0.0205,
-          0.0068,
-          0
+          0.0182,
+          0.006200000000000001,
+          -0.0027
         ],
         "top_front_mid": [
-          0,
-          0.0068,
-          0.0128
+          0.0,
+          0.006200000000000001,
+          0.006600000000000001
         ],
         "top_back_mid": [
-          0,
-          0.0068,
-          -0.0128
+          0.0,
+          0.006200000000000001,
+          -0.012
         ],
         "bottom_front_mid": [
+          0.0,
           0,
-          0,
-          0.0128
+          0.006600000000000001
         ],
         "bottom_left_mid": [
-          -0.0205,
+          -0.0182,
           0,
-          0
+          -0.0027
         ],
         "bottom_right_mid": [
-          0.0205,
+          0.0182,
           0,
-          0
+          -0.0027
         ]
       },
       "plate_fraction_uv": {
         "origin_bottom_centre": [
-          0.5,
-          0.86015
+          0.497689,
+          0.846281
         ],
         "top_centre": [
-          0.5,
-          0.767144
+          0.497669,
+          0.762347
         ],
         "top_left_mid": [
-          0.328156,
-          0.77772
+          0.347021,
+          0.771581
         ],
         "top_right_mid": [
-          0.668878,
-          0.75675
+          0.646033,
+          0.753253
         ],
         "top_front_mid": [
-          0.511789,
-          0.832826
+          0.505917,
+          0.808615
         ],
         "top_back_mid": [
-          0.48937,
-          0.707922
+          0.490012,
+          0.719392
         ],
         "bottom_front_mid": [
-          0.511672,
-          0.930202
+          0.505865,
+          0.89535
         ],
         "bottom_left_mid": [
-          0.329789,
-          0.871435
+          0.348331,
+          0.856076
         ],
         "bottom_right_mid": [
-          0.6673,
-          0.849058
+          0.644801,
+          0.836632
         ]
       }
     }
@@ -242,7 +245,10 @@
       "note": "no front fill; keep key:fill high so the shadow on the top reads strong (Cycles key-only vs env-only: the env adds a soft overall lift, it does not cast the shaped shadow)"
     },
     "pedestal_envMapIntensity": 0.25,
-    "environment": "env/v2-env-paper.exr tinted warm (#FFB87A multiply), intensity ~0.28 for ring reflections"
+    "environment": "env/v2-env-paper.exr tinted warm (#FFB87A multiply), intensity ~0.28 for ring reflections",
+    "plate_only_lamp_spill": {
+      "note": "Cycles only, baked into the plate; do NOT add it on the web. Low warm lamp light from the right (Blender mm [125.0, 50.0, 58.0], disk D60 mm) light-linked to pedestal + desk: brighter right half of the top, highlight on the right lip, left/front faces in shade, long soft pedestal shadow to the left-front. The ring neither receives it nor casts a shadow from it, so the live ring shadow still comes from lights.key alone."
+    }
   },
   "desk": {
     "type": "ShadowMaterial plane at y = 0",

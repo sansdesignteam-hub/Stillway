@@ -54,9 +54,9 @@ OAK_TILE_MM = float(os.environ.get("OAK_TILE", "150"))
 DESK_RGB = (168, 112, 64)                           # mean desk tone around the pedestal (flat: keeps D1/D0 clean)
 P_LOOK = os.environ.get("P_LOOK", "AgX - Medium High Contrast")
 P_EXPOSURE = float(os.environ.get("P_EXPOSURE", "0.0"))
-KEY_POWER = float(os.environ.get("KEY_POWER", "1.45"))   # plate passes
+KEY_POWER = float(os.environ.get("KEY_POWER", "1.0"))   # plate passes
 KEY_POWER_RING = 1.1                                    # D-179 poster value
-ENV_STRENGTH = float(os.environ.get("ENV_STRENGTH", "0.14"))   # plate passes; the ring pass keeps the D-179 poster value
+ENV_STRENGTH = float(os.environ.get("ENV_STRENGTH", "0.10"))   # plate passes; the ring pass keeps the D-179 poster value
 ENV_STRENGTH_RING = 0.28
 # phones (Developer, D-181): ring + pedestal as a 2D transform of the frame about O
 MOB_K, MOB_DY, MOB_O = 0.62, -0.14, (0.5, 0.86)
@@ -68,6 +68,8 @@ MOB_LENS = ped.CAM["lens"] * MOB_K
 MOB_SHIFT = ((0.5 - MOB_O[0]) * (1 - MOB_K) + MOB_K * ped.CAM["shift"][0],
              ((MOB_O[1] - 0.5) * (1 - MOB_K) + MOB_DY) / _A + MOB_K * ped.CAM["shift"][1])
 BORDER_M = (0.26, 0.74, 0.03, 0.70)
+SPILL = dict(pos=tuple(float(v) for v in os.environ.get("SPILL_POS", "125,50,58").split(",")), size=60.0,
+             power=float(os.environ.get("SPILL_POWER", "0.45")), color=(1.0, 0.62, 0.34))
 
 
 # ---------------------------------------------------------------- scene
@@ -155,7 +157,7 @@ def oak_material():
         return acc
     col = blend("diff", "sRGB")
     # calmer figure (the scan's stripes read as veneer at this size): pull 30 % toward the mean oak tone
-    calm = N.new("ShaderNodeMix"); calm.data_type = 'RGBA'; calm.inputs["Factor"].default_value = float(os.environ.get("OAK_CALM", "0.3"))
+    calm = N.new("ShaderNodeMix"); calm.data_type = 'RGBA'; calm.inputs["Factor"].default_value = float(os.environ.get("OAK_CALM", "0.08"))
     L.new(col, calm.inputs["A"]); calm.inputs["B"].default_value = (0.52, 0.33, 0.17, 1)
     col = calm.outputs["Result"]
     # open pores: short dark dashes along the grain (X on top/front/back, Y on the ends), also pressed into the normal
@@ -166,18 +168,18 @@ def oak_material():
         mr = N.new("ShaderNodeMapRange"); mr.interpolation_type = 'SMOOTHSTEP'
         mr.inputs["From Min"].default_value = 0.64; mr.inputs["From Max"].default_value = 0.70
         L.new(n.outputs["Fac"], mr.inputs[0]); return mr.outputs[0]
-    PS = float(os.environ.get("PORE_SCALE", "1"))
+    PS = float(os.environ.get("PORE_SCALE", "0.8"))
     dx = math_('MAXIMUM', dashes((520 * PS, 6500 * PS, 6500 * PS), 1.0), math_('MULTIPLY', dashes((300 * PS, 4200 * PS, 4200 * PS), 7.0), 0.7))
     dy = dashes((6500 * PS, 520 * PS, 6500 * PS), 3.0)
     pore = math_('ADD', math_('MULTIPLY', math_('ADD', ws[0], ws[1]), dx), math_('MULTIPLY', ws[2], dy))
     pmix = N.new("ShaderNodeMix"); pmix.data_type = 'RGBA'; pmix.blend_type = 'MULTIPLY'
-    L.new(math_('MULTIPLY', pore, float(os.environ.get("PORE_DARK", "0.55"))), pmix.inputs["Factor"])
+    L.new(math_('MULTIPLY', pore, float(os.environ.get("PORE_DARK", "0.8"))), pmix.inputs["Factor"])
     L.new(col, pmix.inputs["A"]); pmix.inputs["B"].default_value = (0.42, 0.30, 0.20, 1)
     col = pmix.outputs["Result"]
     hsv = N.new("ShaderNodeHueSaturation")
-    hsv.inputs["Hue"].default_value = float(os.environ.get("OAK_HUE", "0.493"))
-    hsv.inputs["Saturation"].default_value = float(os.environ.get("OAK_SAT", "0.61"))
-    hsv.inputs["Value"].default_value = float(os.environ.get("OAK_VAL", "1.3"))
+    hsv.inputs["Hue"].default_value = float(os.environ.get("OAK_HUE", "0.482"))
+    hsv.inputs["Saturation"].default_value = float(os.environ.get("OAK_SAT", "0.68"))
+    hsv.inputs["Value"].default_value = float(os.environ.get("OAK_VAL", "1.12"))
     L.new(col, hsv.inputs["Color"])
     # lip: nz*(1-nz)*4 is 0 on the flat top and the sides, 1 mid-roundover -> a touch lighter and smoother (handled edge)
     lip = math_('MULTIPLY', math_('MULTIPLY', math_('MAXIMUM', nz, 0.0), math_('SUBTRACT', 1.0, nz)), 4.0)
@@ -246,7 +248,13 @@ def scene_setup():
         if o.type != 'MESH': continue
         ev = o.evaluated_get(dg); mw = ev.matrix_world
         zmin = min(zmin, min((mw @ v.co).z for v in ev.data.vertices))
-    ring.location = (ped.RING_LOC[0] * MM, ped.RING_LOC[1] * MM, H * MM - zmin)
+    PP = Vector((ped.PED_POS[0] * MM, ped.PED_POS[1] * MM, 0.0))
+    pd.location = PP; proxy.location = PP
+    low = min(((o.evaluated_get(dg).matrix_world @ v.co) for o in ring_objs if o.type == 'MESH' for v in o.evaluated_get(dg).data.vertices), key=lambda c: c.z)
+    lowrel = (low.x + ped.RING_LOC[0] * MM, low.y + ped.RING_LOC[1] * MM)
+    print("PLATE ring contact rel. to top centre (mm)", round(lowrel[0] / MM, 2), round(lowrel[1] / MM, 2), "flat top half-extents", W / 2 - ped.R_FILLET, D / 2 - ped.R_FILLET)
+    assert abs(lowrel[0]) < (W / 2 - ped.R_FILLET) * MM and abs(lowrel[1]) < (D / 2 - ped.R_FILLET) * MM, "ring contact is off the flat top"
+    ring.location = (PP.x + ped.RING_LOC[0] * MM, PP.y + ped.RING_LOC[1] * MM, H * MM - zmin)
     bpy.ops.mesh.primitive_plane_add(size=1.2, location=(0, 0, 0))
     desk = bpy.context.active_object; desk.name = "Desk"
     dm = bpy.data.materials.new("Desk"); dm.use_nodes = True
@@ -261,7 +269,7 @@ def scene_setup():
     tint = nt.nodes.new("ShaderNodeMix"); tint.data_type = 'RGBA'; tint.blend_type = 'MULTIPLY'
     tint.inputs["Factor"].default_value = 1.0; tint.inputs["B"].default_value = (1.0, 0.72, 0.48, 1)
     nt.links.new(env.outputs[0], tint.inputs["A"]); nt.links.new(tint.outputs["Result"], warm.inputs[0])
-    cool = nt.nodes.new("ShaderNodeBackground"); cool.inputs["Strength"].default_value = 1.1
+    cool = nt.nodes.new("ShaderNodeBackground"); cool.inputs["Strength"].default_value = float(os.environ.get("RING_ENV", "1.55"))   # D-181b: whiter, like the live web ring (was 1.1)
     cg = nt.nodes.new("ShaderNodeMix"); cg.data_type = 'RGBA'; cg.blend_type = 'MULTIPLY'
     cg.inputs["Factor"].default_value = 1.0; cg.inputs["B"].default_value = (0.97, 0.99, 1.03, 1)
     nt.links.new(env.outputs[0], cg.inputs["A"]); nt.links.new(cg.outputs["Result"], cool.inputs[0])
@@ -276,6 +284,20 @@ def scene_setup():
     key = bpy.data.objects.new("Key_Lamp", ld); sc.collection.objects.link(key)
     key.location = Vector(K["pos"]) * MM
     key.rotation_euler = (Vector((0, 0, 4 * MM)) - key.location).to_track_quat('-Z', 'Y').to_euler()
+    # lamp spill (plate only, D-181 review): the table lamp's low warm light from the right. Close and low, so the
+    # top face is brighter on its right half, the right lip catches a highlight, the left and front faces stay in
+    # shade and the pedestal throws a long soft shadow to the left-front. Light-linked to pedestal + desk only:
+    # the ring neither receives it nor casts a shadow from it, so the ring look and the live ring shadow
+    # (key light of the pose JSON) are unchanged.
+    sd = bpy.data.lights.new("Lamp_Spill", 'AREA'); sd.shape = 'DISK'
+    sd.size = SPILL["size"] * MM; sd.energy = SPILL["power"]; sd.color = SPILL["color"]
+    spill = bpy.data.objects.new("Lamp_Spill", sd); sc.collection.objects.link(spill)
+    spill.location = Vector(SPILL["pos"]) * MM
+    spill.rotation_euler = (Vector((0, 0, 4 * MM)) - spill.location).to_track_quat('-Z', 'Y').to_euler()
+    col = bpy.data.collections.new("SpillSet"); sc.collection.children.link(col)
+    col.objects.link(pd); col.objects.link(desk)
+    spill.light_linking.receiver_collection = col
+    spill.light_linking.blocker_collection = col
     cd = bpy.data.cameras.new("Cam_S01"); cam = bpy.data.objects.new("Cam_S01", cd); sc.collection.objects.link(cam)
     sc.camera = cam
     ped.place_camera(cam, **ped.CAM)
@@ -307,7 +329,7 @@ def render_pass(name, S, pd, ring, desk, proxy='off', exr=False, silver=False, s
         s.file_format = 'PNG'; s.color_mode = 'RGBA'; s.color_depth = '16'; s.compression = 15
         sc.view_settings.view_transform = 'AgX'
         sc.view_settings.look = 'None' if silver else P_LOOK       # ring: exactly the D-179 poster grade
-        sc.view_settings.exposure = 0.0 if silver else P_EXPOSURE
+        sc.view_settings.exposure = float(os.environ.get("RING_EXPOSURE", "0.2")) if silver else P_EXPOSURE
     sc.render.filepath = f"{PASS}/{name}.{'exr' if exr else 'png'}"
     bpy.ops.render.render(write_still=True)
     print("PLATE pass", name, "done")
@@ -348,10 +370,12 @@ def write_camera_json(S):
         c = world_to_camera_view(sc, cam, Vector(p))
         return [round(c.x, 6), round(1 - c.y, 6)]
     hw, hd = W / 2 * MM, D / 2 * MM
+    ox_, oy_ = ped.PED_POS[0] * MM, ped.PED_POS[1] * MM
     pts = {"origin_bottom_centre": (0, 0, 0), "top_centre": (0, 0, H * MM),
            "top_left_mid": (-hw, 0, H * MM), "top_right_mid": (hw, 0, H * MM),
            "top_front_mid": (0, -hd, H * MM), "top_back_mid": (0, hd, H * MM),
            "bottom_front_mid": (0, -hd, 0), "bottom_left_mid": (-hw, 0, 0), "bottom_right_mid": (hw, 0, 0)}
+    pts = {k: (v[0] + ox_, v[1] + oy_, v[2]) for k, v in pts.items()}
     out = {"points_blender_m": {k: list(v) for k, v in pts.items()},
            "points_three_m": {k: [v[0], v[2], -v[1]] for k, v in pts.items()},
            "points_plate_fraction_uv": {k: frac(v) for k, v in pts.items()},
@@ -432,6 +456,43 @@ def cover(arr, w, h):
     r = resize(arr, rw, rh)
     x0, y0 = (rw - w) // 2, (rh - h) // 2
     return r[y0:y0 + h, x0:x0 + w]
+
+
+WEB_ZOOM, WEB_ANCHOR = 1.14, (0.503, 0.8)     # heroBg.desktop.zoomFrom / heroBg.anchor: the web REST frame
+
+
+def webframe_map(Ww, Hh, fw, fh):
+    """plate px -> screen px of the web rest frame: object-fit cover, then CSS zoom 1.14 about the anchor"""
+    c = max(fw / Ww, fh / Hh); x0, y0 = (fw - Ww * c) / 2, (fh - Hh * c) / 2
+    ax, ay = x0 + WEB_ANCHOR[0] * Ww * c, y0 + WEB_ANCHOR[1] * Hh * c
+    k = c * WEB_ZOOM
+    return k, ax + WEB_ZOOM * (x0 - ax), ay + WEB_ZOOM * (y0 - ay)      # X = k px + ox, Y = k py + oy
+
+
+def webframe(arr, fw, fh):
+    Hh, Ww = arr.shape[:2]
+    k, ox, oy = webframe_map(Ww, Hh, fw, fh)
+    if k < 0.95: arr = gauss(arr, 0.5 * math.sqrt(1 / k ** 2 - 1))
+    return bilinear(arr, (np.arange(fw) + 0.5 - ox) / k - 0.5, (np.arange(fh) + 0.5 - oy) / k - 0.5)
+
+
+def fit():
+    """quick fit against Figma: bboxes of the pedestal (P1 alpha) and ring (RG alpha) in the 2880 x 1800 web rest frame"""
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    P1, RG = load(f"{PASS}/P1.png"), load(f"{PASS}/RG.png")
+    Hh, Ww = P1.shape[:2]
+    k, ox, oy = webframe_map(Ww, Hh, 2880, 1800)
+    for name, a in (("pedestal", P1[..., 3]), ("ring", RG[..., 3])):
+        ys, xs = np.where(a > 0.5)
+        bb = [xs.min() * k + ox, ys.min() * k + oy, (xs.max() + 1) * k + ox, (ys.max() + 1) * k + oy]
+        print("FIT", name, [round(float(v)) for v in bb], "w", round(float(bb[2] - bb[0])), "h", round(float(bb[3] - bb[1])))
+    print("FIT figma pedestal [886, 1266, 1982, 1640] w 1096 h 374 ; ring [1088, 598, 1805, 1408] w 717 h 810")
+    photo = resize(load(PHOTO)[..., :3], Ww, Hh)
+    c = over(RG, over(P1, photo)[..., :3] if False else np.concatenate([over(P1, photo)], -1))
+    fig = resize(load(FIGMA)[..., :3], 1440, 900)
+    ours = webframe(c, 1440, 900)
+    save(0.5 * ours + 0.5 * fig, f"{REN}/fit-onion.png")
+    save(hstack(ours, fig), f"{REN}/fit-side.png")
 
 
 def erode(m):
@@ -550,7 +611,16 @@ def comp():
     fig = load(FIGMA)[..., :3]
     fw, fh = (2880, 1800) if SCALE == 1 else (1440, 900)
     if fig.shape[1] != fw: fig = resize(fig, fw, fh)
-    ours_s, ours_p = cover(still, fw, fh), cover(plate, fw, fh)
+    # the web REST frame: cover x CSS zoom 1.14 about heroBg.anchor (that is what the user sees next to Figma)
+    ours_s, ours_p = webframe(still, fw, fh), webframe(plate, fw, fh)
+    save(0.5 * ours_s + 0.5 * fig, f"{REN}/s01-plate-still-onion-figma{tag}.webp", 92)
+    kk, ox, oy = webframe_map(Ww, Hh, 2880, 1800)
+    def wbb(al):
+        ys2, xs2 = np.where(al > 0.5)
+        return [round(float(v)) for v in (xs2.min() * kk + ox, ys2.min() * kk + oy, (xs2.max() + 1) * kk + ox, (ys2.max() + 1) * kk + oy)]
+    report["web_rest_frame_2880x1800"] = {"pedestal_bbox_px": wbb(a[..., 0]), "figma_pedestal_bbox_px": [886, 1266, 1982, 1640],
+                                          "ring_bbox_px": wbb(load(f"{PASS}/RG.png")[..., 3]), "figma_ring_bbox_px": [1088, 598, 1805, 1408],
+                                          "note": "Figma boxes read off hero-text-layout-ref.png by eye (+-6 px)"}
     save(hstack(ours_s, fig), f"{REN}/s01-plate-still-vs-figma{tag}.webp", 92)
     save(hstack(ours_p, fig), f"{REN}/s01-plate-vs-figma{tag}.webp", 92)
     cx0, cx1, cy0, cy1 = (round(v * fw / 2880) for v in (760, 2110, 1150, 1700))
@@ -590,6 +660,19 @@ def write_pose(report, chk):
     P["camera"]["check_points"] = {"note": "world points (three.js Y-up, metres, pedestal space) and where they fall in the plate (u right, v down, fractions of the frame). Use them to assert the web camera.",
                                    "three_m": chk["points_three_m"], "plate_fraction_uv": chk["points_plate_fraction_uv"]}
     pd = P["pedestal"]
+    pd["size_mm"] = {"width_x": W, "depth_z": D, "height_y": H, "corner_radius": ped.R_CORNER,
+                     "top_roundover": ped.R_FILLET, "bottom_roundover": ped.R_FILLET_BOT,
+                     "note": "D-181b: fitted to the Figma pedestal silhouette in the web rest frame (cover x 1.14 about heroBg.anchor); was 41 x 25.6 x 6.8, corner R 5.3. Lip and bottom-centre pivot unchanged."}
+    m = Matrix(chk["ring_matrix_world"]); rl, rq = m.translation, m.to_quaternion()
+    P["ring"]["position"] = [round(rl.x, 6), round(rl.z, 6), round(-rl.y, 6)]
+    P["ring"]["quaternion"] = [round(rq.x, 6), round(rq.z, 6), round(-rq.y, 6), round(rq.w, 6)]
+    P["ring"]["seat_note"] = "D-181b: s01_scale 1.35 -> %s and re-seated so the ring's screen box matches Figma in the web rest frame (see renders/s01-plate/s01-plate-report.json). Same lean/quaternion as D-179. Lowest vertex rests exactly on top_y, on the flat part of the top (no intersection). position already assumes s01_scale." % ped.RING_S01_SCALE
+    P["lights"]["plate_only_lamp_spill"] = {
+        "note": "Cycles only, baked into the plate; do NOT add it on the web. Low warm lamp light from the right (Blender mm %s, disk D%d mm) light-linked to pedestal + desk: brighter right half of the top, highlight on the right lip, left/front faces in shade, long soft pedestal shadow to the left-front. The ring neither receives it nor casts a shadow from it, so the live ring shadow still comes from lights.key alone." % (list(SPILL["pos"]), SPILL["size"])}
+    pd["position"] = [round(ped.PED_POS[0] * MM, 6), 0, round(-ped.PED_POS[1] * MM, 6)]
+    pd["position_note"] = "D-181b: the block sits 2.7 mm further from the camera than the old origin so its silhouette lands on Figma's; the GLB pivot is still the bottom centre."
+    pd["top_y"] = round(H * MM, 6)
+    P["ring"]["s01_scale"] = ped.RING_S01_SCALE
     pd["role"] = "PROXY (D-181): invisible. material.colorWrite = false, depthWrite = true (occludes the ring), plus a multiply shadow catcher (PCSS) on the same mesh for the ring's shadow. Do NOT shade it: the pedestal the user sees is in the plate."
     pd["castShadow"] = False
     pd["receiveShadow"] = True
@@ -624,3 +707,4 @@ if __name__ == "__main__":
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else ["all"]
     if argv[0] in ("render", "all"): render()
     if argv[0] in ("comp", "all"): comp()
+    if argv[0] == "fit": fit()
