@@ -19,6 +19,8 @@ Passes (same camera, same lights, render border around the subject):
     P2  pedestal RGBA with the ring's shadow        display PNG  -> P2/P1 = ring shadow on the pedestal
     RG  ring RGBA (bright neutral silver, D-179)    display PNG
     MK  s01-pedestal.glb silhouette (the web proxy) PNG alpha
+    C1  pedestal, short-range AO as emission, no ring   linear EXR
+    C2  the same with the ring in place                 linear EXR   -> C2/C1 = contact occlusion under the touching band (D-181c)
 
 REGISTRATION (measured, phase correlation, 44 patches): hero-warm-desk-v2-upscaled-3636.jpg (3632 x 2072)
 is the 1818 x 1037 source stretched to the full frame: u = 1.99768 x - 0.09, v = 1.99800 y + 0.03
@@ -306,6 +308,19 @@ def scene_setup():
                 ring_root=ring, desk=[desk], key=key, cam=cam, switch=sw, warm=warm)
 
 
+CONTACT_DIST = float(os.environ.get("CONTACT_DIST", "12.0"))     # mm: reach of the contact occlusion around the touch point
+
+
+def contact_material():
+    m = bpy.data.materials.new("Contact_AO"); m.use_nodes = True
+    N, L = m.node_tree.nodes, m.node_tree.links
+    N.clear()
+    ao = N.new("ShaderNodeAmbientOcclusion"); ao.samples = 32; ao.inputs["Distance"].default_value = CONTACT_DIST * MM
+    em = N.new("ShaderNodeEmission"); out = N.new("ShaderNodeOutputMaterial")
+    L.new(ao.outputs["AO"], em.inputs["Strength"]); L.new(em.outputs[0], out.inputs["Surface"])
+    return m
+
+
 def show(objs, mode):
     """mode: 'on' | 'cast' (in the scene, hidden from the camera) | 'off'"""
     for o in objs:
@@ -313,8 +328,10 @@ def show(objs, mode):
         o.visible_camera = mode == 'on'
 
 
-def render_pass(name, S, pd, ring, desk, proxy='off', exr=False, silver=False, samples=None, denoise=True):
+def render_pass(name, S, pd, ring, desk, proxy='off', exr=False, silver=False, samples=None, denoise=True, contact=False):
     sc = bpy.context.scene
+    if "contact_mat" not in S: S["contact_mat"] = contact_material()
+    bpy.context.view_layer.material_override = S["contact_mat"] if contact else None
     show(S["ped"], pd); show(S["ring"], ring); show(S["desk"], desk); show(S["proxy"], proxy)
     S["switch"].inputs[1].default_value = 1.0 if silver else 0.0
     S["warm"].inputs["Strength"].default_value = ENV_STRENGTH_RING if silver else ENV_STRENGTH
@@ -346,7 +363,9 @@ def render():
             ("P1", dict(pd='on', ring='off', desk='cast')),
             ("P2", dict(pd='on', ring='cast', desk='cast')),
             ("RG", dict(pd='cast', ring='on', desk='cast', silver=True)),
-            ("MK", dict(pd='off', ring='off', desk='off', proxy='on', samples=32, denoise=False))]
+            ("MK", dict(pd='off', ring='off', desk='off', proxy='on', samples=32, denoise=False)),
+            ("C1", dict(pd='on', ring='off', desk='cast', exr=True, samples=192, contact=True)),
+            ("C2", dict(pd='on', ring='cast', desk='cast', exr=True, samples=192, contact=True))]
     sc = bpy.context.scene
     for sfx, border, lens, shift in (("", BORDER, ped.CAM["lens"], ped.CAM["shift"]), ("m", BORDER_M, MOB_LENS, MOB_SHIFT)):
         S["cam"].data.lens = lens; S["cam"].data.shift_x, S["cam"].data.shift_y = shift
@@ -356,6 +375,7 @@ def render():
             render_pass(name + sfx, S, **kw)
     S["cam"].data.lens = ped.CAM["lens"]; S["cam"].data.shift_x, S["cam"].data.shift_y = ped.CAM["shift"]
     sc.render.border_min_x, sc.render.border_max_x, sc.render.border_min_y, sc.render.border_max_y = BORDER
+    bpy.context.view_layer.material_override = None
     for grp in ("ped", "ring", "desk"): show(S[grp], 'on')
     show(S["proxy"], 'off')
     bpy.ops.wm.save_as_mainfile(filepath=V2 + "/s01-plate.blend", compress=True)
@@ -515,6 +535,8 @@ def hstack(*imgs, gap=12):
 
 
 # ---------------------------------------------------------------- composite
+CONTACT_GAMMA = float(os.environ.get("CONTACT_GAMMA", "2.8"))   # strength of the contact occlusion (display space)
+CONTACT_FLOOR = float(os.environ.get("CONTACT_FLOOR", "0.10"))  # darkest it gets right at the touch line
 def comp():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     os.makedirs(OUT, exist_ok=True)
@@ -541,7 +563,11 @@ def comp():
         desk2 = oetf(lin * r2)                       # ... + ring shadow
         a = P1[..., 3:4]
         plate = P1[..., :3] * a + desk1 * (1 - a)
-        still_exact = P2[..., :3] * a + desk2 * (1 - a)
+        # contact occlusion of the ring on the pedestal (short-range AO with / without the ring), D-181c
+        C1, C2 = (load(f"{PASS}/{n}{sfx}.exr", linear=True)[..., :1] for n in ("C1", "C2"))
+        contact = np.where(C1 > 1e-3, np.clip(C2 / np.maximum(C1, 1e-3), 0, 1), 1.0) ** CONTACT_GAMMA
+        contact = CONTACT_FLOOR + (1 - CONTACT_FLOOR) * contact
+        still_exact = P2[..., :3] * contact * a + desk2 * (1 - a)
         # ring shadow as a straight-alpha layer in display space. Colour = the web desk catcher's warm dark
         # (#2A1608), so shadows stay warm instead of going grey: plate (1 - a) + c a has the luminance of the exact render
         lp_ = lum(plate); num = np.clip(lp_ - lum(still_exact), 0, None)
@@ -626,6 +652,13 @@ def comp():
     cx0, cx1, cy0, cy1 = (round(v * fw / 2880) for v in (760, 2110, 1150, 1700))
     save(hstack(ours_p[cy0:cy1, cx0:cx1], fig[cy0:cy1, cx0:cx1]), f"{REN}/s01-plate-vs-figma-closeup{tag}.png")
     save(hstack(ours_s[cy0:cy1, cx0:cx1], fig[cy0:cy1, cx0:cx1]), f"{REN}/s01-plate-still-vs-figma-closeup{tag}.png")
+    cq = tuple(round(v * fw / 2880) for v in (1100, 1900, 1180, 1560))
+    save(hstack(ours_s[cq[2]:cq[3], cq[0]:cq[1]], fig[cq[2]:cq[3], cq[0]:cq[1]]), f"{REN}/s01-plate-contact-closeup-vs-figma{tag}.png")
+    # ring tone distribution, poster vs Figma, over the pixels both rings cover (the rings coincide in this frame)
+    rmask = webframe(load(f"{PASS}/RG.png")[..., 3:4], fw, fh)[..., 0] > 0.98
+    L_ = lambda im: (im[..., :3] * np.array([0.2126, 0.7152, 0.0722], np.float32)).sum(-1)[rmask] * 255
+    pct = lambda v: {k: round(float(np.percentile(v, q)), 1) for k, q in (("p05", 5), ("p25", 25), ("p50", 50), ("p75", 75), ("p95", 95))} | {"mean": round(float(v.mean()), 1)}
+    report["ring_luma_8bit_web_rest_frame"] = {"poster": pct(L_(ours_s)), "figma": pct(L_(fig))}
     save(cover(still_m, 750, 1624) if SCALE == 1 else cover(still_m, 375, 812), f"{REN}/s01-plate-mobile-still-375{tag}.png")
     save(resize(plate_m, 1816, 1036) if SCALE == 1 else plate_m, f"{REN}/s01-plate-mobile-1816{tag}.png")
     with open(f"{REN}/s01-plate-report{tag}.json", "w") as f: json.dump(report, f, indent=1)
@@ -697,6 +730,33 @@ def write_pose(report, chk):
         "ring_shadow_in_overlay": "colour #2A1608 (the web catcher colour), straight alpha chosen so plate*(1-a) + c*a has the luminance of the exact Cycles render with the ring shadow, on the desk AND on the pedestal top/lip/front."}
     P["desk"]["note"] = "transparent shadow catcher over the plate; receives the RING shadow only (the pedestal's own contact shadow, AO and bounce are in the plate)."
     P["lights"]["key"]["plate_note"] = "the plate was lit with this same key (Cycles area disk D55 mm at Blender (0.190, 0.120, 0.250) m), so the live ring shadow continues the baked pedestal shadow: same direction, same 9.4 deg penumbra cone."
+    kp, sp, tg = Vector(ped.KEY["pos"]) * MM, Vector(SPILL["pos"]) * MM, Vector((0, 0, 4 * MM))
+    t3 = lambda v: [round(v.x, 6), round(v.z, 6), round(-v.y, 6)]
+    dk, ds = (kp - tg).length, (sp - tg).length
+    hexs = lambda c: "#%02X%02X%02X" % tuple(round(x * 255) for x in c)
+    rel = (SPILL["power"] / KEY_POWER) * (dk / ds) ** 2
+    P["lights"]["spill"] = {
+        "type": "plate-only lamp spill (Cycles area DISK). Baked into the plate; on the web model it analytically, do not light the ring with it.",
+        "position": t3(sp), "target": t3(tg),
+        "direction_unit": [round(c, 4) for c in t3((tg - sp).normalized())],
+        "elevation_deg": round(math.degrees(math.asin((sp - tg).normalized().z)), 1),
+        "azimuth_note": "light travels left (-X), down (-Y) and toward the camera (+Z): the pedestal's spill shadow falls LEFT-FRONT, %.1f x the casting height long" % (1 / math.tan(math.asin((sp - tg).normalized().z))),
+        "distance_to_target_m": round(ds, 5),
+        "disk_diameter_m": SPILL["size"] * MM,
+        "penumbra_cone_deg": round(math.degrees(2 * math.atan(SPILL["size"] / 2 * MM / ds)), 1),
+        "color_linear_rgb": list(SPILL["color"]),
+        "color_hex_same_convention_as_key": hexs(SPILL["color"]),
+        "color_note": "Blender linear RGB. The hex writes those linear values as bytes, exactly as lights.key.color (#FFB370) does for the key's Blender linear (1, 0.70, 0.44); if you need true linear in three.js use color.setRGB(r, g, b, THREE.LinearSRGBColorSpace) with color_linear_rgb.",
+        "blender_power_W": SPILL["power"], "key_blender_power_W_in_plate": KEY_POWER,
+        "intensity_relative_to_key": {
+            "facing_the_light_at_target": round(rel, 3),
+            "on_horizontal_top_at_target": round(rel * ((sp - tg).normalized().z / (kp - tg).normalized().z), 3),
+            "as_three_intensity_if_key_is_%s" % P["lights"]["key"]["intensity"]: round(rel * P["lights"]["key"]["intensity"], 3),
+            "falloff": "inverse square from `position` (a near lamp, %.0f mm away): irradiance at point p = facing value x (distance_to_target / |p - position|)^2 x cos(incidence). That falloff is what makes the right half of the top brighter than the left." % (ds / MM)},
+        "linking": "illuminates pedestal + desk only; only the pedestal blocks it. The ring neither receives it nor casts a shadow from it.",
+        "convention": "three.js Y-up metres in desk space (the space of lights.key; pedestal.position is given in it too) = Blender (x, y, z) -> (x, z, -y). Blender lamp at (%s) mm aimed at (0, 0, 4) mm." % ", ".join(str(v) for v in SPILL["pos"])}
+    P["lights"].pop("plate_only_lamp_spill", None)
+    P["plate"]["contact_occlusion"] = "D-181c: the still and both ring overlays carry a dark, tight contact occlusion under the touching band (Cycles AO pass, reach %s mm, with / without the ring; gamma %s, floor %s). It is part of the overlay's shadow alpha, not of the plate." % (CONTACT_DIST, CONTACT_GAMMA, CONTACT_FLOOR)
     P["proven"] = "Cycles: plate, stills, overlays and the proxy overlay in renders/s01-plate/ use exactly these values; the camera numbers above were re-projected with three.js-style maths and agree with Blender to %s px at 1818." % report["json_camera_vs_blender_max_px_at_1818"]
     P["proposed"] = "three.js material flags for the proxy and the catcher opacity are a starting point, untested in web-v2 (the 3D Designer does not touch it). Match the live ring shadow density to plate/still-s01-3632.png."
     with open(ped.POSE, "w") as f: json.dump(P, f, indent=2)

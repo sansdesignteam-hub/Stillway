@@ -246,8 +246,45 @@
     },
     "pedestal_envMapIntensity": 0.25,
     "environment": "env/v2-env-paper.exr tinted warm (#FFB87A multiply), intensity ~0.28 for ring reflections",
-    "plate_only_lamp_spill": {
-      "note": "Cycles only, baked into the plate; do NOT add it on the web. Low warm lamp light from the right (Blender mm [125.0, 50.0, 58.0], disk D60 mm) light-linked to pedestal + desk: brighter right half of the top, highlight on the right lip, left/front faces in shade, long soft pedestal shadow to the left-front. The ring neither receives it nor casts a shadow from it, so the live ring shadow still comes from lights.key alone."
+    "spill": {
+      "type": "plate-only lamp spill (Cycles area DISK). Baked into the plate; on the web model it analytically, do not light the ring with it.",
+      "position": [
+        0.125,
+        0.058,
+        -0.05
+      ],
+      "target": [
+        0.0,
+        0.004,
+        -0.0
+      ],
+      "direction_unit": [
+        -0.8617,
+        -0.3723,
+        0.3447
+      ],
+      "elevation_deg": 21.9,
+      "azimuth_note": "light travels left (-X), down (-Y) and toward the camera (+Z): the pedestal's spill shadow falls LEFT-FRONT, 2.5 x the casting height long",
+      "distance_to_target_m": 0.14506,
+      "disk_diameter_m": 0.06,
+      "penumbra_cone_deg": 23.4,
+      "color_linear_rgb": [
+        1.0,
+        0.62,
+        0.34
+      ],
+      "color_hex_same_convention_as_key": "#FF9E57",
+      "color_note": "Blender linear RGB. The hex writes those linear values as bytes, exactly as lights.key.color (#FFB370) does for the key's Blender linear (1, 0.70, 0.44); if you need true linear in three.js use color.setRGB(r, g, b, THREE.LinearSRGBColorSpace) with color_linear_rgb.",
+      "blender_power_W": 0.45,
+      "key_blender_power_W_in_plate": 1.0,
+      "intensity_relative_to_key": {
+        "facing_the_light_at_target": 2.374,
+        "on_horizontal_top_at_target": 1.197,
+        "as_three_intensity_if_key_is_3.0": 7.123,
+        "falloff": "inverse square from `position` (a near lamp, 145 mm away): irradiance at point p = facing value x (distance_to_target / |p - position|)^2 x cos(incidence). That falloff is what makes the right half of the top brighter than the left."
+      },
+      "linking": "illuminates pedestal + desk only; only the pedestal blocks it. The ring neither receives it nor casts a shadow from it.",
+      "convention": "three.js Y-up metres in desk space (the space of lights.key; pedestal.position is given in it too) = Blender (x, y, z) -> (x, z, -y). Blender lamp at (125.0, 50.0, 58.0) mm aimed at (0, 0, 4) mm."
     }
   },
   "desk": {
@@ -297,6 +334,7 @@
     },
     "source_photo": "design/assets/v2/s01/hero-warm-desk-v2-upscaled-3636.jpg (3632 x 2072)",
     "identity": "still == plate with ring-overlay composited source-over in sRGB (pixel-exact up to 8-bit rounding), so poster = plate + overlay.",
-    "ring_shadow_in_overlay": "colour #2A1608 (the web catcher colour), straight alpha chosen so plate*(1-a) + c*a has the luminance of the exact Cycles render with the ring shadow, on the desk AND on the pedestal top/lip/front."
+    "ring_shadow_in_overlay": "colour #2A1608 (the web catcher colour), straight alpha chosen so plate*(1-a) + c*a has the luminance of the exact Cycles render with the ring shadow, on the desk AND on the pedestal top/lip/front.",
+    "contact_occlusion": "D-181c: the still and both ring overlays carry a dark, tight contact occlusion under the touching band (Cycles AO pass, reach 12.0 mm, with / without the ring; gamma 2.8, floor 0.1). It is part of the overlay's shadow alpha, not of the plate."
   }
 }

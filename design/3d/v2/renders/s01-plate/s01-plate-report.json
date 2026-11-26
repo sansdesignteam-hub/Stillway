@@ -54,5 +54,23 @@
    1408
   ],
   "note": "Figma boxes read off hero-text-layout-ref.png by eye (+-6 px)"
+ },
+ "ring_luma_8bit_web_rest_frame": {
+  "poster": {
+   "p05": 26.6,
+   "p25": 52.4,
+   "p50": 117.0,
+   "p75": 140.5,
+   "p95": 243.1,
+   "mean": 110.3
+  },
+  "figma": {
+   "p05": 8.8,
+   "p25": 25.8,
+   "p50": 58.1,
+   "p75": 158.2,
+   "p95": 210.0,
+   "mean": 89.8
+  }
  }
 }

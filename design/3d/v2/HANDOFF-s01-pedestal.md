@@ -29,6 +29,19 @@ Semua file di `plate/`, `s01-pedestal.glb`, dan `s01-pedestal-pose.json` **digan
 - **Akibat untuk web:** `heroBg.ringLeft` perlu diukur ulang (ring lebih kecil), dan pada ponsel alas kini lebih kecil pada faktor 0,62 yang sama.
 - Ukuran file baru: plate 5,5 MB, plate ponsel 5,5 MB, still 5,7 / 5,6 MB, overlay ring WebP 220 KB (ponsel 119 KB), GLB 77 KB.
 
+### D-181c: kontak ring, angka lampu spill, kontras ring
+
+- **Kontak ring → alas:** still dan kedua `ring-overlay` sekarang memuat oklusi kontak gelap dan sempit di bawah pita yang menyentuh. Sumbernya pass AO Cycles jarak pendek (jangkauan 12 mm, dengan ÷ tanpa ring), gamma 2,8, lantai 0,10. Kontak ini bagian dari alpha bayangan overlay, **bukan** bagian plate. Bukti: `renders/s01-plate/s01-plate-contact-closeup-vs-figma.png`.
+- **Lampu spill (`lights.spill` di JSON, ruang meja three.js, konvensi sama dengan `lights.key`):** posisi `[0.125, 0.058, -0.05]`, target `[0, 0.004, 0]`, arah `[-0.8805, -0.3804, 0.2829]`, elevasi 22,4°, jarak 142 mm, disk Ø60 mm (kerucut penumbra 23,9°), warna linear `(1; 0,62; 0,34)`. Intensitas relatif terhadap lampu kunci: 2,48× pada permukaan yang menghadap lampu, 1,28× pada sisi atas datar di target, dengan falloff kuadrat terbalik dari posisi lampu. Hanya menerangi alas + meja; ring tidak menerima dan tidak menghalanginya.
+- **Kontras ring (luma 8-bit pada piksel ring, frame diam web):**
+
+| | p05 | p25 | p50 | p75 | p95 | rata-rata |
+| --- | --- | --- | --- | --- | --- | --- |
+| Poster | 26,6 | 52,4 | 117,0 | 140,5 | 243,1 | 110,3 |
+| Figma | 8,8 | 25,8 | 58,1 | 158,2 | 210,0 | 89,8 |
+
+  Ring Figma lebih gelap di bagian gelap dan tengah daripada poster, dan sedikit lebih redup di highlight. Poster tidak diubah. Saran: **web yang bergerak** di bagian gelap (liner dan pantulan gelap diturunkan ke arah poster). Highlight web (15–18% di bawah poster) sudah setingkat Figma, jadi biarkan. Kalau kesetiaan penuh ke Figma diinginkan, poster dan web sama-sama perlu nada tengah yang lebih gelap; itu membalik permintaan "lebih putih" D-181b, jadi perlu keputusan PM.
+
 ### File
 
 Semua 3632×2072, frame dan kamera sama dengan foto latar. Folder `plate/`:
