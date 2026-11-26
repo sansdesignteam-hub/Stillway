@@ -14,3 +14,9 @@ Baseline `f59be50`. `npm run build` lulus. Diperiksa dengan Chrome headless pada
 - Di mobile, saat semua kartu S07 menutup, kata yang keluar ke samping masih sempat bersinggungan sebentar dengan tumpukan. Perilaku ini sama seperti sebelumnya.
 - Kalau hash `#finishes` diubah langsung di URL saat halaman sudah terbuka, browser melompat ke awal track tanpa offset. Ini perilaku bawaan browser untuk semua section; tautan nav dan membuka halaman dengan hash tidak terpengaruh.
 - Isi preview Vercel tidak dapat dibuka dari sesi ini karena memerlukan login.
+
+## Revisi setelah review PM (D-172)
+| Catatan | Commit | Hasil | Bukti |
+|---|---|---|---|
+| S07 kata dan kartu | `ea7e242` | Setelah State 2, "Through" dan "the day." tidak lagi bergeser ke tepi. Keduanya memudar di tempat (u 1.0–1.1) dalam keadaan utuh, di dalam layar. Kartu baru mulai menutup menjadi tumpukan setelahnya (u 1.1–1.75), jadi tidak ada huruf yang terpotong tepi atau tertutup kartu, baik di desktop maupun di mobile. Masuknya kartu (scale + fade) dan urutan layer dari kiri ke kanan tetap. Hasilnya sama saat scroll maju maupun mundur. Reduced motion: di State 2 (u = 1) kata masih tampil penuh; di State 3 kata sudah hilang. | `S07_row-to-stack_forward.jpg`, `S07_row-to-stack_forward_375.jpg`, `S07_row-to-stack_backward.png` (frame u 0.9–2.3, jarak 0.05–0.15) |
+| Reduced motion S09→S10 mobile | `731c7fd` | Sebelumnya S09 memudar 0,3 detik sambil kolom S10 sudah masuk dari bawah. Sekarang, khusus reduced motion di mobile, S09 hilang seketika (transisi opacity dimatikan pada batas ini) tepat saat track S10 dimulai, ketika kolom S10 masih di bawah layar (y ≥ 796 dari 812). Fade reduced motion di bagian lain tetap. | `S09-S10_reduced_mobile_probe.txt` |

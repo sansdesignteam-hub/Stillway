@@ -1,0 +1,7 @@
+S10 track +-0.10H {"s09op":"0.220703","s09vis":"visible","s10top":893}
+S10 track +-0.02H {"s09op":"0.741039","s09vis":"visible","s10top":828}
+S10 track +0.02H {"s09op":"0","s09vis":"hidden","s10top":796}
+S10 track +0.10H {"s09op":"0","s09vis":"hidden","s10top":731}
+S10 track +0.30H {"s09op":"0","s09vis":"hidden","s10top":568}
+S10 track +0.00H {"s09op":"0","s09vis":"hidden","s10top":812}
+S10 track +-0.05H {"s09op":"0.344769","s09vis":"visible","s10top":853}
