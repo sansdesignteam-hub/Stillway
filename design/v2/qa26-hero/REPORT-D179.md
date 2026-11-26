@@ -77,3 +77,14 @@ Commit kode: `4766476` (branch Developer). Aset 3D: 3D-Designer `e7337a6`. Build
 - Semua nilai sekarang dibaca dari JSON: DirectionalLight 3,0, VSM 2048, bounds ±0,045 m, radius 6, blurSamples 16, bias −0,0001, normalBias 0,0003, hemisphere 0,15, env alas 0,25. Gain web direset ke 1. Bukti: `D180b_shadow_closeup_1440.jpg`, `D180b_shadow_closeup_375.jpg`.
 - Wordmark, tilt, dan clearance tidak berubah dan sudah dicek ulang (`D180b_wordmark_ring_bbox.txt`, `D180b_clearance_check.txt`, `D180b_tilt_strip.jpg`).
 - **Batas:** dengan VSM yang blurnya seragam, sisi jauh bayangan ring tetap lebih tegas daripada poster. Untuk meniru penumbra yang melebar menjauhi kontak dibutuhkan soft shadow PCSS atau shadow bake. Ini perlu diputuskan.
+
+## D-180c: bayangan lembut contact-hardening (PCSS)
+- Satu-satunya pemancar bayangan di halaman adalah lampu kunci S01. Shadow map sekarang berupa depth map biasa (`BasicShadowMap`). Dua penerima di S01, yaitu alas dan shadow catcher meja, memakai `getShadow` PCSS lewat `onBeforeCompile`. Prosesnya: cari blocker (16 tap), hitung lebar penumbra = jarak receiver−blocker × tan(sudut cahaya), lalu PCF Vogel dengan rotasi per piksel (24 tap; 8/12 di ponsel). Nilai tan = 0,0826 diambil dari area light Ø55 mm pada jarak 333 mm (HANDOFF). Hasilnya bayangan tajam dan gelap di titik kontak, lalu melebar dan memudar ke sisi jauh, seperti poster Cycles. Tidak ada banding, dan noise tidak terlihat di close-up 2×. Section lain tidak terpengaruh karena tidak punya penerima bayangan.
+- Catatan teknis: chunk three yang ter-bundle tidak menyertakan komentar shader, jadi patch mencocokkan kode, bukan komentar. Bila patch gagal, konsol menampilkan peringatan.
+- Oak: tint `(1, 0.8, 0.52)` agar tidak terlalu kuning/datar dibanding poster.
+- Performa (`D180c_perf.txt`, `design/v2/scripts/perf.mjs`, Chrome dengan GPU Metal, rAF 3 detik):
+  - 1440 diam: 60,2 fps (p95 17,4 ms). Saat tilt: rata-rata 52,6 fps (19,0 ms), p95 17,6 ms.
+  - 1440 dengan CPU ×4: 60,3 / 59,8 fps.
+  - 375 (12 tap): 60,5 / 60 fps.
+  Angka ini dari GPU desktop. Ponsel kelas bawah belum diukur.
+- Bukti: `D180c_pcss_closeup_1440.jpg`, `D180c_pcss_closeup_375.jpg`, `D180c_tilt_strip.jpg`. Cek wordmark 7/7 lulus, dan clearance tidak berubah (≥0).

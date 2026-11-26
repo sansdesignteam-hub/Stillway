@@ -176,9 +176,65 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   let LAMP = 2.6;
   let PED_ENV = 0.35;
   /** warm-yellow multiply on the oak: AgX turns the lamp-lit oak pinkish; matched by eye to the poster */
-  const PED_TINT = new THREE.Color().setRGB(1, 0.9, 0.42);
+  const PED_TINT = new THREE.Color().setRGB(1, 0.8, 0.52);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.VSMShadowMap; // smooth penumbra, no PCF noise or banding
+  /* D-180c: contact-hardening soft shadows (PCSS). The only shadow caster on the page is the S01 lamp
+     key, so the map is a plain depth map (Basic) and the two S01 receivers — pedestal and desk
+     catcher — get a PCSS getShadow (blocker search → penumbra ∝ blocker distance × light size → PCF),
+     so the shadow is dark and tight at the ring's contact and widens and fades with distance, like the
+     Cycles area light (Ø55 mm at 333 mm). Nothing outside S01 receives shadows. */
+  renderer.shadowMap.type = THREE.BasicShadowMap;
+  const PCSS = {
+    uLightTan: { value: 0.0826 }, // tan of the light's half-angle: 27.5 mm / 333 mm (HANDOFF, Cycles key)
+    uDepthRange: { value: 1 }, // shadow camera far − near (world)
+    uFrustumW: { value: 1 }, // shadow camera width (world)
+  };
+  const PCSS_N = isPhone() ? 12 : 24; // PCF taps
+  const PCSS_B = isPhone() ? 8 : 16; // blocker-search taps
+  const pcssChunk = THREE.ShaderChunk.shadowmap_pars_fragment.replace(
+    // the Basic getShadow (the bundled chunk has its comments stripped, so match code only)
+    /#else\s*float getShadow\( sampler2D shadowMap[\s\S]*?return mix\( 1\.0, shadow, shadowIntensity \);\s*\}/,
+    `#else
+      uniform float uLightTan; uniform float uDepthRange; uniform float uFrustumW;
+      float pcssIGN( vec2 p ) { return fract( 52.9829189 * fract( dot( p, vec2( 0.06711056, 0.00583715 ) ) ) ); }
+      vec2 pcssDisk( int i, int n, float phi ) { float r = sqrt( ( float( i ) + 0.5 ) / float( n ) ); float t = float( i ) * 2.399963 + phi; return vec2( cos( t ), sin( t ) ) * r; }
+      float getShadow( sampler2D shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord ) {
+        shadowCoord.xyz /= shadowCoord.w;
+        shadowCoord.z += shadowBias;
+        if ( shadowCoord.x < 0.0 || shadowCoord.x > 1.0 || shadowCoord.y < 0.0 || shadowCoord.y > 1.0 || shadowCoord.z > 1.0 ) return 1.0;
+        float phi = pcssIGN( gl_FragCoord.xy ) * 6.2831853;
+        float texel = 1.0 / shadowMapSize.x;
+        // blocker search over the light's footprint for the farthest plausible blocker (~45 mm)
+        // blockers up to half the frustum (~45 mm) away: their penumbra radius is uLightTan · W/2
+        float searchUV = max( uLightTan * 0.5, 4.0 * texel );
+        float blk = 0.0; float nb = 0.0;
+        for ( int i = 0; i < ${PCSS_B}; i ++ ) {
+          float d = texture2D( shadowMap, shadowCoord.xy + pcssDisk( i, ${PCSS_B}, phi ) * searchUV ).r;
+          if ( d < shadowCoord.z ) { blk += d; nb += 1.0; }
+        }
+        if ( nb < 0.5 ) return 1.0;
+        blk /= nb;
+        float distW = ( shadowCoord.z - blk ) * uDepthRange;            // receiver − blocker, world
+        float pen = distW * uLightTan / max( uFrustumW, 1e-6 );  // penumbra radius, uv
+        pen = clamp( pen, 1.5 * texel, searchUV );
+        float lit = 0.0;
+        for ( int i = 0; i < ${PCSS_N}; i ++ ) {
+          float d = texture2D( shadowMap, shadowCoord.xy + pcssDisk( i, ${PCSS_N}, phi ) * pen ).r;
+          lit += step( shadowCoord.z, d );
+        }
+        float shadow = lit / float( ${PCSS_N} );
+        return mix( 1.0, shadow, shadowIntensity );
+      }`,
+  );
+  if (pcssChunk === THREE.ShaderChunk.shadowmap_pars_fragment) console.warn('PCSS: shadow chunk not patched');
+  const usePCSS = (m: THREE.Material) => {
+    m.onBeforeCompile = (sh) => {
+      Object.assign(sh.uniforms, PCSS);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <shadowmap_pars_fragment>', pcssChunk);
+    };
+    m.customProgramCacheKey = () => 'pcss' + PCSS_N;
+    m.needsUpdate = true;
+  };
   const desk = new THREE.Group();
   desk.matrixAutoUpdate = false;
   desk.visible = false;
@@ -193,6 +249,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   let deskHemiI = 0.25;
   desk.add(deskHemi);
   const deskMat = new THREE.ShadowMaterial({ color: 0x2a1608, opacity: 0, transparent: true, depthWrite: false });
+  usePCSS(deskMat);
   const deskPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.2), deskMat);
   deskPlane.rotation.x = -Math.PI / 2;
   deskPlane.receiveShadow = true;
@@ -295,6 +352,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       o.receiveShadow = true;
       const m = o.material as THREE.MeshStandardMaterial;
       m.color.multiply(PED_TINT);
+      usePCSS(m);
       m.envMapIntensity = PED_ENV; // handoff: 0.4–0.6, so the wood does not read as plastic
       pedMats.push(m);
     });
@@ -771,6 +829,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
         sc.right = sc.top = b;
         sc.near = 0.01 * kk;
         sc.far = (lampKey.position.distanceTo(lampKey.target.position) + 0.2) * kk;
+        PCSS.uDepthRange.value = sc.far - sc.near;
+        PCSS.uFrustumW.value = 2 * b;
         sc.updateProjectionMatrix();
         lampKey.shadow.normalBias = (L.normalBias ?? 0.0004) * kk;
       }
