@@ -6,9 +6,13 @@
  * Motion: scripts/sections/hero.ts. Photo + zoom settings: content/heroBg.ts.
  */
 import { hero } from '../../content/copy';
-import { heroBg } from '../../content/heroBg';
+import { heroBg, plateSet } from '../../content/heroBg';
 const D = heroBg.desktop;
 const M = heroBg.mobile;
+const P = M.portrait;
+const R = heroBg.poster;
+/** first paint under the full image: AVIF where the browser has it, else WebP */
+const ph = (b: string) => `image-set(url(${b}.avif) type('image/avif'), url(${b}.webp) type('image/webp'))`;
 
 ---
 
@@ -16,21 +20,32 @@ const M = heroBg.mobile;
   class="scene scene--hero"
   data-scene="hero"
   aria-labelledby="hero-title"
-  style={`--ph-d:url(${D.placeholder}); --ph-m:url(${M.placeholder}); --v1-ratio:${heroBg.v1Ratio}; --d-ratio:${D.width / D.height}; --d-orig:${D.origW}; --m-ratio:${M.width / M.height}; --m-orig:${M.origW}; --anchor-x:${heroBg.anchor.x * 100}%; --anchor-y:${heroBg.anchor.y * 100}%; --subj-x:${heroBg.subjectOrigin.x * 100}%; --subj-y:${heroBg.subjectOrigin.y * 100}%; --subj-m:${M.subject}; --subj-dy:${M.subjectDy}`}
+  style={`--ph-d:${ph(D.placeholder)}; --ph-m:${ph(M.placeholder)}; --crop-m:${P.crop}; --v1-ratio:${heroBg.v1Ratio}; --d-ratio:${D.width / D.height}; --d-orig:${D.origW}; --m-ratio:${M.width / M.height}; --m-orig:${M.origW}; --anchor-x:${heroBg.anchor.x * 100}%; --anchor-y:${heroBg.anchor.y * 100}%; --subj-x:${heroBg.subjectOrigin.x * 100}%; --subj-y:${heroBg.subjectOrigin.y * 100}%; --subj-m:${M.subject}; --subj-dy:${M.subjectDy}`}
 >
   <div class="scene__back">
     <div class="hero__photo" data-h-photo data-a>
       <picture>
-        <source media={M.media} type="image/webp" srcset={M.srcset} sizes="max(100vw, 178lvh)" />
-        <img src={D.src} srcset={D.srcset} sizes="max(100vw, 178lvh)" width={D.width} height={D.height} alt="" fetchpriority="low" decoding="async" data-h-img />
+        <!-- D-181: plate = desk photo + Cycles pedestal. AVIF, then WebP; portrait phones the centre
+             crop of the phone plate, other narrow windows the full phone plate, the rest the desktop one -->
+        <source media={P.media} type="image/avif" srcset={plateSet(P, 'avif')} sizes={P.sizes} />
+        <source media={P.media} type="image/webp" srcset={plateSet(P, 'webp')} sizes={P.sizes} />
+        <source media={M.media} type="image/avif" srcset={plateSet(M, 'avif')} sizes={M.sizes} />
+        <source media={M.media} type="image/webp" srcset={plateSet(M, 'webp')} sizes={M.sizes} />
+        <source type="image/avif" srcset={plateSet(D, 'avif')} sizes={D.sizes} />
+        <img src={`${D.base}-1920.webp`} srcset={plateSet(D, 'webp')} sizes={D.sizes} width={D.width} height={D.height} alt="" fetchpriority="low" decoding="async" data-h-img />
       </picture>
       <div class="hero__dim" style={`opacity:${heroBg.dim}`}></div>
-      <!-- D-179 poster: ring + 3D pedestal + their shadows, transparent, in the photo's own frame
-           (3D Designer fb-s01-pedestal-alpha), so it zooms with the photo. First paint, reduced
-           motion and no WebGL; once the live ring is up it cross-fades to the identical 3D frame. -->
-      <div class="hero__poster">
-        <img src={heroBg.poster} alt={hero.ringAlt} width="1818" height="1037" data-ring-fallback data-fb-range="0,1.6" decoding="async" fetchpriority="high" />
-      </div>
+      <!-- D-181 poster: ring + ring shadow, transparent, in the plate's own frame (3D Designer
+           ring-overlay-s01*; the pedestal is in the plate), so it zooms with the photo. First paint,
+           reduced motion and no WebGL; once the live ring is up it cross-fades to the identical 3D frame. -->
+      <picture class="hero__poster">
+        <source media={P.media} type="image/avif" srcset={plateSet(R.portrait, 'avif')} sizes={P.sizes} />
+        <source media={P.media} type="image/webp" srcset={plateSet(R.portrait, 'webp')} sizes={P.sizes} />
+        <source media={M.media} type="image/avif" srcset={plateSet(R.mobile, 'avif')} sizes={M.sizes} />
+        <source media={M.media} type="image/webp" srcset={plateSet(R.mobile, 'webp')} sizes={M.sizes} />
+        <source type="image/avif" srcset={plateSet(R.desktop, 'avif')} sizes={D.sizes} />
+        <img src={`${R.desktop.base}-1920.webp`} srcset={plateSet(R.desktop, 'webp')} sizes={D.sizes} alt={hero.ringAlt} width={D.width} height={D.height} data-ring-fallback data-fb-range="0,1.6" decoding="async" fetchpriority="high" />
+      </picture>
     </div>
     <h1 class="hero__word" id="hero-title" data-h-word data-a>
       <span class="sr-only">Stillway</span>
@@ -78,25 +93,15 @@ const M = heroBg.mobile;
     width: 100%;
     height: 100%;
   }
+  .hero__photo picture {
+    position: absolute;
+    inset: 0;
+  }
   .hero__photo img {
     object-fit: cover;
   }
-  .hero__poster,
-  .hero__poster img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-  }
   .hero__poster {
-    transform-origin: var(--subj-x) var(--subj-y);
-  }
-  @media (max-width: 760px) {
-    .hero__poster {
-      scale: var(--subj-m); /* heroBg.mobile.subject, the same as the 3D desk on phones */
-      translate: 0 calc(var(--subj-dy) * 100%); /* heroBg.mobile.subjectDy (fraction of the photo height) */
-    }
+    pointer-events: none;
   }
   :global(html.ring-ready) .hero__poster {
     opacity: 0;
@@ -208,6 +213,14 @@ const M = heroBg.mobile;
       width: calc(var(--cover) / var(--m-orig));
       aspect-ratio: var(--m-ratio);
       background-image: var(--ph-m);
+    }
+    /* portrait phones load the centre crop of the phone plate (heroBg.mobile.portrait): the image
+       fills only that strip of the photo box; the full-frame first-paint plate stays underneath */
+    @media (max-aspect-ratio: 3/4) {
+      .hero__photo picture {
+        width: calc(var(--crop-m) * 100%);
+        left: calc((1 - var(--crop-m)) * 50%);
+      }
     }
     /* D-179 mobile: wordmark full width under the nav; intro on top of "SCROLL DOWN" at the bottom */
     .hero__word {

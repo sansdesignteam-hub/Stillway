@@ -16,7 +16,7 @@ import Finishes from '../components/scenes/Finishes.astro';
 import Close from '../components/scenes/Close.astro';
 import Placeholder from '../components/scenes/Placeholder.astro';
 import { sections } from '../content/sections';
-import { heroBg } from '../content/heroBg';
+import { heroBg, plateSet } from '../content/heroBg';
 
 const built: Record<string, any> = { hero: Hero, why: Why, sleep: Sleep, activity: Activity, insight: Insight, details: Details, specs: Specs, features: Features, app: App, finishes: Finishes, close: Close };
 const len = (i: number) => {
@@ -28,9 +28,11 @@ const len = (i: number) => {
 <Base>
   <Fragment slot="head">
     <!-- S01 photo: the light version paints first (LCP), the full one replaces it -->
-    <link rel="preload" as="image" type="image/webp" href={heroBg.desktop.placeholder} media="(min-width: 761px)" fetchpriority="high" />
-    <link rel="preload" as="image" type="image/webp" href={heroBg.mobile.placeholder} media="(max-width: 760px)" fetchpriority="high" />
-    <link rel="preload" as="image" type="image/webp" href={heroBg.poster} fetchpriority="high" />
+    <link rel="preload" as="image" type="image/avif" href={`${heroBg.desktop.placeholder}.avif`} media="(min-width: 761px)" fetchpriority="high" />
+    <link rel="preload" as="image" type="image/avif" href={`${heroBg.mobile.placeholder}.avif`} media="(max-width: 760px)" fetchpriority="high" />
+    <link rel="preload" as="image" type="image/avif" imagesrcset={plateSet(heroBg.poster.desktop, 'avif')} imagesizes={heroBg.desktop.sizes} media="(min-width: 761px)" fetchpriority="high" />
+    <link rel="preload" as="image" type="image/avif" imagesrcset={plateSet(heroBg.poster.portrait, 'avif')} imagesizes={heroBg.mobile.portrait.sizes} media={heroBg.mobile.portrait.media} fetchpriority="high" />
+    <link rel="preload" as="image" type="image/avif" imagesrcset={plateSet(heroBg.poster.mobile, 'avif')} imagesizes={heroBg.mobile.sizes} media="(max-width: 760px) and (min-aspect-ratio: 3/4)" fetchpriority="high" />
   </Fragment>
   <Header />
   <Progress />

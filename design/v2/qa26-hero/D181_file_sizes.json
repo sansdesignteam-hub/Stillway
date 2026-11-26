@@ -1,0 +1,164 @@
+[
+ {
+  "file": "plate-s01-960",
+  "width": 960,
+  "height": 548,
+  "avifKB": 28.2,
+  "avifQ": 70,
+  "budgetKB": 35,
+  "webpKB": 30.4
+ },
+ {
+  "file": "plate-s01-1280",
+  "width": 1280,
+  "height": 730,
+  "avifKB": 46.1,
+  "avifQ": 70,
+  "budgetKB": 63,
+  "webpKB": 53.2
+ },
+ {
+  "file": "plate-s01-1920",
+  "width": 1920,
+  "height": 1095,
+  "avifKB": 88.7,
+  "avifQ": 70,
+  "budgetKB": 141,
+  "webpKB": 104.9
+ },
+ {
+  "file": "plate-s01-2560",
+  "width": 2560,
+  "height": 1460,
+  "avifKB": 140.5,
+  "avifQ": 70,
+  "budgetKB": 250,
+  "webpKB": 163.6
+ },
+ {
+  "file": "plate-s01-3632",
+  "width": 3632,
+  "height": 2072,
+  "avifKB": 266.7,
+  "avifQ": 70,
+  "budgetKB": 450,
+  "webpKB": 287.2
+ },
+ {
+  "file": "plate-s01-m-960",
+  "width": 960,
+  "height": 548,
+  "avifKB": 28.4,
+  "avifQ": 70,
+  "budgetKB": 35,
+  "webpKB": 30.7
+ },
+ {
+  "file": "plate-s01-m-1280",
+  "width": 1280,
+  "height": 730,
+  "avifKB": 46.9,
+  "avifQ": 70,
+  "budgetKB": 63,
+  "webpKB": 53.5
+ },
+ {
+  "file": "plate-s01-m-1920",
+  "width": 1920,
+  "height": 1095,
+  "avifKB": 89.1,
+  "avifQ": 70,
+  "budgetKB": 141,
+  "webpKB": 106.4
+ },
+ {
+  "file": "plate-s01-mp-908",
+  "width": 908,
+  "height": 1036,
+  "avifKB": 23.7,
+  "avifQ": 70,
+  "budgetKB": 36,
+  "webpKB": 24
+ },
+ {
+  "file": "plate-s01-mp-1280",
+  "width": 1280,
+  "height": 1460,
+  "avifKB": 39.6,
+  "avifQ": 70,
+  "budgetKB": 72,
+  "webpKB": 39.6
+ },
+ {
+  "file": "plate-s01-mp-1816",
+  "width": 1816,
+  "height": 2072,
+  "avifKB": 72.7,
+  "avifQ": 70,
+  "budgetKB": 145,
+  "webpKB": 70.5
+ },
+ {
+  "file": "ring-s01-1280",
+  "width": 1280,
+  "height": 730,
+  "avifKB": 18.9,
+  "avifQ": 70,
+  "budgetKB": 200,
+  "webpKB": 52.5
+ },
+ {
+  "file": "ring-s01-1920",
+  "width": 1920,
+  "height": 1095,
+  "avifKB": 30.2,
+  "avifQ": 70,
+  "budgetKB": 200,
+  "webpKB": 97.9
+ },
+ {
+  "file": "ring-s01-3632",
+  "width": 3632,
+  "height": 2072,
+  "avifKB": 54.9,
+  "avifQ": 70,
+  "budgetKB": 200,
+  "webpKB": 233
+ },
+ {
+  "file": "ring-s01-m-1280",
+  "width": 1280,
+  "height": 730,
+  "avifKB": 11.1,
+  "avifQ": 70,
+  "budgetKB": 200,
+  "webpKB": 31.7
+ },
+ {
+  "file": "ring-s01-m-1920",
+  "width": 1920,
+  "height": 1095,
+  "avifKB": 17.9,
+  "avifQ": 70,
+  "budgetKB": 200,
+  "webpKB": 58.4
+ },
+ {
+  "file": "ring-s01-mp-908",
+  "width": 908,
+  "height": 1036,
+  "avifKB": 17,
+  "avifQ": 70,
+  "budgetKB": 200,
+  "webpKB": 51.8
+ },
+ {
+  "file": "ring-s01-mp-1816",
+  "width": 1816,
+  "height": 2072,
+  "avifKB": 34.8,
+  "avifQ": 70,
+  "budgetKB": 200,
+  "webpKB": 131
+ }
+]
