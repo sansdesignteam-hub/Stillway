@@ -30,8 +30,8 @@ OUT_BLEND = V2 + "/s01-pedestal.blend"
 POSE = V2 + "/s01-pedestal-pose.json"
 
 MM = 0.001
-W, D, H = 41.0, 25.6, 5.2
-R_CORNER, R_FILLET = 7.0, 1.8
+W, D, H = 41.0, 25.6, 6.8
+R_CORNER, R_FILLET, R_FILLET_BOT = 4.3, 0.7, 0.35
 ATLAS = 1024
 
 # ring pose relative to pedestal origin (mm / degrees, Blender Z-up)
@@ -40,7 +40,7 @@ RING_ROT = (0.0, 8.0, 236.0)   # XYZ euler deg: ring axis horizontal, lean 8 deg
 # camera (desktop hero, matches the warm-desk photo: slightly high, long lens)
 CAM = dict(lens=70.0, elev=19.0, azim=-6.0, dist=232.0, target=(0.0, 0.0, 9.0), shift=(0.0, 0.135))
 # warm key from the lamp: back-right, high -> shadows fall front-left
-KEY = dict(pos=(150.0, 170.0, 150.0), size=50.0, power=0.75, color=(1.0, 0.70, 0.44))
+KEY = dict(pos=(190.0, 120.0, 250.0), size=55.0, power=1.1, color=(1.0, 0.70, 0.44))
 
 
 def srgb(c):
@@ -55,10 +55,11 @@ def make_mesh():
         v.co = Vector((v.co.x * W, v.co.y * D, (v.co.z + 0.5) * H)) * MM
     vert_edges = [e for e in bm.edges if abs(e.verts[0].co.z - e.verts[1].co.z) > 1e-6]
     bmesh.ops.bevel(bm, geom=vert_edges, offset=R_CORNER * MM, segments=10, profile=0.5, affect='EDGES')
-    rim = [e for e in bm.edges
-           if abs(e.verts[0].co.z - e.verts[1].co.z) < 1e-7 and len(e.link_faces) == 2
-           and any(abs(f.normal.z) > 0.99 for f in e.link_faces)]
-    bmesh.ops.bevel(bm, geom=rim, offset=R_FILLET * MM, segments=5, profile=0.5, affect='EDGES')
+    for top, r, seg in ((True, R_FILLET, 4), (False, R_FILLET_BOT, 3)):
+        rim = [e for e in bm.edges
+               if abs(e.verts[0].co.z - e.verts[1].co.z) < 1e-7 and len(e.link_faces) == 2
+               and any((f.normal.z > 0.99) if top else (f.normal.z < -0.99) for f in e.link_faces)]
+        bmesh.ops.bevel(bm, geom=rim, offset=r * MM, segments=seg, profile=0.5, affect='EDGES')
     bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4])
     me = bpy.data.meshes.new("S01_Pedestal")
     bm.to_mesh(me)
@@ -96,17 +97,19 @@ def wood_material():
     tc = N.new("ShaderNodeTexCoord")
     mp = N.new("ShaderNodeMapping")            # object space metres -> mm, pith below/behind the board
     mp.inputs["Scale"].default_value = (1000, 1000, 1000)
-    mp.inputs["Location"].default_value = (0, 70, 48)
+    mp.inputs["Location"].default_value = (0, 260, 420)
     L.new(tc.outputs["Object"], mp.inputs[0])
     # low-freq warp so rings wander a little
     warp = N.new("ShaderNodeTexNoise")
-    warp.inputs["Scale"].default_value = 0.035
+    warp.inputs["Scale"].default_value = 0.05
     warp.inputs["Detail"].default_value = 2.0
-    L.new(mp.outputs[0], warp.inputs[0])
+    wsq = N.new("ShaderNodeVectorMath"); wsq.operation = 'MULTIPLY'
+    L.new(mp.outputs[0], wsq.inputs[0]); wsq.inputs[1].default_value = (0.25, 1.0, 1.0)
+    L.new(wsq.outputs[0], warp.inputs[0])
     wv = N.new("ShaderNodeVectorMath"); wv.operation = 'SUBTRACT'
     L.new(warp.outputs["Color"], wv.inputs[0]); wv.inputs[1].default_value = (0.5, 0.5, 0.5)
     ws = N.new("ShaderNodeVectorMath"); ws.operation = 'SCALE'
-    L.new(wv.outputs[0], ws.inputs[0]); ws.inputs["Scale"].default_value = 4.0
+    L.new(wv.outputs[0], ws.inputs[0]); ws.inputs["Scale"].default_value = 14.0
     # warp only across the grain (y, z)
     mask = N.new("ShaderNodeVectorMath"); mask.operation = 'MULTIPLY'
     L.new(ws.outputs[0], mask.inputs[0]); mask.inputs[1].default_value = (0.0, 1.0, 1.0)
@@ -114,33 +117,35 @@ def wood_material():
     L.new(mp.outputs[0], pw.inputs[0]); L.new(mask.outputs[0], pw.inputs[1])
     rings = N.new("ShaderNodeTexWave")
     rings.wave_type = 'RINGS'; rings.rings_direction = 'X'; rings.wave_profile = 'SAW'
-    rings.inputs["Scale"].default_value = 0.2
-    rings.inputs["Distortion"].default_value = 0.3
+    rings.inputs["Scale"].default_value = 0.18
+    rings.inputs["Distortion"].default_value = 1.0
     rings.inputs["Detail"].default_value = 1.5
-    rings.inputs["Detail Scale"].default_value = 0.6
-    L.new(pw.outputs[0], rings.inputs[0])
+    rings.inputs["Detail Scale"].default_value = 0.25
+    rsq = N.new("ShaderNodeVectorMath"); rsq.operation = 'MULTIPLY'
+    L.new(pw.outputs[0], rsq.inputs[0]); rsq.inputs[1].default_value = (0.2, 1.0, 1.0)
+    L.new(rsq.outputs[0], rings.inputs[0])
     # fine fibres: noise stretched along X
     fs = N.new("ShaderNodeVectorMath"); fs.operation = 'MULTIPLY'
-    L.new(mp.outputs[0], fs.inputs[0]); fs.inputs[1].default_value = (0.12, 6.0, 6.0)
+    L.new(mp.outputs[0], fs.inputs[0]); fs.inputs[1].default_value = (0.05, 14.0, 14.0)
     fib = N.new("ShaderNodeTexNoise")
     fib.inputs["Scale"].default_value = 1.0; fib.inputs["Detail"].default_value = 6.0
     L.new(fs.outputs[0], fib.inputs[0])
     # broad tone variation
-    tone = N.new("ShaderNodeTexNoise"); tone.inputs["Scale"].default_value = 0.06
+    tone = N.new("ShaderNodeTexNoise"); tone.inputs["Scale"].default_value = 0.09
     L.new(mp.outputs[0], tone.inputs[0])
     # latewood bands: sharpen the saw ramp
     cr = N.new("ShaderNodeValToRGB")
     e = cr.color_ramp.elements
-    e[0].position = 0.0;  e[0].color = (*srgb((192, 146, 104)), 1)
-    e[1].position = 0.78; e[1].color = (*srgb((184, 137, 96)), 1)
-    e3 = e.new(0.92); e3.color = (*srgb((168, 117, 72)), 1)
-    e4 = e.new(0.97); e4.color = (*srgb((200, 152, 102)), 1)
+    e[0].position = 0.0;  e[0].color = (*srgb((208, 152, 96)), 1)
+    e[1].position = 0.70; e[1].color = (*srgb((200, 143, 88)), 1)
+    e3 = e.new(0.88); e3.color = (*srgb((182, 124, 72)), 1)
+    e4 = e.new(0.97); e4.color = (*srgb((196, 138, 84)), 1)
     L.new(rings.outputs["Fac"], cr.inputs[0])
     mixf = N.new("ShaderNodeMix"); mixf.data_type = 'RGBA'; mixf.blend_type = 'MULTIPLY'
-    mixf.inputs["Factor"].default_value = 0.32
+    mixf.inputs["Factor"].default_value = 0.55
     L.new(cr.outputs[0], mixf.inputs["A"]); L.new(fib.outputs["Color"], mixf.inputs["B"])
     mixt = N.new("ShaderNodeMix"); mixt.data_type = 'RGBA'; mixt.blend_type = 'OVERLAY'
-    mixt.inputs["Factor"].default_value = 0.18
+    mixt.inputs["Factor"].default_value = 0.3
     L.new(mixf.outputs["Result"], mixt.inputs["A"]); L.new(tone.outputs["Color"], mixt.inputs["B"])
     L.new(mixt.outputs["Result"], bsdf.inputs["Base Color"])
     # roughness: high, latewood a touch smoother
@@ -280,7 +285,7 @@ def scene_setup():
     w = bpy.data.worlds.new("W"); sc.world = w; w.use_nodes = True
     nt = w.node_tree
     env = nt.nodes.new("ShaderNodeTexEnvironment"); env.image = bpy.data.images.load(ENV)
-    bg = nt.nodes["Background"]; bg.inputs["Strength"].default_value = 0.45
+    bg = nt.nodes["Background"]; bg.inputs["Strength"].default_value = 0.28
     tint = nt.nodes.new("ShaderNodeMix"); tint.data_type = 'RGBA'; tint.blend_type = 'MULTIPLY'
     tint.inputs["Factor"].default_value = 1.0; tint.inputs["B"].default_value = (1.0, 0.72, 0.48, 1)
     nt.links.new(env.outputs[0], tint.inputs["A"]); nt.links.new(tint.outputs["Result"], bg.inputs[0])
@@ -291,7 +296,7 @@ def scene_setup():
     key.location = Vector(KEY["pos"]) * MM
     key.rotation_euler = (Vector((0, 0, 4 * MM)) - key.location).to_track_quat('-Z', 'Y').to_euler()
     # soft warm bounce from the front-left (desk/room), no shadow detail
-    fd = bpy.data.lights.new("Fill", 'AREA'); fd.size = 0.3; fd.energy = 0.025; fd.color = (1.0, 0.8, 0.62)
+    fd = bpy.data.lights.new("Fill", 'AREA'); fd.size = 0.3; fd.energy = 0.0; fd.color = (1.0, 0.8, 0.62)
     fill = bpy.data.objects.new("Fill", fd); sc.collection.objects.link(fill)
     fill.location = Vector((-250, -220, 120)) * MM
     fill.rotation_euler = (-fill.location).to_track_quat('-Z', 'Y').to_euler()
@@ -415,7 +420,7 @@ def renders():
     # 3) pedestal only (material check), photo-matched camera
     S["ring"].hide_render = True
     for c in S["ring"].children_recursive: c.hide_render = True
-    place_camera(S["cam"], lens=70.0, elev=24.0, azim=-20.0, dist=170.0, target=(0, 0, 2.6), shift=(0, 0))
+    place_camera(S["cam"], lens=70.0, elev=17.0, azim=-14.0, dist=150.0, target=(0, 0, 3.4), shift=(0, 0))
     po = REN + "/s01-pedestal-material-rgba.png"
     render_rgba(po, 1440, 900)
     save_px(comp(po, desk_tone), REN + "/s01-pedestal-material.png")
@@ -437,7 +442,7 @@ def write_pose(S):
         "id": "D-179 S01 pedestal pose",
         "units": "metres, three.js Y-up (glTF). Pedestal origin = centre of its bottom face, on the desk plane y = 0.",
         "pedestal": {"glb": "s01-pedestal.glb", "position": [0, 0, 0], "quaternion": [0, 0, 0, 1], "scale": 1,
-                      "size_mm": {"width_x": W, "depth_z": D, "height_y": H, "corner_radius": R_CORNER, "edge_fillet": R_FILLET},
+                      "size_mm": {"width_x": W, "depth_z": D, "height_y": H, "corner_radius": R_CORNER, "top_roundover": R_FILLET, "bottom_roundover": R_FILLET_BOT},
                       "top_y": round(H * MM, 6), "castShadow": True, "receiveShadow": True},
         "ring": {"glb": "stillway-ring-v2-silver-polished_web.glb", "position": v2t(loc), "quaternion": q2t(rq), "scale": 1,
                  "note": "ring rests on its band on the pedestal top (lowest vertex at top_y). Euler XYZ deg in Blender Z-up: %s" % (list(RING_ROT),),
@@ -451,11 +456,13 @@ def write_pose(S):
                    "frame": "photo 1818x1037, shown background-size: cover, centred (desktop 1440x900 crops the sides)"},
         "lights": {
             "key": {"type": "DirectionalLight (or SpotLight) warm, from the lamp: back-right, high", "position": v2t(key.location),
-                    "target": [0, 0.004, 0], "color": "#FFB370", "castShadow": True,
+                    "target": [0, 0.004, 0], "color": "#FFB370", "intensity": 2.6, "castShadow": True,
+                    "threejs_note": "DirectionalLight, renderer AgX exposure 1.0, physically correct units (r155+). Elevation ~50 deg so the ring shadow lands on the pedestal top.",
                     "shadow": {"mapSize": 2048, "bias": -0.0002, "normalBias": 0.0004, "radius_PCFSoft": 6,
-                               "camera_bounds_m": 0.06, "note": "Blender area light Ø50 mm at ~270 mm -> soft penumbra; in three.js use PCFSoftShadowMap or VSM"}},
-            "fill": {"type": "HemisphereLight or env only", "color": "#FFCC9E", "intensity": "low"},
-            "environment": "env/v2-env-paper.exr tinted warm (#FFB87A multiply), intensity ~0.45 for ring reflections"},
+                               "camera_bounds_m": 0.06, "note": "Blender area light Ø55 mm at ~340 mm -> soft penumbra; in three.js use PCFSoftShadowMap or VSM"}},
+            "fill": {"type": "HemisphereLight", "skyColor": "#FFD9B0", "groundColor": "#3A2414", "intensity": 0.25, "note": "no front fill: left and front faces of the pedestal must stay in shade"},
+            "pedestal_envMapIntensity": 0.35,
+            "environment": "env/v2-env-paper.exr tinted warm (#FFB87A multiply), intensity ~0.28 for ring reflections"},
         "desk": {"type": "ShadowMaterial plane at y = 0", "opacity": 0.5, "color": "#2A1608", "size_m": 1.2,
                  "note": "transparent shadow catcher over the CSS photo; receives pedestal + ring shadows"},
         "proven": "Blender Cycles renders in renders/s01-pedestal/ use exactly these values",
