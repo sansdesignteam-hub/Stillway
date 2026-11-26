@@ -69,13 +69,13 @@ export const activity = {
   status: 'title + body draft; states approved D-066',
   heading: ['Activity', 'and rest.'], // shown as "ACTIVITY" caps + "and rest."
   body: 'Through the day the ring keeps two quiet tallies: the time you spend moving and the moments you stop. Seen together they show the rhythm of a day.',
-  // photos: 5 C-02 frames from V1, not retouched (D-073); alt text draft (home-copy-v2), adjusted to the frames
+  // photos: Figma Day arc / State 3 (D-172); alt text describes the new frames
   frames: [
-    { key: 's0740', time: '07:40', state: 'Moving', detail: '25 min walk', alt: '07:40 — A man walking outside in early light, the ring on his left index finger.' },
-    { key: 's0900', time: '09:00', state: 'Resting', detail: '40 min focus', alt: '09:00 — Reading with a coffee at a desk, the ring in view.' },
-    { key: 's1030', time: '10:30', state: 'Moving', detail: '15 min stretch', alt: '10:30 — A short stretch by the window, both arms out, the ring on his left index finger.' },
-    { key: 's1230', time: '12:30', state: 'Resting', detail: '30 min lunch', alt: '12:30 — Lunch at a table, the ring resting on the hand.' },
-    { key: 's1530', time: '15:30', state: 'Moving', detail: '20 min stairs', alt: '15:30 — Taking the stairs on an errand, his hand on the rail.' },
+    { key: 's0740', time: '07:40', state: 'Moving', detail: '25 min walk', alt: '07:40 — A hand on the rail of a treadmill, the silver ring on one finger.' },
+    { key: 's0900', time: '09:00', state: 'Resting', detail: '40 min focus', alt: '09:00 — A hand resting near his face, a black ring on one finger.' },
+    { key: 's1030', time: '10:30', state: 'Moving', detail: '15 min stretch', alt: '10:30 — A hand holding the ring up between finger and thumb.' },
+    { key: 's1230', time: '12:30', state: 'Resting', detail: '30 min lunch', alt: '12:30 — A man in sunglasses by the water, a gold ring on his hand.' },
+    { key: 's1530', time: '15:30', state: 'Moving', detail: '20 min stairs', alt: '15:30 — The ring on a ledge in warm amber light.' },
   ],
 };
 
