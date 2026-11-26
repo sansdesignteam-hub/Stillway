@@ -33,20 +33,14 @@ const canTilt = () => matchMedia('(hover: hover) and (pointer: fine)').matches &
  */
 const V1 = { rx: -0.6977, ry: 0.5757, rz: -2.3613 };
 const LOGO_FRONT = 0; // psi 0
-/** D-177: the pedestal top in the warm desk photo (fractions of the photo) — the landing point */
-const STONE = heroBg.anchor;
-const stoneAt = (zoom = 1) => {
-  const W = window.innerWidth;
-  const H = window.innerHeight;
-  const coverW = Math.max(W, H * heroBg.v1Ratio);
-  const coverH = coverW / heroBg.v1Ratio;
-  // D-177: the pedestal top is 0.33 of the photo wide and 0.082 deep on screen; the catcher is tilted
-  // (sin 0.32 ≈ 0.31), so its own depth is 0.08 / 0.31 of the photo height
-  // the photo zooms around the pedestal (heroBg.anchor), so its place does not depend on the zoom
-  // the top face runs from y 0.71 (back edge) to 0.792 (front edge) of the photo: centre 0.751
-  const topY = 0.751;
-  return { shadowX: ((STONE.x - 0.5) * coverW) / W, shadowY: (-(topY - 0.5) * coverH) / H, shadowW: (0.33 * coverW * zoom) / W, shadowD: ((0.082 / 0.31) * coverH * zoom) / H, shadowDrop: (0.113 * coverH * zoom) / H };
-};
+/** the photo's CSS zoom (D-177), shared with the 3D desk so the pedestal zooms with the photo */
+const photoZoom = (u: number, ctx: Ctx) => lerp(ctx.mobile ? heroBg.mobile.zoomFrom : heroBg.desktop.zoomFrom, 1, seg(u, 0.9, 2.2));
+/**
+ * D-179 state 1: the ring stands on the 3D pedestal in the 3D Designer's pose (rest 1, stage.ts takes
+ * the pose from s01-pedestal-pose.json) and casts its shadow over the pedestal and the desk, on
+ * phones too (it rests on the pedestal, so the shadow is a contact shadow, not a ring floating
+ * high above a surface). x / y / w / r* below are the lift-off float pose it rises into (0 → 0.9).
+ */
 const floatPose = (ctx: Ctx): Pose => {
   const W = window.innerWidth;
   const H = window.innerHeight;
@@ -58,9 +52,9 @@ const floatPose = (ctx: Ctx): Pose => {
     spin: LOGO_FRONT,
     photo: 1,
     gloss: 1,
-    // phones float the ring far above the stone, where a sharp ring-shaped shadow reads wrong
-    shadow: ctx.mobile ? 0 : 1,
-    ...stoneAt(ctx.mobile ? heroBg.mobile.zoomFrom : heroBg.desktop.zoomFrom),
+    shadow: 1,
+    desk: 1,
+    rest: 1,
   });
 };
 
@@ -84,7 +78,7 @@ export const hero: SectionMotion = {
     // V1 load intro: the photo settles, the letters rise (not for reduced motion)
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
       gsap.timeline({ delay: 0.1 })
-        .fromTo(el.img, { scale: 1.08 }, { scale: 1, duration: 2.4, ease: 'expo.out' }, 0)
+        // D-179: no settle-zoom on the photo any more: the 3D pedestal stands on it and must not slide
         .fromTo(root.querySelectorAll('.hero__char'), { yPercent: 110 }, { yPercent: 0, duration: 1.3, ease: 'expo.out', stagger: 0.045 }, 0.2)
         .fromTo([el.tag, el.features, el.price, el.statement, el.foot], { opacity: 0 }, { opacity: 1, duration: 0.9, stagger: 0.08, clearProps: 'opacity' }, 0.9);
     }
@@ -101,8 +95,7 @@ export const hero: SectionMotion = {
 
     // 1 → 2: the photo zooms out behind the ring (D-177: from a little zoomed in down to cover, around
     // the pedestal, so no edge ever shows); 2 → 3: it fades to Paper
-    const z = lerp(ctx.mobile ? heroBg.mobile.zoomFrom : heroBg.desktop.zoomFrom, 1, seg(u, 0.9, 2.2));
-    put(el.photo, { o: 1 - seg(u, 2.05, 2.8), s: z }, ctx);
+    put(el.photo, { o: 1 - seg(u, 2.05, 2.8), s: photoZoom(u, ctx) }, ctx);
   },
   theme: (u) => (u < 2.45 ? 'photo' : null),
   ring(u, ctx: Ctx) {
@@ -110,14 +103,15 @@ export const hero: SectionMotion = {
     const end = why.ring!(0, ctx); // = S02 state 1 (frame end = frame start)
     const p = along(u, [
       [0, floatPose(ctx)],
-      [0.9, pose({ ...floatPose(ctx), y: m ? 0.12 : 0.01, w: m ? 0.72 : 0.34, rx: -0.55, ry: 0.15, rz: -1.2, spin: 0.2, uncap: 1, shadow: 0 })],
+      [0.9, pose({ ...floatPose(ctx), y: m ? 0.12 : 0.01, w: m ? 0.72 : 0.34, rx: -0.55, ry: 0.15, rz: -1.2, spin: 0.2, uncap: 1, rest: 0 })],
       // close-up (s01-state3-zoom-in.png): opening toward the camera, the sensors and the green
       // light on the inner wall, the band running off the edge
-      [2, pose({ x: m ? 0.34 : 0.12, y: 0.02, w: m ? 1.9 : 0.95, rx: -0.3, ry: -0.42, rz: 0.1, spin: -0.3, photo: 1, uncap: 1, led: 0.6 })],
+      [2, pose({ x: m ? 0.34 : 0.12, y: 0.02, w: m ? 1.9 : 0.95, rx: -0.3, ry: -0.42, rz: 0.1, spin: -0.3, photo: 1, desk: 1, shadow: 1, uncap: 1, led: 0.6 })],
       [3, end],
     ]);
     // mouse tilt in state 1 only (V1 heroRing: ±0.22 / ±0.32 rad, eased)
-    const w = 1 - seg(u, 0, 0.8);
+    // no mouse tilt or bob while the ring stands on the pedestal (it lifts off from 0 to 0.9)
+    const w = (1 - seg(u, 0, 0.8)) * (1 - p.rest);
     const tk = canTilt() && !ctx.reduced ? 1 : 0;
     tilt.x += (mouse.y * 0.22 * tk - tilt.x) * 0.06;
     tilt.y += (mouse.x * 0.32 * tk - tilt.y) * 0.06;
@@ -134,6 +128,9 @@ export const hero: SectionMotion = {
       photo: u < 2 ? 1 : 1 - out,
       led: u < 2 ? p.led : 0.6 * (1 - seg(u, 2, 2.6)),
       uncap: u < 2 ? p.uncap : 1,
+      // the pedestal leaves with the photo (same window as the CSS fade below), so S02 is unchanged
+      desk: 1 - seg(u, 2.05, 2.8),
+      deskZoom: photoZoom(u, ctx),
     };
   },
 };

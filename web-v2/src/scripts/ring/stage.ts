@@ -32,7 +32,7 @@ export interface RingStage {
 export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingStage | null> {
   let renderer: THREE.WebGLRenderer;
   try {
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, stencil: true, powerPreference: 'high-performance' });
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
   } catch {
     return null;
   }
@@ -156,78 +156,134 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const coldEdge = new THREE.DirectionalLight(0xdfe8ff, 0);
   coldEdge.position.set(-1000, 260, -760);
   scene.add(coldEdge);
-  // V1 live cast shadow on the stone (D-051): a shadow-only light and a transparent catcher plane
+  /* D-179 S01 desk: the 3D Designer's pedestal (s01-pedestal.glb) on the ring's canvas, a transparent
+     shadow catcher on the desk and one warm key light from the lamp (upper right, behind) that casts
+     the ring + pedestal shadows: the ring's shadow runs over the pedestal top, down its front and on
+     across the desk, to the left and forward. Replaces the D-178 stencil-masked receivers (the photo
+     has no pedestal any more). Everything sits in one group in the pose JSON's own space (metres,
+     Y up); the group is placed so the 3D Designer's camera, matched to the photo (heroBg.cam), is
+     this stage's camera (see placeDesk). Pose values (ring rest height included) come from the JSON
+     at runtime, so a revised GLB + JSON swap in without code changes. */
+  const LAMP = 8; // lamp key intensity, matched by eye to the 3D Designer's poster
+  const PED_ENV = 0.55;
+  /** warm-yellow multiply on the oak: AgX turns the lamp-lit oak pinkish; matched by eye to the poster */
+  const PED_TINT = new THREE.Color().setRGB(1, 0.88, 0.58);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  const shadowSun = new THREE.DirectionalLight(0xffffff, 0); // casts only, adds no light
-  shadowSun.shadow.mapSize.set(2048, 2048);
-  shadowSun.shadow.radius = 6;
-  shadowSun.shadow.bias = -0.0005;
-  scene.add(shadowSun, shadowSun.target);
-  const catcherMat = new THREE.ShadowMaterial({ color: 0x1c140b, opacity: 0, transparent: true, depthWrite: false });
-  /* D-178: two shadow receivers — the pedestal's top plane and the desk plane one pedestal height
-     lower, both large — limited in SCREEN space by stencil masks traced from the photo
-     (heroBg.pedestal): the top receiver draws only inside the top face, the desk receiver only
-     outside the pedestal's silhouette, the visible sides get neither. So the shadow follows the
-     photo's own outline: it runs over the top and on down onto the desk, with no patch or double. */
-  const stencilTest = (m: THREE.Material, ref: number) => {
-    m.stencilWrite = true; // enables the stencil test
-    m.stencilRef = ref;
-    m.stencilFunc = THREE.EqualStencilFunc;
-    m.stencilFail = THREE.KeepStencilOp;
-    m.stencilZFail = THREE.KeepStencilOp;
-    m.stencilZPass = THREE.KeepStencilOp;
-  };
-  const catcher = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), catcherMat);
-  stencilTest(catcherMat, 1);
-  catcher.receiveShadow = true;
-  catcher.renderOrder = -1;
-  catcher.visible = false;
-  scene.add(catcher);
-  const deskMat = new THREE.ShadowMaterial({ color: 0x1c140b, opacity: 0, transparent: true, depthWrite: false });
-  stencilTest(deskMat, 0);
-  const deskCatcher = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), deskMat);
-  deskCatcher.receiveShadow = true;
-  deskCatcher.renderOrder = -1;
-  deskCatcher.visible = false;
-  scene.add(deskCatcher);
-  // masks: screen-facing shapes at z 0 (1 px = 1 unit there), drawn first, write only the stencil
-  const maskMat = (ref: number) =>
-    new THREE.MeshBasicMaterial({
-      colorWrite: false,
-      depthWrite: false,
-      depthTest: false,
-      stencilWrite: true,
-      stencilRef: ref,
-      stencilFunc: THREE.AlwaysStencilFunc,
-      stencilZPass: THREE.ReplaceStencilOp,
+  renderer.shadowMap.type = THREE.VSMShadowMap; // smooth penumbra, no PCF noise or banding
+  const desk = new THREE.Group();
+  desk.matrixAutoUpdate = false;
+  desk.visible = false;
+  scene.add(desk);
+  const lampKey = new THREE.DirectionalLight(0xffb370, 0);
+  lampKey.castShadow = true;
+  lampKey.shadow.mapSize.set(isPhone() ? 1024 : 2048, isPhone() ? 1024 : 2048);
+  lampKey.shadow.radius = 18;
+  lampKey.shadow.blurSamples = 24;
+  desk.add(lampKey, lampKey.target);
+  const deskMat = new THREE.ShadowMaterial({ color: 0x2a1608, opacity: 0, transparent: true, depthWrite: false });
+  const deskPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.2), deskMat);
+  deskPlane.rotation.x = -Math.PI / 2;
+  deskPlane.receiveShadow = true;
+  deskPlane.renderOrder = -1;
+  desk.add(deskPlane);
+  // soft contact shade where the pedestal meets the desk (ambient occlusion the lampKey light cannot give)
+  const aoTex = (() => {
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = 128;
+    const g = cv.getContext('2d')!;
+    const grd = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grd.addColorStop(0, 'rgba(0,0,0,1)');
+    grd.addColorStop(0.55, 'rgba(0,0,0,0.6)');
+    grd.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = grd;
+    g.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(cv);
+  })();
+  const aoMat = new THREE.MeshBasicMaterial({ map: aoTex, color: 0x1a0c04, transparent: true, opacity: 0, depthWrite: false, toneMapped: false });
+  const ao = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), aoMat);
+  ao.rotation.x = -Math.PI / 2;
+  ao.position.y = 0.0001;
+  ao.renderOrder = -1;
+  desk.add(ao);
+  let deskPose: any = null;
+  let pedestal: THREE.Object3D | null = null;
+  const pedMats: THREE.MeshStandardMaterial[] = [];
+  const deskCam = new THREE.PerspectiveCamera(); // the JSON camera (for its view rotation)
+  const loadDesk = async () => {
+    deskPose = await fetch(RING_MODEL.desk.pose).then((r) => r.json());
+    const c = deskPose.camera;
+    deskCam.position.fromArray(c.position);
+    deskCam.lookAt(new THREE.Vector3().fromArray(c.lookAt));
+    deskCam.updateMatrixWorld(true);
+    const L = deskPose.lights.key;
+    lampKey.position.fromArray(L.position);
+    lampKey.target.position.fromArray(L.target);
+    const b = L.shadow.camera_bounds_m ?? 0.06;
+    const sc = lampKey.shadow.camera;
+    sc.left = sc.bottom = -b;
+    sc.right = sc.top = b;
+    sc.near = 0.01;
+    sc.far = lampKey.position.distanceTo(lampKey.target.position) + 0.2;
+    lampKey.shadow.bias = L.shadow.bias ?? -0.0002;
+    lampKey.shadow.normalBias = L.shadow.normalBias ?? 0.0004;
+    deskMat.color.set(deskPose.desk.color ?? '#2A1608');
+    const sz = deskPose.pedestal.size_mm;
+    ao.scale.set((sz.width_x / 1000) * 1.35, (sz.depth_z / 1000) * 1.6, 1);
+    const draco = new DRACOLoader().setDecoderPath(RING_MODEL.dracoPath);
+    const g = await new GLTFLoader().setDRACOLoader(draco).loadAsync(RING_MODEL.desk.url);
+    pedestal = g.scene;
+    pedestal.position.fromArray(deskPose.pedestal.position);
+    pedestal.quaternion.fromArray(deskPose.pedestal.quaternion);
+    pedestal.scale.setScalar(deskPose.pedestal.scale ?? 1);
+    pedestal.traverse((o) => {
+      if (!o.isMesh) return;
+      o.castShadow = true;
+      o.receiveShadow = true;
+      const m = o.material as THREE.MeshStandardMaterial;
+      m.color.multiply(PED_TINT);
+      m.envMapIntensity = PED_ENV; // handoff: 0.4–0.6, so the wood does not read as plastic
+      pedMats.push(m);
     });
-  const bodyMask = new THREE.Mesh(new THREE.BufferGeometry(), maskMat(2)); // the sides: no shadow
-  const topMask = new THREE.Mesh(new THREE.BufferGeometry(), maskMat(1)); // the top face
-  bodyMask.renderOrder = -12;
-  topMask.renderOrder = -11;
-  bodyMask.visible = topMask.visible = false;
-  scene.add(bodyMask, topMask);
-  let maskKey = '';
-  /** photo px → screen units (origin at the centre, y up), with the photo's cover size and zoom */
-  const maskShape = (pts: number[][], W: number, H: number, zoom: number) => {
-    const ratio = heroBg.v1Ratio;
-    const cw = Math.max(W, H * ratio);
-    const ch = cw / ratio;
-    const ax = (heroBg.anchor.x - 0.5) * cw;
-    const ay = (heroBg.anchor.y - 0.5) * ch;
-    const sh = new THREE.Shape();
-    pts.forEach(([px, py], i) => {
-      const x = ax + ((px / 1672 - 0.5) * cw - ax) * zoom;
-      const y = ay + ((py / 941 - 0.5) * ch - ay) * zoom;
-      if (i === 0) sh.moveTo(x, -y);
-      else sh.lineTo(x, -y);
-    });
-    return new THREE.ShapeGeometry(sh);
+    desk.add(pedestal);
   };
-  // D-177: from the lamp (upper right, behind the ring), so the shadow falls left and forward, away from it
-const SHADOW_DIR = new THREE.Vector3(1.3, 0.8, -0.08).normalize(); // the lamp stands at the back of the desk
-
+  const deskReady = loadDesk().catch((e) => {
+    console.warn('S01 pedestal not loaded', e);
+    deskPose = null; // no pedestal: the ring still renders; the poster keeps the pedestal
+  });
+  const _m = new THREE.Matrix4();
+  const _q = new THREE.Quaternion();
+  const _v = new THREE.Vector3();
+  /** the photo camera on screen: focal length (px) and principal point (px from the centre, y down),
+   *  through the photo's cover size and its CSS zoom around heroBg.anchor */
+  const photoCam = (zoom: number) => {
+    const C = heroBg.cam;
+    const cw = Math.max(W, H * heroBg.v1Ratio);
+    const ch = cw / heroBg.v1Ratio;
+    const toScreen = (fu: number, fv: number) => {
+      const ax = (heroBg.anchor.x - 0.5) * cw;
+      const ay = (heroBg.anchor.y - 0.5) * ch;
+      return [ax + ((fu - 0.5) * cw - ax) * zoom, ay + ((fv - 0.5) * ch - ay) * zoom];
+    };
+    const [px, py] = toScreen(0.5, (C.frameH / 2 + C.shiftY * C.frameW) / C.frameH);
+    return { F: C.focalPx * (cw / C.frameW) * zoom, px, py };
+  };
+  /**
+   * the desk group: camera space of the JSON camera → this stage's world. Our camera sits at (0,0,F)
+   * looking down −Z with the same focal length and principal point, so a point at camera-space p
+   * (metres) goes to (0,0,F) + k·p; k = F / (subject distance) keeps the subject near z 0.
+   */
+  let deskK = 1;
+  /** phones: ring + pedestal smaller against the photo, about the pedestal origin (heroBg.mobile.subject) */
+  const deskSubject = () => (window.innerWidth <= 760 ? heroBg.mobile.subject : heroBg.desktop.subject);
+  const placeDesk = (F: number) => {
+    if (!deskPose) return;
+    const d = deskCam.position.distanceTo(_v.fromArray(deskPose.camera.lookAt));
+    deskK = F / d;
+    _m.copy(deskCam.matrixWorldInverse); // world (JSON) → JSON camera space
+    const m = deskSubject();
+    desk.matrix.makeScale(deskK, deskK, deskK).premultiply(new THREE.Matrix4().makeTranslation(0, 0, F)).multiply(_m).multiply(new THREE.Matrix4().makeScale(m, m, m));
+    desk.matrixWorldNeedsUpdate = true;
+  };
   /* S06 finger proxy (s06-pose.json fingerProxy): lathe around +Y in hand-photo px, y = 0 at the
      ring seat (profile reversed so the faces point outward, as ring-test/s06.html); depth only, drawn before the ring so the back of the band hides behind the finger */
   const PROFILE = [[0, 337], [15, 334], [28, 320], [35, 300], [38, 280], [40, 260], [42, 220], [44.6, 160], [48, 120], [47, 60], [46, 0], [48, -110], [0, -110]];
@@ -472,22 +528,56 @@ const SHADOW_DIR = new THREE.Vector3(1.3, 0.8, -0.08).normalize(); // the lamp s
   let lastBlur = 0;
   let lastEnv = '';
   let lastLedKey = '';
+  let lastCam = '';
   const apply = (p: Pose, extra: { breathe?: number } = {}) => {
     // width: fraction of viewport width, but never taller than 82% of the viewport
     const raw = p.w * W;
-    const w = (Math.min(raw, H * 0.82) * (1 - p.uncap) + raw * p.uncap) * (1 + (extra.breathe ?? 0));
-    pivot.position.set(p.x * W, p.y * H, 0);
+    const w = (Math.min(raw, H * 0.82) * (1 - p.uncap) + raw * p.uncap) * (1 + (extra.breathe ?? 0) * (1 - Math.min(1, Math.max(0, p.rest))));
+    /* D-179: in S01 the camera becomes the photo camera (focal length + principal point of
+       s01-pedestal-pose.json on the photo as CSS shows it); poses in screen fractions keep their
+       place on the z 0 plane (the principal-point shift is taken back out of pivot.x / y) */
+    const dsk = deskPose ? Math.min(1, Math.max(0, p.desk)) : 0;
+    const F0 = H / 2 / Math.tan(THREE.MathUtils.degToRad(FOV / 2));
+    const pc = dsk > 0 ? photoCam(p.deskZoom) : { F: F0, px: 0, py: 0 };
+    // the camera stays the photo camera until the pedestal has almost faded (≤ 1/8), so the pedestal
+    // never drifts against the photo; only then does it ease back to the default lens
+    const cb = Math.min(1, dsk * 8);
+    const F = F0 + (pc.F - F0) * cb;
+    const Px = pc.px * cb;
+    const Py = pc.py * cb;
+    const camKey = `${F.toFixed(2)}|${Px.toFixed(2)}|${Py.toFixed(2)}|${W}x${H}`;
+    if (camKey !== lastCam) {
+      lastCam = camKey;
+      camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(H / 2 / F));
+      camera.position.set(0, 0, F);
+      camera.far = Math.max(40000, F * 4);
+      if (Px || Py) camera.setViewOffset(W, H, -Px, -Py, W, H);
+      else camera.clearViewOffset();
+      camera.updateProjectionMatrix();
+      placeDesk(F);
+    }
+    pivot.position.set(p.x * W - Px, p.y * H + Py, 0);
     pivot.scale.setScalar(w / ringSize);
     pivot.rotation.set(p.rx, p.ry, p.rz, 'YXZ');
     if (p.pitch) pivot.quaternion.premultiply(rollQ.setFromAxisAngle(X_AXIS, p.pitch));
     if (p.roll) pivot.quaternion.premultiply(rollQ.setFromAxisAngle(Z_AXIS, p.roll));
+    // the ring standing on the pedestal: the JSON ring pose, through the desk group
+    const rest = deskPose && dsk > 0 ? Math.min(1, Math.max(0, p.rest)) : 0;
+    if (rest > 0) {
+      const R = deskPose.ring;
+      _v.fromArray(R.position).applyMatrix4(desk.matrix);
+      pivot.position.lerp(_v, rest);
+      pivot.scale.setScalar(pivot.scale.x + (deskK * deskSubject() * (R.scale ?? 1) - pivot.scale.x) * rest);
+      _q.copy(deskCam.quaternion).invert().multiply(new THREE.Quaternion().fromArray(R.quaternion));
+      pivot.quaternion.slerp(_q, rest);
+    }
     finger.visible = p.fing > 0.5;
     if (finger.visible) {
       finger.position.set(p.fx * W, p.fy * H, 0);
       finger.scale.setScalar(p.fs);
       finger.rotation.set(0, 0, FINGER_TILT);
     }
-    spinner.rotation.z = p.spin;
+    spinner.rotation.z = p.spin * (1 - rest);
     // S06 table: scale = ring px per metre, origin at the contact line, x 0 = middle of the screen
     const tk = `${p.table.toFixed(3)}|${p.tableD.toFixed(1)}|${p.tableY.toFixed(4)}|${W}x${H}`;
     tableRoot.visible = p.table > 0.002;
@@ -528,9 +618,12 @@ const SHADOW_DIR = new THREE.Vector3(1.3, 0.8, -0.08).normalize(); // the lamp s
     }
 
     // V1 rig and cast shadow, S01 only
-    sun.intensity = 2.6 * p.photo;
-    hemi.intensity = 0.55 * p.photo;
-    fill.intensity = 0.35 * p.photo;
+    // D-179: on the desk the lamp key (lampKey) takes over from the D-177 rig, so the shadows it casts
+    // are the dominant shade on the pedestal (a shadow only removes the light that casts it)
+    const rig = p.photo * (1 - 0.6 * dsk);
+    sun.intensity = 2.6 * rig;
+    hemi.intensity = 0.55 * rig;
+    fill.intensity = 0.35 * rig;
     rim.intensity = 14 * p.rim;
     rimFill.intensity = 3.2 * p.rim;
     warmRim.intensity = 10 * p.warm;
@@ -542,45 +635,35 @@ const SHADOW_DIR = new THREE.Vector3(1.3, 0.8, -0.08).normalize(); // the lamp s
     deskFill.distance = w * 2.6;
     cornerLight.intensity = 14 * Math.min(1, Math.max(0, p.corner));
     coldEdge.intensity = 34 * Math.min(1, Math.max(0, p.edge));
-    const sh = Math.max(0, p.shadow);
-    catcher.visible = sh > 0.005;
-    const masked = catcher.visible && p.shadowDrop > 0 && p.shadowW > 0;
-    deskCatcher.visible = bodyMask.visible = topMask.visible = masked;
-    shadowSun.castShadow = catcher.visible;
-    if (catcher.visible) {
-      catcher.position.set(p.shadowX * W, p.shadowY * H, 0);
-      // D-177: the further the ring is above the pedestal, the lighter its shadow (a soft key light)
-      const lift = Math.min(1, Math.abs(pivot.position.y - catcher.position.y) / (1.5 * w));
-      catcherMat.opacity = deskMat.opacity = 0.6 * sh * (1 - 0.35 * lift);
-      catcher.rotation.set(-Math.PI / 2 + 0.32, 0, 0); // the receiving top, foreshortened like the photo
-      if (masked) {
-        // D-178: both planes large; the stencil masks give them the photo's outline
-        catcher.scale.set(W * 4, H * 4, 1);
-        const drop = p.shadowDrop * H;
-        deskCatcher.scale.copy(catcher.scale);
-        deskCatcher.position.set(catcher.position.x, catcher.position.y - drop, 0);
-        deskCatcher.rotation.copy(catcher.rotation);
-        // the photo's zoom, from the pedestal width the hero passes (0.33 of the cover width)
-        const cw = Math.max(W, H * heroBg.v1Ratio);
-        const zoom = (p.shadowW * W) / (0.33 * cw);
-        const key = `${W}x${H}|${zoom.toFixed(4)}`;
-        if (key !== maskKey) {
-          maskKey = key;
-          bodyMask.geometry.dispose();
-          topMask.geometry.dispose();
-          bodyMask.geometry = maskShape(heroBg.pedestal.body, W, H, zoom);
-          topMask.geometry = maskShape(heroBg.pedestal.top, W, H, zoom);
+    // D-179 desk: pedestal, key light and the shadow catcher fade with the photo
+    desk.visible = dsk > 0.002;
+    lampKey.castShadow = desk.visible;
+    if (desk.visible) {
+      const sh = Math.max(0, p.shadow);
+      lampKey.intensity = LAMP * dsk;
+      deskMat.opacity = (deskPose.desk.opacity ?? 0.5) * sh * dsk;
+      aoMat.opacity = 0.32 * dsk;
+      pedMats.forEach((m) => {
+        m.opacity = dsk;
+        if (m.transparent !== dsk < 1) {
+          m.transparent = dsk < 1; // opaque while fully shown (correct sorting), fades out with the photo
+          m.needsUpdate = true;
         }
-      } else catcher.scale.set(w * 3.2, w * 2.2, 1);
-      shadowSun.target.position.copy(catcher.position);
-      shadowSun.position.copy(catcher.position).addScaledVector(SHADOW_DIR, w * 4);
-      const c = shadowSun.shadow.camera;
-      c.left = c.bottom = -w * 7; // D-178: wide enough for the shadow's run onto the desk
-      c.right = c.top = w * 7;
-      c.near = 1;
-      c.far = w * 14;
-      c.updateProjectionMatrix();
-    }
+      });
+      // shadow camera in world units (the group is scaled by deskK)
+      const L = deskPose.lights.key.shadow;
+      const kk = deskK * deskSubject();
+      const b = (L.camera_bounds_m ?? 0.06) * kk;
+      const sc = lampKey.shadow.camera;
+      if (sc.right !== b) {
+        sc.left = sc.bottom = -b;
+        sc.right = sc.top = b;
+        sc.near = 0.01 * kk;
+        sc.far = (lampKey.position.distanceTo(lampKey.target.position) + 0.2) * kk;
+        sc.updateProjectionMatrix();
+        lampKey.shadow.normalBias = (L.normalBias ?? 0.0004) * kk;
+      }
+    } else lampKey.intensity = 0;
 
     // env: night when light ≥ .5, else photo when photo ≥ .5, else paper; intensity dips around a swap
     const n = Math.min(1, Math.max(0, p.light));
@@ -676,5 +759,6 @@ const SHADOW_DIR = new THREE.Vector3(1.3, 0.8, -0.08).normalize(); // the lamp s
     litLed(ledPower, color === 'off' ? LED_RED : null, intensity);
   };
 
+  await deskReady; // the first frame already shows the pedestal (the poster cross-fades to it)
   return { apply, render, setLed, canvas, three: THREE, pivot };
 }

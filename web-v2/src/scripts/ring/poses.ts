@@ -17,8 +17,12 @@
  * led: 0..1 glow of the green light in sensor window A (S01 close-up shows it, as in the reference).
  * gloss: 1 = polished silver (finishes.json silver_polished) — every V2 section (D-085);
  *        0 = brushed as authored in the GLB (kept only as an option).
- * shadow: 0..1 opacity of the real-time cast shadow on the stone (S01, V1 D-051);
- *         shadowX / shadowY = where the stone top is (fractions of the viewport from the centre, y up).
+ * shadow: 0..1 opacity of the real-time cast shadows on the S01 pedestal and desk (D-179).
+ * desk: 0..1 the S01 desk scene (D-179): the 3D pedestal (s01-pedestal.glb), its shadow catcher on
+ *       the desk and the 3D Designer's camera matched to the photo (s01-pedestal-pose.json). 1 = the
+ *       camera is that photo camera and the pedestal is fully shown; 0 = gone, default FOV.
+ * deskZoom: the photo's CSS zoom (content/heroBg.ts), so the pedestal zooms with the photo.
+ * rest: 0..1 the ring stands on the pedestal in the pose JSON's ring pose (1) instead of x/y/w/r*.
  * pitch: turn about the screen X axis (radians), applied after rx/ry/rz and before roll; + tips the
  *        top of the ring toward the viewer (S06: logo on the band reads from slightly above).
  * fing: 0..1 finger proxy on (S06 state 4): a depth-only lathe along the index finger of the hand
@@ -64,13 +68,9 @@ export interface Pose {
   led: number;
   gloss: number;
   shadow: number;
-  shadowX: number;
-  shadowY: number;
-  /** D-177: size of the surface that receives the S01 shadow (the pedestal top), fractions of W / H; 0 = the V1 size */
-  shadowW: number;
-  shadowD: number;
-  /** D-178: height of the pedestal's front face (fraction of H): the desk plane lies this much lower; 0 = no desk plane */
-  shadowDrop: number;
+  desk: number;
+  deskZoom: number;
+  rest: number;
   pitch: number;
   fing: number;
   fx: number;
@@ -137,4 +137,4 @@ export function along(u: number, frames: Array<[number, Pose]>): Pose {
   return frames[frames.length - 1][1];
 }
 
-export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, shadowX: 0, shadowY: -0.3, shadowW: 0, shadowD: 0, shadowDrop: 0, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, ledc: 0, flare: 0, custom: 0, finA: 0, finB: 0, finT: 0, lamp: 0, corner: 0, edge: 0, envDim: 0, blur: 0, table: 0, tableD: 0, tableY: 0, tableShadow: 0, alpha: 1, ...p });
+export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, desk: 0, deskZoom: 1, rest: 0, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, ledc: 0, flare: 0, custom: 0, finA: 0, finB: 0, finT: 0, lamp: 0, corner: 0, edge: 0, envDim: 0, blur: 0, table: 0, tableD: 0, tableY: 0, tableShadow: 0, alpha: 1, ...p });

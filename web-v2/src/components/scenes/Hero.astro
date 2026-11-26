@@ -21,7 +21,7 @@ const icons = [
   class="scene scene--hero"
   data-scene="hero"
   aria-labelledby="hero-title"
-  style={`--ph-d:url(${D.placeholder}); --ph-m:url(${M.placeholder}); --v1-ratio:${heroBg.v1Ratio}; --d-ratio:${D.width / D.height}; --d-orig:${D.origW}; --m-ratio:${M.width / M.height}; --m-orig:${M.origW}; --anchor-x:${heroBg.anchor.x * 100}%; --anchor-y:${heroBg.anchor.y * 100}%`}
+  style={`--ph-d:url(${D.placeholder}); --ph-m:url(${M.placeholder}); --v1-ratio:${heroBg.v1Ratio}; --d-ratio:${D.width / D.height}; --d-orig:${D.origW}; --m-ratio:${M.width / M.height}; --m-orig:${M.origW}; --anchor-x:${heroBg.anchor.x * 100}%; --anchor-y:${heroBg.anchor.y * 100}%; --subj-x:${heroBg.subjectOrigin.x * 100}%; --subj-y:${heroBg.subjectOrigin.y * 100}%; --subj-m:${M.subject}`}
 >
   <div class="scene__back">
     <div class="hero__photo" data-h-photo data-a>
@@ -30,6 +30,12 @@ const icons = [
         <img src={D.src} srcset={D.srcset} sizes="max(100vw, 178lvh)" width={D.width} height={D.height} alt="" fetchpriority="low" decoding="async" data-h-img />
       </picture>
       <div class="hero__dim" style={`opacity:${heroBg.dim}`}></div>
+      <!-- D-179 poster: ring + 3D pedestal + their shadows, transparent, in the photo's own frame
+           (3D Designer fb-s01-pedestal-alpha), so it zooms with the photo. First paint, reduced
+           motion and no WebGL; once the live ring is up it cross-fades to the identical 3D frame. -->
+      <div class="hero__poster">
+        <img src={heroBg.poster} alt={hero.ringAlt} width="1818" height="1037" data-ring-fallback data-fb-range="0,1.6" decoding="async" fetchpriority="high" />
+      </div>
     </div>
     <h1 class="hero__word" id="hero-title" data-h-word data-a>
       <span class="sr-only">Stillway. {hero.tagline}</span>
@@ -40,10 +46,7 @@ const icons = [
   </div>
 
 
-  <!-- polished stills (3D Designer 16cfbaf): reduced motion / WebGL failure only; frame 1024, ring 640 px
-       centred at (512, 442), so the image is 1.6× the ring width -->
-  <img class="ring-fallback hero__fb hero__fb--shadow" src="/ring-fallback/fb-s01-warm-shadow.webp" alt="" width="2048" height="1100" data-ring-fallback data-fb-range="0,1" data-a decoding="async" />
-  <img class="ring-fallback hero__fb" src="/ring-fallback/fb-s01-warm.webp" alt={hero.ringAlt} width="1024" height="1024" data-ring-fallback data-fb-range="0,1" data-a decoding="async" />
+  <!-- S02 start still (reduced motion / WebGL failure only) -->
   <img class="ring-fallback hero__fb hero__fb--end" src="/ring-fallback/fb-s02-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-fb-range="3,3.5" data-a loading="lazy" decoding="async" />
   <div class="scene__front">
     <div class="hero__meta" data-h-meta data-a>
@@ -98,11 +101,25 @@ const icons = [
   .hero__photo img {
     object-fit: cover;
   }
-  /* D-178: fb-s01-warm is the live S01 ring (warm desk rig) rendered at the still framing (1024,
-     ring 640 at (512, 442)), so the poster and the 3D ring match. fb-s01-warm-shadow is that
-     ring's live shadow (pedestal top + desk), in a frame twice as wide, centred the same way. */
-  .hero__fb.hero__fb--shadow {
-    width: calc(var(--rw) * 3.2);
+  .hero__poster,
+  .hero__poster img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .hero__poster {
+    transform-origin: var(--subj-x) var(--subj-y);
+  }
+  @media (max-width: 760px) {
+    .hero__poster {
+      scale: var(--subj-m); /* heroBg.mobile.subject, the same as the 3D desk on phones */
+    }
+  }
+  :global(html.ring-ready) .hero__poster {
+    opacity: 0;
+    transition: opacity 0.9s ease; /* same as the canvas fade-in, so the two cross */
   }
   .hero__dim {
     position: absolute;
@@ -233,9 +250,6 @@ const icons = [
     .hero__fb {
       --rw: 66vw;
       top: calc(40% - var(--rw) * 1.6 * 0.4316);
-    }
-    .hero__fb--shadow {
-      display: none;
     }
     .hero__fb--end {
       --rw: 70vw;
