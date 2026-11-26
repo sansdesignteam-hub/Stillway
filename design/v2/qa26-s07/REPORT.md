@@ -1,6 +1,6 @@
 # S07 foto dan layout teks penutup (D-175) — laporan Developer
 
-Baseline `0335c24`, commit ``. `npm run build` lulus. Diperiksa dengan Chrome headless pada 1440 × 900 dan 375 × 812.
+Baseline `0335c24`, commit `26f79f9`. `npm run build` lulus. Diperiksa dengan Chrome headless pada 1440 × 900 dan 375 × 812.
 
 ## Aset
 - Lima PNG dari `/tmp/stillway-d175-s07.IqcurO/` disalin ke `design/assets/v2/s07/`.
