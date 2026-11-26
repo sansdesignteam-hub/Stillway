@@ -502,13 +502,16 @@ def write_pose(S):
                                                 "note": "Blender shift_y 0.135 of frame width moves the subject down. In three.js use camera.setViewOffset(fullW, fullH, 0, -0.135*fullW, fullW, fullH) or render to the photo aspect and match by eye."},
                    "frame": "photo 1818x1037, shown background-size: cover, centred (desktop 1440x900 crops the sides)"},
         "lights": {
-            "key": {"type": "DirectionalLight (or SpotLight) warm, from the lamp: back-right, high", "position": v2t(key.location),
-                    "target": [0, 0.004, 0], "color": "#FFB370", "intensity": 2.6, "castShadow": True,
-                    "threejs_note": "DirectionalLight, renderer AgX exposure 1.0, physically correct units (r155+). Elevation ~50 deg so the ring shadow lands on the pedestal top.",
-                    "shadow": {"mapSize": 2048, "bias": -0.0002, "normalBias": 0.0004, "radius_PCFSoft": 6,
-                               "camera_bounds_m": 0.06, "note": "Blender area light Ø55 mm at ~340 mm -> soft penumbra; in three.js use PCFSoftShadowMap or VSM"}},
-            "fill": {"type": "HemisphereLight", "skyColor": "#FFD9B0", "groundColor": "#3A2414", "intensity": 0.25, "note": "no front fill: left and front faces of the pedestal must stay in shade"},
-            "pedestal_envMapIntensity": 0.35,
+            "key": {"type": "DirectionalLight", "position": v2t(key.location), "target": [0, 0.004, 0],
+                    "direction_unit": [round(c, 4) for c in v2t((Vector((0, 0, 0.004)) - key.location).normalized())],
+                    "elevation_deg": round(math.degrees(math.asin(((key.location - Vector((0, 0, 0.004))).normalized()).z)), 1),
+                    "color": "#FFB370", "intensity": 3.0, "castShadow": True,
+                    "convention": "three.js Y-up metres in pedestal space (= Blender (x, y, z) -> (x, z, -y)). Verified against the Cycles light: Blender key at (0.190, 0.120, 0.250) m aimed at (0, 0, 0.004); a Cycles SUN with this exact direction gives the same front-left shadow as the area light (renders/s01-pedestal/s01-key-area-vs-sun.png). Light travels (-0.570, -0.738, +0.360): left, down, toward the camera (+Z), so the ring shadow on the top runs LEFT-FRONT and is ~0.9 x the casting height long (elevation 47.6 deg).",
+                    "shadow": {"type": "VSMShadowMap", "mapSize": 2048, "camera_bounds_m": 0.045, "radius": 6, "blurSamples": 16,
+                               "bias": -0.0001, "normalBias": 0.0003,
+                               "note": "Cycles area light D55 mm at 333 mm = 9.4 deg penumbra cone: contact-hard at the ring's touch point, ~3-4 mm soft at the shadow tip. With VSM (uniform blur) keep the blur small (~0.5 mm = 6 texels at 2048 over +-0.045 m) so the shadow stays clearly defined, as the user asked; do not raise radius to fake the tip softness."}},
+            "fill": {"type": "HemisphereLight", "skyColor": "#FFD9B0", "groundColor": "#3A2414", "intensity": 0.15, "note": "no front fill; keep key:fill high so the shadow on the top reads strong (Cycles key-only vs env-only: the env adds a soft overall lift, it does not cast the shaped shadow)"},
+            "pedestal_envMapIntensity": 0.25,
             "environment": "env/v2-env-paper.exr tinted warm (#FFB87A multiply), intensity ~0.28 for ring reflections"},
         "desk": {"type": "ShadowMaterial plane at y = 0", "opacity": 0.5, "color": "#2A1608", "size_m": 1.2,
                  "note": "transparent shadow catcher over the CSS photo; receives pedestal + ring shadows"},
@@ -576,6 +579,8 @@ if __name__ == "__main__":
         build()
     if mode in ("renders", "all"):
         renders()
+    if mode == "pose":
+        write_pose(scene_setup())
     if mode == "poster":
         poster_silver()
     if mode == "quick":
