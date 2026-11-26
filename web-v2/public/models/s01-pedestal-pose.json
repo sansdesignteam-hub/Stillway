@@ -19,8 +19,8 @@
       "width_x": 41.0,
       "depth_z": 25.6,
       "height_y": 6.8,
-      "corner_radius": 4.3,
-      "top_roundover": 0.7,
+      "corner_radius": 5.3,
+      "top_roundover": 1.1,
       "bottom_roundover": 0.35
     },
     "top_y": 0.0068,
@@ -30,18 +30,18 @@
   "ring": {
     "glb": "stillway-ring-v2-silver-polished_web.glb",
     "position": [
-      0.0015,
-      0.01872,
-      -0.0015
+      0.003,
+      0.018997,
+      -0.001
     ],
     "quaternion": [
-      0.061591,
-      -0.880797,
-      -0.032749,
-      0.468328
+      -0.342653,
+      -0.04484,
+      -0.915502,
+      0.205997
     ],
     "scale": 1,
-    "note": "ring rests on its band on the pedestal top (lowest vertex at top_y). Euler XYZ deg in Blender Z-up: [0.0, 8.0, 236.0]",
+    "note": "ring leans back-right resting on its lower edge (lowest vertex at top_y), opening toward camera-right, logo lower-left front (Figma 40004725:5602). Blender axis (-0.6, 0.75, -0.22), logo dir (-0.85, -0.3, -0.4)",
     "castShadow": true,
     "receiveShadow": false
   },

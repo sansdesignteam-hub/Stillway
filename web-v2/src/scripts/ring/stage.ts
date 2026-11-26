@@ -168,6 +168,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
      lights.pedestal_envMapIntensity); these are only the fallbacks and one gain each, tuned by eye
      against the 3D Designer's poster, so a new JSON drop retunes itself */
   const LAMP_GAIN = 2;
+  const RING_DESK_ENV = 1.6;
+  const DESK_PAPER = 0.35;
   /** Cycles' warm desk bounce lights the shaded faces; the web has no GI, so the env stands in */
   const PED_ENV_GAIN = 5;
   const SHADOW_RADIUS = 40;
@@ -586,7 +588,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       const R = deskPose.ring;
       _v.fromArray(R.position).applyMatrix4(desk.matrix);
       pivot.position.lerp(_v, rest);
-      pivot.scale.setScalar(pivot.scale.x + (deskK * deskSubject() * (R.scale ?? 1) - pivot.scale.x) * rest);
+      pivot.scale.setScalar(pivot.scale.x + (deskK * deskSubject() * (R.scale ?? 1) * (R.s01_scale ?? 1) - pivot.scale.x) * rest);
+      // ring.s01_scale (optional, JSON): larger ring only while it rests; the rest blend takes it back to the lift-off size, no pop
       _q.copy(deskCam.quaternion).invert().multiply(new THREE.Quaternion().fromArray(R.quaternion));
       pivot.quaternion.slerp(_q, rest);
     }
@@ -623,7 +626,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     }
 
     // finish: brushed → polished (V1)
-    const finKey = `${p.gloss}|${p.custom.toFixed(3)}|${p.finA}|${p.finB}|${p.finT.toFixed(3)}`;
+    const finKey = `${p.gloss}|${p.custom.toFixed(3)}|${p.finA}|${p.finB}|${p.finT.toFixed(3)}|${dsk.toFixed(3)}`;
     if (finKey !== lastFin) {
       lastFin = finKey;
       mix(band, brushed.band, POLISHED.band, p.gloss);
@@ -634,6 +637,11 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       } else {
         if (band && 'clearcoat' in band) band.clearcoat = 0;
       }
+      // D-179: on the desk the D-177 rig is off (JSON: key + hemisphere only), so the polished band
+      // takes more of the warm env to match the poster's bright silver; fades out with the desk
+      const rg = 1 + (RING_DESK_ENV - 1) * dsk;
+      if (band) band.envMapIntensity *= rg;
+      if (engrave) engrave.envMapIntensity *= rg;
     }
 
     // V1 rig and cast shadow, S01 only
@@ -689,7 +697,11 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     const n = Math.min(1, Math.max(0, p.light));
     const ph = Math.min(1, Math.max(0, p.photo));
     // photo ↔ paper: step through the prebuilt blends (no pop); paper ↔ night: dip and swap at 0.5
-    const step = blends.length ? Math.round((1 - ph) * (blends.length - 1)) : -1;
+    // D-179: the poster lights the ring with the paper studio env (warm-tinted), so on the desk the
+    // env starts DESK_PAPER of the way from the photo env toward paper; as the desk fades the photo→paper
+    // walk continues from there (no pop)
+    const pw = Math.max(1 - ph, DESK_PAPER * Math.min(1, Math.max(0, p.desk)));
+    const step = blends.length ? Math.round(pw * (blends.length - 1)) : -1;
     const dk = Math.min(1, Math.max(0, p.dusk));
     const key = dk >= 0.5 && envs.dusk ? 'dusk' : n >= 0.5 && envs.night ? 'night' : step >= 0 ? `blend${step}` : 'paper';
     if (key !== lastEnv) {
