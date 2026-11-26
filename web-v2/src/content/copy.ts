@@ -101,7 +101,7 @@ export const details = {
     { title: 'One quiet band', body: 'A single band with nothing raised on its surface to catch on a sleeve or a keyboard. There is no front to remember and no wrong way to put it on.' },
     { title: 'Softened edges', body: 'Both edges are bevelled where they meet the finger, so the ring sits easily at night and slides on without catching.' },
   ],
-  fits: { title: 'Then, it just fits.', body: 'Slip it on in the morning and stop thinking about it.' },
+  fits: { title: 'Then, it just fit.', body: 'Slip it on in the morning and stop thinking about it.' },
   alt: {
     ring: 'The Stillway ring rolling to a stop on a sand-coloured tile.',
     hand: 'A hand on a plain cream background, the ring settling at the base of one raised finger.',
