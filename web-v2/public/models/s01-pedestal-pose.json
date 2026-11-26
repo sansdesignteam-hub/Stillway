@@ -68,7 +68,7 @@
   },
   "lights": {
     "key": {
-      "type": "DirectionalLight (or SpotLight) warm, from the lamp: back-right, high",
+      "type": "DirectionalLight",
       "position": [
         0.19,
         0.25,
@@ -79,27 +79,35 @@
         0.004,
         0
       ],
+      "direction_unit": [
+        -0.5702,
+        -0.7383,
+        0.3602
+      ],
+      "elevation_deg": 47.6,
       "color": "#FFB370",
-      "intensity": 2.6,
+      "intensity": 3.0,
       "castShadow": true,
-      "threejs_note": "DirectionalLight, renderer AgX exposure 1.0, physically correct units (r155+). Elevation ~50 deg so the ring shadow lands on the pedestal top.",
+      "convention": "three.js Y-up metres in pedestal space (= Blender (x, y, z) -> (x, z, -y)). Verified against the Cycles light: Blender key at (0.190, 0.120, 0.250) m aimed at (0, 0, 0.004); a Cycles SUN with this exact direction gives the same front-left shadow as the area light (renders/s01-pedestal/s01-key-area-vs-sun.png). Light travels (-0.570, -0.738, +0.360): left, down, toward the camera (+Z), so the ring shadow on the top runs LEFT-FRONT and is ~0.9 x the casting height long (elevation 47.6 deg).",
       "shadow": {
+        "type": "VSMShadowMap",
         "mapSize": 2048,
-        "bias": -0.0002,
-        "normalBias": 0.0004,
-        "radius_PCFSoft": 6,
-        "camera_bounds_m": 0.06,
-        "note": "Blender area light \u00d855 mm at ~340 mm -> soft penumbra; in three.js use PCFSoftShadowMap or VSM"
+        "camera_bounds_m": 0.045,
+        "radius": 6,
+        "blurSamples": 16,
+        "bias": -0.0001,
+        "normalBias": 0.0003,
+        "note": "Cycles area light D55 mm at 333 mm = 9.4 deg penumbra cone: contact-hard at the ring's touch point, ~3-4 mm soft at the shadow tip. With VSM (uniform blur) keep the blur small (~0.5 mm = 6 texels at 2048 over +-0.045 m) so the shadow stays clearly defined, as the user asked; do not raise radius to fake the tip softness."
       }
     },
     "fill": {
       "type": "HemisphereLight",
       "skyColor": "#FFD9B0",
       "groundColor": "#3A2414",
-      "intensity": 0.25,
-      "note": "no front fill: left and front faces of the pedestal must stay in shade"
+      "intensity": 0.15,
+      "note": "no front fill; keep key:fill high so the shadow on the top reads strong (Cycles key-only vs env-only: the env adds a soft overall lift, it does not cast the shaped shadow)"
     },
-    "pedestal_envMapIntensity": 0.35,
+    "pedestal_envMapIntensity": 0.25,
     "environment": "env/v2-env-paper.exr tinted warm (#FFB87A multiply), intensity ~0.28 for ring reflections"
   },
   "desk": {

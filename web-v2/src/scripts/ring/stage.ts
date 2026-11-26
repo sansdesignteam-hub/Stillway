@@ -167,11 +167,11 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   /* D-179 1b: light values come from the pose JSON (lights.key.intensity, lights.fill,
      lights.pedestal_envMapIntensity); these are only the fallbacks and one gain each, tuned by eye
      against the 3D Designer's poster, so a new JSON drop retunes itself */
-  const LAMP_GAIN = 3.2;
+  const LAMP_GAIN = 1;
   const RING_DESK_ENV = 1.6;
   const DESK_PAPER = 0.35;
   /** Cycles' warm desk bounce lights the shaded faces; the web has no GI, so the env stands in */
-  const PED_ENV_GAIN = 1.3;
+  const PED_ENV_GAIN = 1;
   const SHADOW_RADIUS = 24;
   let LAMP = 2.6;
   let PED_ENV = 0.35;
@@ -273,6 +273,11 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     sc.right = sc.top = b;
     sc.near = 0.01;
     sc.far = lampKey.position.distanceTo(lampKey.target.position) + 0.2;
+    // D-180 follow-up: shadow map, blur and bias straight from the JSON (fe485f9)
+    const ms = L.shadow.mapSize ?? 2048;
+    lampKey.shadow.mapSize.set(ms, ms);
+    lampKey.shadow.radius = L.shadow.radius ?? L.shadow.radius_PCFSoft ?? SHADOW_RADIUS;
+    lampKey.shadow.blurSamples = L.shadow.blurSamples ?? 16;
     lampKey.shadow.bias = L.shadow.bias ?? -0.0002;
     lampKey.shadow.normalBias = L.shadow.normalBias ?? 0.0004;
     deskMat.color.set(deskPose.desk.color ?? '#2A1608');
@@ -901,6 +906,26 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   if (new URLSearchParams(location.search).has('inspect')) {
     (window as any).__ringClearance = (pose: Pose) => (apply(pose), clearance());
     (window as any).__ringScreenBox = (pose: Pose) => (apply(pose), screenBox());
+    // light travel direction mapped back into pedestal space (must equal JSON direction_unit)
+    // shadow of the ring's highest point at rest on the pedestal top, in screen px (JSON maths only)
+    (window as any).__shadowTip = () => {
+      const R = deskPose.ring, L = deskPose.lights.key;
+      const q = new THREE.Quaternion().fromArray(R.quaternion), sc = (R.scale ?? 1) * (R.s01_scale ?? 1), pos = new THREE.Vector3().fromArray(R.position);
+      let hi: THREE.Vector3 | null = null;
+      for (const v of ringPts) { const w = v.clone().multiplyScalar(sc).applyQuaternion(q).add(pos); if (!hi || w.y > hi.y) hi = w; }
+      const d = new THREE.Vector3().fromArray(L.direction_unit);
+      const t = (deskPose.pedestal.top_y - hi!.y) / d.y;
+      const hit = hi!.clone().addScaledVector(d, t);
+      const low = restLow()!;
+      const toScr = (v: THREE.Vector3) => { const q2 = v.clone().applyMatrix4(desk.matrix).project(camera); return [Math.round((q2.x + 1) / 2 * W), Math.round((1 - q2.y) / 2 * H)]; };
+      return { high: hi!.toArray(), hit: hit.toArray(), contact: low.toArray(), scrHigh: toScr(hi!), scrHit: toScr(hit), scrContact: toScr(low) };
+    };
+    (window as any).__keyDir = () => {
+      scene.updateMatrixWorld(true);
+      const a = lampKey.getWorldPosition(new THREE.Vector3()), t = lampKey.target.getWorldPosition(new THREE.Vector3());
+      const inv = desk.matrix.clone().invert();
+      return t.applyMatrix4(inv).sub(a.applyMatrix4(inv)).normalize().toArray().map((x) => +x.toFixed(4));
+    };
   }
   await deskReady; // the first frame already shows the pedestal (the poster cross-fades to it)
   return { apply, render, setLed, canvas, three: THREE, pivot };
