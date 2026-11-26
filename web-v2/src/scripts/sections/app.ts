@@ -75,8 +75,18 @@ function measure() {
   });
 }
 
+/** D-172: drop the reduced-motion opacity transition on S09 while it is cut at the 09 → 10 edge */
+let noFadeOn = false;
+const noFade = (on: boolean) => {
+  if (on === noFadeOn || !rootEl) return;
+  noFadeOn = on;
+  rootEl.querySelectorAll<HTMLElement>('[data-a]').forEach((e) => (e.style.transition = on ? 'none' : ''));
+};
+let rootEl: HTMLElement | null = null;
+
 export const app: SectionMotion = {
   init(r) {
+    rootEl = r;
     const q = (s: string) => r.querySelector<HTMLElement>(s);
     const all = (s: string, from: ParentNode = r) => [...from.querySelectorAll<HTMLElement>(s)];
     el = { phone: q('[data-p-phone]'), pages: q('[data-p-pages]') };
@@ -113,7 +123,11 @@ export const app: SectionMotion = {
     // D-172: phones too go up 1:1 (no fade); the navbar mask (global.css, QA G-14) hides what passes
     // under the bar. Only reduced motion fades.
     const fade = ctx.reduced;
-    const out = fade ? 1 - seg(u, END, END + (ctx.reduced ? 0.3 : 0.6)) : 1;
+    // D-172 PM review: reduced motion on phones — S10's column scrolls in right under S09 (finishes.ts),
+    // so S09 is gone at once when its track ends (no fade that overlaps the incoming column)
+    const cut = ctx.reduced && ctx.mobile;
+    const out = cut ? (u < END ? 1 : 0) : fade ? 1 - seg(u, END, END + 0.3) : 1;
+    noFade(cut && u >= END - 0.01);
     const up = fade ? 0 : Math.max(0, u - END) * (vhPx || H);
     const rise = ctx.reduced ? (u >= -0.5 ? 1 : 0) : seg(u, -0.5, -0.05);
     const inn = seg(u, -0.3, 0); // 70–100%: chip, texts, footer
