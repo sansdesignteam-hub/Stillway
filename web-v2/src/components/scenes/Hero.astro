@@ -42,8 +42,8 @@ const icons = [
 
   <!-- polished stills (3D Designer 16cfbaf): reduced motion / WebGL failure only; frame 1024, ring 640 px
        centred at (512, 442), so the image is 1.6× the ring width -->
-  <img class="ring-fallback hero__fb hero__fb--shadow" src="/ring-fallback/fb-s01-polished-shadow.webp" alt="" width="1024" height="1024" data-ring-fallback data-fb-range="0,1" data-a decoding="async" />
-  <img class="ring-fallback hero__fb" src="/ring-fallback/fb-s01-polished.webp" alt={hero.ringAlt} width="1024" height="1024" data-ring-fallback data-fb-range="0,1" data-a decoding="async" />
+  <img class="ring-fallback hero__fb hero__fb--shadow" src="/ring-fallback/fb-s01-warm-shadow.webp" alt="" width="2048" height="1100" data-ring-fallback data-fb-range="0,1" data-a decoding="async" />
+  <img class="ring-fallback hero__fb" src="/ring-fallback/fb-s01-warm.webp" alt={hero.ringAlt} width="1024" height="1024" data-ring-fallback data-fb-range="0,1" data-a decoding="async" />
   <img class="ring-fallback hero__fb hero__fb--end" src="/ring-fallback/fb-s02-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-fb-range="3,3.5" data-a loading="lazy" decoding="async" />
   <div class="scene__front">
     <div class="hero__meta" data-h-meta data-a>
@@ -98,15 +98,11 @@ const icons = [
   .hero__photo img {
     object-fit: cover;
   }
-  /* D-177: the polished stills were rendered over the moss photo (green reflections); neutralised and
-     warmed toward the lamp-lit desk until a warm-desk still exists (3D Designer) */
-  /* D-177: the still's shadow was cut for the V1 stone and falls the other way; off until a
-     warm-desk still pair exists (the live 3D shadow is drawn on the pedestal) */
-  .hero__fb--shadow {
-    display: none;
-  }
-  .hero__fb:not(.hero__fb--shadow):not(.hero__fb--end) {
-    filter: grayscale(0.75) sepia(0.28) brightness(0.95) contrast(1.05);
+  /* D-178: fb-s01-warm is the live S01 ring (warm desk rig) rendered at the still framing (1024,
+     ring 640 at (512, 442)), so the poster and the 3D ring match. fb-s01-warm-shadow is that
+     ring's live shadow (pedestal top + desk), in a frame twice as wide, centred the same way. */
+  .hero__fb.hero__fb--shadow {
+    width: calc(var(--rw) * 3.2);
   }
   .hero__dim {
     position: absolute;

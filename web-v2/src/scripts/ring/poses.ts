@@ -69,6 +69,8 @@ export interface Pose {
   /** D-177: size of the surface that receives the S01 shadow (the pedestal top), fractions of W / H; 0 = the V1 size */
   shadowW: number;
   shadowD: number;
+  /** D-178: height of the pedestal's front face (fraction of H): the desk plane lies this much lower; 0 = no desk plane */
+  shadowDrop: number;
   pitch: number;
   fing: number;
   fx: number;
@@ -135,4 +137,4 @@ export function along(u: number, frames: Array<[number, Pose]>): Pose {
   return frames[frames.length - 1][1];
 }
 
-export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, shadowX: 0, shadowY: -0.3, shadowW: 0, shadowD: 0, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, ledc: 0, flare: 0, custom: 0, finA: 0, finB: 0, finT: 0, lamp: 0, corner: 0, edge: 0, envDim: 0, blur: 0, table: 0, tableD: 0, tableY: 0, tableShadow: 0, alpha: 1, ...p });
+export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, shadowX: 0, shadowY: -0.3, shadowW: 0, shadowD: 0, shadowDrop: 0, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, ledc: 0, flare: 0, custom: 0, finA: 0, finB: 0, finT: 0, lamp: 0, corner: 0, edge: 0, envDim: 0, blur: 0, table: 0, tableD: 0, tableY: 0, tableShadow: 0, alpha: 1, ...p });

@@ -45,7 +45,7 @@ const stoneAt = (zoom = 1) => {
   // the photo zooms around the pedestal (heroBg.anchor), so its place does not depend on the zoom
   // the top face runs from y 0.71 (back edge) to 0.792 (front edge) of the photo: centre 0.751
   const topY = 0.751;
-  return { shadowX: ((STONE.x - 0.5) * coverW) / W, shadowY: (-(topY - 0.5) * coverH) / H, shadowW: (0.33 * coverW * zoom) / W, shadowD: ((0.082 / 0.31) * coverH * zoom) / H };
+  return { shadowX: ((STONE.x - 0.5) * coverW) / W, shadowY: (-(topY - 0.5) * coverH) / H, shadowW: (0.33 * coverW * zoom) / W, shadowD: ((0.082 / 0.31) * coverH * zoom) / H, shadowDrop: (0.113 * coverH * zoom) / H };
 };
 const floatPose = (ctx: Ctx): Pose => {
   const W = window.innerWidth;

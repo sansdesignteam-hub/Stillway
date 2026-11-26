@@ -159,7 +159,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const shadowSun = new THREE.DirectionalLight(0xffffff, 0); // casts only, adds no light
-  shadowSun.shadow.mapSize.set(1024, 1024);
+  shadowSun.shadow.mapSize.set(2048, 2048);
   shadowSun.shadow.radius = 6;
   shadowSun.shadow.bias = -0.0005;
   scene.add(shadowSun, shadowSun.target);
@@ -185,8 +185,44 @@ const catcher = new THREE.Mesh(catcherShape, catcherMat);
   catcher.renderOrder = -1;
   catcher.visible = false;
   scene.add(catcher);
+  // D-178: the desk around the pedestal also takes the shadow, so it carries on past the pedestal's
+  // edge onto the desk (no cut line). Same tilt, one face height lower; a hole where the pedestal
+  // hides the desk (its footprint plus the part behind it up to the top's back edge).
+  const deskCatcher = new THREE.Mesh(new THREE.BufferGeometry(), catcherMat);
+  deskCatcher.receiveShadow = true;
+  deskCatcher.renderOrder = -1;
+  deskCatcher.visible = false;
+  scene.add(deskCatcher);
+  let deskKey = '';
+  const roundRect = (path: THREE.Path, cx: number, cy: number, w: number, h: number, r: number) => {
+    const x0 = cx - w / 2, x1 = cx + w / 2, y0 = cy - h / 2, y1 = cy + h / 2;
+    path.moveTo(x0 + r, y0);
+    path.lineTo(x1 - r, y0);
+    path.quadraticCurveTo(x1, y0, x1, y0 + r);
+    path.lineTo(x1, y1 - r);
+    path.quadraticCurveTo(x1, y1, x1 - r, y1);
+    path.lineTo(x0 + r, y1);
+    path.quadraticCurveTo(x0, y1, x0, y1 - r);
+    path.lineTo(x0, y0 + r);
+    path.quadraticCurveTo(x0, y0, x0 + r, y0);
+  };
+  const deskGeometry = (pw: number, pd: number, back: number) => {
+    const sh = new THREE.Shape();
+    const big = pw * 4;
+    sh.moveTo(-big, -big);
+    sh.lineTo(big, -big);
+    sh.lineTo(big, big);
+    sh.lineTo(-big, big);
+    sh.lineTo(-big, -big);
+    const hole = new THREE.Path();
+    // local +y runs back (away from the camera); the hole covers the footprint and the strip behind it
+    // a little larger than the top (the pedestal's sides flare slightly toward the foot)
+    roundRect(hole, 0, back / 2 + 0.1 * pd, pw * 1.05, pd * 0.8 + back, 0.15 * Math.min(pw, pd));
+    sh.holes.push(hole);
+    return new THREE.ShapeGeometry(sh, 8);
+  };
   // D-177: from the lamp (upper right, behind the ring), so the shadow falls left and forward, away from it
-const SHADOW_DIR = new THREE.Vector3(0.9, 1, -0.45).normalize(); // the lamp stands at the back of the desk
+const SHADOW_DIR = new THREE.Vector3(1.3, 0.8, -0.08).normalize(); // the lamp stands at the back of the desk
 
   /* S06 finger proxy (s06-pose.json fingerProxy): lathe around +Y in hand-photo px, y = 0 at the
      ring seat (profile reversed so the faces point outward, as ring-test/s06.html); depth only, drawn before the ring so the back of the band hides behind the finger */
@@ -504,23 +540,40 @@ const SHADOW_DIR = new THREE.Vector3(0.9, 1, -0.45).normalize(); // the lamp sta
     coldEdge.intensity = 34 * Math.min(1, Math.max(0, p.edge));
     const sh = Math.max(0, p.shadow);
     catcher.visible = sh > 0.005;
+    deskCatcher.visible = catcher.visible && p.shadowDrop > 0 && p.shadowW > 0;
     shadowSun.castShadow = catcher.visible;
     if (catcher.visible) {
       catcher.position.set(p.shadowX * W, p.shadowY * H, 0);
       // D-177: the further the ring is above the pedestal, the lighter its shadow (a soft key light)
       const lift = Math.min(1, Math.abs(pivot.position.y - catcher.position.y) / (1.5 * w));
-      catcherMat.opacity = 0.42 * sh * (1 - 0.6 * lift);
+      catcherMat.opacity = 0.6 * sh * (1 - 0.35 * lift);
       catcher.rotation.set(-Math.PI / 2 + 0.32, 0, 0); // the receiving top, foreshortened like the photo
       // only the pedestal top receives it (no shadow past its edges); V1 size when not given
       if (p.shadowW > 0) catcher.scale.set(p.shadowW * W, p.shadowD * H, 1);
       else catcher.scale.set(w * 3.2, w * 2.2, 1);
+      if (deskCatcher.visible) {
+        const pw = p.shadowW * W;
+        const pd = p.shadowD * H;
+        const drop = p.shadowDrop * H;
+        // a desk point `back` units behind the footprint shows sin(0.32) of it higher on screen: the
+        // pedestal hides the desk up to the top's back edge, i.e. `drop` screen px above its foot
+        const back = drop / Math.sin(0.32);
+        const key = `${pw.toFixed(1)}|${pd.toFixed(1)}|${back.toFixed(1)}`;
+        if (key !== deskKey) {
+          deskKey = key;
+          deskCatcher.geometry.dispose();
+          deskCatcher.geometry = deskGeometry(pw, pd, back);
+        }
+        deskCatcher.position.set(catcher.position.x, catcher.position.y - drop, 0);
+        deskCatcher.rotation.copy(catcher.rotation);
+      }
       shadowSun.target.position.copy(catcher.position);
       shadowSun.position.copy(catcher.position).addScaledVector(SHADOW_DIR, w * 4);
       const c = shadowSun.shadow.camera;
-      c.left = c.bottom = -w * 1.6;
-      c.right = c.top = w * 1.6;
+      c.left = c.bottom = -w * 7; // D-178: wide enough for the shadow's run onto the desk
+      c.right = c.top = w * 7;
       c.near = 1;
-      c.far = w * 9;
+      c.far = w * 14;
       c.updateProjectionMatrix();
     }
 
