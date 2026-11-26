@@ -35,8 +35,9 @@ export const heroBg = {
    * the photo width (measured with ?inspect __ringScreenBox at 43f5c91's pose; re-measure if the pose
    * JSON changes). The desktop wordmark is sized so its right edge stays wordGap px left of it.
    */
-  ringLeft: 0.3897,
-  wordGap: 36,
+  /* D-181b (0742ce3, ring s01_scale 1.125): 532 px at 1440 × 900 and 731 px at 1920 × 1080 → 0.3957 */
+  ringLeft: 0.3957,
+  wordGap: 33,
   /** the poster: transparent ring + ring shadow in the plate's own frame (ring-overlay-s01*), one set
    *  per plate; the phone ones are rendered in the phone framing, so no CSS scale is applied */
   poster: {

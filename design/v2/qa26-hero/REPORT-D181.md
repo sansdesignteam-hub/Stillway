@@ -49,3 +49,30 @@ Yang diunduh (Chrome, dicek dari network): 1440@1x → plate 1920; 1440@2x → p
 - Saat ring terangkat (u ≈ 0,5), contact shade oval ring masih terlihat memudar di atas alas (perilaku D-179, tidak diubah).
 - Alas di Figma lebih dalam, sudut lebih bulat, oak lebih hangat. Itu bagian drop D-181b dari 3D Designer; web tinggal menjalankan ulang skrip dan menyalin JSON + GLB.
 - `context/decisions.md` belum saya ubah: D-181 adalah brief PM, belum ada persetujuan pengguna atas hasilnya.
+
+---
+
+# D-181b: drop 3D-Designer `0742ce3` (alas dan ring dicocokkan ke Figma)
+
+## Yang dikerjakan
+- GLB + JSON disalin, `hero-plate.mjs` dijalankan ulang pada plate/overlay baru. Tidak ada perubahan kode untuk aset; `pedestal.position`, `top_y`, `size_mm`, `s01_scale` dibaca dari JSON. Satu perbaikan: pemeriksaan clearance (`?inspect`) sekarang menghitung alas yang tidak lagi di titik asal.
+- Lampu spill plate **tidak** ditambahkan di web.
+- `heroBg.ringLeft` diukur ulang: 0,3897 → **0,3957** (532 px pada 1440×900, 731 px pada 1920×1080, tilt maksimum termasuk). `wordGap` 36 → 33.
+- Kepadatan bayangan ring (`CATCH`) diukur ulang dari overlay baru: meja 0,55, atas alas 0,34, sisi 0,15 (sebelumnya 0,80 / 0,80 / 0,10). Bayangan lebih tipis karena spill plate tidak dihalangi ring. Contact shade ring 0,85 → 0,45.
+- Nada ring hidup: porsi env paper di meja 0,35 → 0,6 dan gain env ring 1,6 → 1,85.
+
+## Hasil terukur
+- **Ukuran file**: AVIF 2560 = 142,0 KB (≤ 250), 3632 = 269,6 KB (≤ 450), 1920 = 89,1 KB, 960 = 28,5 KB, potret ponsel 1816 = 74,7 KB; poster ring AVIF 3632 = 48,2 KB (`D181b_file_sizes.json`).
+- **Wordmark 1440×900**: 145,1 → **149,6 px**, jarak bbox 33 px. 193,59 px baru tercapai pada 1920×1080 (jarak 97 px). Pada 1440×900 ukuran Figma tidak bisa dicapai dengan aturan bbox: lebar "Stillway" 193,59 px berakhir di x 634, sedangkan tepi kiri bbox ring (dengan tilt) di x 532. Figma sendiri menumpuk ring di atas huruf "ay".
+- **Clearance**: diam −0,0002 mm (0,2 µm, pembulatan posisi JSON), minimum setelah lepas 0,0000–0,0082 mm; tidak ada tembus yang terlihat (`D181b_clearance_check.txt`).
+- **fps, tiga kali jalan, Blender diam** (`D181b_perf.txt`): 1440 diam 60,2–60,3 / tilt 60,2–60,3; **throttle CPU 4× diam 60,0–60,3 / tilt 60,0–60,1**; 375 60 / 60. Jeda pada pengukuran D-181 tidak muncul lagi.
+- **Nada ring, poster vs hidup** (rata-rata RGB semua piksel ring pada 1440@2x): poster 133 / 119 / 109; hidup sebelum 102 / 90 / 81, sesudah 108 / 98 / 89.
+- **Bayangan atas alas** (kiri ring, tanpa ring): poster 96,8, hidup 99,2 (plate tanpa bayangan 126,6).
+
+## Belum cocok
+- Ring hidup masih ±19% lebih gelap dari poster pada rata-rata: liner dalam lebih gelap dan pita depan bawah netral putih, sedangkan poster hangat di sana. Pita luar atas sekarang dekat. Cross-fade masih terlihat pada ring.
+- Bayangan ring di **meja kiri-depan** lebih tipis di web: poster menggelapkan 11 tingkat, hidup 5–6 (39,7 vs 45,2). Menaikkan opacity meja 0,44 → 0,55 hampir tidak mengubahnya, jadi penyebabnya bukan kepadatan; kemungkinan mask bayangan alas atau penumbra jauh, belum diperiksa.
+- Di Figma ada bayangan kontak gelap di bawah ring; di still Cycles dan di web bayangan itu tipis. Web mengikuti still, sesuai tugas.
+- Tidak ada frame Figma 375; 375 dibandingkan dengan still ponsel 3D Designer.
+
+Bukti: `D181b_1440_2x_vs_figma.jpg`, `D181b_onion_figma_vs_live_1440.jpg`, `D181b_onion_poster_vs_live_1440.jpg` / `_375.jpg`, `D181b_375_live_vs_3d_still.jpg`, `D181b_pedestal_closeup_poster_live_figma.jpg`, `D181b_frames_1440.jpg` / `_375.jpg`, `D181b_tilt_strip.jpg`.

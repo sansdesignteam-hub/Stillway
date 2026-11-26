@@ -168,15 +168,16 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
      lights.pedestal_envMapIntensity); these are only the fallbacks and one gain each, tuned by eye
      against the 3D Designer's poster, so a new JSON drop retunes itself */
   const LAMP_GAIN = 1;
-  const RING_DESK_ENV = 1.6;
-  const DESK_PAPER = 0.35;
+  const RING_DESK_ENV = 1.85;
+  const DESK_PAPER = 0.6;
   const SHADOW_RADIUS = 24;
-  /* D-181 catcher density, measured from the 3D Designer's ring overlay (ring-overlay-s01-3632, the
-     alpha of its #2A1608 shadow = the Cycles ring shadow): 0.70–0.82 on the desk, 0.72–0.80 on the
-     pedestal top, 0.10–0.15 on the front face (no key there; the ring only takes bounce away). The
-     JSON's desk.opacity 0.5 was the D-179 value for the shaded pedestal; a later JSON can set
-     desk.catcher_opacity / pedestal.catcher_opacity / pedestal.catcher_side_opacity instead. */
-  const CATCH = { desk: 0.8, top: 0.8, side: 0.1 };
+  /* D-181b catcher density, measured from the 3D Designer's ring overlay (ring-overlay-s01-3632 of
+     0742ce3; the alpha of its #2A1608 shadow = the Cycles ring shadow): 0.40–0.70 on the desk (0.55 used),
+     0.30–0.35 on the pedestal top, ~0.15 on the front face. Lower than the first D-181 drop (0.8)
+     because the plate now has a second, plate-only lamp spill that the ring does not block, so the
+     ring's shadow only takes the key away. Not in the JSON; a later JSON can set
+     desk.catcher_opacity / pedestal.catcher_opacity / pedestal.catcher_side_opacity. */
+  const CATCH = { desk: 0.55, top: 0.34, side: 0.15 };
   let LAMP = 2.6;
   /* D-181: the pedestal is no longer shaded here. It is rendered once in Cycles INTO the photo (the
      plate: oak, contact shadow, bounce, AO), and this stage only keeps its shape as an invisible
@@ -889,7 +890,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
         contact.position.set(low.x, (deskPose.pedestal.top_y ?? low.y) + 0.00005, low.z);
         contact.scale.set(0.016, 0.009, 1); // ~11 × 6 mm soft oval under the touching band
       }
-      contactMat.opacity = 0.85 * dsk * Math.min(1, Math.max(0, p.rest));
+      contactMat.opacity = 0.45 * dsk * Math.min(1, Math.max(0, p.rest));
       // shadow camera in world units (the group is scaled by deskK)
       const L = deskPose.lights.key.shadow;
       const kk = deskK;
@@ -1017,6 +1018,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     let min: number | null = null;
     for (const v of ringPts) {
       const d = v.clone().applyMatrix4(M).applyMatrix4(inv);
+      if (pedestal) d.x -= pedestal.position.x, (d.z -= pedestal.position.z); // D-181b: the block is no longer at the origin
       if (Math.abs(d.x) <= hx && Math.abs(d.z) <= hz) min = min === null ? d.y - top : Math.min(min, d.y - top);
     }
     return min;
