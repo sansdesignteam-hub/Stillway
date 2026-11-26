@@ -1,0 +1,107 @@
+{
+  "id": "D-179 S01 pedestal pose",
+  "units": "metres, three.js Y-up (glTF). Pedestal origin = centre of its bottom face, on the desk plane y = 0.",
+  "pedestal": {
+    "glb": "s01-pedestal.glb",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "quaternion": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "scale": 1,
+    "size_mm": {
+      "width_x": 41.0,
+      "depth_z": 25.6,
+      "height_y": 5.2,
+      "corner_radius": 7.0,
+      "edge_fillet": 1.8
+    },
+    "top_y": 0.0052,
+    "castShadow": true,
+    "receiveShadow": true
+  },
+  "ring": {
+    "glb": "stillway-ring-v2-silver-polished_web.glb",
+    "position": [
+      0.0015,
+      0.01712,
+      -0.0015
+    ],
+    "quaternion": [
+      0.061591,
+      -0.880797,
+      -0.032749,
+      0.468328
+    ],
+    "scale": 1,
+    "note": "ring rests on its band on the pedestal top (lowest vertex at top_y). Euler XYZ deg in Blender Z-up: [0.0, 8.0, 236.0]",
+    "castShadow": true,
+    "receiveShadow": false
+  },
+  "camera": {
+    "type": "PerspectiveCamera",
+    "position": [
+      -0.022929,
+      0.084532,
+      0.218159
+    ],
+    "lookAt": [
+      0.0,
+      0.009,
+      -0.0
+    ],
+    "fov_vertical_deg_at_1818x1037": 16.689,
+    "lens_mm_36mm_sensor": 70.0,
+    "filmOffset_or_viewOffset": {
+      "shift_y_fraction_of_width": 0.135,
+      "note": "Blender shift_y 0.135 of frame width moves the subject down. In three.js use camera.setViewOffset(fullW, fullH, 0, -0.135*fullW, fullW, fullH) or render to the photo aspect and match by eye."
+    },
+    "frame": "photo 1818x1037, shown background-size: cover, centred (desktop 1440x900 crops the sides)"
+  },
+  "lights": {
+    "key": {
+      "type": "DirectionalLight (or SpotLight) warm, from the lamp: back-right, high",
+      "position": [
+        0.15,
+        0.15,
+        -0.17
+      ],
+      "target": [
+        0,
+        0.004,
+        0
+      ],
+      "color": "#FFB370",
+      "castShadow": true,
+      "shadow": {
+        "mapSize": 2048,
+        "bias": -0.0002,
+        "normalBias": 0.0004,
+        "radius_PCFSoft": 6,
+        "camera_bounds_m": 0.06,
+        "note": "Blender area light \u00d850 mm at ~270 mm -> soft penumbra; in three.js use PCFSoftShadowMap or VSM"
+      }
+    },
+    "fill": {
+      "type": "HemisphereLight or env only",
+      "color": "#FFCC9E",
+      "intensity": "low"
+    },
+    "environment": "env/v2-env-paper.exr tinted warm (#FFB87A multiply), intensity ~0.45 for ring reflections"
+  },
+  "desk": {
+    "type": "ShadowMaterial plane at y = 0",
+    "opacity": 0.5,
+    "color": "#2A1608",
+    "size_m": 1.2,
+    "note": "transparent shadow catcher over the CSS photo; receives pedestal + ring shadows"
+  },
+  "proven": "Blender Cycles renders in renders/s01-pedestal/ use exactly these values",
+  "proposed": "three.js light/shadow numbers are a starting point; tune by eye against s01-pedestal-review-1440x900.png"
+}
