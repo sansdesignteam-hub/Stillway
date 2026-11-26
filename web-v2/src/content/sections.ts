@@ -31,7 +31,7 @@ export const sections: SectionDef[] = [
   { n: '03', id: 'sleep', name: 'Sleep summary', act: 2, time: '23:10', part: 'Last night', bg: 'night', states: 4, tin: 2.5, hold: 0.6, built: true }, // D-136: 02 → 03 is 2.5 screens: S02 scrolls out 1:1 (≈ 40%), dark, corner light, green LED
   { n: '04', id: 'activity', name: 'Activity & rest', act: 2, time: '07:40', timeEnd: '15:30', bg: 'night', states: 5, tin: 2, hold: 0.6, built: true }, // D-138: the 03 → 04 lens is 2 screens
   { n: '05', id: 'insight', name: 'Daily insight', act: 2, time: '17:30', part: 'Evening', bg: 'dusk', states: 4, tin: 1, hold: 0.6, built: true },
-  { n: '06', id: 'details', name: 'Product details', act: 3, time: '21:00', bg: 'paper', states: 6, tin: 1, hold: 0.6, built: true }, // D-144: roll 1–3, hand A–C
+  { n: '06', id: 'details', name: 'Product details', act: 3, time: '21:00', bg: 'paper', states: 8, tin: 1, hold: 0.6, built: true }, // D-144: roll 1–3; D-174: the fall and fit over 3–7
   { n: '07', id: 'specs', name: 'Specs & benefits', act: 3, time: '21:00', bg: 'sand', states: 7, tin: 1.6, hold: 0.6, built: true }, // D-147: 06 → 07 is a plain scroll; 1.6 screens so the whole hand leaves. D-149: Figma 07 State 1–7, end photo rises (Obsidian)
   { n: '08', id: 'features', name: 'Features', act: 3, time: '21:00', bg: 'night', states: 4, tin: 1, hold: 0.6, built: true }, // D-154: Figma 08 State 1–4, state 4 red = off
   { n: '09', id: 'app', name: 'The app', act: 3, time: '21:00', bg: 'paper', states: 7, tin: 1, hold: 0.6, built: true }, // D-161: 2 screens per mode (cards in, numbers count, charts draw, the screen scrolls)

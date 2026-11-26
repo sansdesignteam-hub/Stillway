@@ -8,14 +8,14 @@
  *              no motion ghosts, no stops); "Made to be forgotten."
  *  1  State 2  on its way; "One quiet band"
  *  2  State 3  at the edge (x 720 of 1440); "Softened edges"; it tips over the corner…
- *  D-173 (oryzo.ai, the falling object): from the corner the camera follows the ring down —
- *  2.55 → 3.2  it drops off the edge; the frame re-centres on it while the table goes up and out of the
- *              picture (the ring keeps falling, it never fades: one ring from the roll to the finger)
- *  3.2 → 3.6   the ring alone, turning in the air, the focus of the frame
- *  3.35 → 4.45 the hand (photo A-1) rises from below while the ring is still coming down; the ring slows
- *              and turns side-on to the index finger, over the fingertip
- *  4.45 → 5    it passes the fingertip and slides down to the seat (onFinger pose, finger proxy)
- *  5 → 5.3     "Then, it just fit." and the S06 body appear (hidden through the fall); (D-157: no tag)
+ *  D-173 (oryzo.ai, the falling object), retimed D-174 (slower, one continuous motion):
+ *  2.55 → 3.75 the ring drops off the corner (a soft dip) and the frame re-centres on it while the
+ *              table goes up and out; it never fades — one ring from the roll to the finger
+ *  3.75 → 4.7  alone in the air, still tumbling with the momentum of the roll, slowly coming down
+ *  4.3 → 6     the hand (photo A-1) rises from below while the ring is still descending; the ring's
+ *              tumble settles progressively into the finger's orientation over the fingertip (6)
+ *  5.6 → 6.7   one smooth move from the fingertip down to the seat (onFinger pose, finger proxy)
+ *  6.85 → 7.2  "Then, it just fit." and the S06 body appear (hidden through the fall); (D-157: no tag)
  *  > END to S07 (specs.ts drives the card shrink through this module's update)
  * The hand photo's cut bottom is always below the viewport (and melted into Paper), on every screen.
  */
@@ -28,17 +28,19 @@ let el: Record<string, HTMLElement | null> = {};
 let steps: HTMLElement[] = [];
 let ticks: HTMLElement[] = [];
 let root: HTMLElement | null = null;
-export const DETAILS_END = 5.6;
+export const DETAILS_END = 7.6; // D-174: states 6 → 8 (sections.ts), the fall and fit get 2 more screens
 /** D-173: the camera follows the ring off the edge; the table goes up and out of the frame */
-const FOLLOW: [number, number] = [2.55, 3.2];
+const FOLLOW: [number, number] = [2.55, 3.75];
 /** the hand rises from below while the ring is still falling */
-const HAND: [number, number] = [3.35, 4.45];
+const HAND: [number, number] = [4.3, 6.0];
 /** the ring meets the fingertip and turns side-on to the finger */
-const MEET: [number, number] = [3.55, 4.45];
+const MEET: [number, number] = [4.7, 6.0];
 /** onto the finger and down to the seat */
-const SLIDE: [number, number] = [4.45, 5];
+const SLIDE: [number, number] = [5.6, 6.7];
 /** heading + body, after the ring has seated */
-const TEXT: [number, number] = [5, 5.3];
+const TEXT: [number, number] = [6.85, 7.2];
+/** D-174: zero velocity at both ends (smootherstep), for the joins between phases */
+const smoother = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
 const D2R = Math.PI / 180;
 
 /** layout in px: table, ring, roll stops, hand box (s06-pose.json image px × hs) */
@@ -214,51 +216,58 @@ function ringPose(u: number, ctx: Ctx, L: L6): Pose {
     const t = onTable(Math.max(0, u), ctx, L);
     return base(t.cx, t.cy, t.spin);
   }
-  // D-173 (oryzo.ai): the camera follows the fall. The ring leaves the corner, dips down and is
-  // re-centred as the frame follows it; it turns in the air, alone; then the hand comes up under it,
-  // the ring slows, turns side-on to the index finger and slides down to the seat.
+  // D-173/D-174 (oryzo.ai): the camera follows the fall; one continuous motion to the seat.
+  // Position: corner → (dip, re-centre) → the air → the fingertip of the rising hand → the seat.
+  // Rotation: from the roll, the ring carries its momentum into a tumble whose angular velocity
+  // decays steadily (no per-frame turn rounding) and reaches the finger's orientation at the
+  // fingertip; the slide to the seat starts before the approach ends, so it never stops at the tip.
   const from = onTable(2.55, ctx, L);
   const m = ctx.mobile;
+  const off = handOff(u, L, m);
   const airW = (L.D * (m ? 1.25 : 1.12)) / L.W;
-  const air = (uu: number) => {
-    const a = uu - 2.55;
-    return pose({
-      x: fx(L.W / 2, L.W),
-      y: fy(L.H * (m ? 0.36 : 0.4) + seg(uu, 3.2, 4.2) * L.H * 0.06, L.H), // drifts down a little
-      w: airW,
-      rx: -0.35 * Math.sin(a * 1.6),
-      ry: a * 2.1,
-      rz: 0.25 * Math.sin(a * 1.1),
-      spin: from.spin - a * 1.4,
-    });
+  // position in the air: centred, drifting down slowly (it keeps falling while the hand comes up)
+  const airX = L.W / 2;
+  const airY = L.H * (m ? 0.36 : 0.4) + smoother(seg(u, FOLLOW[1] - 0.4, MEET[1])) * L.H * 0.1;
+  // the follow: off the corner, a soft dip (the fall reads), the frame catches up and centres it
+  const t = seg(u, FOLLOW[0], FOLLOW[1]);
+  const e = smoother(t);
+  const dip = Math.sin(Math.PI * t) * 0.09 * L.H;
+  let cx = lerp(from.cx, airX, e) + Math.sin(Math.PI * t) * 0.12 * L.D;
+  let cy = lerp(from.cy, airY, e) + dip;
+  let w = lerp(L.D / L.W, airW, e);
+  // the approach and the slide, with the hand
+  const slide = smoother(seg(u, SLIDE[0], SLIDE[1]));
+  const tip = withHand(fingerPose(slide, L, { shadow: 0 }), off, L);
+  const b = smoother(seg(u, MEET[0], MEET[1]));
+  const tipX = (tip.x + 0.5) * L.W;
+  const tipY = (0.5 - tip.y) * L.H;
+  cx = lerp(cx, tipX, b);
+  cy = lerp(cy, tipY, b);
+  w = lerp(w, tip.w, b);
+  // rotation: S + (T − S)·(1 − (1 − τ)^1.8) over the whole fall; T is the finger's pose with whole
+  // extra turns fixed once (from the spin at the corner), so the direction never reverses
+  const tau = seg(u, FOLLOW[0], MEET[1]);
+  const k = 1 - Math.pow(1 - tau, 1.8);
+  const TAU = 2 * Math.PI;
+  const spinT = Math.floor(from.spin / TAU) * TAU - TAU; // keeps turning the way it rolled
+  const rot = {
+    rx: lerp(0, tip.rx, k),
+    ry: lerp(0, tip.ry - TAU, k),
+    rz: lerp(0, tip.rz, k),
+    spin: lerp(from.spin, spinT, k),
+    pitch: lerp(0, tip.pitch, k),
+    roll: lerp(0, tip.roll, k),
   };
-  const start = base(from.cx, from.cy, from.spin);
-  let p: Pose;
-  if (u < FOLLOW[1]) {
-    // off the corner: down first (the fall reads), then the frame catches up and centres it
-    const t = seg(u, FOLLOW[0], FOLLOW[1]);
-    const e = t * t * (3 - 2 * t);
-    p = lerpPose(start, air(u), e);
-    const dip = Math.sin(Math.PI * Math.min(1, t * 1.2)) * 0.16 * L.H;
-    p.y -= dip / L.H;
-    p.x += (Math.sin(Math.PI * t) * 0.15 * L.D) / L.W;
-  } else {
-    p = air(u);
-  }
-  const k = seg(u, MEET[0], MEET[1]);
-  if (k > 0 && u < SLIDE[0]) {
-    // the hand is rising; the ring comes down to its fingertip and turns side-on, slowing
-    const above = withHand(fingerPose(0, L, { fing: 0, shadow: 0 }), handOff(u, L, m), L);
-    const e = 1 - Math.pow(1 - k, 2.2);
-    const turns = Math.round(p.spin / (2 * Math.PI)) * 2 * Math.PI;
-    return { ...lerpPose(p, { ...above, spin: turns }, e), fing: 0 };
-  }
-  if (u >= SLIDE[0]) {
-    const slide = seg(u, SLIDE[0], SLIDE[1]);
-    const q = withHand(fingerPose(slide, L, { shadow: 0 }), handOff(u, L, m), L);
-    return slide < 0.02 ? { ...q, fing: 0 } : q;
-  }
-  return p;
+  // past the seat the same formula holds (k = b = slide = 1): no change of representation in S06
+  return {
+    ...tip,
+    ...rot,
+    x: fx(cx, L.W),
+    y: fy(cy, L.H),
+    w,
+    // the finger proxy (occlusion) is on once the ring is over the fingertip, before it goes round it
+    fing: b > 0.5 ? 1 : 0,
+  };
 }
 
 export const details: SectionMotion = {
@@ -311,7 +320,7 @@ export const details: SectionMotion = {
       put(st, { o: window4(u, a, a + 0.25, a + 0.75, a + 0.96), y: (1 - seg(u, a, a + 0.25)) * 14 }, ctx);
     });
     // D-173: hidden through the fall and the fitting; in once the ring has seated
-    const fits = ctx.reduced ? (u >= 5 ? 1 : 0) : seg(u, TEXT[0], TEXT[1]);
+    const fits = ctx.reduced ? (u >= 7 ? 1 : 0) : seg(u, TEXT[0], TEXT[1]);
     put(el.fits, { o: fits * (1 - gone), y: (1 - fits) * 16 - up }, ctx);
     put(el.progress, { o: window4(u, -0.3, 0.05, 2.4, 2.6) }, ctx);
     const on = Math.min(3, Math.max(0, Math.round(u)));
@@ -323,9 +332,9 @@ export const details: SectionMotion = {
     const off = handOff(u, L, ctx.mobile);
     // D-093 r1: the polished 3D ring stays on the finger (D-085); A-1b only without WebGL / reduced
     const live = document.documentElement.classList.contains('ring-ready');
-    if (el.ringed) el.ringed.style.opacity = live ? '0' : seg(u, 4.8, 5).toFixed(3);
+    if (el.ringed) el.ringed.style.opacity = live ? '0' : seg(u, 6.6, 6.9).toFixed(3);
     put(el.seatShadow, { o: live ? seg(u, SLIDE[1] - 0.2, SLIDE[1]) : 0 }, ctx);
-    if (el.card) put(el.card, { o: (ctx.reduced ? (u >= 3 ? 1 : 0) : rise > 0 ? 1 : 0) * (1 - gone), y: -up }, ctx);
+    if (el.card) put(el.card, { o: (ctx.reduced ? (u >= 5 ? 1 : 0) : rise > 0 ? 1 : 0) * (1 - gone), y: -up }, ctx);
     put(el.hand, { o: 1, x: off.dx, y: off.dy }, ctx);
     // D-173, reduced motion / no WebGL: the still follows the fall — centred in the air (state 3), then
     // over the fingertip as the hand comes up (state 4); A-1b (ring on the hand) takes over at the seat
@@ -333,9 +342,10 @@ export const details: SectionMotion = {
       const fbw = L.D / 0.846;
       const c0x = L.x1 - 0.528 * fbw + fbw / 2;
       const c0y = L.contact - 0.918 * fbw + fbw / 2;
-      const airK = seg(u, 2.2, 3);
-      const tipK = seg(u, 3.4, 4);
-      const tipY = L.seat.y - 337 * L.hs + off.dy - 0.5 * L.D;
+      // reduced motion snaps u to whole states: 3–4 the ring alone in the air, 5–6 over the fingertip
+      const airK = ctx.reduced ? (u >= 3 ? 1 : 0) : seg(u, 2.2, 3.6);
+      const tipK = ctx.reduced ? (u >= 5 ? 1 : 0) : seg(u, 4.6, 6);
+      const tipY = L.seat.y - 337 * L.hs + (ctx.reduced ? 0 : off.dy) - 0.5 * L.D; // reduced: the photo has no offset
       const cx = lerp(lerp(c0x, L.W / 2, airK), L.seat.x, tipK);
       const cy = lerp(lerp(c0y, L.H * (ctx.mobile ? 0.36 : 0.4), airK), tipY, tipK);
       const sc = lerp(lerp(1, 1.12, airK), 0.55, tipK);
