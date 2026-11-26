@@ -31,7 +31,9 @@ POSE = V2 + "/s01-pedestal-pose.json"
 
 MM = 0.001
 W, D, H = 41.0, 25.6, 6.8
-R_CORNER, R_FILLET, R_FILLET_BOT = 4.3, 0.7, 0.35
+R_CORNER, R_FILLET, R_FILLET_BOT = 5.3, 1.1, 0.35
+OAK = V2 + "/tex/src-oak-veneer-01/oak_veneer_01_{}_2k.jpg"   # Poly Haven 'Oak Veneer 01', CC0
+OAK_TILE_MM = 260.0   # one texture tile = 260 mm (scaled down from the 1.83 m scan for a finer figure)
 ATLAS = 1024
 
 # ring pose relative to pedestal origin (mm / degrees, Blender Z-up)
@@ -81,11 +83,48 @@ def make_mesh():
     bpy.ops.mesh.select_all(action='SELECT')
     bpy.ops.uv.smart_project(angle_limit=math.radians(50), island_margin=0.012, area_weight=0.0, scale_to_bounds=False)
     bpy.ops.object.mode_set(mode='OBJECT')
+    # second UV 'proj' only for sampling the photo oak during the bake (removed before export).
+    # texture grain runs along image V -> V follows X on top/bottom and front/back; ends get Y-Z.
+    me = ob.data
+    proj = me.uv_layers.new(name="proj")
+    me.uv_layers.active = me.uv_layers[0]
+    k = 1.0 / (OAK_TILE_MM * MM)
+    for poly in me.polygons:
+        n = poly.normal
+        ax = max(range(3), key=lambda i: abs(n[i]))
+        for li in poly.loop_indices:
+            c = me.vertices[me.loops[li].vertex_index].co
+            if ax == 2:   u, v = c.y * k + 0.31, c.x * k + 0.12
+            elif ax == 1: u, v = c.z * k * 1.0 + 0.62 + (0.0 if n.y > 0 else 0.07), c.x * k + 0.12
+            else:         u, v = c.z * k + 0.85, c.y * k * 0.35 + 0.5
+            proj.data[li].uv = (u, v)
     return ob
 
 
 # ---------------------------------------------------------------- procedural oak (source for bake)
 def wood_material():
+    """photographic CC0 oak (Poly Haven Oak Veneer 01) sampled through UV 'proj', baked to the atlas"""
+    m = bpy.data.materials.new("S01_Pedestal_Oak_src")
+    m.use_nodes = True
+    N, L = m.node_tree.nodes, m.node_tree.links
+    b = N["Principled BSDF"]
+    uv = N.new("ShaderNodeUVMap"); uv.uv_map = "proj"
+    def tex(key, cs):
+        t = N.new("ShaderNodeTexImage"); t.image = bpy.data.images.load(OAK.format(key)); t.image.colorspace_settings.name = cs
+        t.extension = 'REPEAT'; L.new(uv.outputs[0], t.inputs[0]); return t
+    td, tr, tn = tex("diff", "sRGB"), tex("rough", "Non-Color"), tex("nor_gl", "Non-Color")
+    hsv = N.new("ShaderNodeHueSaturation")       # toward the reference: a little lighter, less saturated honey
+    hsv.inputs["Hue"].default_value = 0.49; hsv.inputs["Saturation"].default_value = 0.88; hsv.inputs["Value"].default_value = 1.18
+    L.new(td.outputs[0], hsv.inputs["Color"]); L.new(hsv.outputs[0], b.inputs["Base Color"])
+    rr = N.new("ShaderNodeMapRange"); rr.inputs["To Min"].default_value = 0.68; rr.inputs["To Max"].default_value = 0.88
+    L.new(tr.outputs[0], rr.inputs[0]); L.new(rr.outputs[0], b.inputs["Roughness"])
+    nm = N.new("ShaderNodeNormalMap"); nm.uv_map = "proj"; nm.inputs["Strength"].default_value = 1.0
+    L.new(tn.outputs[0], nm.inputs["Color"]); L.new(nm.outputs[0], b.inputs["Normal"])
+    b.inputs["Specular IOR Level"].default_value = 0.35
+    return m
+
+
+def wood_material_procedural_old():
     m = bpy.data.materials.new("S01_Pedestal_Oak_src")
     m.use_nodes = True
     nt = m.node_tree
@@ -206,6 +245,7 @@ def bake(ob):
     b.inputs["Metallic"].default_value = 0.0
     b.inputs["Specular IOR Level"].default_value = 0.35
     ob.data.materials.clear(); ob.data.materials.append(m)
+    ob.data.uv_layers.remove(ob.data.uv_layers["proj"])
     src.use_fake_user = True
     return m
 
