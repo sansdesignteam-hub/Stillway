@@ -1,9 +1,9 @@
 /**
  * S01 Hero — 06:50 (D-080): V1 hero look, V2 ring, Oryzo-style transition to Paper.
- * u: 0 state 1  V1 frame: photo, STILLWAY, tagline / features / price, statement. The ring floats
+ * u: 0 state 1  D-179: photo, Stillway wordmark, intro bottom-right, scroll hint bottom-left. The ring floats
  *               in front of the wordmark and follows the mouse (fine pointer ≥ 720 px, as V1 / D-051);
  *               it breathes (the one autoplay loop).
- *  0 → 1        the text slides out (wordmark up, tagline/statement left, features/price right)
+ *  0 → 1        the text slides out (wordmark up, intro right, scroll hint fades)
  *  1 → 2 state 3  the ring zooms in close, turning smoothly until the sensors show; the photo zooms
  *               OUT behind it (content/heroBg.ts)
  *  2 → 3 state 4  the ring zooms out, turning back to the centre at the size and pose of S02 state 1;
@@ -65,9 +65,6 @@ export const hero: SectionMotion = {
       photo: q('[data-h-photo]'),
       img: q('[data-h-img]'),
       word: q('[data-h-word]'),
-      tag: q('[data-h-tag]'),
-      features: q('[data-h-features]'),
-      price: q('[data-h-price]'),
       statement: q('[data-h-statement]'),
       foot: q('[data-h-foot]'),
     };
@@ -80,17 +77,14 @@ export const hero: SectionMotion = {
       gsap.timeline({ delay: 0.1 })
         // D-179: no settle-zoom on the photo any more: the 3D pedestal stands on it and must not slide
         .fromTo(root.querySelectorAll('.hero__char'), { yPercent: 110 }, { yPercent: 0, duration: 1.3, ease: 'expo.out', stagger: 0.045 }, 0.2)
-        .fromTo([el.tag, el.features, el.price, el.statement, el.foot], { opacity: 0 }, { opacity: 1, duration: 0.9, stagger: 0.08, clearProps: 'opacity' }, 0.9);
+        .fromTo([el.statement, el.foot], { opacity: 0 }, { opacity: 1, duration: 0.9, stagger: 0.08, clearProps: 'opacity' }, 0.9);
     }
   },
   update(u, ctx) {
     // 0 → 1: the text slides out
     const k = seg(u, 0.05, 0.9);
     put(el.word, { o: 1 - k, yv: -0.16 * k }, ctx);
-    put(el.tag, { o: 1 - k, x: -90 * k }, ctx);
-    put(el.features, { o: 1 - k, x: 90 * k }, ctx);
-    put(el.price, { o: 1 - k, x: 90 * k }, ctx);
-    put(el.statement, { o: 1 - k, x: -120 * k }, ctx);
+    put(el.statement, { o: 1 - k, x: 120 * k }, ctx); // intro bottom-right slides right
     put(el.foot, { o: 1 - seg(u, 0.05, 0.5) }, ctx);
 
     // 1 → 2: the photo zooms out behind the ring (D-177: from a little zoomed in down to cover, around

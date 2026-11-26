@@ -167,16 +167,16 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   /* D-179 1b: light values come from the pose JSON (lights.key.intensity, lights.fill,
      lights.pedestal_envMapIntensity); these are only the fallbacks and one gain each, tuned by eye
      against the 3D Designer's poster, so a new JSON drop retunes itself */
-  const LAMP_GAIN = 2;
+  const LAMP_GAIN = 2.3;
   const RING_DESK_ENV = 1.6;
   const DESK_PAPER = 0.35;
   /** Cycles' warm desk bounce lights the shaded faces; the web has no GI, so the env stands in */
-  const PED_ENV_GAIN = 5;
+  const PED_ENV_GAIN = 2.6;
   const SHADOW_RADIUS = 40;
   let LAMP = 2.6;
   let PED_ENV = 0.35;
   /** warm-yellow multiply on the oak: AgX turns the lamp-lit oak pinkish; matched by eye to the poster */
-  const PED_TINT = new THREE.Color().setRGB(1, 0.93, 0.5);
+  const PED_TINT = new THREE.Color().setRGB(1, 0.9, 0.42);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.VSMShadowMap; // smooth penumbra, no PCF noise or banding
   const desk = new THREE.Group();
@@ -285,8 +285,16 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       const ay = (heroBg.anchor.y - 0.5) * ch;
       return [ax + ((fu - 0.5) * cw - ax) * zoom, ay + ((fv - 0.5) * ch - ay) * zoom];
     };
-    const [px, py] = toScreen(0.5, (C.frameH / 2 + C.shiftY * C.frameW) / C.frameH);
-    return { F: C.focalPx * (cw / C.frameW) * zoom, px, py };
+    const [px0, py0] = toScreen(0.5, (C.frameH / 2 + C.shiftY * C.frameW) / C.frameH);
+    /* phones: ring + pedestal as a 2D scale of the photo camera's image about the pedestal origin
+       (heroBg.subjectOrigin) plus a shift of subjectDy × photo height — exactly what the poster's CSS
+       scale + translate does, so poster and 3D stay identical (a 3D scale would change the view) */
+    const m = deskSubject();
+    const dy = (window.innerWidth <= 760 ? heroBg.mobile.subjectDy : heroBg.desktop.subjectDy) * ch * zoom;
+    const [qx, qy] = toScreen(heroBg.subjectOrigin.x, heroBg.subjectOrigin.y);
+    const px = qx + (px0 - qx) * m;
+    const py = qy + (py0 - qy) * m + dy;
+    return { F: C.focalPx * (cw / C.frameW) * zoom * m, px, py };
   };
   /**
    * the desk group: camera space of the JSON camera → this stage's world. Our camera sits at (0,0,F)
@@ -301,8 +309,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     const d = deskCam.position.distanceTo(_v.fromArray(deskPose.camera.lookAt));
     deskK = F / d;
     _m.copy(deskCam.matrixWorldInverse); // world (JSON) → JSON camera space
-    const m = deskSubject();
-    desk.matrix.makeScale(deskK, deskK, deskK).premultiply(new THREE.Matrix4().makeTranslation(0, 0, F)).multiply(_m).multiply(new THREE.Matrix4().makeScale(m, m, m));
+    desk.matrix.makeScale(deskK, deskK, deskK).premultiply(new THREE.Matrix4().makeTranslation(0, 0, F)).multiply(_m);
     desk.matrixWorldNeedsUpdate = true;
   };
   /* S06 finger proxy (s06-pose.json fingerProxy): lathe around +Y in hand-photo px, y = 0 at the
@@ -588,7 +595,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       const R = deskPose.ring;
       _v.fromArray(R.position).applyMatrix4(desk.matrix);
       pivot.position.lerp(_v, rest);
-      pivot.scale.setScalar(pivot.scale.x + (deskK * deskSubject() * (R.scale ?? 1) * (R.s01_scale ?? 1) - pivot.scale.x) * rest);
+      pivot.scale.setScalar(pivot.scale.x + (deskK * (R.scale ?? 1) * (R.s01_scale ?? 1) - pivot.scale.x) * rest);
       // ring.s01_scale (optional, JSON): larger ring only while it rests; the rest blend takes it back to the lift-off size, no pop
       _q.copy(deskCam.quaternion).invert().multiply(new THREE.Quaternion().fromArray(R.quaternion));
       pivot.quaternion.slerp(_q, rest);
@@ -680,7 +687,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       });
       // shadow camera in world units (the group is scaled by deskK)
       const L = deskPose.lights.key.shadow;
-      const kk = deskK * deskSubject();
+      const kk = deskK;
       const b = (L.camera_bounds_m ?? 0.06) * kk;
       const sc = lampKey.shadow.camera;
       if (sc.right !== b) {

@@ -10,18 +10,13 @@ import { heroBg } from '../../content/heroBg';
 const D = heroBg.desktop;
 const M = heroBg.mobile;
 
-const icons = [
-  'M11.5 9.6A4.6 4.6 0 0 1 6.4 4.5a4.6 4.6 0 1 0 5.1 5.1Z', // sleep: crescent
-  'M5 12V6M9 12V3M13 12V8', // activity and rest: bars
-  'M3 10h10M3 13h6M8 3.5a1.5 1.5 0 1 1 0 .01', // insight
-];
 ---
 
 <section
   class="scene scene--hero"
   data-scene="hero"
   aria-labelledby="hero-title"
-  style={`--ph-d:url(${D.placeholder}); --ph-m:url(${M.placeholder}); --v1-ratio:${heroBg.v1Ratio}; --d-ratio:${D.width / D.height}; --d-orig:${D.origW}; --m-ratio:${M.width / M.height}; --m-orig:${M.origW}; --anchor-x:${heroBg.anchor.x * 100}%; --anchor-y:${heroBg.anchor.y * 100}%; --subj-x:${heroBg.subjectOrigin.x * 100}%; --subj-y:${heroBg.subjectOrigin.y * 100}%; --subj-m:${M.subject}`}
+  style={`--ph-d:url(${D.placeholder}); --ph-m:url(${M.placeholder}); --v1-ratio:${heroBg.v1Ratio}; --d-ratio:${D.width / D.height}; --d-orig:${D.origW}; --m-ratio:${M.width / M.height}; --m-orig:${M.origW}; --anchor-x:${heroBg.anchor.x * 100}%; --anchor-y:${heroBg.anchor.y * 100}%; --subj-x:${heroBg.subjectOrigin.x * 100}%; --subj-y:${heroBg.subjectOrigin.y * 100}%; --subj-m:${M.subject}; --subj-dy:${M.subjectDy}`}
 >
   <div class="scene__back">
     <div class="hero__photo" data-h-photo data-a>
@@ -38,7 +33,7 @@ const icons = [
       </div>
     </div>
     <h1 class="hero__word" id="hero-title" data-h-word data-a>
-      <span class="sr-only">Stillway. {hero.tagline}</span>
+      <span class="sr-only">Stillway</span>
       <span class="hero__word-inner" aria-hidden="true">
         {hero.wordmark.split('').map((ch) => <span class="hero__char">{ch}</span>)}
       </span>
@@ -48,27 +43,12 @@ const icons = [
 
   <!-- S02 start still (reduced motion / WebGL failure only) -->
   <img class="ring-fallback hero__fb hero__fb--end" src="/ring-fallback/fb-s02-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-fb-range="3,3.5" data-a loading="lazy" decoding="async" />
+  <!-- D-179 Stage 2 (Figma 40004725:5602): scrim, "SCROLL DOWN" bottom-left, intro bottom-right -->
+  <div class="hero__scrim" aria-hidden="true"></div>
   <div class="scene__front">
-    <div class="hero__meta" data-h-meta data-a>
-      <p class="hero__tag" data-h-tag><i class="dot" aria-hidden="true"></i>{hero.tagline}</p>
-      <ul class="hero__features" data-h-features>
-        {
-          hero.features.map((f, i) => (
-            <li>
-              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                <path d={icons[i]} fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-              {f}
-            </li>
-          ))
-        }
-      </ul>
-      <p class="hero__price" data-h-price>{hero.price}</p>
-    </div>
-    <!-- D-087: statement bottom-left and "Scroll down" bottom-right on one baseline; no "• Stillway" -->
     <div class="hero__bottom">
-      <p class="hero__statement" data-h-statement data-a>{hero.statement}</p>
       <span class="hero__foot" data-h-foot data-a aria-hidden="true">{hero.scroll}</span>
+      <p class="hero__statement" data-h-statement data-a>{hero.statement}</p>
     </div>
   </div>
 </section>
@@ -115,6 +95,7 @@ const icons = [
   @media (max-width: 760px) {
     .hero__poster {
       scale: var(--subj-m); /* heroBg.mobile.subject, the same as the 3D desk on phones */
+      translate: 0 calc(var(--subj-dy) * 100%); /* heroBg.mobile.subjectDy (fraction of the photo height) */
     }
   }
   :global(html.ring-ready) .hero__poster {
@@ -129,81 +110,58 @@ const icons = [
   /* V1 wordmark: Hanken Grotesk Medium, justified across the width, behind the ring.
      Display/Display 1 size and line height; its letter spacing does not apply (the letters are
      spread with space-between, a negative tracking would only push the last letter out). */
+  /* D-179 Stage 2 wordmark (Figma 40004725:5606): title case, left 40 / top 126.3, 193.59 px,
+     line 143.4, tracking −5.81 px plus the frame's −4.92 px per letter (≈ −0.0554em in all) */
   .hero__word {
     position: absolute;
-    top: var(--header-h);
-    left: 0;
-    right: 0;
+    top: 126.3px;
+    left: var(--margin);
     margin: 0;
-    padding: 1.6vw var(--margin) 1.2vw;
     font-weight: var(--w-display);
-    font-size: var(--t-display-1-size);
-    line-height: var(--t-display-1-lh);
-    letter-spacing: 0;
+    font-size: min(193.59px, 13.44vw);
+    line-height: 0.7407;
+    letter-spacing: -0.0554em;
+    white-space: nowrap;
     color: var(--white);
   }
+
   .hero__word-inner {
-    display: flex;
-    justify-content: space-between;
+    display: inline-flex;
   }
+
   .hero__char {
     display: inline-block;
   }
-  .hero__meta {
+  .hero__scrim {
     position: absolute;
-    left: 0;
-    right: 0;
-    top: calc(var(--header-h) + var(--t-display-1-lh) + 2.8vw + 18px);
-    padding-inline: var(--margin);
-    display: grid;
-    grid-template-columns: var(--grid);
-    gap: var(--gutter);
-    /* Paragraph/Small */
-    font-size: var(--t-para-sm-size);
-    line-height: var(--t-para-sm-lh);
-    letter-spacing: var(--t-para-sm-ls);
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, 0.35) 100%);
   }
-  .hero__tag {
-    grid-column: 1 / span 5;
-  }
-  .hero__features {
-    grid-column: 10 / span 2;
-    display: grid;
-    gap: var(--space-2);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .hero__features li {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .hero__price {
-    grid-column: 12;
-    justify-self: end;
-    font-variant-numeric: tabular-nums;
-  }
+  /* Figma "Bottom": x 40, y 752, 1360 × 108, bottom-aligned, space-between */
   .hero__bottom {
     position: absolute;
     left: var(--margin);
     right: var(--margin);
-    bottom: var(--margin); /* QA HR-02: same as the side padding */
+    bottom: var(--margin);
     display: flex;
     justify-content: space-between;
-    align-items: last baseline;
+    align-items: flex-end;
     gap: 24px;
   }
+
+  /* Heading/Heading 2, 389 px wide → three lines, left-aligned inside the block */
   .hero__statement {
-    /* exactly 3 balanced lines at 1440 (D-087): ~27 characters per line, no orphan */
-    max-width: 14.6em;
-    text-wrap: balance;
-    /* Heading/Heading 2 */
+    width: 389px;
+    max-width: 100%;
+    margin: 0;
     font-weight: var(--w-heading);
     font-size: var(--t-heading-2-size);
     line-height: var(--t-heading-2-lh);
     letter-spacing: var(--t-heading-2-ls);
   }
+
   /* Mono/Medium in capitals (QA G-09) */
   .hero__foot {
     flex: none;
@@ -212,15 +170,6 @@ const icons = [
     line-height: var(--t-mono-md-lh);
     letter-spacing: var(--t-mono-md-ls);
     text-transform: uppercase;
-  }
-  .dot {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-    margin-right: 10px;
-    vertical-align: 2px;
   }
   /* stills: float pose (state 1–2), close-up (state 3), S02 start (state 4) */
   .hero__fb--float {
@@ -260,27 +209,22 @@ const icons = [
       aspect-ratio: var(--m-ratio);
       background-image: var(--ph-m);
     }
-    /* QA M-08: the wordmark keeps 20 px on both sides (sized from the width, STILLWAY ≈ 4.9em) */
+    /* D-179 mobile: wordmark full width under the nav; intro on top of "SCROLL DOWN" at the bottom */
     .hero__word {
       top: calc(var(--header-h) + 18px);
-      padding-inline: 20px;
-      font-size: min(var(--t-display-1-size), calc((100vw - 40px) / 4.95));
+      left: 20px;
+      font-size: calc((100vw - 40px) / 3.1); /* full width: "Stillway" ≈ 3.07 em wide */
     }
-    .hero__meta {
-      top: calc(var(--header-h) + 18px + var(--t-display-1-lh) + 2.8vw + 14px);
-      grid-template-columns: 1fr auto;
-    }
-    .hero__tag {
-      grid-column: 1;
-    }
-    .hero__features {
-      display: none;
-    }
-    .hero__price {
-      grid-column: 2;
+    .hero__bottom {
+      flex-direction: column-reverse;
+      align-items: flex-start;
+      gap: 14px;
+      left: 20px;
+      right: 20px;
     }
     .hero__statement {
-      max-width: 11.5em;
+      width: auto;
+      max-width: 15em;
     }
     .hero__fb--float {
       top: 52%;

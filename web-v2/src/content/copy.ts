@@ -22,13 +22,13 @@ export const nav = {
  */
 export const hero = {
   status: 'V1 copy per D-080 (headline working copy D-014)',
-  wordmark: 'STILLWAY',
+  wordmark: 'Stillway', // D-179 Stage 2: title case (Figma 40004725:5602)
   tagline: 'Understand your rhythm.',
   features: ['Sleep summary', 'Activity and rest', 'Daily insight'],
   price: '$299',
   statement: 'A smart ring that brings your sleep, activity, and rest into one everyday view.',
   scroll: 'Scroll down',
-  ringAlt: 'The silver Stillway ring, the engraved name on its band, floating above a pale stone in a bed of moss.',
+  ringAlt: 'The silver Stillway ring, the engraved name on its band, resting on a small oak block on a warm desk.',
 };
 
 export const why = {

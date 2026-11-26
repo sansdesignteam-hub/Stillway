@@ -33,6 +33,8 @@ export const heroBg = {
     zoomFrom: 1.14,
     /** ring + pedestal size against the photo (1 = the 3D Designer's framing) */
     subject: 1,
+    /** vertical shift of ring + pedestal against the photo (fraction of the photo height, − = up) */
+    subjectDy: 0,
     /** light first paint: preloaded, shown under the full image */
     placeholder: '/hero/hero-warm-desk-v2-960.webp',
   },
@@ -47,6 +49,8 @@ export const heroBg = {
      *  would run off both sides and read as the desk; at 0.62 it is ~300 px of 375 and reads as a
      *  pedestal (the ring stays ~175 px wide) */
     subject: 0.62,
+    /** D-179 Stage 2: lifted so the intro + scroll hint at the bottom do not cover the pedestal */
+    subjectDy: -0.14,
     placeholder: '/hero/hero-warm-desk-v2-960.webp',
   },
   /** warm dim over the photo (0..1); the photo is already a night scene */
