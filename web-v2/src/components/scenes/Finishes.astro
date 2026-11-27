@@ -87,7 +87,7 @@ import { finishes as d } from '../../content/copy';
           </div>
         </div>
         <p class="fn__muted fn__box">{d.trial} · {d.box}</p>
-        <Button class="fn__cta" label={d.button(d.finishes[0].name)} variant="paper" data-fn-cta />
+        <Button class="fn__cta" label={d.button(d.finishes[0].name)} variant="ink" data-fn-cta />
         <p class="fn__note" data-fn-note role="status" aria-live="polite"></p>
       </div>
     </div>
@@ -417,8 +417,7 @@ import { finishes as d } from '../../content/copy';
       height: 32px;
     }
     .fn__panel :global(.fn__cta) {
-      --dot: 34px;
-      min-height: 44px;
+      --h: 44px;
     }
     /* as on phones: the chosen finish is named above, the swatch names stay for screen readers */
     .fn__swatch span {
@@ -539,8 +538,7 @@ import { finishes as d } from '../../content/copy';
       height: 36px;
     }
     .fn__panel :global(.fn__cta) {
-      --dot: 36px;
-      min-height: 46px;
+      --h: 46px;
     }
   }
   /* QA27 M-15: large phones / small tablets (the one-column layout) keep a 24 px margin */

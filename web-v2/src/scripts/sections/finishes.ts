@@ -122,8 +122,7 @@ function initControls(r: HTMLElement) {
     r.querySelectorAll<HTMLButtonElement>('[data-fn-light]').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.fnLight === '1') === choice.lampOn)));
     const nm = q('[data-fn-finish-name]');
     if (nm) nm.textContent = FINISHES[i];
-    const cta = q('[data-fn-cta] .btn__label');
-    if (cta) cta.textContent = d.button(FINISHES[i]);
+    r.querySelectorAll('[data-fn-cta] [data-btn-text]').forEach((n) => (n.textContent = d.button(FINISHES[i])));
     if (note) note.textContent = '';
     r.dataset.lamp = choice.lampOn ? '1' : '0';
     // reduced motion / no WebGL: the still of the chosen finish
