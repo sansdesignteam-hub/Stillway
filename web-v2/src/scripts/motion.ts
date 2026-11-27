@@ -41,6 +41,8 @@ export function initMotion() {
   if (canvas && !reduced) {
     const start = () =>
       loadRing()
+        // D-191: evaluating three.js and creating the WebGL context are two turns, not one long task
+        .then((m) => new Promise<typeof m>((ok) => setTimeout(() => ok(m), 0)))
         .then(({ createRingStage }) => createRingStage(canvas))
         .then((r) => r && story.setRing(r))
         .catch(() => {

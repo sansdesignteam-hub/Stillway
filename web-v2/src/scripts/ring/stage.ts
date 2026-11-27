@@ -24,6 +24,8 @@ const FOV = 30;
 export interface RingStage {
   apply: (p: Pose, extra?: { breathe?: number }) => void;
   render: () => void;
+  /** D-191: prepare everything the first frame of this pose needs (programs, textures), in short turns */
+  prime: (p: Pose, extra?: { breathe?: number }) => Promise<void>;
   /** QA27 G-19: compile, ahead of the scroll, every shader variant these poses will need */
   prewarm: (poses: Pose[]) => void;
   setLed: (color: string | 'off' | null, intensity?: number) => void;
@@ -31,6 +33,12 @@ export interface RingStage {
   three: typeof THREE;
   pivot: THREE.Group;
 }
+
+/**
+ * D-191: setup is cut into short turns. Between two pieces of work the browser gets the main thread
+ * back (input, paint), so no single task is long; the work and its order are the same.
+ */
+const breath = (): Promise<void> => (globalThis as any).scheduler?.yield?.() ?? new Promise((r) => setTimeout(r, 0));
 
 export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingStage | null> {
   let renderer: THREE.WebGLRenderer;
@@ -40,6 +48,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     return null;
   }
   if (!renderer.getContext()) return null;
+  await breath();
 
   const isPhone = () => window.innerWidth < 720;
   /* D-182 edges: MSAA (antialias) only smooths silhouettes, not the polished band's thin highlights,
@@ -52,6 +61,19 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     const budget = Math.sqrt(5.6e6 / (view.w * view.lh));
     return Math.max(Math.min(d, 1.5), Math.min(2, budget));
   };
+  /* D-191: the drawing buffer is sized here, while the GPU has nothing else to do, and only when the
+     size or the ratio really changes. It used to be sized after the environments were built: on a
+     slow or software GPU the resize then waited ~100 ms on the main thread for that work to finish. */
+  let bufferKey = '';
+  const sizeBuffer = () => {
+    const pr = pixelRatio();
+    const key = `${view.w}x${view.lh}@${pr}`;
+    if (key === bufferKey) return;
+    bufferKey = key;
+    renderer.setDrawingBufferSize(view.w, view.lh, pr); // = setPixelRatio + setSize(w, h, false), one allocation
+  };
+  sizeBuffer();
+  const maxAnisotropy = renderer.capabilities.getMaxAnisotropy(); // asked once, now: later the answer would wait for the GPU's queue
   renderer.toneMapping = THREE.AgXToneMapping;
   renderer.toneMappingExposure = 1.0;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -68,7 +90,9 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   try {
     paperTex = await loadExr(RING_MODEL.env.paper); // D-191: decoded in a worker
     paperTex.mapping = THREE.EquirectangularReflectionMapping;
+    await breath();
     envs.paper = pmrem.fromEquirectangular(paperTex).texture;
+    await breath();
   } catch {
     /* no env: the ring still renders, darker */
   }
@@ -87,7 +111,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
    * scroll point, prebuild BLEND_STEPS environments that mix the two (photo rotated 0.6π as in V1)
    * and step through them with pose.photo. A shader sphere renders the mix, PMREM bakes each step.
    */
-  const buildBlends = () => {
+  const buildBlends = async () => {
     if (!photoTex || !paperTex) return;
     const mat = new THREE.ShaderMaterial({
       side: THREE.BackSide,
@@ -116,13 +140,14 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     for (let i = 0; i < BLEND_STEPS; i++) {
       mat.uniforms.t.value = i / (BLEND_STEPS - 1);
       blends.push(pmrem.fromScene(blendScene, 0, 0.1, 100).texture);
+      await breath(); // D-191: one environment per turn
     }
     mat.dispose();
   };
-  buildBlends();
-  // night env after the first paint of the ring
-  setTimeout(() => loadEnv(RING_MODEL.env.night).then((e) => ((envs.night = e), (lastEnv = ''), lateAsset())).catch(() => {}).finally(closeExr), 300);
-  setTimeout(() => loadEnv(RING_MODEL.env.dusk).then((e) => ((envs.dusk = e), (lastEnv = ''), lateAsset())).catch(() => {}).finally(closeExr), 900);
+  await buildBlends();
+  let firstFrameDone = () => {};
+  /** resolved by `prime`: the first frame of the ring comes before anything for later sections */
+  const firstFrame = new Promise<void>((ok) => (firstFrameDone = ok));
   let lateAsset = () => {}; // set once prewarm exists (below)
   /** run in idle time; `left()` = ms left in this slice (Safari has no requestIdleCallback: 8 ms slices) */
   const idle = (fn: (left: () => number) => void) =>
@@ -130,12 +155,40 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       ? (window as any).requestIdleCallback((d: IdleDeadline) => fn(() => d.timeRemaining()), { timeout: 1500 })
       : setTimeout(() => { const t0 = performance.now(); fn(() => 8 - (performance.now() - t0)); }, 60);
   const loadEnv = (url: string) =>
-    loadExr(url).then((t) => {
+    loadExr(url).then(async (t) => {
       t.mapping = THREE.EquirectangularReflectionMapping;
+      await breath();
+      renderer.initTexture(t); // the upload and the prefiltering in two turns
+      await breath();
       const env = pmrem.fromEquirectangular(t).texture;
       t.dispose();
+      await gpuDone();
       return env;
     });
+  /* D-191: what only the sections below the hero need — the night env (S03), the dusk env (S05) and
+     the S06 table — comes after the ring's first frame, one after the other in idle time (they used
+     to start on timers, 0.3 / 0.9 / 2.5 s into the ring's own loading, and competed with it). Each is
+     cheap for the main thread now: decoded in a worker, uploaded in strips. Loading them only once the
+     visitor moves was tried and dropped: on a real GPU the prefiltering and the mipmaps then cost two
+     or three 50–80 ms frames in the visitor's first second of interaction. */
+  const idleTurn = () => new Promise<void>((next) => idle(() => next()));
+  const lateAssets = async () => {
+    await firstFrame;
+    for (const k of ['night', 'dusk'] as const) {
+      await idleTurn();
+      try {
+        envs[k] = await loadEnv(RING_MODEL.env[k]);
+        lastEnv = '';
+        lateAsset();
+      } catch {
+        /* the stage keeps the env it has */
+      }
+    }
+    closeExr();
+    await idleTurn();
+    loadTable();
+  };
+  lateAssets();
   scene.environment = blends[0] ?? envs.paper ?? null;
 
   // S01 rig, faded in with pose.photo (so S02 and the rest never see it). D-177, the warm desk photo:
@@ -667,6 +720,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     renderer.dispose();
     return null;
   }
+  await breath();
   const box = new THREE.Box3().setFromObject(ring);
   ring.position.sub(box.getCenter(new THREE.Vector3()));
   const ringSize = box.getSize(new THREE.Vector3()).x; // outer diameter
@@ -907,40 +961,83 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   let table: THREE.Object3D | null = null;
   const tableMats: THREE.MeshStandardMaterial[] = [];
   let tableLoading = false;
+  /** D-191: one texture to the GPU in strips of 128 rows, a strip per idle turn. three.js sends a
+   *  texture in one call: for a 2048 px map that is 16 MB handed to the GPU inside a single task, 25–60 ms
+   *  with a real GPU and more with a software one. Here three.js still creates the texture (storage,
+   *  format, filtering, anisotropy) but is told the pixels are not ready; the same pixels then go up
+   *  row band by row band and the mipmaps are built at the end, as three.js would. Anything unusual
+   *  (no ImageBitmap, another format) takes the normal single upload. */
+  const stripUpload = async (t: THREE.Texture) => {
+    const img = t.image as ImageBitmap;
+    const gl = renderer.getContext() as WebGL2RenderingContext;
+    const ROWS = 128;
+    const plain = typeof ImageBitmap !== 'undefined' && img instanceof ImageBitmap && !!gl.texStorage2D && t.format === THREE.RGBAFormat && t.type === THREE.UnsignedByteType && !t.mipmaps?.length && img.height > ROWS && img.width <= renderer.capabilities.maxTextureSize && img.height <= renderer.capabilities.maxTextureSize;
+    const whole = async () => {
+      await new Promise<void>((next) => idle(() => next()));
+      t.source.dataReady = true;
+      renderer.initTexture(t);
+    };
+    if (!plain) return whole();
+    const strips: Array<[number, ImageBitmap]> = [];
+    try {
+      // cut by the browser off the main thread; same options as GLTFLoader's own bitmaps
+      for (let y = 0; y < img.height; y += ROWS)
+        strips.push([y, await createImageBitmap(img, 0, y, img.width, Math.min(ROWS, img.height - y), { premultiplyAlpha: 'none', colorSpaceConversion: 'none' })]);
+    } catch {
+      return whole();
+    }
+    t.source.dataReady = false;
+    renderer.initTexture(t); // storage and parameters only
+    t.source.dataReady = true;
+    const glTex = renderer.properties.get(t).__webglTexture;
+    if (!glTex) {
+      t.needsUpdate = true;
+      return whole();
+    }
+    for (const [y, strip] of strips) {
+      await new Promise<void>((next) => idle(() => next()));
+      renderer.state.bindTexture(gl.TEXTURE_2D, glTex);
+      renderer.state.pixelStorei(gl.UNPACK_ALIGNMENT, t.unpackAlignment);
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, y, gl.RGBA, gl.UNSIGNED_BYTE, strip);
+      strip.close();
+    }
+    renderer.state.bindTexture(gl.TEXTURE_2D, glTex);
+    if (t.generateMipmaps) gl.generateMipmap(gl.TEXTURE_2D);
+    renderer.state.unbindTexture();
+  };
   const loadTable = () => {
     if (tableLoading) return;
     tableLoading = true;
     new GLTFLoader()
       .loadAsync(RING_MODEL.tableUrl)
       .then((g) => {
-        table = g.scene;
-        const aniso = renderer.capabilities.getMaxAnisotropy();
-        table.traverse((o) => {
+        const tbl = g.scene;
+        tbl.traverse((o) => {
           if (!o.isMesh) return;
           const m = o.material as THREE.MeshStandardMaterial;
-          for (const t of [m.map, m.roughnessMap, m.metalnessMap, m.normalMap]) if (t) t.anisotropy = aniso;
+          for (const t of [m.map, m.roughnessMap, m.metalnessMap, m.normalMap]) if (t) t.anisotropy = maxAnisotropy;
           m.transparent = true; // fades with S06 (opacity set per frame)
           tableMats.push(m);
         });
-        tableRoot.add(table);
-        document.documentElement.classList.add('table-ready');
-        lastTableKey = '';
-        // QA27 G-19: its textures go to the GPU now, one per idle slice, not in the frame S06 enters
+        // QA27 G-19: its textures go to the GPU now, in idle time, not in the frame S06 enters.
+        // D-191: and in strips (see stripUpload); the table joins the scene once they are all there
         const texs = [...new Set(tableMats.flatMap((m) => [m.map, m.roughnessMap, m.metalnessMap, m.normalMap]).filter(Boolean))] as THREE.Texture[];
-        const up = () => {
-          const t = texs.pop();
-          if (!t) return lateAsset();
-          renderer.initTexture(t);
-          idle(up);
+        const up = async () => {
+          for (const t of texs) await stripUpload(t);
+          await gpuDone();
+          table = tbl;
+          tableRoot.add(tbl);
+          document.documentElement.classList.add('table-ready');
+          lastTableKey = '';
+          lateAsset();
         };
-        idle(up);
+        return up();
       })
       .catch(() => {
         /* the CSS table stays */
       });
   };
-  // lazily, once the first paint is done (it is needed from S06 on)
-  setTimeout(() => ('requestIdleCallback' in window ? (window as any).requestIdleCallback(loadTable, { timeout: 3000 }) : loadTable()), 2500);
+  // D-191: loaded after the late environments (lateAssets above)
   let lastTableKey = '';
 
   /* S08: window A lit in the three mode colours (D-062), a soft flare sprite and the coloured bounce
@@ -1016,8 +1113,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     H = view.h;
     LH = view.lh;
     lastCam = '';
-    renderer.setPixelRatio(pixelRatio());
-    renderer.setSize(W, LH, false);
+    sizeBuffer();
     camera.aspect = W / H;
     frameView(0, 0);
     camera.position.set(0, 0, H / 2 / Math.tan(THREE.MathUtils.degToRad(FOV / 2)));
@@ -1359,46 +1455,136 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     if (desk.visible && deskHemi.visible) hemiN++;
     return [dir, point, hemiN, desk.visible ? 1 : 0, scene.environment?.uuid ?? '', (band as any)?.clearcoat > 0 ? 1 : 0, ledMain?.toneMapped ? 0 : 1, ledPower?.toneMapped ? 0 : 1, finger.visible ? 1 : 0, flare.visible ? 1 : 0, table && tableRoot.visible ? 1 : 0].join('|');
   };
+  /** everything three.js draws in a scene (hidden objects too: they show in some other pose) */
+  const drawables = (root: THREE.Object3D) => {
+    const out: THREE.Object3D[] = [];
+    root.traverse((o: any) => (o.isMesh || o.isSprite || o.isPoints || o.isLine) && out.push(o));
+    return out;
+  };
+  /** D-191: the programs of ONE object for the scene as it stands (lights, env, shadow), not of the
+   *  whole scene at once: building the shader source of every material in one go was a 50–60 ms task
+   *  on a phone. The result is the same program three.js would build when it draws the object. */
+  const compileOne = (o: THREE.Object3D, inTable: boolean) => {
+    if (inTable) {
+      tableScene.environment = scene.environment;
+      tableScene.environmentIntensity = 1;
+      renderer.compile(o, camera, tableScene);
+    } else renderer.compile(o, camera, scene);
+  };
   const warmed = new Set<string>();
   let warmQueue: Pose[] = [];
   let warmBusy = false;
+  /** the variant being compiled: its pose and the objects still to do */
+  let warmJob: { p: Pose; todo: Array<[THREE.Object3D, boolean]> } | null = null;
+  const WARM_MS = 5; // prewarm work per idle turn; one object is always finished
   const warmStep = (left: () => number) => {
     warmBusy = false;
-    if (!warmQueue.length || !lastPose) return;
+    if (!lastPose || (!warmJob && !warmQueue.length)) return;
+    const t0 = performance.now();
+    const more = () => performance.now() - t0 < WARM_MS && left() > 1;
     quiet = true;
     try {
-      let compiled = 0;
-      // skim the poses whose variant is known; compile at most one new variant per idle slice
-      while (warmQueue.length && compiled < 1 && left() > 1) {
-        const p = warmQueue.pop()!;
-        apply(p);
-        const key = variantKey();
-        if (warmed.has(key)) continue;
-        warmed.add(key);
-        scene.updateMatrixWorld();
-        renderer.compile(scene, camera);
-        if (table && tableRoot.visible) {
-          tableScene.environment = scene.environment;
-          tableScene.environmentIntensity = 1;
-          renderer.compile(tableScene, camera);
+      if (warmJob) apply(warmJob.p); // the scene was put back after the last turn
+      for (;;) {
+        if (!warmJob) {
+          // skim the poses whose variant is known
+          do {
+            const p = warmQueue.pop();
+            if (!p) break;
+            apply(p);
+            const key = variantKey();
+            if (warmed.has(key)) continue;
+            warmed.add(key);
+            scene.updateMatrixWorld();
+            warmJob = { p, todo: drawables(scene).map((o) => [o, false]) };
+            if (table && tableRoot.visible) for (const o of drawables(tableScene)) warmJob.todo.push([o, true]);
+          } while (!warmJob && more());
+          if (!warmJob) break;
         }
-        compiled++;
+        const next = warmJob.todo.pop();
+        if (next) compileOne(next[0], next[1]);
+        if (!warmJob.todo.length) warmJob = null;
+        if (!more()) break;
       }
       apply(lastPose, lastExtra); // the scene exactly as the last real frame left it
     } finally {
       quiet = false;
     }
-    if (warmQueue.length) (warmBusy = true), idle(warmStep);
+    if (warmQueue.length || warmJob) (warmBusy = true), idle(warmStep);
   };
   let warmAll: Pose[] = [];
   const prewarm = (poses: Pose[]) => {
     warmAll = poses;
+    warmJob = null;
     warmQueue = poses.slice().reverse(); // from the top of the page down
     if (!warmBusy) (warmBusy = true), idle(warmStep);
   };
   /** an asset that arrived late (night / dusk env, the table) brings new variants: go round again */
   lateAsset = () => {
     if (warmAll.length) prewarm(warmAll);
+  };
+
+  /** D-191: resolves once the GPU has worked through everything sent so far (a fence, polled between
+   *  turns). The first use of a program asks the GPU questions that wait for its queue: on a slow or
+   *  software GPU that wait was spent on the main thread. */
+  const gpuDone = () =>
+    new Promise<void>((ok) => {
+      const gl = renderer.getContext() as WebGL2RenderingContext;
+      if (!gl.fenceSync) return ok();
+      const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+      gl.flush();
+      let n = 0;
+      const poll = () => {
+        if (sync && gl.clientWaitSync(sync, 0, 0) === gl.TIMEOUT_EXPIRED && ++n < 250) return setTimeout(poll, 8);
+        gl.deleteSync(sync);
+        ok();
+      };
+      setTimeout(poll, 0);
+    });
+
+  /** D-191: the first frame used to build every program and upload every texture inside one task
+   *  (250 ms on a phone). Here the same work is done before it, one object and one texture per turn,
+   *  and the frame is only drawn once the GPU has linked the programs (KHR_parallel_shader_compile,
+   *  where the browser has it), so drawing it never waits. */
+  const prime = async (p: Pose, extra: { breathe?: number } = {}) => {
+    const set = () => {
+      quiet = true;
+      try {
+        apply(p, extra);
+      } finally {
+        quiet = false;
+      }
+    };
+    for (const o of drawables(scene)) {
+      set(); // each turn: nothing else touches the scene before the first frame, but stay exact
+      renderer.compile(o, camera, scene);
+      await breath();
+    }
+    const texs = new Set<THREE.Texture>();
+    scene.traverse((o: any) => {
+      for (const m of [o.material].flat())
+        if (m) for (const k in m) if (m[k]?.isTexture && !m[k].isRenderTargetTexture) texs.add(m[k]);
+    });
+    for (const t of texs) {
+      renderer.initTexture(t);
+      await breath();
+    }
+    set();
+    await renderer.compileAsync(scene, camera);
+    await gpuDone();
+    // the first use of each program (its uniform and attribute look-ups, a few hundred questions to
+    // the GPU each) one program per turn; the frame then finds them answered
+    const firsts = new Set<any>();
+    for (const o of drawables(scene))
+      for (const m of [(o as any).material].flat()) {
+        const program = m && renderer.properties.get(m).currentProgram;
+        if (!program || firsts.has(program)) continue;
+        firsts.add(program);
+        program.getUniforms();
+        program.getAttributes();
+        await breath();
+      }
+    firstFrameDone();
   };
 
   /** colour for window A, or 'off' to light only the red dot, or null for both dark */
@@ -1471,5 +1657,5 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     };
   }
   await deskReady; // the first frame already shows the pedestal (the poster cross-fades to it)
-  return { apply, render, prewarm, setLed, canvas, three: THREE, pivot };
+  return { apply, render, prime, prewarm, setLed, canvas, three: THREE, pivot };
 }

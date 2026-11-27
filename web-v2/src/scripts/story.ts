@@ -157,6 +157,9 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
   };
 
   let ring: RingStage | null = null;
+  /** D-191: the stage while it prepares its first frame, and the pose that frame will have */
+  let priming: RingStage | null = null;
+  let primed: { pose: Pose; breathe: number } | null = null;
   let lastPoseKey = '';
   const progDots = [...document.querySelectorAll<HTMLElement>('[data-gprog] a')];
   let progAt = -1;
@@ -370,7 +373,7 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     setHash(at === 'hero' ? '' : at === 'close' && clockFrom === cur && u >= 1.5 ? '#faq' : `#${at}`);
 
     /* ring */
-    if (ring) {
+    if (ring || priming) {
       let pose: Pose;
       if (inConn && prev) {
         const from = poseOf(prev, prev.end);
@@ -386,7 +389,8 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
         breathe = 0.01 * (1 - Math.cos(t * 1.25)) * (1 - seg(u, 0, 0.8));
       }
       const key = JSON.stringify(pose) + breathe.toFixed(4) + vh;
-      if (key !== lastPoseKey) {
+      if (!ring) primed = { pose, breathe };
+      else if (key !== lastPoseKey) {
         lastPoseKey = key;
         ring.apply(pose, { breathe });
         ring.render();
@@ -410,7 +414,12 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
 
   return {
     frame,
-    setRing(r: RingStage) {
+    async setRing(r: RingStage) {
+      // D-191: programs and textures of the first frame are prepared in short turns, then it is drawn
+      priming = r;
+      frame();
+      if (primed) await r.prime(primed.pose, { breathe: primed.breathe }).catch(() => {});
+      priming = null;
       ring = r;
       lastPoseKey = '';
       frame(); // first frame with the real pose, finish and env; the canvas fades in over 0.9 s
@@ -419,9 +428,11 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       // QA27 G-19: every pose the story can ask for (sections, connections, both S10 options that
       // change the shader), so the ring stage compiles its shader variants in idle time, not on scroll.
       // Sampled finely: a variant can exist for a few hundredths of a screen only (lights crossing over)
-      setTimeout(() => {
+      setTimeout(async () => {
         const poses: Pose[] = [];
-        items.forEach((it, i) => {
+        // D-191: one section per turn (≈ 3000 poses were built in a single 80 ms task on a phone)
+        for (let i = 0; i < items.length; i++) {
+          const it = items[i];
           const prev = items[i - 1];
           if (prev && it.def.tin) {
             const from = poseOf(prev, prev.end);
@@ -433,7 +444,8 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
             const p = poseOf(it, 0);
             for (const fin of [0, 1, 2]) for (const lamp of [0, 1]) poses.push({ ...p, custom: 1, finA: fin, finB: fin, finT: 0, lamp });
           }
-        });
+          await new Promise((next) => setTimeout(next, 0));
+        }
         r.prewarm(poses);
       }, 1400);
     },
