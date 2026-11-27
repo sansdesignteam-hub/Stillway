@@ -47,7 +47,7 @@
         2547,
         2159
       ],
-      "mismatch_pixels": 497,
+      "mismatch_pixels": 490,
       "mismatch_band_max_px_at_frame": 1,
       "mismatch_band_max_px_at_1920": 0.5,
       "bbox_delta_px_at_1920": [
