@@ -4,7 +4,7 @@ D-182b: S01 poster RING pass matched to the live web ring (Developer a7eea87, D-
 Cycles render of the ring alone, lit like the web at rest: env = hero-env-warm.jpg (rotated 0.6 pi, seam
 cross-faded) with 25 % paper env, in CAMERA space (the web camera never turns); web rig (sun, hemisphere,
 fill, desk key); web band material; AgX, exposure 1.15. Then a monotonic luma curve maps the ring's
-p05/25/50/75/95 (1440@2x web rest frame) to the live values and per-channel gains set the live mean colour.
+p05/25/50/75/95 (web rest frame) to the live values; no per-channel gain (it turned the highlights blue).
 """
 import bpy, os, math, importlib.util
 import numpy as np
@@ -22,7 +22,6 @@ if not os.path.exists(WEB_PHOTO):
 # (28/48/98/151/236 vs 33/50/100/155/245; 375 29/48/98/153/225 vs 33/50/100/156/240), so the targets below
 # are the live numbers converted to this file's measure by that same offset.
 TARGET = {"": (27, 47, 66, 146, 194), "m": (27, 47, 67, 145, 195)}
-TARGET_RGB = np.array([120, 108, 99], np.float32)   # live mean colour (D-182, middle of the sway range)
 
 
 def pixels(img):
@@ -156,10 +155,7 @@ def grade():
         print("PLATE raw ring", sfx or "desktop", [round(v) for v in p], mean.round())
         xs = [0] + p + [255]; ys = [0] + list(target) + [255]
         gain = np.ones(3, np.float32)
-        for _ in range(8):          # curve and tint interact (clipping, interpolation): iterate
-            q, mean = stats(apply(raw, xs, ys, gain))
-            ratio = TARGET_RGB / mean
-            gain = gain * (ratio / (ratio @ LUMA))     # hue only; the curve owns the level
+        for _ in range(8):          # curve and dark tint interact (clipping, interpolation): iterate
             q, mean = stats(apply(raw, xs, ys, gain))
             ys = [0] + [float(y + (t - v)) for y, v, t in zip(ys[1:-1], q, target)] + [255]
             ys = list(np.maximum.accumulate(ys))
