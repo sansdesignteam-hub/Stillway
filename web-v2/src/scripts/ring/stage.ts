@@ -194,7 +194,10 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
      left of the ring → A ≈ 0.58 (the top sees more of the room). `side` is the least alpha on faces
      the key does not reach (the ring takes bounce away there). A later JSON can set
      desk.catcher_ambient / pedestal.catcher_ambient / pedestal.catcher_side_opacity. */
-  const CATCH = { deskAmb: 0.15, topAmb: 0.58, side: 0.1 };
+  /* D-186: both densities × a gain (poster/live mean darkening was 0.204 / 0.159). `fill` / `soft` soften
+     the desk mask around the pedestal's own baked shadow: with a hard, full mask the ring's far shadow
+     read as a thin arc round it */
+  const CATCH = { deskAmb: 0.15, topAmb: 0.58, side: 0.1, deskGain: 0.88, topGain: 1.65, fill: 0.3, soft: 0.003 };
   let LAMP = 2.6;
   /* D-181: the pedestal is no longer shaded here. It is rendered once in Cycles INTO the photo (the
      plate: oak, contact shadow, bounce, AO), and this stage only keeps its shape as an invisible
@@ -299,7 +302,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
           `uniform vec3 uPedL; uniform vec4 uPedBox; uniform vec4 uTouch; uniform vec3 uTouchDir; uniform vec2 uOver; uniform float uAmb; uniform float uSideFloor; uniform vec3 uSpillPos; uniform float uSpillF; uniform float uSpillTan; varying vec3 vPedPos; varying vec3 vPedN;
           // 1 where the key light reaches the desk, 0 inside the pedestal's own shadow (soft edge that
           // widens with the distance to the casting edge, like the PCSS penumbra)
-          float pedLit( vec3 P, vec3 L, float tanA ) {
+          float pedLit( vec3 P, vec3 L, float tanA, float soft ) {
             float tTop = uPedBox.y / L.y;
             float best = 1.0; float bt = 0.0;
             for ( int i = 0; i < 12; i ++ ) {
@@ -308,7 +311,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
               float d = length( max( q, 0.0 ) ) + min( max( q.x, q.y ), 0.0 ) - uPedBox.w;
               if ( d < best ) { best = d; bt = t; }
             }
-            float pw = max( 0.00025, tanA * bt );
+            float pw = max( soft, tanA * bt );
             return smoothstep( - pw, pw, best );
           }
           void main() {`,
@@ -321,7 +324,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
           float S = uSpillF / ( dS * dS ) * max( dot( n, toS ), 0.0 );
           ${
             ped
-              ? `float a = max( K / ( K + S + uAmb ), uSideFloor );
+              ? `float a0 = max( K / ( K + S + uAmb ), uSideFloor );
+          float a = min( ${CATCH.topGain.toFixed(4)} * a0, max( a0, 0.82 ) );
           // contact occlusion: distance to the touching strip; measured on the 3D Designer's overlay
           // (82f67c3): alpha 1 within ~2 mm of the band, 0.67 at 5.5 mm, 0.4 at 8 mm, gone by ~11.5 mm
           vec3 tp = vPedPos - uTouch.xyz;
@@ -333,8 +337,9 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
           float ao = uTouchDir.z * max( 1.0 - smoothstep( 0.002, 0.0115, td ), ov ) * smoothstep( -0.1, 0.45, n.y ); // top and lip, fading down the front face (as in the overlay)`
               : `// the pedestal shades the spill lamp front-left (there the key is the only light left, so the
           // ring's shadow is denser) and the key itself next to its base (no ring shadow at all)
-          S *= pedLit( vPedPos, toS, uSpillTan );
-          float a = K / ( K + S + uAmb ) * pedLit( vPedPos, uPedL, uLightTan );`
+          S *= pedLit( vPedPos, toS, uSpillTan, ${CATCH.soft.toFixed(4)} );
+          float a0 = K / ( K + S + uAmb );
+          float a = min( ${CATCH.deskGain.toFixed(4)} * a0, max( a0, 0.82 ) ) * mix( ${CATCH.fill.toFixed(4)}, 1.0, pedLit( vPedPos, uPedL, uLightTan, ${CATCH.soft.toFixed(4)} ) );`
           }
           gl_FragColor = vec4( color, opacity * ${ped ? '( 1.0 - ( 1.0 - a * ( 1.0 - getShadowMask() ) ) * ( 1.0 - ao ) )' : 'a * ( 1.0 - getShadowMask() )'} );`,
         );
@@ -674,15 +679,57 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     uGlint: { value: 0 },
     uGlintDir: { value: new THREE.Vector3(0.57, 0.74, -0.36) }, // toward the lamp, view space (= world: the camera never rotates)
   };
-  if (band) {
-    band.onBeforeCompile = (sh) => {
-      Object.assign(sh.uniforms, GLINT);
+  /* D-186 the ring in its room, while it rests on the pedestal (uRest = pose rest × desk, so nothing
+     changes once it lifts or in any other section):
+     (a) a slightly warmer ring: a luma-neutral tint, so the poster luma match holds;
+     (b) the wood under it mirrored in the lower band: the reflected ray is traced to the pedestal top
+     (rounded rectangle) or on to the desk, and the polished pixel is mixed toward that wood colour,
+     keeping its own light and dark, weaker with height above the top and darker near the touch. */
+  const ROOM = { uRest: { value: 0 } };
+  const patchRing = (m: THREE.MeshStandardMaterial, metal: boolean, lampGlint: boolean) => {
+    m.onBeforeCompile = (sh) => {
+      Object.assign(sh.uniforms, ROOM, { uToPed: PCSS.uToPed, uPedBox: PCSS.uPedBox, uTouch: PCSS.uTouch }, lampGlint ? GLINT : {});
       sh.fragmentShader = sh.fragmentShader
-        .replace('void main() {', 'uniform float uGlint; uniform vec3 uGlintDir;\nvoid main() {')
+        .replace(
+          'void main() {',
+          `uniform float uRest; uniform mat4 uToPed; uniform vec4 uPedBox; uniform vec4 uTouch;
+          ${lampGlint ? 'uniform float uGlint; uniform vec3 uGlintDir;' : ''}
+          void main() {`,
+        )
         .replace(
           '#include <dithering_fragment>',
           `#include <dithering_fragment>
-          if ( uGlint > 0.0 ) {
+          if ( uRest > 0.0 ) {
+            ${
+              metal
+                ? `// view space = world axes (the camera never rotates)
+            vec3 wP = cameraPosition - vViewPosition;
+            vec3 wR = reflect( - normalize( vViewPosition ), normalize( normal ) );
+            vec3 P = ( uToPed * vec4( wP, 1.0 ) ).xyz;
+            vec3 D = normalize( mat3( uToPed ) * wR );
+            float down = smoothstep( 0.02, 0.45, - D.y );
+            if ( down > 0.0 ) {
+              float h = max( P.y - uPedBox.y, 0.0 );
+              vec3 hit = P + D * ( h / max( - D.y, 0.05 ) );
+              vec2 q = abs( hit.xz ) - ( uPedBox.xz - uPedBox.w );
+              float sd = length( max( q, 0.0 ) ) + min( max( q.x, q.y ), 0.0 ) - uPedBox.w;
+              float onTop = 1.0 - smoothstep( - 0.0015, 0.003, sd );
+              vec3 wood = mix( vec3( 0.52, 0.31, 0.14 ), vec3( 0.60, 0.43, 0.26 ), onTop ); // sRGB: desk, pedestal top
+              wood *= mix( 0.6, 1.0, smoothstep( 0.001, 0.007, distance( hit.xz, uTouch.xz ) ) );
+              float lum = dot( gl_FragColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );
+              float k = uRest * down * mix( 1.0, 0.25, smoothstep( 0.003, 0.016, h ) );
+              // the wood's hue at the pixel's own brightness (a little darker in the shade), so the luma holds
+              vec3 hue = mix( vec3( 1.0 ), wood / dot( wood, vec3( 0.2126, 0.7152, 0.0722 ) ), 0.5 );
+              float shade = mix( 1.0, 1.035, smoothstep( 0.2, 0.6, dot( wood, vec3( 0.333 ) ) ) );
+              vec3 refl = hue * lum * shade;
+              refl += max( max( refl.r, max( refl.g, refl.b ) ) - 1.0, 0.0 ) * vec3( 0.0, 0.6, 0.8 ); // highlights keep their level
+              gl_FragColor.rgb = mix( gl_FragColor.rgb, min( refl, vec3( 1.0 ) ), 0.7 * k );
+            }`
+                : ''
+            }
+            gl_FragColor.rgb = min( gl_FragColor.rgb * mix( vec3( 1.0 ), vec3( 1.05, 0.99, 0.91 ), uRest ), vec3( 1.0 ) );
+          }
+          ${lampGlint ? `          if ( uGlint > 0.0 ) {
             vec3 gV = normalize( vViewPosition );
             vec3 gN = normalize( normal );
             float gNV = clamp( dot( gN, gV ), 0.0, 1.0 );
@@ -698,12 +745,18 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
             vec3 warm = mix( vec3( 1.0, 0.70, 0.28 ), vec3( 1.0, 0.91, 0.62 ), core ); // sRGB gold → pale core
             gl_FragColor.rgb += a * warm * ( 1.0 - 0.55 * gl_FragColor.rgb ); // soft add: warms silver, never clips hard
             gl_FragColor.rgb = min( gl_FragColor.rgb, vec3( 1.0 ) );
-          }`,
+          }` : ''}`,
         );
-      if (!sh.fragmentShader.includes('uGlint * clamp')) console.warn('glint: band shader not patched');
+      if (!sh.fragmentShader.includes('uRest > 0.0')) console.warn('ring: shader not patched');
     };
-    band.customProgramCacheKey = () => 'glint';
-  }
+    m.customProgramCacheKey = () => 'room' + (metal ? 'm' : '') + (lampGlint ? 'g' : '');
+  };
+  const ringMats = new Set<THREE.MeshStandardMaterial>();
+  ring.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (mesh.isMesh && mesh.name !== RING_MODEL.meshes.ledMain && mesh.name !== RING_MODEL.meshes.ledPower) ringMats.add(mesh.material as THREE.MeshStandardMaterial);
+  });
+  ringMats.forEach((m) => patchRing(m, m === band || m === engrave, m === band));
   let lastFin = '';
   // LEDs (D-062): both off until a section asks (S08 colours, "off" = red dot)
   const ledMain = ring.getObjectByName(RING_MODEL.meshes.ledMain)?.material as THREE.MeshStandardMaterial | undefined;
@@ -1025,6 +1078,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     deskFill.distance = w * 2.6;
     cornerLight.intensity = 14 * Math.min(1, Math.max(0, p.corner));
     coldEdge.intensity = 34 * Math.min(1, Math.max(0, p.edge));
+    ROOM.uRest.value = rest * dsk;
     GLINT.uGlint.value = Math.min(1, Math.max(0, p.glint));
     if (GLINT.uGlint.value > 0 && deskPose) {
       const K = deskPose.lights.key;

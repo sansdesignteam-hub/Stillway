@@ -259,4 +259,16 @@ const ph = (b: string) => `image-set(url(${b}.avif) type('image/avif'), url(${b}
       width: 70vw;
     }
     }
+  /* D-186 follow-up: landscape phones (740 × 360): the full-width phone wordmark ran over the ring and
+     the intro; there it sits left of the ring, and the intro stays left of the pedestal */
+  @media (max-width: 760px) and (orientation: landscape) and (max-height: 500px) {
+    .hero__word {
+      font-size: calc(36vw / 3.1);
+    }
+    .hero__statement {
+      max-width: calc(35vw - 20px);
+      font-size: 15px;
+      line-height: 20px;
+    }
+  }
 </style>
