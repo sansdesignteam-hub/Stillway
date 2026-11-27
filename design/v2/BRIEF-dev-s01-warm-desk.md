@@ -1,0 +1,10 @@
+# Brief Developer — Hero S01 foto meja hangat (D-177)
+
+Kerjakan di web-v2 pada branch Developer dari c9bc8aa. Gunakan foto asli [Warm Desk Scene Without Ring Shadow](https://www.figma.com/design/ejtNpUf0FdEYMgAbcENMCH/Website-AI---1-Stillway?node-id=40004704-5849) yang sudah PM unduh lewat Figma MCP ke `/tmp/stillway-d177-hero.KEB7iE/hero-warm-desk.png` (1672 × 941, SHA-1 d010b5e9992fdb3bfbb21071797046b05cf9f974). Simpan aset lokal dan buat varian teroptimasi untuk desktop, mobile dan first paint sesuai pola hero yang ada.
+
+- Ganti foto Hero S01 dengan sumber tersebut. Sesuaikan crop/anchor pada desktop dan mobile agar alas kayu tetap menjadi titik mendarat cincin. Foto sebelumnya memakai kanvas outpaint; sesuaikan batas zoom/parallax untuk rasio baru agar tidak membuka tepi kosong. Pertahankan struktur hero dan arah motion. Jaga keterbacaan wordmark, teks, dan navigasi di area lampu.
+- Selaraskan bayangan dengan cahaya lampu hangat dari kanan atas pada foto. Bayangan kontak ditambatkan pada permukaan atas alas kayu dan proyeksinya jatuh ke arah kiri menjauhi lampu. Sesuaikan ketajaman dan intensitas berdasarkan jarak cincin dari permukaan; hindari bayangan ganda atau melewati alas secara tidak wajar.
+- Sesuaikan refleksi 3D khusus S01: kilau lampu dari kanan dan pantulan kayu hangat dari bawah, dengan fill lebih lembut di sisi gelap. Pertahankan karakter polished Silver. Ganti kontribusi environment foto lama yang bernuansa hijau, dan blend menuju rig S02 lewat mekanisme transisi yang ada supaya pencahayaan scene lain tidak ikut berubah.
+- Pastikan poster/fallback dan reduced motion tetap selaras dengan foto serta posisi alas yang baru, termasuk saat WebGL mulai tampil. Jika membutuhkan aset tambahan dari 3D Designer, laporkan kebutuhan spesifik dengan bukti ke PM.
+
+Uji 1440 × 900 dan 375 × 812, hero awal, cincin mendekati/mendarat di alas, transisi ke S02, dan fallback. Jalankan npm run build, sertakan screenshot, laporan perubahan rig dan batas verifikasi, lalu push hanya ke origin/Developer. PM meninjau hasil dan status staging sebelum melapor. Production menunggu instruksi pengguna.

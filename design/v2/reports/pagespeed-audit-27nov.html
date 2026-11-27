@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Audit Performa Stillway V2</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 18mm 16mm; }
+  :root{
+    --ink:#231F20; --muted:#6B655F; --line:#E4DDD2; --paper:#F9F5EF; --ochre:#B76F20;
+    --good:#0C7A43; --good-bg:#E3F4EA; --mid:#A35A00; --mid-bg:#FDF0DC; --bad:#B42318; --bad-bg:#FBE6E4;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#fff;color:var(--ink);font:10pt/1.5 -apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  h1{font-size:21pt;line-height:1.15;margin:0 0 4pt;letter-spacing:-.3pt}
+  h2{font-size:12.5pt;margin:18pt 0 6pt;padding-bottom:4pt;border-bottom:1px solid var(--line)}
+  h3{font-size:10.5pt;margin:10pt 0 3pt}
+  p{margin:0 0 6pt}
+  .eyebrow{font-size:8pt;letter-spacing:1.2pt;text-transform:uppercase;color:var(--ochre);font-weight:600;margin-bottom:6pt}
+  .meta{color:var(--muted);font-size:9pt}
+  .cover{border-bottom:2px solid var(--ink);padding-bottom:10pt;margin-bottom:4pt}
+  .summary{background:var(--paper);border-left:3px solid var(--ochre);padding:9pt 12pt;margin:12pt 0}
+  .summary ul{margin:4pt 0 0;padding-left:14pt}
+  .summary li{margin-bottom:3pt}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8pt;margin:10pt 0 4pt}
+  .card{border:1px solid var(--line);border-radius:6pt;padding:8pt 9pt}
+  .card .lbl{font-size:8pt;color:var(--muted)}
+  .card .val{font-size:22pt;font-weight:700;line-height:1.1;margin-top:2pt}
+  .card .sub{font-size:8pt;color:var(--muted)}
+  .card.bad .val{color:var(--bad)} .card.mid .val{color:var(--mid)}
+  table{width:100%;border-collapse:collapse;margin:6pt 0 4pt;font-size:9pt}
+  th,td{padding:5pt 6pt;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{font-size:8pt;text-transform:uppercase;letter-spacing:.5pt;color:var(--muted);font-weight:600;background:var(--paper)}
+  td.n,th.n{text-align:right;white-space:nowrap}
+  .b{display:inline-block;white-space:nowrap;min-width:30pt;text-align:center;border-radius:10pt;padding:1pt 6pt;font-weight:600}
+  .g{color:var(--good);background:var(--good-bg)} .m{color:var(--mid);background:var(--mid-bg)} .r{color:var(--bad);background:var(--bad-bg)}
+  .note{font-size:8.5pt;color:var(--muted)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12pt}
+  .box{border:1px solid var(--line);border-radius:6pt;padding:8pt 10pt}
+  ol,ul{margin:3pt 0 6pt;padding-left:15pt} li{margin-bottom:2pt}
+  .page-break{break-before:page}
+  .status{display:inline-block;font-size:8pt;font-weight:600;padding:1pt 6pt;border-radius:8pt}
+  .done{background:var(--good-bg);color:var(--good)} .prog{background:var(--mid-bg);color:var(--mid)} .wait{background:#EEE;color:var(--muted)}
+  footer{margin-top:16pt;padding-top:6pt;border-top:1px solid var(--line);font-size:8pt;color:var(--muted)}
+  .keep{break-inside:avoid}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="eyebrow">Laporan audit performa</div>
+  <h1>Website Stillway V2:<br>Hasil Audit PageSpeed Insights</h1>
+  <div class="meta">Tanggal audit: 27 November 2026 &nbsp;·&nbsp; Alat: Lighthouse 13.6.0 (mesin PageSpeed Insights) &nbsp;·&nbsp; Disusun oleh tim proyek Stillway</div>
+</div>
+
+<div class="summary keep">
+  <strong>Ringkasan</strong>
+  <ul>
+    <li><strong>Versi staging (versi terbaru) sudah jauh lebih baik daripada production.</strong> Skor Performance naik dari 50 ke 69 di mobile dan dari 71 ke 79 di desktop. Ukuran halaman awal turun sekitar 60% (3,9 MB → 1,6 MB).</li>
+    <li><strong>Tiga dari empat metrik Core Web Vitals utama sudah “Good”</strong> di staging: konten pertama tampil 1,1 detik, konten utama tampil 2,1 detik, dan tata letak stabil (CLS 0).</li>
+    <li><strong>Penghambat yang tersisa hanya satu: Total Blocking Time (TBT).</strong> Inisialisasi animasi 3D cincin membuat browser sibuk 2,5–4,3 detik di HP, sehingga halaman lambat merespons di detik-detik awal.</li>
+    <li><strong>Accessibility (95–100) dan Best Practices (100) sudah memenuhi target 90+.</strong> Skor SEO rendah karena situs sengaja disembunyikan dari mesin pencari selama tahap konsep. Ini bukan masalah teknis.</li>
+    <li><strong>Tindak lanjut sedang berjalan:</strong> Developer mengoptimalkan inisialisasi 3D dengan target Performance 90+ di mobile dan desktop, tanpa mengubah tampilan. Setelah itu hasilnya dirilis ke production dan dites ulang di PageSpeed Insights.</li>
+  </ul>
+</div>
+
+<h2>1. Skor utama</h2>
+<div class="cards">
+  <div class="card bad"><div class="lbl">Production · Mobile</div><div class="val">50</div><div class="sub">Performance</div></div>
+  <div class="card mid"><div class="lbl">Staging · Mobile</div><div class="val">69</div><div class="sub">Performance (+19)</div></div>
+  <div class="card mid"><div class="lbl">Production · Desktop</div><div class="val">71</div><div class="sub">Performance</div></div>
+  <div class="card mid"><div class="lbl">Staging · Desktop</div><div class="val">79</div><div class="sub">Performance (+8)</div></div>
+</div>
+<p class="note">Skala: 90–100 Good (hijau), 50–89 Needs Improvement (kuning), 0–49 Poor (merah). Target proyek: 90+.</p>
+
+<table class="keep">
+  <tr><th>Kategori</th><th class="n">Prod mobile</th><th class="n">Staging mobile</th><th class="n">Prod desktop</th><th class="n">Staging desktop</th><th class="n">Target</th></tr>
+  <tr><td><strong>Performance</strong></td><td class="n"><span class="b m">50</span></td><td class="n"><span class="b m">69</span></td><td class="n"><span class="b m">71</span></td><td class="n"><span class="b m">79</span></td><td class="n">90+</td></tr>
+  <tr><td>Accessibility</td><td class="n"><span class="b g">96</span></td><td class="n"><span class="b g">95</span></td><td class="n"><span class="b g">100</span></td><td class="n"><span class="b g">100</span></td><td class="n">90+</td></tr>
+  <tr><td>Best Practices</td><td class="n"><span class="b g">100</span></td><td class="n"><span class="b g">100</span></td><td class="n"><span class="b g">100</span></td><td class="n"><span class="b g">100</span></td><td class="n">90+</td></tr>
+  <tr><td>SEO <span class="note">(sengaja rendah, lihat §4)</span></td><td class="n"><span class="b m">63</span></td><td class="n"><span class="b m">58</span></td><td class="n"><span class="b m">63</span></td><td class="n"><span class="b m">58</span></td><td class="n">—</td></tr>
+</table>
+
+<h2>2. Core Web Vitals dan metrik kecepatan</h2>
+<table class="keep">
+  <tr><th>Metrik</th><th class="n">Prod mobile</th><th class="n">Staging mobile</th><th class="n">Prod desktop</th><th class="n">Staging desktop</th><th class="n">Batas Good</th></tr>
+  <tr><td><strong>FCP</strong><div class="note">Konten pertama tampil</div></td><td class="n"><span class="b g">1,15 s</span></td><td class="n"><span class="b g">1,10 s</span></td><td class="n"><span class="b g">0,82 s</span></td><td class="n"><span class="b g">0,34 s</span></td><td class="n">&lt; 1,8 s</td></tr>
+  <tr><td><strong>LCP</strong><div class="note">Konten utama tampil</div></td><td class="n"><span class="b r">5,95 s</span></td><td class="n"><span class="b g">2,10 s</span></td><td class="n"><span class="b g">0,86 s</span></td><td class="n"><span class="b g">0,43 s</span></td><td class="n">&lt; 2,5 s</td></tr>
+  <tr><td><strong>TBT</strong><div class="note">Waktu halaman tidak merespons</div></td><td class="n"><span class="b r">1.740 ms</span></td><td class="n"><span class="b r">2.500–4.300 ms</span></td><td class="n"><span class="b r">653 ms</span></td><td class="n"><span class="b r">483 ms</span></td><td class="n">&lt; 200 ms</td></tr>
+  <tr><td><strong>CLS</strong><div class="note">Stabilitas tata letak</div></td><td class="n"><span class="b g">0</span></td><td class="n"><span class="b g">0</span></td><td class="n"><span class="b g">0,04</span></td><td class="n"><span class="b g">0,01</span></td><td class="n">&lt; 0,1</td></tr>
+  <tr><td>Speed Index<div class="note">Kecepatan visual halaman terisi</div></td><td class="n"><span class="b m">4,67 s</span></td><td class="n"><span class="b m">2,68 s</span></td><td class="n"><span class="b m">1,92 s</span></td><td class="n"><span class="b g">0,87 s</span></td><td class="n">&lt; 3,4 s (m)<br>&lt; 1,3 s (d)</td></tr>
+  <tr><td>Ukuran awal<div class="note">Data yang diunduh</div></td><td class="n">3,9 MB</td><td class="n">1,6 MB</td><td class="n">4,3 MB</td><td class="n">1,7 MB</td><td class="n">—</td></tr>
+</table>
+<p class="note">TBT (Total Blocking Time) adalah ukuran lab untuk responsivitas. Di data pengguna nyata, padanannya adalah INP (Interaction to Next Paint). TBT juga punya bobot terbesar (30%) dalam skor Performance Lighthouse.</p>
+
+<h2>3. Temuan utama</h2>
+<div class="two">
+  <div class="box keep">
+    <h3>Yang sudah membaik di staging</h3>
+    <ul>
+      <li><strong>LCP mobile 5,95 s → 2,10 s.</strong> Konten utama di HP kini tampil dalam batas “Good”.</li>
+      <li><strong>Ukuran halaman awal turun sekitar 60%.</strong> Gambar section bawah dimuat saat dibutuhkan (lazy-load), dan gambar hero dikompresi ulang.</li>
+      <li><strong>Tata letak tidak bergeser</strong> (CLS 0) di semua perangkat.</li>
+      <li><strong>Server cepat:</strong> respons dokumen 50–70 ms.</li>
+    </ul>
+  </div>
+  <div class="box keep">
+    <h3>Yang masih menghambat: TBT</h3>
+    <p>Di HP, main thread browser sibuk sekitar 7,5 detik saat halaman dibuka. 5,2 detik di antaranya untuk menjalankan script, dengan blok terpanjang 400–600 ms. Penyebabnya:</p>
+    <ul>
+      <li>Shader 3D cincin di-compile untuk semua section sekaligus.</li>
+      <li>Aset 3D section bawah ikut dimuat di awal (meja S06 477 KB dan peta cahaya EXR).</li>
+      <li>Sekitar 123 KB JavaScript belum terpakai saat halaman dibuka.</li>
+    </ul>
+  </div>
+</div>
+
+<h2>4. Catatan di luar performa</h2>
+<ul>
+  <li><strong>SEO:</strong> situs memasang tag <code>noindex, nofollow</code> agar tidak muncul di Google selama tahap konsep. Skor SEO otomatis turun karena itu. Tag akan dicabut saat situs siap dipublikasikan. Di staging, beberapa error tambahan muncul karena staging dilindungi login Vercel.</li>
+  <li><strong>Accessibility:</strong> satu tombol navigasi (“nav CTA”) belum memiliki label untuk pembaca layar. Ini perbaikan kecil yang masuk ke putaran berikutnya.</li>
+  <li><strong>Field data:</strong> data pengguna nyata (Chrome UX Report) belum tersedia karena trafik production masih rendah. Semua angka di laporan ini adalah lab data, yaitu simulasi terkontrol.</li>
+</ul>
+
+<h2 class="page-break">5. Rencana tindak lanjut</h2>
+<table class="keep">
+  <tr><th style="width:24pt">#</th><th>Langkah</th><th>Penanggung jawab</th><th>Status</th></tr>
+  <tr><td>1</td><td>Audit awal production dan staging (laporan ini)</td><td>Project Manager</td><td><span class="status done">Selesai</span></td></tr>
+  <tr><td>2</td><td>Optimasi performa staging: muat aset 3D sesuai kebutuhan, pecah proses berat menjadi potongan kecil, compile shader secara asinkron, pangkas JavaScript tidak terpakai. Tampilan dan animasi tidak berubah.</td><td>Developer</td><td><span class="status prog">Berjalan</span></td></tr>
+  <tr><td>3</td><td>Verifikasi ulang di staging dengan Lighthouse (median 3 run), target Performance 90+ mobile dan desktop</td><td>Project Manager</td><td><span class="status wait">Menunggu #2</span></td></tr>
+  <tr><td>4</td><td>Migrasi ke production setelah disetujui</td><td>Developer</td><td><span class="status wait">Menunggu persetujuan</span></td></tr>
+  <tr><td>5</td><td>Tes ulang production di PageSpeed Insights (pagespeed.web.dev)</td><td>Project Manager</td><td><span class="status wait">Menunggu #4</span></td></tr>
+</table>
+
+<h3>Target setelah optimasi</h3>
+<table class="keep">
+  <tr><th>Metrik</th><th class="n">Staging sekarang (mobile)</th><th class="n">Target</th></tr>
+  <tr><td>Performance mobile</td><td class="n">69</td><td class="n"><strong>90+</strong></td></tr>
+  <tr><td>Performance desktop</td><td class="n">79</td><td class="n"><strong>90+</strong></td></tr>
+  <tr><td>TBT mobile</td><td class="n">2.500–4.300 ms</td><td class="n">&lt; 300 ms</td></tr>
+  <tr><td>LCP / CLS</td><td class="n">2,10 s / 0</td><td class="n">dipertahankan</td></tr>
+</table>
+
+<h2>6. Metode pengujian</h2>
+<ul>
+  <li><strong>Alat:</strong> Lighthouse 13.6.0 di Google Chrome headless. Ini mesin yang sama dengan PageSpeed Insights.</li>
+  <li><strong>Profil mobile:</strong> emulasi Moto G Power, CPU diperlambat 4×, jaringan slow 4G. <strong>Profil desktop:</strong> preset desktop Lighthouse.</li>
+  <li><strong>Pengulangan:</strong> 3 kali per konfigurasi, dan yang dilaporkan adalah median, karena skor Lighthouse bervariasi antar run (contoh production mobile: 39, 63, 50).</li>
+  <li><strong>Versi yang diuji:</strong> production <code>stillway-two.vercel.app</code> (commit 182048e, rilis 24 Nov) dan staging dari branch Developer (commit 062e3e4, berisi revisi QA 25–27 Nov).</li>
+  <li><strong>Akses staging:</strong> staging dilindungi login Vercel. Pengujian memakai token bypass sementara yang langsung dicabut setelah audit.</li>
+</ul>
+
+<footer>Stillway V2 · Audit performa 27 November 2026 · Angka adalah lab data Lighthouse. Hasil di pagespeed.web.dev bisa sedikit berbeda karena perbedaan server dan jaringan.</footer>
+</body>
+</html>
