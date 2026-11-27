@@ -192,7 +192,7 @@ html.js .scene--close .scene__front {
 }
 
 /* QA27 M-13: phones — nothing shows beside the logo or the pills: gone at the navbar's lower edge,
-   whole again 16 px below it (the S10 column moves, so its mask counter-moves by --fn-y) */
+   whole again 16 px below it */
 @media (max-width: 719px) {
   html.js .scene--why .scene__front,
   html.js .scene--why .scene__back,
@@ -277,10 +277,11 @@ html.reduced .scene [data-a] {
     scroll-behavior: auto !important;
   }
 }
-/* D-171: the S10 column scrolls like a page on phones, so it fades out under the navbar too */
+/* D-171: the S10 column scrolls like a page on phones, so it fades out under the navbar too.
+   QA27 G-19: the mask sits on the front layer, which no longer moves (the column inside it does) */
 @media (max-width: 719px) {
   html.js .scene--finishes .scene__front {
-    -webkit-mask-image: linear-gradient(to bottom, transparent calc(var(--header-h) - var(--fn-y, 0px)), #000 calc(var(--header-h) + 16px - var(--fn-y, 0px)));
-    mask-image: linear-gradient(to bottom, transparent calc(var(--header-h) - var(--fn-y, 0px)), #000 calc(var(--header-h) + 16px - var(--fn-y, 0px)));
+    -webkit-mask-image: linear-gradient(to bottom, transparent var(--header-h), #000 calc(var(--header-h) + 16px));
+    mask-image: linear-gradient(to bottom, transparent var(--header-h), #000 calc(var(--header-h) + 16px));
   }
 }

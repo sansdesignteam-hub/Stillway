@@ -175,7 +175,7 @@ export const finishes: SectionMotion = {
     const q = (s: string) => r.querySelector<HTMLElement>(s);
     el = { panel: q('[data-fn-panel]'), more: q('[data-fn-more]'), turn: q('[data-fn-turn]'), drag: q('[data-fn-drag]') };
     heads = [...r.querySelectorAll<HTMLElement>('[data-fn-head]')];
-    front = r.querySelector<HTMLElement>('.scene__front');
+    front = r.querySelector<HTMLElement>('[data-fn-col]'); // the moving column (phones)
     still = q('[data-fn-still]');
     track = document.getElementById('finishes');
     initControls(r);
@@ -190,8 +190,7 @@ export const finishes: SectionMotion = {
       // D-171: plain flow on phones — everything visible, the column moves with the page
       const y = flowY();
       if (front) {
-        front.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0)`;
-        front.style.setProperty('--fn-y', `${y.toFixed(1)}px`); // QA27 M-13: the navbar mask stays put
+        front.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0)`; // QA27 M-13: the navbar mask is on its still parent
       }
       [heads[1], el.panel, el.more].forEach(clearInline);
       if (el.more) el.more.style.display = '';

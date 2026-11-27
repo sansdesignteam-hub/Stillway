@@ -18,9 +18,12 @@ import { finishes as d } from '../../content/copy';
   <!-- Lamp light (D-100): Sand dims toward a warm evening tone, a low lamp glow on the lamp side -->
   <div class="scene__back"><div class="fn__dim" aria-hidden="true"></div></div>
   <!-- reduced motion / no WebGL: the polished still of the chosen finish -->
-  <img class="ring-fallback fn__fb" src={d.finishes[0].still} alt="" width="1024" height="1024" data-ring-fallback data-fn-still data-a loading="lazy" decoding="async" />
+  <img class="ring-fallback fn__fb" data-src={d.finishes[0].still} alt="" width="1024" height="1024" data-ring-fallback data-fn-still data-a loading="lazy" decoding="async" />
 
   <div class="scene__front">
+    <!-- QA27 G-19: on phones the column moves inside the front layer, so the navbar mask on the layer
+         stays still (a mask that counter-moved every frame was repainted every frame) -->
+    <div class="fn__col" data-fn-col>
     <h2 id="finishes-title" class="fn__heads">
       {
         d.heads.map((h, i) => (
@@ -89,10 +92,15 @@ import { finishes as d } from '../../content/copy';
       </div>
     </div>
     <p class="sr-only">{d.alt}</p>
+    </div>
   </div>
 </section>
 
 <style>
+  /* desktop: no box of its own, the layout is the front layer's as before */
+  .fn__col {
+    display: contents;
+  }
   .scene--finishes {
     color: var(--ink);
     --panel: color-mix(in srgb, var(--paper) 60%, transparent);
@@ -431,9 +439,17 @@ import { finishes as d } from '../../content/copy';
   /* D-171: phones — one column in plain scroll flow (title, ring, arrows, panel), as tall as its
      content; finishes.ts moves it 1:1 with the page and sizes the track to it. No pin, no fade. */
   @media (max-width: 719px) {
+    /* the front layer stays put (it carries the navbar mask, global.css) and covers the large viewport */
     .scene--finishes .scene__front {
       bottom: auto;
+      height: calc(100 * var(--lvh));
       overflow: visible;
+    }
+    .fn__col {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
       display: flex;
       flex-direction: column;
       gap: var(--space-4);
@@ -529,7 +545,7 @@ import { finishes as d } from '../../content/copy';
   }
   /* QA27 M-15: large phones / small tablets (the one-column layout) keep a 24 px margin */
   @media (min-width: 600px) and (max-width: 719px) {
-    .scene--finishes .scene__front {
+    .fn__col {
       padding-inline: var(--space-5);
     }
   }
