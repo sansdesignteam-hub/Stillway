@@ -417,7 +417,8 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       document.documentElement.classList.add('ring-ready');
       setTimeout(() => document.documentElement.classList.add('ring-live'), 1000);
       // QA27 G-19: every pose the story can ask for (sections, connections, both S10 options that
-      // change the shader), so the ring stage compiles its shader variants in idle time, not on scroll
+      // change the shader), so the ring stage compiles its shader variants in idle time, not on scroll.
+      // Sampled finely: a variant can exist for a few hundredths of a screen only (lights crossing over)
       setTimeout(() => {
         const poses: Pose[] = [];
         items.forEach((it, i) => {
@@ -425,9 +426,9 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
           if (prev && it.def.tin) {
             const from = poseOf(prev, prev.end);
             const to = poseOf(it, 0);
-            for (let x = 0; x <= 1.0001; x += 0.04) poses.push(it.m.ringIn ? it.m.ringIn(Math.min(1, x), ctx, from, to) : lerpPose(from, to, seg(x, 0.3, 0.7)));
+            for (let x = 0; x <= 1.0001; x += 0.01) poses.push(it.m.ringIn ? it.m.ringIn(Math.min(1, x), ctx, from, to) : lerpPose(from, to, seg(x, 0.3, 0.7)));
           }
-          for (let u = 0; u <= it.end + 0.0001; u += 0.1) poses.push(poseOf(it, Math.min(it.end, u)));
+          for (let u = 0; u <= it.end + 0.0001; u += 0.02) poses.push(poseOf(it, Math.min(it.end, u)));
           if (it.def.id === 'finishes') {
             const p = poseOf(it, 0);
             for (const fin of [0, 1, 2]) for (const lamp of [0, 1]) poses.push({ ...p, custom: 1, finA: fin, finB: fin, finT: 0, lamp });
