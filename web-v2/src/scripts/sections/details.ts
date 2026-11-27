@@ -79,6 +79,8 @@ function setVars(ctx: Ctx) {
   root.style.setProperty('--hx', `${L.hx.toFixed(1)}px`);
   root.style.setProperty('--hy', `${L.hy.toFixed(1)}px`);
   root.style.setProperty('--hs', L.hs.toFixed(4));
+  // the fingertip (img px 23): phones centre "Then, it just fit." above it (D-192)
+  root.style.setProperty('--tip', `${(L.seat.y - 337 * L.hs).toFixed(1)}px`);
   root.style.setProperty('--ty', `${L.ty.toFixed(1)}px`);
   root.style.setProperty('--tx', `${L.tx.toFixed(1)}px`);
   // reduced motion / no WebGL: the polished still (fb-s02, ring 84.6% of the image height) on the table

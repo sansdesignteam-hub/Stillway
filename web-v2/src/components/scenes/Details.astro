@@ -71,6 +71,7 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     --hx: 60vw;
     --hy: calc(50 * var(--lvh));
     --hs: 0.8;
+    --tip: calc(48 * var(--svh)); /* the fingertip's height on phones */
     --ty: calc(66.7 * var(--lvh)); /* table top (Figma y 600 of 900) */
     --tx: 50vw; /* table right edge (Figma x 720) */
   }
@@ -286,8 +287,12 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     .det__step {
       gap: var(--space-2);
     }
+    /* D-192: not right under the navbar but centred in the room above the fingertip (16 px of it kept
+       free), so there is no big gap between the text and the hand */
     .det__fits {
       top: var(--content-top);
+      height: calc(var(--tip) - var(--space-4) - var(--content-top));
+      align-content: safe center;
       gap: var(--space-2);
     }
     .det__progress {
