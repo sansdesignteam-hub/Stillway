@@ -1,5 +1,88 @@
 # Handoff: alas cincin hero S01 3D (D-179)
 
+## D-186: plate dibangun ulang di foto baru 3840×2400 (menggantikan semua file `-3632`)
+
+Dari: 3D Designer · Untuk: Developer (`web-v2/`) · 27 November 2026
+Status: **draf, menunggu tinjauan pengguna.** Bagian D-181 sampai D-182d di bawah tetap berlaku untuk cara kerja (plate + proxy tak terlihat, overlay ring, kontak AO, grade ring); semua angka frame, kamera, lampu, dan nama file di sana digantikan oleh bagian ini.
+
+Sumber: `design/assets/v2/s01/Hero_BG_Stillway_New_3840x2400.avif` (16:10, native).
+
+### File (`plate/`, semua 3840×2400; file `-3632` dihapus dari branch)
+
+| File | Ukuran |
+| --- | --- |
+| `plate-s01-3840.png` (desktop) / `plate-s01-mobile-3840.png` | 8,2 MB / 8,2 MB |
+| `still-s01-3840.png` / `still-s01-mobile-3840.png` | 8,2 MB / 8,3 MB |
+| `ring-overlay-s01-3840.webp` (`.png`) | 303 KB (917 KB) |
+| `ring-overlay-s01-mobile-3840.webp` (`.png`) | 157 KB (467 KB) |
+| `layer-pedestal-rgba-3840.png`, `layer-desk-multiply-3840.png` (+ `-mobile-`) | 0,3–0,5 MB |
+
+`s01-pedestal.glb` **tidak berubah** (77 KB). `s01-pedestal-pose.json` diperbarui. Identitas `still = plate + ring-overlay` tetap.
+
+### Yang harus diubah di web
+
+- `heroBg.v1Ratio` = 3840/2400. `anchor` (0,503; 0,8), `zoomFrom` 1,14, dan `subjectOrigin` (0,5; 0,86) boleh tetap.
+- `heroBg.cam` = `{ frameW: 3840, frameH: 2400, focalPx: 8180.18, shiftY: 0.147901 }` (lensa 76,689 mm pada sensor 36 mm). **Posisi kamera dan `lookAt` tidak berubah.**
+- Posisi/quaternion ring, `s01_scale` 1,125, posisi alas, dan proxy: tidak berubah.
+- `lights.key`: posisi `[0.185, 0.25, -0.117]`, arah `[-0.5618, -0.7471, 0.3553]`, elevasi 48,3° (bergeser 0,7° dari D-180).
+- `lights.spill` (hanya di plate): posisi `[0.12, 0.058, -0.047]`, arah `[-0.8588, -0.3865, 0.3364]`, elevasi 22,7°, jarak 140 mm, kerucut penumbra 24,2°, warna linear `(1; 0,52; 0,22)`.
+- Set responsif plate/overlay perlu dibuat ulang dari file `-3840`; `sizes` desktop sekarang `max(114vw, 182.4lvh)` (cover 16:10 × 1,14).
+- Pada viewport 16:9 foto 16:10 terpotong atas-bawah (dulu terpotong kiri-kanan pada 16:10). `ringLeft` sebagai fraksi lebar foto perlu diukur ulang: pada 1440×900 ring tetap di 552 px dari kiri (kotak ring 1104–1806 px @2x), tetapi fraksi fotonya berubah.
+
+### Kalibrasi kamera
+
+- Foto baru adalah **gambar baru** dari adegan yang sama, bukan crop plate lama: pencocokan fitur (SIFT) lama↔baru tidak menemukan kecocokan. Jadi tidak bisa diregistrasi seperti D-181; kalibrasi dilakukan pada geometri foto itu sendiri.
+- Kemiringan bidang meja diukur dari dua pasang tepi tegak lurus yang terletak di meja (perspektif lemah, `sin²δ = tan a₁ · tan a₂`): laptop (+8,1° / −32,3°) → **17,5°** di v ≈ 0,65; buku (15,3° / 17,4°) → **17,0°** di v ≈ 0,55. Kamera kita menunduk 17,5° di v 0,65 dan 15,9° di v 0,55, dan 20,1° di alas. Selisih ±1°, dalam ketelitian ukur (±2°, foto buatan AI).
+- Karena itu pose kamera (elevasi 19°, azimut −6°, jarak 232 mm) dipertahankan. Lensa dan shift diturunkan supaya **frame diam web** (cover × 1,14 di sekitar anchor, viewport 16:10) menghasilkan gambar pinhole yang sama dengan plate D-181b: 70 → 76,689 mm, `shiftY` 0,135 → 0,147901.
+- Serat meja di foto miring ±2° (turun ke kanan); alas diputar −6° terhadap kamera seperti di Figma, jadi serat alas dan serat meja tidak sejajar (±12° di bidang meja). Itu wajar untuk benda lepas.
+- Angka kamera di JSON diproyeksikan ulang dengan matematika gaya three.js: selisih 0,002 px pada 1920.
+- Batas: baris keyboard tidak konvergen secara terukur, tepi buku konvergen ke horizon sekitar v ≈ −0,2, horizon kamera kita di v = −0,437. Kamera cocok di daerah alas; ini bukan rekonstruksi penuh lensa foto.
+
+### Lampu
+
+- Lampu foto baru, dari sinar kamera ini: kaki lampu di meja pada Blender (69; 73) mm, bukaan kap ±34 mm di atas meja. Di plate lama kaki lampu ada di (74; 76). Jadi terhadap alas lampu hampir tidak pindah (5 mm ke kiri, 3 mm lebih dekat).
+- `lights.key` dan `lights.spill` digeser sebesar perpindahan itu. Arah key berubah 0,7°.
+- **Tidak diubah, perlu diketahui:** azimut spill (±22° dari sumbu X) dan key (±32°) adalah pilihan D-181b yang mengikuti arah bayangan Figma. Azimut geometris lampu dari alas ±45°. Bayangan alas di plate jadi jatuh lebih ke kiri daripada yang dihasilkan lampu foto secara fisik (yang akan lebih ke arah kamera).
+- Warna cahaya plate lebih hangat (key `(1; 0,60; 0,30)`, spill `(1; 0,52; 0,22)`), nada meja untuk bounce `(179, 104, 48)`, oak `OAK_HUE` 0,495 / `OAK_SAT` 0,8: meja baru lebih jingga (rata-rata sekitar alas 198/116/53, dulu 186/123/79) dan alas D-181b tampak pucat-merah muda di atasnya. `lights.key.color` untuk web tidak diubah.
+
+### Kecocokan (terukur)
+
+| | Kita | Figma |
+| --- | --- | --- |
+| Alas, frame diam web 2880×1800 | 887, 1272, 1976, 1645 | 886, 1266, 1982, 1640 |
+| Ring | 1104, 570, 1806, 1408 | 1088, 598, 1805, 1408 |
+
+- Lebar ring 702 px = 24,4% lebar frame. Sama dengan D-181b (selisih ≤ 1 px).
+- Proxy GLB vs alas di plate: selisih bbox 0 px, pita selisih maksimum **0,5 px pada 1920** (1 px pada 3840), desktop dan ponsel.
+- Luma ring (ukuran skrip ini, frame diam): desktop **27/47/66/146/194**, ponsel **27/47/67/145/195**. Sama dengan D-182d, yang setara 23/45/64/142/188 pada ukuran Developer; kesetaraan itu belum diverifikasi ulang di web.
+- Kontak AO D-181c tetap (jangkauan 12 mm, gamma 2,8, lantai 0,10).
+
+### Bukti (`renders/s01-plate/`)
+
+- `s01-plate-still-onion-figma.webp`: onion-skin still vs Figma di frame diam web.
+- `s01-plate-realism-closeup.webp` (still, alas + ring + meja), `s01-plate-realism-plate-only.webp`, `s01-plate-realism-detail-100pct.png` (100%).
+- `s01-plate-proxy-overlay.webp`, `-closeup.png`, `s01-plate-report.json`.
+- `s01-plate-vs-figma*.webp/png`, `s01-plate-mobile-1920.png`, `s01-plate-mobile-still-375.png`.
+
+### Penilaian realisme (jujur)
+
+- **Pada ukuran halaman: meyakinkan.** Perspektif alas cocok dengan meja, nadanya sekarang menyatu dengan meja jingga, bayangan kontak rapat, bayangan lembut ke kiri-depan searah sisi terang buku dan laptop.
+- **Pada 100% masih ada tanda CG:**
+  - Tepi alas lebih tajam daripada meja di sekitarnya. Foto melunak ke arah depan (v > 0,85); alas tidak diberi blur kedalaman supaya siluetnya tetap sama dengan proxy.
+  - Pori di ujung kanan alas besar dan terlalu teratur; sisi depan sangat jenuh (kanal biru hampir 0).
+  - Meja di foto agak mengilap (garis pantulan lampu), tetapi alas tidak punya pantulan samar di meja.
+  - Arah bayangan mengikuti konvensi D-181b, bukan azimut geometris lampu (lihat Lampu).
+- **Ring:** sengaja dicocokkan ke ring hidup (D-182d), jadi tampak bersih seperti render, kurang fotografis dibanding ring Figma (p50 66 vs 58, p95 194 vs 210).
+- Skala serat alas sebanding dengan serat meja di kedalaman yang sama (garis ±6–10 px pada 3840).
+
+### Belum dikerjakan / terbuka
+
+- Belum diuji di `web-v2/` (cross-fade poster → ring hidup, set responsif, ponsel).
+- `fallback/fb-s01-pedestal*` dan `s01-pedestal-build.py` (kamera 70 mm, foto 1818) masih versi D-179; tidak dipakai plate ini.
+- Keputusan pengguna: apakah arah bayangan mengikuti Figma (sekarang) atau lampu foto (±45°).
+
+---
+
 ## D-181: plate foto + proxy tak terlihat (menggantikan alas yang di-shade real-time)
 
 Dari: 3D Designer · Untuk: Developer (`web-v2/`) · 26 November 2026

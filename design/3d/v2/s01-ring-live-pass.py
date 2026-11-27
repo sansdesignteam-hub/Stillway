@@ -88,7 +88,7 @@ def setup_web_look(S):
         o.rotation_euler = Vector(to_light).normalized().to_track_quat('Z', 'Y').to_euler()
     sun("web_sun", R @ Vector((720, 640, 420)), lin_hex(0xffdcb2), 2.6)
     sun("web_fill", R @ Vector((-700, 120, 600)), lin_hex(0xffe7cf), 0.35)
-    sun("web_desk_key", (0.5702, 0.3602, 0.7383), lin_hex(0xffb370), 1.0)
+    sun("web_desk_key", Vector(pb.KEY["pos"]) - Vector((0, 0, 4)), lin_hex(0xffb370), 1.0)   # lights.key of the pose JSON (D-186: follows the new lamp)
     S["key"].hide_render = True
     bpy.data.lights["Lamp_Spill"].energy = 0.0
     # web band material (stage.ts): neutral, roughness 0.06, no anisotropy / normal map
@@ -115,7 +115,7 @@ def render():
     sc.view_settings.view_transform = 'AgX'; sc.view_settings.look = 'None'
     sc.view_settings.exposure = math.log2(1.15)
     sc.cycles.samples = pb.SPP
-    for sfx, border, lens, shift in (("", pb.BORDER, ped.CAM["lens"], ped.CAM["shift"]), ("m", pb.BORDER_M, pb.MOB_LENS, pb.MOB_SHIFT)):
+    for sfx, border, lens, shift in (("", pb.BORDER, pb.CAM["lens"], pb.CAM["shift"]), ("m", pb.BORDER_M, pb.MOB_LENS, pb.MOB_SHIFT)):
         S["cam"].data.lens = lens; S["cam"].data.shift_x, S["cam"].data.shift_y = shift
         sc.render.border_min_x, sc.render.border_max_x, sc.render.border_min_y, sc.render.border_max_y = border
         sc.render.filepath = f"{PASS}/RG{sfx}_lin.png"

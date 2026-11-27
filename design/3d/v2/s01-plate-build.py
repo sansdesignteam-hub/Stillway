@@ -22,10 +22,17 @@ Passes (same camera, same lights, render border around the subject):
     C1  pedestal, short-range AO as emission, no ring   linear EXR
     C2  the same with the ring in place                 linear EXR   -> C2/C1 = contact occlusion under the touching band (D-181c)
 
-REGISTRATION (measured, phase correlation, 44 patches): hero-warm-desk-v2-upscaled-3636.jpg (3632 x 2072)
-is the 1818 x 1037 source stretched to the full frame: u = 1.99768 x - 0.09, v = 1.99800 y + 0.03
-(3632/1818 = 1.99780, 2072/1037 = 1.99807), residual 0.3 px rms. So frame FRACTIONS are identical in
-both, and the camera keeps lens 70 mm / shift_y 0.135 with pixel aspect 1.000136 at 3632 x 2072.
+D-186: the background is the new native photo Hero_BG_Stillway_New_3840x2400.avif (16:10). It is a NEW image of
+the same scene, not a re-crop of the 3632 plate (SIFT finds no common features), so it cannot be registered to
+the old one. Calibration, from the photo itself:
+  * desk tilt from two pairs of orthogonal desk-plane edges (weak perspective, sin^2 d = tan a1 * tan a2):
+    laptop rows +8.1 deg / laptop side -32.3 deg -> 17.5 deg at v ~ 0.65; books 15.3 / 17.4 deg -> 17.0 deg at
+    v ~ 0.55. The camera below looks down 17.5 deg at v 0.65 and 15.9 deg at v 0.55: within ~1 deg.
+  * the pose (elev 19, azim -6, dist 232 mm) is therefore kept, and lens / shift are re-derived so that the
+    WEB REST FRAME (cover x 1.14 about heroBg.anchor, 16:10 viewport) shows the pedestal and ring exactly where
+    the D-181b plate did (the Figma fit): lens 70 -> 76.689 mm, shift_y 0.135 -> 0.147901 of the width.
+  * lamp: base on the desk at Blender (69, 73) mm, shade opening ~34 mm up (rays of this camera); in the old
+    plate it was at (74, 76). KEY and SPILL are moved by that displacement (see LAMP_SHIFT).
 """
 import bpy, bmesh, math, os, sys, json, importlib.util
 import numpy as np
@@ -40,20 +47,26 @@ OUT = V2 + "/plate"
 REN = V2 + "/renders/s01-plate"
 PASS = REN + "/passes"
 ASSETS = next(p for p in (ped.WT + "/design/assets/v2/s01", "/Users/zaimmaulana/Orca/projects/Smart Ring/design/assets/v2/s01")
-              if os.path.exists(p + "/hero-warm-desk-v2-upscaled-3636.jpg"))
-PHOTO = ASSETS + "/hero-warm-desk-v2-upscaled-3636.jpg"
+              if os.path.exists(p + "/Hero_BG_Stillway_New_3840x2400.avif"))
+PHOTO_SRC = ASSETS + "/Hero_BG_Stillway_New_3840x2400.avif"
+PHOTO = PASS + "/photo-3840.png"                    # Blender does not read AVIF: decoded once with sips (sRGB, lossless PNG)
+if not os.path.exists(PHOTO):
+    import subprocess
+    os.makedirs(PASS, exist_ok=True)
+    subprocess.run(["sips", "-s", "format", "png", PHOTO_SRC, "--out", PHOTO], check=True, stdout=subprocess.DEVNULL)
 FIGMA = ASSETS + "/hero-text-layout-ref.png"
 
 SCALE = float(os.environ.get("PLATE_SCALE", "1"))
-FW, FH = 3632, 2072
+FW, FH = 3840, 2400
+OLD_FW, OLD_FH = 3632, 2072                         # the D-181 plate frame the camera of s01-pedestal-build.py belongs to
 RW, RH = round(FW * SCALE), round(FH * SCALE)
 SPP = int(os.environ.get("PLATE_SPP", "512"))
-PIX_ASPECT_X = (1818 / 1037) * (FH / FW)            # 1.000136: the upscale is a full-frame stretch
+PIX_ASPECT_X = 1.0
 BORDER = tuple(float(v) for v in os.environ.get("PLATE_BORDER", "0.16,0.84,0.0,0.80").split(","))                    # xmin, xmax, ymin (bottom), ymax as frame fractions
 MM = ped.MM
 W, D, H = ped.W, ped.D, ped.H
 OAK_TILE_MM = float(os.environ.get("OAK_TILE", "150"))
-DESK_RGB = (168, 112, 64)                           # mean desk tone around the pedestal (flat: keeps D1/D0 clean)
+DESK_RGB = tuple(int(v) for v in os.environ.get("DESK_RGB", "179,104,48").split(","))   # D-186: 0.9 x the new photo's mean around the pedestal (198, 116, 53); was (168, 112, 64)
 P_LOOK = os.environ.get("P_LOOK", "AgX - Medium High Contrast")
 P_EXPOSURE = float(os.environ.get("P_EXPOSURE", "0.0"))
 KEY_POWER = float(os.environ.get("KEY_POWER", "1.0"))   # plate passes
@@ -65,13 +78,46 @@ MOB_K, MOB_DY, MOB_O = 0.62, -0.14, (0.5, 0.86)
 # The 2D similarity p' = O + k (p - O) + (0, dy H) of a pinhole image is itself a pinhole image: lens x k and a
 # new shift. The phone passes ("m" suffix) are rendered natively with that camera (sharp, and the ring shadow
 # that runs off the bottom of the desktop frame is complete), not resampled from the desktop passes.
-_A = 1818 / 1037
-MOB_LENS = ped.CAM["lens"] * MOB_K
-MOB_SHIFT = ((0.5 - MOB_O[0]) * (1 - MOB_K) + MOB_K * ped.CAM["shift"][0],
-             ((MOB_O[1] - 0.5) * (1 - MOB_K) + MOB_DY) / _A + MOB_K * ped.CAM["shift"][1])
+WEB_ZOOM, WEB_ANCHOR = 1.14, (0.503, 0.8)     # heroBg.desktop.zoomFrom / heroBg.anchor: the web REST frame
+
+
+def webframe_map(Ww, Hh, fw, fh):
+    """plate px -> screen px of the web rest frame: object-fit cover, then CSS zoom 1.14 about the anchor"""
+    c = max(fw / Ww, fh / Hh); x0, y0 = (fw - Ww * c) / 2, (fh - Hh * c) / 2
+    ax, ay = x0 + WEB_ANCHOR[0] * Ww * c, y0 + WEB_ANCHOR[1] * Hh * c
+    k = c * WEB_ZOOM
+    return k, ax + WEB_ZOOM * (x0 - ax), ay + WEB_ZOOM * (y0 - ay)      # X = k px + ox, Y = k py + oy
+
+
+def _recalibrate():
+    """D-186 camera for the 3840 x 2400 photo: same pose as D-179/D-181, lens and shift chosen so the web rest
+    frame at 2880 x 1800 is the same pinhole image as with the 3632 x 2072 plate (a 2D similarity of a pinhole
+    image is the same camera with another lens and shift)."""
+    C = ped.CAM
+    ko, oxo, oyo = webframe_map(OLD_FW, OLD_FH, 2880, 1800); kn, oxn, oyn = webframe_map(FW, FH, 2880, 1800)
+    f_old = C["lens"] / 36.0 * OLD_FW
+    pp_old = ((0.5 - C["shift"][0]) * OLD_FW, (0.5 + C["shift"][1] * OLD_FW / OLD_FH) * OLD_FH)
+    f_new = f_old * ko / kn
+    pp_new = ((ko * pp_old[0] + oxo - oxn) / kn, (ko * pp_old[1] + oyo - oyn) / kn)
+    return dict(C, lens=f_new / FW * 36.0, shift=(0.5 - pp_new[0] / FW, (pp_new[1] / FH - 0.5) * FH / FW))
+
+
+CAM = _recalibrate()
+_A = FW / FH
+MOB_LENS = CAM["lens"] * MOB_K
+MOB_SHIFT = ((0.5 - MOB_O[0]) * (1 - MOB_K) + MOB_K * CAM["shift"][0],
+             ((MOB_O[1] - 0.5) * (1 - MOB_K) + MOB_DY) / _A + MOB_K * CAM["shift"][1])
 BORDER_M = (0.26, 0.74, 0.03, 0.70)
-SPILL = dict(pos=tuple(float(v) for v in os.environ.get("SPILL_POS", "125,50,58").split(",")), size=60.0,
-             power=float(os.environ.get("SPILL_POWER", "0.45")), color=(1.0, 0.62, 0.34))
+# D-186: the lamp of the new photo stands at Blender (69, 73) mm on the desk; in the 3632 plate it stood at (74, 76).
+# Both lights follow it by that displacement (their direction at the pedestal changes by < 2 deg).
+LAMP_SHIFT = tuple(float(v) for v in os.environ.get("LAMP_SHIFT", "-5,-3").split(","))
+KEY = dict(ped.KEY, pos=tuple(float(v) for v in os.environ["KEY_POS"].split(",")) if os.environ.get("KEY_POS") else
+           (ped.KEY["pos"][0] + LAMP_SHIFT[0], ped.KEY["pos"][1] + LAMP_SHIFT[1], ped.KEY["pos"][2]))
+SPILL = dict(pos=tuple(float(v) for v in os.environ["SPILL_POS"].split(",")) if os.environ.get("SPILL_POS") else
+             (125 + LAMP_SHIFT[0], 50 + LAMP_SHIFT[1], 58.0), size=float(os.environ.get("SPILL_SIZE", "60")),
+             power=float(os.environ.get("SPILL_POWER", "0.45")),
+             color=tuple(float(v) for v in os.environ.get("SPILL_COLOR", "1.0,0.52,0.22").split(",")))
+KEY["color"] = tuple(float(v) for v in os.environ.get("KEY_COLOR", "1.0,0.60,0.30").split(","))   # D-186: warmer, the new desk is more orange (was 1, 0.70, 0.44 / spill 1, 0.62, 0.34)
 
 
 # ---------------------------------------------------------------- scene
@@ -179,8 +225,8 @@ def oak_material():
     L.new(col, pmix.inputs["A"]); pmix.inputs["B"].default_value = (0.42, 0.30, 0.20, 1)
     col = pmix.outputs["Result"]
     hsv = N.new("ShaderNodeHueSaturation")
-    hsv.inputs["Hue"].default_value = float(os.environ.get("OAK_HUE", "0.482"))
-    hsv.inputs["Saturation"].default_value = float(os.environ.get("OAK_SAT", "0.68"))
+    hsv.inputs["Hue"].default_value = float(os.environ.get("OAK_HUE", "0.495"))
+    hsv.inputs["Saturation"].default_value = float(os.environ.get("OAK_SAT", "0.8"))
     hsv.inputs["Value"].default_value = float(os.environ.get("OAK_VAL", "1.12"))
     L.new(col, hsv.inputs["Color"])
     # lip: nz*(1-nz)*4 is 0 on the flat top and the sides, 1 mid-roundover -> a touch lighter and smoother (handled edge)
@@ -280,7 +326,7 @@ def scene_setup():
     nt.links.new(lp.outputs["Is Glossy Ray"], sw.inputs[0]); nt.links.new(sw.outputs[0], mx.inputs[0])
     nt.links.new(warm.outputs[0], mx.inputs[1]); nt.links.new(cool.outputs[0], mx.inputs[2])
     nt.links.new(mx.outputs[0], [n for n in nt.nodes if n.type == 'OUTPUT_WORLD'][0].inputs[0])
-    K = ped.KEY
+    K = KEY
     ld = bpy.data.lights.new("Key_Lamp", 'AREA'); ld.shape = 'DISK'
     ld.size = K["size"] * MM; ld.energy = KEY_POWER; ld.color = K["color"]
     key = bpy.data.objects.new("Key_Lamp", ld); sc.collection.objects.link(key)
@@ -304,7 +350,7 @@ def scene_setup():
     spill.light_linking.blocker_collection = bcol
     cd = bpy.data.cameras.new("Cam_S01"); cam = bpy.data.objects.new("Cam_S01", cd); sc.collection.objects.link(cam)
     sc.camera = cam
-    ped.place_camera(cam, **ped.CAM)
+    ped.place_camera(cam, **CAM)
     bpy.context.view_layer.update()
     return dict(ped=[pd], proxy=[o for o in proxy_objs if o.type == 'MESH'], ring=[o for o in ring_objs if o.type == 'MESH'],
                 ring_root=ring, desk=[desk], key=key, cam=cam, switch=sw, warm=warm, spill_blockers=bcol)
@@ -348,7 +394,7 @@ def render_pass(name, S, pd, ring, desk, proxy='off', exr=False, silver=False, s
         if silver and o.name not in S["spill_blockers"].objects: S["spill_blockers"].objects.link(o)
         if not silver and o.name in S["spill_blockers"].objects: S["spill_blockers"].objects.unlink(o)
     S["warm"].inputs["Strength"].default_value = ENV_STRENGTH_RING if silver else ENV_STRENGTH
-    S["key"].data.color = (1.0, 0.86, 0.72) if silver else ped.KEY["color"]
+    S["key"].data.color = (1.0, 0.86, 0.72) if silver else KEY["color"]
     S["key"].data.energy = KEY_POWER_RING if silver else KEY_POWER
     sc.cycles.samples = samples or SPP
     sc.cycles.use_denoising = denoise
@@ -380,13 +426,13 @@ def render():
             ("C1", dict(pd='on', ring='off', desk='cast', exr=True, samples=192, contact=True)),
             ("C2", dict(pd='on', ring='cast', desk='cast', exr=True, samples=192, contact=True))]
     sc = bpy.context.scene
-    for sfx, border, lens, shift in (("", BORDER, ped.CAM["lens"], ped.CAM["shift"]), ("m", BORDER_M, MOB_LENS, MOB_SHIFT)):
+    for sfx, border, lens, shift in (("", BORDER, CAM["lens"], CAM["shift"]), ("m", BORDER_M, MOB_LENS, MOB_SHIFT)):
         S["cam"].data.lens = lens; S["cam"].data.shift_x, S["cam"].data.shift_y = shift
         sc.render.border_min_x, sc.render.border_max_x, sc.render.border_min_y, sc.render.border_max_y = border
         for name, kw in jobs:
             if only and name + sfx not in only: continue
             render_pass(name + sfx, S, **kw)
-    S["cam"].data.lens = ped.CAM["lens"]; S["cam"].data.shift_x, S["cam"].data.shift_y = ped.CAM["shift"]
+    S["cam"].data.lens = CAM["lens"]; S["cam"].data.shift_x, S["cam"].data.shift_y = CAM["shift"]
     sc.render.border_min_x, sc.render.border_max_x, sc.render.border_min_y, sc.render.border_max_y = BORDER
     bpy.context.view_layer.material_override = None
     for grp in ("ped", "ring", "desk"): show(S[grp], 'on')
@@ -491,17 +537,6 @@ def cover(arr, w, h):
     return r[y0:y0 + h, x0:x0 + w]
 
 
-WEB_ZOOM, WEB_ANCHOR = 1.14, (0.503, 0.8)     # heroBg.desktop.zoomFrom / heroBg.anchor: the web REST frame
-
-
-def webframe_map(Ww, Hh, fw, fh):
-    """plate px -> screen px of the web rest frame: object-fit cover, then CSS zoom 1.14 about the anchor"""
-    c = max(fw / Ww, fh / Hh); x0, y0 = (fw - Ww * c) / 2, (fh - Hh * c) / 2
-    ax, ay = x0 + WEB_ANCHOR[0] * Ww * c, y0 + WEB_ANCHOR[1] * Hh * c
-    k = c * WEB_ZOOM
-    return k, ax + WEB_ZOOM * (x0 - ax), ay + WEB_ZOOM * (y0 - ay)      # X = k px + ox, Y = k py + oy
-
-
 def webframe(arr, fw, fh):
     Hh, Ww = arr.shape[:2]
     k, ox, oy = webframe_map(Ww, Hh, fw, fh)
@@ -532,7 +567,7 @@ def ringstat():
     """quick look at the ring pass alone against Figma (any pass resolution)"""
     bpy.ops.wm.read_factory_settings(use_empty=True)
     RG = load(f"{PASS}/RG.png"); Hh, Ww = RG.shape[:2]
-    plate = resize(load(f"{OUT}/still-s01-3632.png")[..., :3], Ww, Hh)
+    plate = resize(load(f"{OUT}/still-s01-3840.png")[..., :3], Ww, Hh)
     fig = resize(load(FIGMA)[..., :3], 1440, 900)
     ours = webframe(over(RG, plate), 1440, 900)
     m = webframe(RG[..., 3:4], 1440, 900)[..., 0] > 0.98
@@ -611,16 +646,16 @@ def comp():
     plate_m, still_m, overlay_m = Mb["plate"], Mb["still"], Mb["overlay"]
     mult, ped_layer = Dk["mult"], Dk["ped"]
     tag = "" if SCALE == 1 else f"-preview{RW}"
-    save(plate, f"{OUT}/plate-s01-3632{tag}.png")
-    save(plate_m, f"{OUT}/plate-s01-mobile-3632{tag}.png")
-    save(still, f"{OUT}/still-s01-3632{tag}.png")
-    save(still_m, f"{OUT}/still-s01-mobile-3632{tag}.png")
-    save(overlay, f"{OUT}/ring-overlay-s01-3632{tag}.png"); save(overlay, f"{OUT}/ring-overlay-s01-3632{tag}.webp", 90)
-    save(overlay_m, f"{OUT}/ring-overlay-s01-mobile-3632{tag}.png"); save(overlay_m, f"{OUT}/ring-overlay-s01-mobile-3632{tag}.webp", 90)
-    save(ped_layer, f"{OUT}/layer-pedestal-rgba-3632{tag}.png")
-    save(mult, f"{OUT}/layer-desk-multiply-3632{tag}.png")
-    save(Mb["ped"], f"{OUT}/layer-pedestal-rgba-mobile-3632{tag}.png")
-    save(Mb["mult"], f"{OUT}/layer-desk-multiply-mobile-3632{tag}.png")
+    save(plate, f"{OUT}/plate-s01-3840{tag}.png")
+    save(plate_m, f"{OUT}/plate-s01-mobile-3840{tag}.png")
+    save(still, f"{OUT}/still-s01-3840{tag}.png")
+    save(still_m, f"{OUT}/still-s01-mobile-3840{tag}.png")
+    save(overlay, f"{OUT}/ring-overlay-s01-3840{tag}.png"); save(overlay, f"{OUT}/ring-overlay-s01-3840{tag}.webp", 90)
+    save(overlay_m, f"{OUT}/ring-overlay-s01-mobile-3840{tag}.png"); save(overlay_m, f"{OUT}/ring-overlay-s01-mobile-3840{tag}.webp", 90)
+    save(ped_layer, f"{OUT}/layer-pedestal-rgba-3840{tag}.png")
+    save(mult, f"{OUT}/layer-desk-multiply-3840{tag}.png")
+    save(Mb["ped"], f"{OUT}/layer-pedestal-rgba-mobile-3840{tag}.png")
+    save(Mb["mult"], f"{OUT}/layer-desk-multiply-mobile-3840{tag}.png")
     # ---- evidence
     report = {}
     # proxy overlay: GLB silhouette (cyan) over the plate; tolerance = thickness of the mismatch band
@@ -629,14 +664,14 @@ def comp():
     while cur.any(): cur = erode(cur); n += 1
     ys_, xs_ = np.where(mk); yp, xp = np.where(mp)
     bb = lambda xs2, ys2: [int(xs2.min()), int(ys2.min()), int(xs2.max()), int(ys2.max())]
-    k1818 = 1818 / Ww
+    k1818 = 1920 / Ww
     xm = (Mb["a"][..., 0] > 0.5) ^ (Mb["MK"][..., 3] > 0.5); nm = 0; cur = xm
     while cur.any(): cur = erode(cur); nm += 1
-    report["proxy_overlay_mobile_band_max_px_at_1818"] = round(nm * k1818, 2)
+    report["proxy_overlay_mobile_band_max_px_at_1920"] = round(nm * k1818, 2)
     report["proxy_overlay"] = {"frame": [Ww, Hh], "plate_pedestal_bbox_px": bb(xp, yp), "proxy_glb_bbox_px": bb(xs_, ys_),
                                "mismatch_pixels": int(x.sum()), "mismatch_band_max_px_at_frame": n,
-                               "mismatch_band_max_px_at_1818": round(n * k1818, 2),
-                               "bbox_delta_px_at_1818": [round((p - q) * k1818, 2) for p, q in zip(bb(xp, yp), bb(xs_, ys_))]}
+                               "mismatch_band_max_px_at_1920": round(n * k1818, 2),
+                               "bbox_delta_px_at_1920": [round((p - q) * k1818, 2) for p, q in zip(bb(xp, yp), bb(xs_, ys_))]}
     ov = plate.copy()
     e = edge_of(mk); e2 = e.copy()
     if SCALE == 1:                               # 2 px line at full res so it survives downscaling
@@ -651,15 +686,15 @@ def comp():
     cj = pose_camera()
     pos, tgt = np.array(cj["position"]), np.array(cj["lookAt"])
     z = pos - tgt; z /= np.linalg.norm(z); xax = np.cross([0, 1, 0], z); xax /= np.linalg.norm(xax); yax = np.cross(z, xax)
-    fpx = cj["plate"]["focal_fraction_of_width"]; ppv = cj["plate"]["principal_point_fraction"][1]
+    fpx = cj["plate"]["focal_fraction_of_width"]; ppu, ppv = cj["plate"]["principal_point_fraction"]
     worst = 0
     for kname, p3 in chk["points_three_m"].items():
         d = np.array(p3) - pos; xc, yc, zc = d @ xax, d @ yax, d @ z
-        u = 0.5 + fpx * xc / -zc
-        v = ppv - fpx * (1818 / 1037) * yc / -zc
+        u = ppu + fpx * xc / -zc
+        v = ppv - fpx * (FW / FH) * yc / -zc
         bu, bv = chk["points_plate_fraction_uv"][kname]
-        worst = max(worst, abs(u - bu) * 1818, abs(v - bv) * 1037)
-    report["json_camera_vs_blender_max_px_at_1818"] = round(worst, 3)
+        worst = max(worst, abs(u - bu) * 1920, abs(v - bv) * 1200)
+    report["json_camera_vs_blender_max_px_at_1920"] = round(worst, 3)
     # side by side with Figma 40004725:5602 (web framing: the plate covers 1440 x 900, like the photo does)
     fig = load(FIGMA)[..., :3]
     fw, fh = (2880, 1800) if SCALE == 1 else (1440, 900)
@@ -689,37 +724,54 @@ def comp():
     rq = tuple(round(v * fw / 2880) for v in (1000, 1900, 520, 1500))
     save(hstack(ours_s[rq[2]:rq[3], rq[0]:rq[1]], fig[rq[2]:rq[3], rq[0]:rq[1]]), f"{REN}/s01-plate-ring-closeup-vs-figma{tag}.png")
     save(cover(still_m, 750, 1624) if SCALE == 1 else cover(still_m, 375, 812), f"{REN}/s01-plate-mobile-still-375{tag}.png")
-    save(resize(plate_m, 1816, 1036) if SCALE == 1 else plate_m, f"{REN}/s01-plate-mobile-1816{tag}.png")
+    save(resize(plate_m, 1920, 1200) if SCALE == 1 else plate_m, f"{REN}/s01-plate-mobile-1920{tag}.png")
+    # D-186 realism check: the still at plate resolution, pedestal + ring with the desk around them, and a 100 % detail
+    rc = lambda u0, v0, u1, v1: still[round(v0 * Hh):round(v1 * Hh), round(u0 * Ww):round(u1 * Ww)]
+    save(rc(0.14, 0.30, 0.86, 1.0), f"{REN}/s01-plate-realism-closeup{tag}.webp", 93)
+    save(rc(0.30, 0.68, 0.70, 0.96), f"{REN}/s01-plate-realism-detail-100pct{tag}.png")
+    pc = lambda u0, v0, u1, v1: plate[round(v0 * Hh):round(v1 * Hh), round(u0 * Ww):round(u1 * Ww)]
+    save(pc(0.14, 0.55, 0.86, 1.0), f"{REN}/s01-plate-realism-plate-only{tag}.webp", 93)
     with open(f"{REN}/s01-plate-report{tag}.json", "w") as f: json.dump(report, f, indent=1)
     print("PLATE report", json.dumps(report))
     if SCALE == 1: write_pose(report, chk)
 
 
 def pose_camera():
-    """the D-179 camera, restated for the plate frame (fractions of the frame; valid for 1818 and 3632)"""
-    C = ped.CAM
+    """the D-186 camera for the 3840 x 2400 plate (fractions of the frame)"""
+    C = CAM
     t = Vector(C["target"]) * MM
     e, az = math.radians(C["elev"]), math.radians(C["azim"]); d = C["dist"] * MM
     loc = t + Vector((math.sin(az) * math.cos(e) * d, -math.cos(az) * math.cos(e) * d, math.sin(e) * d))
     v2t = lambda v: [round(v.x, 6), round(v.z, 6), round(-v.y, 6)]
+    f = C["lens"] / 36.0; ppu, ppv = 0.5 - C["shift"][0], 0.5 + C["shift"][1] * FW / FH
+    dep = lambda v: round(C["elev"] + math.degrees(math.atan((v - ppv) * FH / (f * FW))), 1)
     return {"type": "PerspectiveCamera", "position": v2t(loc), "lookAt": v2t(t),
-            "fov_vertical_deg_at_1818x1037": round(math.degrees(2 * math.atan(36.0 / 2 * (1037 / 1818) / C["lens"])), 3),
-            "lens_mm_36mm_sensor": C["lens"],
-            "filmOffset_or_viewOffset": {"shift_y_fraction_of_width": C["shift"][1],
-                                         "note": "unchanged from D-179: Blender shift_y 0.135 of the frame width moves the subject down (heroBg.cam.shiftY)."},
-            "plate": {"file": "plate/plate-s01-3632.png", "size_px": [FW, FH],
-                      "focal_fraction_of_width": round(C["lens"] / 36.0, 6),
-                      "principal_point_fraction": [0.5, round(0.5 + C["shift"][1] * 1818 / 1037, 6)],
-                      "pixel_aspect_x": round(PIX_ASPECT_X, 6),
-                      "note": "RECALIBRATED AGAINST THE UPSCALED PLATE (D-181): the 3632 x 2072 upscale is the 1818 x 1037 source stretched to the full frame (measured u = 1.99768 x - 0.09, v = 1.99800 y + 0.03, 0.3 px rms), so every frame FRACTION is unchanged and heroBg.cam {frameW 1818, frameH 1037, focalPx 70/36*1818, shiftY 0.135} stays valid: keep those numbers and lay the plate out with the photo's cover box. u = 0.5 + f*x_c/-z_c, v = pp_v - f*(1818/1037)*y_c/-z_c with f = focal_fraction_of_width. The plate's own pixel ratio (3632/2072) differs from 1818/1037 by 0.014 % = 0.25 px at 3632; ignore it."},
-            "frame": "photo/plate frame, shown object-fit: cover, centred (desktop 1440x900 crops the sides)"}
+            "fov_vertical_deg_at_%dx%d" % (FW, FH): round(math.degrees(2 * math.atan(36.0 / 2 * (FH / FW) / C["lens"])), 3),
+            "lens_mm_36mm_sensor": round(C["lens"], 4),
+            "filmOffset_or_viewOffset": {"shift_x_fraction_of_width": round(C["shift"][0], 6), "shift_y_fraction_of_width": round(C["shift"][1], 6),
+                                         "note": "D-186: position and lookAt are unchanged from D-179/D-181. Only the intrinsics changed with the new 16:10 photo: heroBg.cam = {frameW %d, frameH %d, focalPx %.2f (= lens/36 x frameW), shiftY %.6f}; shift_x (%.6f of the width) is negligible, 0.14 px at 3840." % (FW, FH, f * FW, C["shift"][1], C["shift"][0])},
+            "plate": {"file": "plate/plate-s01-3840.png", "size_px": [FW, FH],
+                      "focal_fraction_of_width": round(f, 6),
+                      "principal_point_fraction": [round(ppu, 6), round(ppv, 6)],
+                      "pixel_aspect_x": 1.0,
+                      "note": "D-186, new native photo (3840 x 2400, square pixels). u = pp_u + f*x_c/-z_c, v = pp_v - f*(3840/2400)*y_c/-z_c with f = focal_fraction_of_width. Lens and shift were derived from the D-181 camera (70 mm, shiftY 0.135 on the 3632 x 2072 plate) so that the web rest frame (object-fit cover x zoomFrom 1.14 about heroBg.anchor (0.503, 0.8), 16:10 viewport) is the same pinhole image as before: pedestal and ring keep their Figma size and position on screen. heroBg.anchor, zoomFrom and subjectOrigin can stay; v1Ratio becomes 3840/2400."},
+            "calibration": {
+                "method": "the new photo is a new image of the scene (no feature matches with the 3632 plate), so it was calibrated on its own geometry: desk-plane tilt from two pairs of orthogonal edges lying on the desk (weak perspective: sin^2(depression) = tan(a1) * tan(a2)).",
+                "measured_depression_deg": {"laptop_edges_at_v_0.65": 17.5, "book_edges_at_v_0.55": 17.0},
+                "camera_depression_deg": {"at_v_0.55": dep(0.55), "at_v_0.65": dep(0.65), "at_pedestal_v_0.80": dep(0.80)},
+                "horizon_v_fraction": round(ppv - f * (FW / FH) * math.tan(e), 4),
+                "desk_grain_slope_in_image_deg": 2.0,
+                "lamp_blender_mm": {"base_on_desk": [69, 73, 0], "shade_opening_centre": [67, 73.5, 34], "in_old_3632_plate_base": [74, 76, 0],
+                                    "note": "rays of this camera through the lamp base and shade rim. The scene is at pedestal scale (the ring is deliberately larger than the photo's objects), so these are the lamp's coordinates in the pedestal's space, not real millimetres."},
+                "limits": "edges read with a line-segment detector on an AI-made photo: +-2 deg. The keyboard rows do not converge measurably, the book edges converge toward a horizon near v = -0.2; the camera's horizon is at the value above. Good at the pedestal, not a full reconstruction of the photo's lens."},
+            "frame": "photo/plate frame, shown object-fit: cover, centred (16:10; a 16:9 viewport crops top and bottom)"}
 
 
 def write_pose(report, chk):
     P = json.load(open(ped.POSE))
-    P["id"] = "D-181 S01 plate + invisible pedestal proxy (supersedes the shaded pedestal of D-179)"
+    P["id"] = "D-186 S01 plate on the new 3840 x 2400 photo + invisible pedestal proxy (supersedes the D-181 3632 x 2072 plate)"
     P["camera"] = pose_camera()
-    P["camera"]["check_points"] = {"note": "world points (three.js Y-up, metres, pedestal space) and where they fall in the plate (u right, v down, fractions of the frame). Use them to assert the web camera.",
+    P["camera"]["check_points"] = {"note": "D-186 values. world points (three.js Y-up, metres, pedestal space) and where they fall in the plate (u right, v down, fractions of the frame). Use them to assert the web camera.",
                                    "three_m": chk["points_three_m"], "plate_fraction_uv": chk["points_plate_fraction_uv"]}
     pd = P["pedestal"]
     pd["size_mm"] = {"width_x": W, "depth_z": D, "height_y": H, "corner_radius": ped.R_CORNER,
@@ -740,32 +792,42 @@ def write_pose(report, chk):
     pd["receiveShadow"] = True
     pd["castShadow_note"] = "the pedestal's own shadow on the desk is baked into the plate; if the proxy also cast it, the desk catcher would darken it twice. Ring: castShadow true."
     pd["proxy_fit"] = {"overlay": "renders/s01-plate/s01-plate-proxy-overlay.webp (close-up: s01-plate-proxy-overlay-closeup.png)", **report["proxy_overlay"],
-                       "json_camera_vs_blender_max_px_at_1818": report["json_camera_vs_blender_max_px_at_1818"]}
+                       "json_camera_vs_blender_max_px_at_1920": report["json_camera_vs_blender_max_px_at_1920"]}
     P["plate"] = {
-        "desktop": {"plate": "plate/plate-s01-3632.png", "still": "plate/still-s01-3632.png",
-                    "ring_overlay_rgba": "plate/ring-overlay-s01-3632.webp"},
-        "mobile": {"plate": "plate/plate-s01-mobile-3632.png", "still": "plate/still-s01-mobile-3632.png",
-                   "ring_overlay_rgba": "plate/ring-overlay-s01-mobile-3632.webp",
+        "desktop": {"plate": "plate/plate-s01-3840.png", "still": "plate/still-s01-3840.png",
+                    "ring_overlay_rgba": "plate/ring-overlay-s01-3840.webp"},
+        "mobile": {"plate": "plate/plate-s01-mobile-3840.png", "still": "plate/still-s01-mobile-3840.png",
+                   "ring_overlay_rgba": "plate/ring-overlay-s01-mobile-3840.webp",
                    "transform": {"scale": MOB_K, "dy_fraction_of_height": MOB_DY, "origin_fraction": list(MOB_O),
                                  "formula": "p' = O + 0.62 (p - O) + (0, -0.14 H), O = (0.5 W, 0.86 H), over the untouched photo",
                                  "how": "rendered natively: a 2D similarity of a pinhole image is the same camera with lens x 0.62 and a new shift, so the phone passes are separate Cycles renders (pedestal RGBA, desk shadow/bounce ratio, ring RGBA), not resampled. Geometrically identical to the CSS scale + translate of the desktop layers; the ring shadow that leaves the bottom of the desktop frame is complete here.",
                                  "blender_camera": {"lens_mm": round(MOB_LENS, 4), "shift_x": round(MOB_SHIFT[0], 6), "shift_y": round(MOB_SHIFT[1], 6)},
-                                 "proxy_band_max_px_at_1818": report["proxy_overlay_mobile_band_max_px_at_1818"]},
-                   "layers": {"pedestal_rgba": "plate/layer-pedestal-rgba-mobile-3632.png", "desk_multiply": "plate/layer-desk-multiply-mobile-3632.png"}},
-        "layers": {"pedestal_rgba": "plate/layer-pedestal-rgba-3632.png", "desk_multiply": "plate/layer-desk-multiply-3632.png",
+                                 "proxy_band_max_px_at_1920": report["proxy_overlay_mobile_band_max_px_at_1920"]},
+                   "layers": {"pedestal_rgba": "plate/layer-pedestal-rgba-mobile-3840.png", "desk_multiply": "plate/layer-desk-multiply-mobile-3840.png"}},
+        "layers": {"pedestal_rgba": "plate/layer-pedestal-rgba-3840.png", "desk_multiply": "plate/layer-desk-multiply-3840.png",
                    "note": "desktop frame. plate = pedestal_rgba over (photo x desk_multiply). The multiply PNG is clamped at 1 (the few % of warm bounce next to the lit side exist only in the plates, which are composited in linear light)."},
-        "source_photo": "design/assets/v2/s01/hero-warm-desk-v2-upscaled-3636.jpg (3632 x 2072)",
+        "source_photo": "design/assets/v2/s01/Hero_BG_Stillway_New_3840x2400.avif (3840 x 2400, native; decoded to sRGB PNG with sips)",
         "identity": "still == plate with ring-overlay composited source-over in sRGB (pixel-exact up to 8-bit rounding), so poster = plate + overlay.",
         "ring_shadow_in_overlay": "colour #2A1608 (the web catcher colour), straight alpha chosen so plate*(1-a) + c*a has the luminance of the exact Cycles render with the ring shadow, on the desk AND on the pedestal top/lip/front."}
     P["desk"]["note"] = "transparent shadow catcher over the plate; receives the RING shadow only (the pedestal's own contact shadow, AO and bounce are in the plate)."
-    P["lights"]["key"]["plate_note"] = "the plate was lit with this same key (Cycles area disk D55 mm at Blender (0.190, 0.120, 0.250) m), so the live ring shadow continues the baked pedestal shadow: same direction, same 9.4 deg penumbra cone."
-    kp, sp, tg = Vector(ped.KEY["pos"]) * MM, Vector(SPILL["pos"]) * MM, Vector((0, 0, 4 * MM))
+    kp, sp, tg = Vector(KEY["pos"]) * MM, Vector(SPILL["pos"]) * MM, Vector((0, 0, 4 * MM))
     t3 = lambda v: [round(v.x, 6), round(v.z, 6), round(-v.y, 6)]
     dk, ds = (kp - tg).length, (sp - tg).length
+    K_ = P["lights"]["key"]; kd = (tg - kp).normalized(); kel = math.degrees(math.asin(-kd.z)); kcone = math.degrees(2 * math.atan(KEY["size"] / 2 * MM / dk))
+    K_["position"] = t3(kp); K_["target"] = t3(tg)
+    K_["direction_unit"] = [round(c, 4) for c in t3(kd)]
+    K_["elevation_deg"] = round(kel, 1)
+    K_["convention"] = "three.js Y-up metres in pedestal space (= Blender (x, y, z) -> (x, z, -y)). D-186: the key follows the lamp of the new photo (lamp base 5 mm left and 3 mm nearer than in the 3632 plate): Blender key at (%.3f, %.3f, %.3f) m aimed at (0, 0, 0.004), was (0.190, 0.120, 0.250). Light travels (%.3f, %.3f, %+.3f): left, down, toward the camera (+Z), so the ring shadow on the top runs LEFT-FRONT and is ~%.1f x the casting height long (elevation %.1f deg). The direction moved %.1f deg from D-180's (-0.5702, -0.7383, 0.3602)." % (
+        kp.x, kp.y, kp.z, kd.x, kd.z, -kd.y, 1 / math.tan(math.radians(kel)), kel,
+        math.degrees(Vector((kd.x, kd.z, -kd.y)).angle(Vector((-0.5702, -0.7383, 0.3602)))))
+    K_["shadow"]["note"] = "Cycles area light D%d mm at %.0f mm = %.1f deg penumbra cone: contact-hard at the ring's touch point, ~3-4 mm soft at the shadow tip. With VSM (uniform blur) keep the blur small (~0.5 mm = 6 texels at 2048 over +-0.045 m) so the shadow stays clearly defined, as the user asked; do not raise radius to fake the tip softness." % (KEY["size"], dk / MM, kcone)
+    K_["plate_color_linear_rgb"] = list(KEY["color"])
+    K_["plate_color_note"] = "D-186, plate only: the Cycles key and spill are warmer than D-181 (key 1, 0.70, 0.44 -> 1, 0.60, 0.30) because the new desk is more orange; `color` above is the web's live value and is not changed here."
+    K_["plate_note"] = "the plate was lit with this same key (Cycles area disk D%d mm at Blender (%.3f, %.3f, %.3f) m), so the live ring shadow continues the baked pedestal shadow: same direction, same %.1f deg penumbra cone." % (KEY["size"], kp.x, kp.y, kp.z, kcone)
     hexs = lambda c: "#%02X%02X%02X" % tuple(round(x * 255) for x in c)
     rel = (SPILL["power"] / KEY_POWER) * (dk / ds) ** 2
     P["lights"]["spill"] = {
-        "type": "plate-only lamp spill (Cycles area DISK). Baked into the plate; on the web model it analytically, do not light the ring with it.",
+        "type": "plate-only lamp spill (Cycles area DISK). Baked into the plate; on the web model it analytically, do not light the ring with it. D-186: moved with the lamp of the new photo, Blender (125, 50, 58) -> (%s) mm." % ", ".join("%g" % v for v in SPILL["pos"]),
         "position": t3(sp), "target": t3(tg),
         "direction_unit": [round(c, 4) for c in t3((tg - sp).normalized())],
         "elevation_deg": round(math.degrees(math.asin((sp - tg).normalized().z)), 1),
@@ -786,8 +848,8 @@ def write_pose(report, chk):
         "convention": "three.js Y-up metres in desk space (the space of lights.key; pedestal.position is given in it too) = Blender (x, y, z) -> (x, z, -y). Blender lamp at (%s) mm aimed at (0, 0, 4) mm." % ", ".join(str(v) for v in SPILL["pos"])}
     P["lights"].pop("plate_only_lamp_spill", None)
     P["plate"]["contact_occlusion"] = "D-181c: the still and both ring overlays carry a dark, tight contact occlusion under the touching band (Cycles AO pass, reach %s mm, with / without the ring; gamma %s, floor %s). It is part of the overlay's shadow alpha, not of the plate." % (CONTACT_DIST, CONTACT_GAMMA, CONTACT_FLOOR)
-    P["proven"] = "Cycles: plate, stills, overlays and the proxy overlay in renders/s01-plate/ use exactly these values; the camera numbers above were re-projected with three.js-style maths and agree with Blender to %s px at 1818." % report["json_camera_vs_blender_max_px_at_1818"]
-    P["proposed"] = "three.js material flags for the proxy and the catcher opacity are a starting point, untested in web-v2 (the 3D Designer does not touch it). Match the live ring shadow density to plate/still-s01-3632.png."
+    P["proven"] = "Cycles: plate, stills, overlays and the proxy overlay in renders/s01-plate/ use exactly these values; the camera numbers above were re-projected with three.js-style maths and agree with Blender to %s px at 1920." % report["json_camera_vs_blender_max_px_at_1920"]
+    P["proposed"] = "three.js material flags for the proxy and the catcher opacity are a starting point, untested in web-v2 (the 3D Designer does not touch it). Match the live ring shadow density to plate/still-s01-3840.png."
     with open(ped.POSE, "w") as f: json.dump(P, f, indent=2)
     print("PLATE pose json updated")
 

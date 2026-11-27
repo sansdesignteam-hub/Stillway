@@ -1,36 +1,36 @@
 {
- "proxy_overlay_mobile_band_max_px_at_1818": 0.5,
+ "proxy_overlay_mobile_band_max_px_at_1920": 0.5,
  "proxy_overlay": {
   "frame": [
-   3632,
-   2072
+   3840,
+   2400
   ],
   "plate_pedestal_bbox_px": [
-   1260,
-   1488,
-   2358,
-   1864
+   1275,
+   1724,
+   2547,
+   2159
   ],
   "proxy_glb_bbox_px": [
-   1260,
-   1489,
-   2357,
-   1864
+   1275,
+   1724,
+   2547,
+   2159
   ],
-  "mismatch_pixels": 386,
+  "mismatch_pixels": 497,
   "mismatch_band_max_px_at_frame": 1,
-  "mismatch_band_max_px_at_1818": 0.5,
-  "bbox_delta_px_at_1818": [
+  "mismatch_band_max_px_at_1920": 0.5,
+  "bbox_delta_px_at_1920": [
    0.0,
-   -0.5,
-   0.5,
+   0.0,
+   0.0,
    0.0
   ]
  },
- "json_camera_vs_blender_max_px_at_1818": 0.001,
+ "json_camera_vs_blender_max_px_at_1920": 0.002,
  "web_rest_frame_2880x1800": {
   "pedestal_bbox_px": [
-   888,
+   887,
    1272,
    1976,
    1645
@@ -42,9 +42,9 @@
    1640
   ],
   "ring_bbox_px": [
-   1105,
+   1104,
    570,
-   1807,
+   1806,
    1408
   ],
   "figma_ring_bbox_px": [
@@ -61,14 +61,14 @@
    "p25": 47.0,
    "p50": 66.0,
    "p75": 146.0,
-   "p95": 194.0,
+   "p95": 194.1,
    "mean": 92.5
   },
   "figma": {
    "p05": 8.8,
    "p25": 25.8,
    "p50": 58.1,
-   "p75": 158.2,
+   "p75": 158.1,
    "p95": 210.0,
    "mean": 89.8
   }
