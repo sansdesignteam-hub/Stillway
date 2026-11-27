@@ -24,6 +24,8 @@ const FOV = 30;
 export interface RingStage {
   apply: (p: Pose, extra?: { breathe?: number }) => void;
   render: () => void;
+  /** QA27 G-19: compile, ahead of the scroll, every shader variant these poses will need */
+  prewarm: (poses: Pose[]) => void;
   setLed: (color: string | 'off' | null, intensity?: number) => void;
   canvas: HTMLCanvasElement;
   three: typeof THREE;
@@ -119,8 +121,14 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   };
   buildBlends();
   // night env after the first paint of the ring
-  setTimeout(() => loadEnv(RING_MODEL.env.night).then((e) => ((envs.night = e), (lastEnv = ''))).catch(() => {}), 300);
-  setTimeout(() => loadEnv(RING_MODEL.env.dusk).then((e) => ((envs.dusk = e), (lastEnv = ''))).catch(() => {}), 900);
+  setTimeout(() => loadEnv(RING_MODEL.env.night).then((e) => ((envs.night = e), (lastEnv = ''), lateAsset())).catch(() => {}), 300);
+  setTimeout(() => loadEnv(RING_MODEL.env.dusk).then((e) => ((envs.dusk = e), (lastEnv = ''), lateAsset())).catch(() => {}), 900);
+  let lateAsset = () => {}; // set once prewarm exists (below)
+  /** run in idle time; `left()` = ms left in this slice (Safari has no requestIdleCallback: 8 ms slices) */
+  const idle = (fn: (left: () => number) => void) =>
+    'requestIdleCallback' in window
+      ? (window as any).requestIdleCallback((d: IdleDeadline) => fn(() => d.timeRemaining()), { timeout: 1500 })
+      : setTimeout(() => { const t0 = performance.now(); fn(() => 8 - (performance.now() - t0)); }, 60);
   const loadEnv = (url: string) =>
     new EXRLoader().loadAsync(url).then((t) => {
       t.mapping = THREE.EquirectangularReflectionMapping;
@@ -917,6 +925,15 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
         tableRoot.add(table);
         document.documentElement.classList.add('table-ready');
         lastTableKey = '';
+        // QA27 G-19: its textures go to the GPU now, one per idle slice, not in the frame S06 enters
+        const texs = [...new Set(tableMats.flatMap((m) => [m.map, m.roughnessMap, m.metalnessMap, m.normalMap]).filter(Boolean))] as THREE.Texture[];
+        const up = () => {
+          const t = texs.pop();
+          if (!t) return lateAsset();
+          renderer.initTexture(t);
+          idle(up);
+        };
+        idle(up);
       })
       .catch(() => {
         /* the CSS table stays */
@@ -1016,7 +1033,24 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   let lastBlur = 0;
   let lastEnv = '';
   let lastLedKey = '';
+  /* QA27 G-19: a light at intensity 0 adds nothing to the picture but is still evaluated for every
+     pixel of the ring (ten directional lights, most of them dark in any one section), so dark lights
+     are taken out of the scene. That changes the shader variant three.js picks (light counts), and a
+     new variant compiled in the middle of a scroll is a dropped frame (measured: S01 → S02, the S06
+     table), so `prewarm` walks the story's poses once after load, in idle time, and compiles every
+     variant before it is needed. */
+  const lit = (l: THREE.Light, i: number) => {
+    l.intensity = i;
+    l.visible = i > 0;
+  };
+  let quiet = false; // prewarm: scene state only, no DOM writes
+  let lastPose: Pose | null = null;
+  let lastExtra: { breathe?: number } = {};
   const apply = (p: Pose, extra: { breathe?: number } = {}) => {
+    if (!quiet) {
+      lastPose = p;
+      lastExtra = extra;
+    }
     // width: fraction of viewport width, but never taller than 82% of the viewport
     const raw = p.w * W;
     const w = (Math.min(raw, H * 0.82) * (1 - p.uncap) + raw * p.uncap) * (1 + (extra.breathe ?? 0) * (1 - Math.min(1, Math.max(0, p.rest))));
@@ -1153,20 +1187,20 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     // D-182: the production look: the rig stays on while the ring rests (the desk key and hemisphere
     // add their light and cast the shadow)
     const rig = p.photo;
-    sun.intensity = 2.6 * rig;
-    hemi.intensity = 0.55 * rig;
-    fill.intensity = 0.35 * rig;
-    rim.intensity = 14 * p.rim;
-    rimFill.intensity = 3.2 * p.rim;
-    warmRim.intensity = 10 * p.warm;
+    lit(sun, 2.6 * rig);
+    lit(hemi, 0.55 * rig);
+    lit(fill, 0.35 * rig);
+    lit(rim, 14 * p.rim);
+    lit(rimFill, 3.2 * p.rim);
+    lit(warmRim, 10 * p.warm);
     const lp = Math.min(1, Math.max(0, p.lamp));
-    deskLamp.intensity = 9 * lp;
+    lit(deskLamp, 9 * lp);
     // a soft close fill on the lamp side so the edge glows rather than shows one sharp line
-    deskFill.intensity = 2.2 * lp;
+    lit(deskFill, 2.2 * lp);
     deskFill.position.set(pivot.position.x - w * 1.1, pivot.position.y + w * 0.45, w * 0.6);
     deskFill.distance = w * 2.6;
-    cornerLight.intensity = 14 * Math.min(1, Math.max(0, p.corner));
-    coldEdge.intensity = 34 * Math.min(1, Math.max(0, p.edge));
+    lit(cornerLight, 14 * Math.min(1, Math.max(0, p.corner)));
+    lit(coldEdge, 34 * Math.min(1, Math.max(0, p.edge)));
     ROOM.uRest.value = rest * dsk;
     SKIN.uSkin.value = Math.min(1, Math.max(0, p.skin));
     GLINT.uGlint.value = Math.min(1, Math.max(0, p.glint));
@@ -1184,8 +1218,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     lampKey.castShadow = desk.visible;
     if (desk.visible) {
       const sh = Math.max(0, p.shadow);
-      lampKey.intensity = LAMP * dsk;
-      deskHemi.intensity = deskHemiI * dsk;
+      lit(lampKey, LAMP * dsk);
+      lit(deskHemi, deskHemiI * dsk);
       setCatch(deskMat, deskPose.desk.catcher_ambient ?? CATCH.deskAmb, sh * dsk);
       setCatch(pedCatch, deskPose.pedestal.catcher_ambient ?? CATCH.topAmb, sh * dsk);
       pedCatch.userData.floor.value = deskPose.pedestal.catcher_side_opacity ?? CATCH.side;
@@ -1222,7 +1256,10 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
         sc.updateProjectionMatrix();
         lampKey.shadow.normalBias = (L.normalBias ?? 0.0004) * kk;
       }
-    } else lampKey.intensity = deskHemi.intensity = 0;
+    } else {
+      lit(lampKey, 0);
+      lit(deskHemi, 0);
+    }
 
     // env: night when light ≥ .5, else photo when photo ≥ .5, else paper; intensity dips around a swap
     const n = Math.min(1, Math.max(0, p.light));
@@ -1261,6 +1298,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     const fl = Math.max(0, p.flare) * (red ? (off - 0.5) * 2 : 1 - off * 2);
     flare.visible = fl > 0.005;
     bounce.intensity = 0;
+    bounce.visible = flare.visible;
     if (flare.visible) {
       const col = red ? LED_RED : ledColor(p.ledc);
       const at = red ? anchorPower : anchorMain;
@@ -1276,6 +1314,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       bounce.distance = w * 0.9;
       bounce.intensity = 2.4 * fl;
     }
+    if (quiet) return;
     if (p.alpha !== lastAlpha) {
       lastAlpha = p.alpha;
       canvas.style.opacity = String(p.alpha);
@@ -1306,6 +1345,60 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       return;
     }
     renderer.render(scene, camera);
+  };
+
+  /** what decides the shader variants of a frame: light counts, env, shadow, clearcoat, lit LEDs, and
+   *  which of the occasional objects are drawn */
+  const variantKey = () => {
+    let dir = 0, point = 0, hemiN = 0;
+    for (const l of [sun, fill, rim, rimFill, warmRim, deskLamp, cornerLight, coldEdge]) if (l.visible) dir++;
+    if (desk.visible && lampKey.visible) dir++;
+    if (deskFill.visible) point++;
+    if (bounce.visible) point++;
+    if (hemi.visible) hemiN++;
+    if (desk.visible && deskHemi.visible) hemiN++;
+    return [dir, point, hemiN, desk.visible ? 1 : 0, scene.environment?.uuid ?? '', (band as any)?.clearcoat > 0 ? 1 : 0, ledMain?.toneMapped ? 0 : 1, ledPower?.toneMapped ? 0 : 1, finger.visible ? 1 : 0, flare.visible ? 1 : 0, table && tableRoot.visible ? 1 : 0].join('|');
+  };
+  const warmed = new Set<string>();
+  let warmQueue: Pose[] = [];
+  let warmBusy = false;
+  const warmStep = (left: () => number) => {
+    warmBusy = false;
+    if (!warmQueue.length || !lastPose) return;
+    quiet = true;
+    try {
+      let compiled = 0;
+      // skim the poses whose variant is known; compile at most one new variant per idle slice
+      while (warmQueue.length && compiled < 1 && left() > 1) {
+        const p = warmQueue.pop()!;
+        apply(p);
+        const key = variantKey();
+        if (warmed.has(key)) continue;
+        warmed.add(key);
+        scene.updateMatrixWorld();
+        renderer.compile(scene, camera);
+        if (table && tableRoot.visible) {
+          tableScene.environment = scene.environment;
+          tableScene.environmentIntensity = 1;
+          renderer.compile(tableScene, camera);
+        }
+        compiled++;
+      }
+      apply(lastPose, lastExtra); // the scene exactly as the last real frame left it
+    } finally {
+      quiet = false;
+    }
+    if (warmQueue.length) (warmBusy = true), idle(warmStep);
+  };
+  let warmAll: Pose[] = [];
+  const prewarm = (poses: Pose[]) => {
+    warmAll = poses;
+    warmQueue = poses.slice().reverse(); // from the top of the page down
+    if (!warmBusy) (warmBusy = true), idle(warmStep);
+  };
+  /** an asset that arrived late (night / dusk env, the table) brings new variants: go round again */
+  lateAsset = () => {
+    if (warmAll.length) prewarm(warmAll);
   };
 
   /** colour for window A, or 'off' to light only the red dot, or null for both dark */
@@ -1378,5 +1471,5 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     };
   }
   await deskReady; // the first frame already shows the pedestal (the poster cross-fades to it)
-  return { apply, render, setLed, canvas, three: THREE, pivot };
+  return { apply, render, prewarm, setLed, canvas, three: THREE, pivot };
 }
