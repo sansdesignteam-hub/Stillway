@@ -37,8 +37,14 @@
 }
 .wordmark {
   margin-right: clamp(8px, 2vw, 32px);
-  font-size: var(--t-label-lg-size); /* Label/Large size; the logo keeps its own tracking (D-083) */
   text-decoration: none;
+}
+/* D-183: lockup 03A, as tall as the text logo it replaces; follows --header-ink through currentColor */
+.wordmark__lockup,
+.wordmark__lockup svg {
+  display: block;
+  height: var(--t-label-lg-size);
+  width: auto;
 }
 .nav-home,
 .nav-bar,

@@ -6,7 +6,7 @@
  * sensiq-style panel. Content is V2: links and "Find your size" (D-069), Hanken Grotesk clock (D-156).
  * The bar tint follows the surface underneath (data-theme light | dark, set by story.ts).
  */
-import Logo from './Logo.astro';
+import lockup from '../assets/stillway-lockup-03a.svg?raw';
 import Button from './Button.astro';
 import { nav } from '../content/copy';
 import { sections } from '../content/sections';
@@ -15,7 +15,7 @@ const first = sections[0];
 
 <header class="site-header" data-nav data-theme="light">
   <div class="site-header__inner">
-    <a class="wordmark" href="#top" aria-label="Stillway, back to top"><Logo /></a>
+    <a class="wordmark" href="#top" aria-label="Stillway, back to top"><span class="wordmark__lockup" aria-hidden="true" set:html={lockup} /></a>
 
     <button class="nav-burger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-menu" data-menu-open>
       <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M3 6h14M3 10h14M3 14h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path></svg>

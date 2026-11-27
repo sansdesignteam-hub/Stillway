@@ -78,9 +78,7 @@ import { close as d, finishes as f } from '../../content/copy';
             <a class="cl__top" href="#top">{d.top} ↑</a>
           </nav>
         </div>
-        <p class="cl__word" data-cl-word aria-label={d.wordmark}>
-          {d.wordmark.toUpperCase().split('').map((c) => <span aria-hidden="true">{c}</span>)}
-        </p>
+        <p class="cl__word" data-cl-word role="img" aria-label={d.wordmark}></p>
       </footer>
     </div>
   </div>
@@ -317,8 +315,8 @@ import { close as d, finishes as f } from '../../content/copy';
     max-width: 34em;
   }
   /* footer on the same canvas — Figma Design "11 · Closing, FAQ & footer" State 4 (40004265:1480):
-     the line right at the top, three columns on the 12-column grid (1–5, 6–9, 10–12), the wordmark
-     in capitals across the full width at the foot (D-165) */
+     the line right at the top, three columns on the 12-column grid (1–5, 6–9, 10–12), the logo
+     lockup at the foot (D-165, D-183) */
   /* D-171: the footer is as tall as its content (no full-screen height, no empty band above the
      wordmark); the last scroll stop puts its bottom on the bottom of the screen (close.ts) */
   .cl__block--foot {
@@ -389,29 +387,22 @@ import { close as d, finishes as f } from '../../content/copy';
   .cl__top {
     margin-top: 10px;
   }
-  /* the wordmark: Display/Display 1, capitals, its letters spread edge to edge (Figma), cream, with
-     the hover shine */
+  /* D-183: lockup 03A, left on the margin, as tall as the capital wordmark's line (Display 1). The
+     shape is a mask, so the hover shine still sweeps across it */
   .cl__word {
     grid-row: 4;
-    margin: 0;
-    padding-top: 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    font-weight: var(--w-display);
-    font-size: var(--t-display-1-size);
-    line-height: var(--t-display-1-lh);
-    letter-spacing: 0;
-    white-space: nowrap;
+    margin: 24px 0 calc(var(--t-display-1-size) * 0.04);
+    justify-self: start;
+    height: var(--t-display-1-lh);
+    max-width: 100%;
+    aspect-ratio: 204.76 / 38.55;
+    -webkit-mask: url('../../assets/stillway-lockup-03a.svg') left center / contain no-repeat;
+    mask: url('../../assets/stillway-lockup-03a.svg') left center / contain no-repeat;
     pointer-events: auto;
-    color: var(--cream);
+    background-color: var(--cream);
     background-image: linear-gradient(110deg, var(--cream) 0%, var(--cream) 40%, var(--white) 47%, var(--shine-amber) 53%, var(--cream) 60%, var(--cream) 100%);
     background-size: 300% 100%;
     background-position: 100% 0;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    padding-bottom: calc(var(--t-display-1-size) * 0.04);
   }
   .cl__word.is-shine {
     animation: cl-shine 0.9s ease-in-out 1;
@@ -464,12 +455,9 @@ import { close as d, finishes as f } from '../../content/copy';
     .cl__statement {
       width: 100%;
     }
-    /* QA M-07: the spread wordmark must not widen the footer past the screen */
+    /* QA M-07: the footer never widens past the screen */
     .cl__block--foot {
       grid-template-columns: minmax(0, 1fr);
-    }
-    .cl__word {
-      font-size: min(var(--t-display-1-size), calc((100vw - 2 * var(--margin)) / 4.95));
     }
     .cl__cols {
       margin-top: 0;
