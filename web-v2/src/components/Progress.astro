@@ -5,6 +5,7 @@
  * short horizontal line. Black on light grounds, white on dark ones and on the photo; inactive dots at
  * a soft opacity. It shows while the page scrolls and hides after 2.5 s without scrolling (story.ts);
  * it stays while hovered (pointer devices) or while a marker has keyboard focus.
+ * QA27 M-12: not shown below 768 px.
  * D-176: each marker is a link to its section (motion.ts initAnchors: Lenis to state 1 of the
  * section, the same landing as the navbar); the current one carries aria-current="location".
  * Hidden, it takes no pointer or touch; each target is 24 × 24 px, in the page margin.
@@ -88,13 +89,10 @@ import { sections } from '../content/sections';
     height: 2px;
     opacity: 1;
   }
-  @media (max-width: 719px) {
-    .gprog a {
-      width: var(--t);
-      padding-left: 4px;
-    }
-    .gprog a.is-on i {
-      width: 6px;
+  /* QA27 M-12 (D-187): hidden below 768 px, where the margin is too narrow and the dots sat on text */
+  @media (max-width: 767px) {
+    .gprog {
+      display: none;
     }
   }
   :global(html.reduced) .gprog,
