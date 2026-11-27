@@ -594,6 +594,56 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   finger.visible = false;
   scene.add(finger);
   const FINGER_TILT = THREE.MathUtils.degToRad(2.9);
+  /* QA27 D-01 the ring's contact shadow on the skin: the same lathe drawn once more, in front of the
+     photo and behind the ring, dark only next to the band. For each point of the finger the shader
+     takes its place in the ring's own space (z along the ring's axis): past the band's edge the shade
+     falls off with the distance, short and tight on the edge toward the light (the fingertip side),
+     longer and softer on the side away from it (toward the knuckle) and a little denser on the left,
+     as the key of A-1 comes from the upper right. It is geometric: it travels with the ring down the
+     finger and with the hand, and there is none while the band is still clear of the skin (radius). */
+  const SEAT = {
+    uToRing: { value: new THREE.Matrix4() }, // world → ring (model metres)
+    uBand: { value: new THREE.Vector2(0.004, 0.0095) }, // band half width (z), inner radius — set from the GLB below
+    uSeat: { value: 1 },
+  };
+  const fingerShade = new THREE.Mesh(
+    finger.geometry,
+    new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      polygonOffset: true, // same geometry as the depth proxy: never lose the depth test to it
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2,
+      uniforms: SEAT,
+      vertexShader: `uniform mat4 uToRing; varying vec3 vR; varying vec3 vN;
+        void main() {
+          vec4 wp = modelMatrix * vec4( position, 1.0 );
+          vR = ( uToRing * wp ).xyz;
+          vN = normalize( mat3( modelMatrix ) * normal );
+          gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); // as the depth proxy, bit for bit
+        }`,
+      fragmentShader: `uniform vec2 uBand; uniform float uSeat; varying vec3 vR; varying vec3 vN;
+        void main() {
+          float d = ( abs( vR.z ) - uBand.x ) / uBand.x; // 0 at the band's edge, in band half-widths
+          float below = step( vR.z, 0.0 ); // filled per frame through the sign of uToRing: 1 = knuckle side
+          float len = mix( 0.16, 0.62, below );
+          float core = exp( - max( d, 0.0 ) / ( 0.35 * len ) );
+          float soft = exp( - max( d, 0.0 ) / len );
+          float a = mix( 0.50 * core + 0.16 * soft, 0.46 * core + 0.40 * soft, below );
+          // only where the band is close to the skin; denser on the side away from the key (left)
+          a *= smoothstep( 0.55, 0.9, length( vR.xy ) / uBand.y );
+          vec3 n = normalize( vN );
+          a *= mix( 1.12, 0.8, smoothstep( - 0.7, 0.7, n.x ) );
+          // on the left the finger runs into the hand, where the proxy ends: fade out before its outline
+          a *= n.x < 0.0 ? smoothstep( 0.05, 0.55, n.z ) : smoothstep( 0.0, 0.12, n.z );
+          a *= 1.0 - smoothstep( 0.0, 0.5, - d ); // nothing deep under the band (it is behind the ring anyway)
+          gl_FragColor = vec4( 0.20, 0.075, 0.03, clamp( a * uSeat, 0.0, 0.85 ) ); // deep skin shade (display values)
+        }`,
+    }),
+  );
+  fingerShade.renderOrder = -1;
+  finger.add(fingerShade);
+  const _ringW = new THREE.Matrix4();
 
   const pivot = new THREE.Group(); // position, scale, view rotation
   const spinner = new THREE.Group(); // spin about the ring's own axis (model Z)
@@ -686,13 +736,20 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
      (rounded rectangle) or on to the desk, and the polished pixel is mixed toward that wood colour,
      keeping its own light and dark, weaker with height above the top and darker near the touch. */
   const ROOM = { uRest: { value: 0 } };
+  /* QA27 D-01 the S06 ring in the light of the hand photo (A-1: one soft warm key from the upper right
+     and front, skin all around), by pose.skin; display space like the two above, so at 0 the pixel is
+     exactly as before and S08 stays neutral (D-141). Still silver_polished (D-085):
+     (a) a warm white balance; (b) skin mirrored where the polished surface looks down at the back of
+     the hand or sideways at the next finger: the pixel goes toward the skin's hue at its own brightness;
+     (c) the key as a soft highlight with a brighter core, and a little less light on the side away from it. */
+  const SKIN = { uSkin: { value: 0 } };
   const patchRing = (m: THREE.MeshStandardMaterial, metal: boolean, lampGlint: boolean) => {
     m.onBeforeCompile = (sh) => {
-      Object.assign(sh.uniforms, ROOM, { uToPed: PCSS.uToPed, uPedBox: PCSS.uPedBox, uTouch: PCSS.uTouch }, lampGlint ? GLINT : {});
+      Object.assign(sh.uniforms, ROOM, SKIN, { uToPed: PCSS.uToPed, uPedBox: PCSS.uPedBox, uTouch: PCSS.uTouch }, lampGlint ? GLINT : {});
       sh.fragmentShader = sh.fragmentShader
         .replace(
           'void main() {',
-          `uniform float uRest; uniform mat4 uToPed; uniform vec4 uPedBox; uniform vec4 uTouch;
+          `uniform float uRest; uniform float uSkin; uniform mat4 uToPed; uniform vec4 uPedBox; uniform vec4 uTouch;
           ${lampGlint ? 'uniform float uGlint; uniform vec3 uGlintDir;' : ''}
           void main() {`,
         )
@@ -728,6 +785,23 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
                 : ''
             }
             gl_FragColor.rgb = min( gl_FragColor.rgb * mix( vec3( 1.0 ), vec3( 1.05, 0.99, 0.91 ), uRest ), vec3( 1.0 ) );
+          }
+          if ( uSkin > 0.0 ) {
+            vec3 sV = normalize( vViewPosition );
+            vec3 sN = normalize( normal );
+            vec3 sR = reflect( - sV, sN );
+            const vec3 sL = vec3( 0.52, 0.56, 0.645 ); // toward the key: upper right, in front
+            const vec3 sW = vec3( 0.2126, 0.7152, 0.0722 );
+            vec3 c = gl_FragColor.rgb * mix( vec3( 1.0 ), vec3( 1.045, 0.998, 0.94 ), uSkin );
+            float lum = dot( c, sW );
+            float bounce = clamp( 0.9 * smoothstep( 0.02, 0.7, - sR.y ) + 0.5 * smoothstep( 0.25, 0.9, - sR.x ), 0.0, 1.0 );
+            const vec3 skinHue = vec3( 1.40, 0.89, 0.62 ); // A-1 skin (205, 140, 96) over its own luma
+            c = mix( c, skinHue * lum, 0.30 * uSkin * bounce );
+            ${metal ? `float sRL = max( dot( sR, sL ), 0.0 );
+            float sKey = 0.26 * pow( sRL, 9.0 ) + 0.5 * pow( sRL, 56.0 );
+            c *= mix( 1.0, mix( 0.74, 1.0, smoothstep( - 0.75, 0.35, dot( sN, sL ) ) ), uSkin );
+            c += uSkin * sKey * vec3( 1.0, 0.95, 0.87 ) * ( 1.0 - 0.6 * c );` : ''}
+            gl_FragColor.rgb = min( c, vec3( 1.0 ) );
           }
           ${lampGlint ? `          if ( uGlint > 0.0 ) {
             vec3 gV = normalize( vViewPosition );
@@ -780,6 +854,12 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     const a = o.geometry.attributes.position;
     for (let i = 0; i < a.count; i += 5) ringPts.push(new THREE.Vector3().fromBufferAttribute(a, i).applyMatrix4(o.matrixWorld));
   });
+  {
+    // band half width (along the axis) and inner radius, from the shell points (ring space)
+    let hz = 0, rin = Infinity;
+    for (const v of ringPts) (hz = Math.max(hz, Math.abs(v.z))), (rin = Math.min(rin, Math.hypot(v.x, v.y)));
+    if (hz > 0 && isFinite(rin)) SEAT.uBand.value.set(hz, rin);
+  }
 
   /* S06 pine table (D-146, HANDOFF-s06-table.md). Its own scene and lights, drawn before the ring with
      the same camera (depth cleared in between: the ring is always in front), so the warm key +
@@ -1021,6 +1101,15 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       finger.rotation.set(0, 0, FINGER_TILT);
     }
     spinner.rotation.z = p.spin * (1 - rest);
+    if (finger.visible) {
+      // world → ring space for the contact shadow; z flipped if needed so −z is the knuckle side (screen down)
+      pivot.updateMatrix();
+      spinner.updateMatrix();
+      _ringW.multiplyMatrices(pivot.matrix, spinner.matrix);
+      const zDown = _ringW.elements[9] > 0; // the ring axis' world y
+      SEAT.uToRing.value.copy(_ringW).invert();
+      if (!zDown) SEAT.uToRing.value.premultiply(_m.makeScale(1, 1, -1));
+    }
     // S06 table: scale = ring px per metre, origin at the contact line, x 0 = middle of the screen
     const tk = `${p.table.toFixed(3)}|${p.tableD.toFixed(1)}|${p.tableY.toFixed(4)}|${W}x${H}`;
     tableRoot.visible = p.table > 0.002;
@@ -1079,6 +1168,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     cornerLight.intensity = 14 * Math.min(1, Math.max(0, p.corner));
     coldEdge.intensity = 34 * Math.min(1, Math.max(0, p.edge));
     ROOM.uRest.value = rest * dsk;
+    SKIN.uSkin.value = Math.min(1, Math.max(0, p.skin));
     GLINT.uGlint.value = Math.min(1, Math.max(0, p.glint));
     if (GLINT.uGlint.value > 0 && deskPose) {
       const K = deskPose.lights.key;

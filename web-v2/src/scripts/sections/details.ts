@@ -180,7 +180,7 @@ const measureVh = () => (vhPx = view.h);
 /** the 3D ring on the finger goes up with the hand (it is not part of the photo) */
 export function detailsLeaveRing(x: number, ctx: Ctx): Pose {
   const L = layout(ctx);
-  const p = fingerPose(1, L, { shadow: 0 });
+  const p = fingerPose(1, L, { shadow: 0, skin: 1 });
   if (!vhPx) measureVh();
   const up = ctx.reduced ? 0 : (x * SPECS_TIN * vhPx) / L.H; // fraction of the height, y up
   // QA G-14: the ring (WebGL, not under the CSS fade) is gone before it reaches the navbar
@@ -268,6 +268,8 @@ function ringPose(u: number, ctx: Ctx, L: L6): Pose {
     w,
     // the finger proxy (occlusion) is on once the ring is over the fingertip, before it goes round it
     fing: b > 0.5 ? 1 : 0,
+    // QA27 D-01: the hand's light comes onto the ring as it nears the finger, full once it is seated
+    skin: b * (0.4 + 0.6 * slide),
   };
 }
 
@@ -281,7 +283,6 @@ export const details: SectionMotion = {
       card: q('[data-d-card]'),
       hand: q('[data-d-hand]'),
       ringed: q('[data-d-ringed]'),
-      seatShadow: q('[data-d-seat]'),
       head: q('[data-d-head]'),
       fits: q('[data-d-fits]'),
       progress: q('[data-d-progress]'),
@@ -334,7 +335,6 @@ export const details: SectionMotion = {
     // D-093 r1: the polished 3D ring stays on the finger (D-085); A-1b only without WebGL / reduced
     const live = document.documentElement.classList.contains('ring-ready');
     if (el.ringed) el.ringed.style.opacity = live ? '0' : seg(u, 6.6, 6.9).toFixed(3);
-    put(el.seatShadow, { o: live ? seg(u, SLIDE[1] - 0.2, SLIDE[1]) : 0 }, ctx);
     if (el.card) put(el.card, { o: (ctx.reduced ? (u >= 5 ? 1 : 0) : rise > 0 ? 1 : 0) * (1 - gone), y: -up }, ctx);
     put(el.hand, { o: 1, x: off.dx, y: off.dy }, ctx);
     // D-173, reduced motion / no WebGL: the still follows the fall — centred in the air (state 3), then

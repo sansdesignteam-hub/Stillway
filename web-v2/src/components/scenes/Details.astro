@@ -34,7 +34,6 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     <div class="det__card" data-d-card data-a>
       <div class="det__hand" data-d-hand>
         <Img src={hand} alt={d.alt.hand} sizes="(max-width: 719px) 60vw, 40vw" widths={[400, 579]} ready fallbackFormat="png" class="det__img" />
-        <i class="det__seat" data-d-seat aria-hidden="true"></i>
         <div class="det__ringed" data-d-ringed aria-hidden="true">
           <Img src={ringed} alt="" sizes="(max-width: 719px) 120vw, 90vw" widths={[800, 1254]} ready class="det__img" />
         </div>
@@ -192,18 +191,6 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     opacity: 0;
     -webkit-mask-image: radial-gradient(ellipse 8% 5.2% at 31.3% 33.1%, #000 62%, transparent 100%);
     mask-image: radial-gradient(ellipse 8% 5.2% at 31.3% 33.1%, #000 62%, transparent 100%);
-  }
-  /* contact shadow of the 3D ring on the finger, just under the band */
-  .det__seat {
-    position: absolute;
-    left: calc((343px - 62px) * var(--hs));
-    top: calc((360px + 22px) * var(--hs));
-    width: calc(124px * var(--hs));
-    height: calc(26px * var(--hs));
-    border-radius: 50%;
-    background: radial-gradient(closest-side, color-mix(in srgb, var(--cocoa-800) 42%, transparent), color-mix(in srgb, var(--cocoa-800) 16%, transparent) 60%, transparent 100%);
-    filter: blur(calc(3px * var(--hs)));
-    opacity: 0;
   }
   /* reduced motion / no WebGL: a polished still on the table (states 1–3) */
   .det__fb {

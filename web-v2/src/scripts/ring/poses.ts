@@ -51,6 +51,9 @@
  *        table's scale), tableY = the contact line (fraction from the centre, y up); tableShadow =
  *        0..1 the contact shadow under the ring on the table.
  * envRot: environment rotation (rad), S01 reflection movement (D-182).
+ * skin: 0..1 S06 ring on the finger (QA27 D-01): the ring takes the light of the hand photo (warm key
+ *       from the upper right, warm skin bounce on the lower and inner band); its contact shadow on the
+ *       finger is drawn on the finger proxy whenever the proxy is on (fing).
  * alpha: canvas opacity (the ring is the only object, so fading the canvas fades the ring).
  */
 export interface Pose {
@@ -103,6 +106,8 @@ export interface Pose {
   envRot: number;
   /** D-185: 0..1 warm specular highlight of the S01 desk lamp on the band (live ring only) */
   glint: number;
+  /** QA27 D-01: 0..1 the hand photo's light on the S06 ring (warm key + skin bounce) */
+  skin: number;
 }
 
 export const lerpPose = (a: Pose, b: Pose, t: number): Pose => {
@@ -148,4 +153,4 @@ export function along(u: number, frames: Array<[number, Pose]>): Pose {
   return frames[frames.length - 1][1];
 }
 
-export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, desk: 0, deskZoom: 1, rest: 0, fwd: 0, tiltX: 0, tiltY: 0, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, ledc: 0, flare: 0, custom: 0, finA: 0, finB: 0, finT: 0, lamp: 0, corner: 0, edge: 0, envDim: 0, blur: 0, table: 0, tableD: 0, tableY: 0, tableShadow: 0, alpha: 1, envRot: 0, glint: 0, ...p });
+export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, desk: 0, deskZoom: 1, rest: 0, fwd: 0, tiltX: 0, tiltY: 0, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, ledc: 0, flare: 0, custom: 0, finA: 0, finB: 0, finT: 0, lamp: 0, corner: 0, edge: 0, envDim: 0, blur: 0, table: 0, tableD: 0, tableY: 0, tableShadow: 0, alpha: 1, envRot: 0, glint: 0, skin: 0, ...p });
