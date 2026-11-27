@@ -205,4 +205,11 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
       width: auto;
     }
   }
+  /* QA27 M-14: short phones — the top sentences start higher, clear of "keeps the" and the ring */
+  @media (max-width: 719px) and (max-height: 660px) {
+    .why__left,
+    .why__final {
+      top: calc(var(--header-h) + 16px);
+    }
+  }
 </style>
