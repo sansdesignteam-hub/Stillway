@@ -268,7 +268,15 @@
 }
 @media (max-width: 719px) {
   :root {
-    --content-top: calc(var(--header-h) + var(--space-4));
+    /* D-192: the room between the navbar and the content at the top of a section, on phones only */
+    --nav-clearance-mobile: var(--space-6);
+    --content-top: calc(var(--header-h) + var(--nav-clearance-mobile));
     --content-bottom: var(--space-5);
+  }
+}
+/* short phones keep the earlier, tighter clearance: their copy has to clear the ring and the photos */
+@media (max-width: 719px) and (max-height: 660px) {
+  :root {
+    --nav-clearance-mobile: var(--space-4);
   }
 }

@@ -134,12 +134,13 @@ import AppPhone from '../AppPhone.astro';
   @media (max-width: 719px) {
     .scene--app {
       --hh: min(660px, calc(78 * var(--svh)), 165vw);
-      --p-cy: 49%;
+      /* D-192: the phone goes down with the text above it (which moved from header + 8 px to --content-top) */
+      --p-cy: calc(49% + var(--content-top) - var(--header-h) - 8px);
     }
     .ap__left {
       left: var(--margin);
       right: var(--margin);
-      top: calc(var(--header-h) + 8px);
+      top: var(--content-top);
       width: auto;
     }
     .ap__lstate {
