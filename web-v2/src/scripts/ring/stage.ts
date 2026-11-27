@@ -14,7 +14,7 @@ import { view } from '../viewport';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
-import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
+import { loadExr, closeExr } from './exr';
 import { RING_MODEL } from './model';
 import type { Pose } from './poses';
 import { heroBg } from '../../content/heroBg';
@@ -66,7 +66,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   let paperTex: THREE.Texture | null = null;
   let photoTex: THREE.Texture | null = null;
   try {
-    paperTex = await new EXRLoader().loadAsync(RING_MODEL.env.paper);
+    paperTex = await loadExr(RING_MODEL.env.paper); // D-191: decoded in a worker
     paperTex.mapping = THREE.EquirectangularReflectionMapping;
     envs.paper = pmrem.fromEquirectangular(paperTex).texture;
   } catch {
@@ -121,8 +121,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   };
   buildBlends();
   // night env after the first paint of the ring
-  setTimeout(() => loadEnv(RING_MODEL.env.night).then((e) => ((envs.night = e), (lastEnv = ''), lateAsset())).catch(() => {}), 300);
-  setTimeout(() => loadEnv(RING_MODEL.env.dusk).then((e) => ((envs.dusk = e), (lastEnv = ''), lateAsset())).catch(() => {}), 900);
+  setTimeout(() => loadEnv(RING_MODEL.env.night).then((e) => ((envs.night = e), (lastEnv = ''), lateAsset())).catch(() => {}).finally(closeExr), 300);
+  setTimeout(() => loadEnv(RING_MODEL.env.dusk).then((e) => ((envs.dusk = e), (lastEnv = ''), lateAsset())).catch(() => {}).finally(closeExr), 900);
   let lateAsset = () => {}; // set once prewarm exists (below)
   /** run in idle time; `left()` = ms left in this slice (Safari has no requestIdleCallback: 8 ms slices) */
   const idle = (fn: (left: () => number) => void) =>
@@ -130,7 +130,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       ? (window as any).requestIdleCallback((d: IdleDeadline) => fn(() => d.timeRemaining()), { timeout: 1500 })
       : setTimeout(() => { const t0 = performance.now(); fn(() => 8 - (performance.now() - t0)); }, 60);
   const loadEnv = (url: string) =>
-    new EXRLoader().loadAsync(url).then((t) => {
+    loadExr(url).then((t) => {
       t.mapping = THREE.EquirectangularReflectionMapping;
       const env = pmrem.fromEquirectangular(t).texture;
       t.dispose();
