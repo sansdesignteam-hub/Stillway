@@ -32,7 +32,7 @@ const stills = [
   <div class="scene__back">
     <canvas class="ft__light" data-f-light data-a aria-hidden="true"></canvas>
   </div>
-  {stills.map((s) => <img class="ring-fallback ft__fb" src={s.src} alt="" width="1024" height="1024" data-ring-fallback data-fb-range={s.range} data-a loading="lazy" decoding="async" />)}
+  {stills.map((s) => <img class="ring-fallback ft__fb" data-src={s.src} alt="" width="1024" height="1024" data-ring-fallback data-fb-range={s.range} data-a loading="lazy" decoding="async" />)}
   <div class="scene__front">
     <p class="sr-only">{d.alt}</p>
     <div class="ft__col" data-f-col>

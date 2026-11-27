@@ -19,6 +19,7 @@
  */
 import { view } from './viewport';
 import { keepLit, LIGHT } from './glow';
+import { fetchPictures, decodePictures, isStill } from './lazy';
 import { sections, dayparts, type SectionDef } from '../content/sections';
 import { clamp01, seg, lerp, put, window4, type Ctx } from './anim';
 import { lerpPose, type Pose } from './ring/poses';
@@ -101,6 +102,10 @@ interface Item {
   top: number; // px
   end: number; // states-1+hold
   visible: boolean;
+  /** QA27 G-19: pictures fetched / decoded / ring stills fetched (scripts/lazy.ts) */
+  fetched: boolean;
+  decoded: boolean;
+  stills: boolean;
 }
 
 export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) => void }) {
@@ -138,6 +143,9 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       top: 0,
       end: def.states - 1 + def.hold,
       visible: true,
+      fetched: false,
+      decoded: false,
+      stills: false,
     };
   });
 
@@ -205,6 +213,24 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     const tinX = cur.def.tin ? clamp01((u + cur.def.tin) / cur.def.tin) : 1; // 0..1 inside the connection
     const inConn = u < 0;
     const prev = items[ci - 1];
+
+    /* QA27 G-19: pictures two sections ahead are fetched, one section ahead decoded (both ways) */
+    for (let i = Math.max(0, ci - 2); i <= Math.min(items.length - 1, ci + 2); i++) {
+      const it = items[i];
+      if (!it.fetched) {
+        it.fetched = true;
+        fetchPictures(it.scene, (e) => !isStill(e));
+      }
+      if (!it.decoded && Math.abs(i - ci) <= 1) {
+        it.decoded = true;
+        decodePictures(it.scene);
+      }
+      // the ring stills only where they can show: no 3D ring (yet), around the current section
+      if (!ring && !it.stills && Math.abs(i - ci) <= 1) {
+        it.stills = true;
+        fetchPictures(it.scene, isStill);
+      }
+    }
 
     /* still poster of the ring (3D fallback/): while WebGL loads, if it fails, and for reduced motion */
     if (!ring) {
@@ -290,7 +316,7 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     else if (wipeY !== null) dark = k < 0.4;
     const theme = (!inConn && cur.m.theme?.(u)) || (dark ? 'dark' : 'light');
     if (nav && nav.dataset.theme !== theme) nav.dataset.theme = theme;
-    document.documentElement.dataset.surface = theme;
+    if (document.documentElement.dataset.surface !== theme) document.documentElement.dataset.surface = theme;
 
     /* clock: changes in the last 30% of a connection (Storyboard §3) */
     // QA G-15: in 02 → 03 the clock changes to 23:10 · Last night as the ground starts to go dark
@@ -390,6 +416,25 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       frame(); // first frame with the real pose, finish and env; the canvas fades in over 0.9 s
       document.documentElement.classList.add('ring-ready');
       setTimeout(() => document.documentElement.classList.add('ring-live'), 1000);
+      // QA27 G-19: every pose the story can ask for (sections, connections, both S10 options that
+      // change the shader), so the ring stage compiles its shader variants in idle time, not on scroll
+      setTimeout(() => {
+        const poses: Pose[] = [];
+        items.forEach((it, i) => {
+          const prev = items[i - 1];
+          if (prev && it.def.tin) {
+            const from = poseOf(prev, prev.end);
+            const to = poseOf(it, 0);
+            for (let x = 0; x <= 1.0001; x += 0.04) poses.push(it.m.ringIn ? it.m.ringIn(Math.min(1, x), ctx, from, to) : lerpPose(from, to, seg(x, 0.3, 0.7)));
+          }
+          for (let u = 0; u <= it.end + 0.0001; u += 0.1) poses.push(poseOf(it, Math.min(it.end, u)));
+          if (it.def.id === 'finishes') {
+            const p = poseOf(it, 0);
+            for (const fin of [0, 1, 2]) for (const lamp of [0, 1]) poses.push({ ...p, custom: 1, finA: fin, finB: fin, finT: 0, lamp });
+          }
+        });
+        r.prewarm(poses);
+      }, 1400);
     },
   };
 }

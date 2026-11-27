@@ -127,7 +127,11 @@ function initControls(r: HTMLElement) {
     if (note) note.textContent = '';
     r.dataset.lamp = choice.lampOn ? '1' : '0';
     // reduced motion / no WebGL: the still of the chosen finish
-    document.querySelectorAll<HTMLImageElement>('[data-fn-still], [data-cl-still]').forEach((img) => (img.src = d.finishes[i].still));
+    document.querySelectorAll<HTMLImageElement>('[data-fn-still], [data-cl-still]').forEach((img) => {
+      // QA27 G-19: a still that has not been fetched yet (the 3D ring is on) only takes the new URL
+      if (img.dataset.src !== undefined) img.dataset.src = d.finishes[i].still;
+      else img.src = d.finishes[i].still;
+    });
   };
   onChoice(sync);
 }

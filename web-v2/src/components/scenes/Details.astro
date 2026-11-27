@@ -33,15 +33,15 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     </div>
     <div class="det__card" data-d-card data-a>
       <div class="det__hand" data-d-hand>
-        <Img src={hand} alt={d.alt.hand} sizes="(max-width: 719px) 60vw, 40vw" widths={[400, 579]} ready fallbackFormat="png" class="det__img" />
+        <Img src={hand} alt={d.alt.hand} sizes="(max-width: 719px) 60vw, 40vw" widths={[400, 579]} defer fallbackFormat="png" class="det__img" />
         <div class="det__ringed" data-d-ringed aria-hidden="true">
-          <Img src={ringed} alt="" sizes="(max-width: 719px) 120vw, 90vw" widths={[800, 1254]} ready class="det__img" />
+          <Img src={ringed} alt="" sizes="(max-width: 719px) 120vw, 90vw" widths={[800, 1254]} defer class="det__img" />
         </div>
       </div>
     </div>
   </div>
 
-  <img class="ring-fallback det__fb" src="/ring-fallback/fb-s02-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-fb-range="0,6" data-d-fb data-a loading="lazy" decoding="async" />
+  <img class="ring-fallback det__fb" data-src="/ring-fallback/fb-s02-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-fb-range="0,6" data-d-fb data-a loading="lazy" decoding="async" />
 
   <div class="scene__front">
     <p class="sr-only">{d.alt.ring}</p>

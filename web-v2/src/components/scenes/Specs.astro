@@ -69,7 +69,7 @@ const EV = [
     {
       d.cards.map((c, i) => (
         <figure class="sp__card" data-s-card={i} data-a>
-          <Img src={img[c.key]} alt={c.alt} sizes="(max-width: 719px) 90vw, 42vw" widths={[480, 800, 1122]} ready class="sp__cardimg" />
+          <Img src={img[c.key]} alt={c.alt} sizes="(max-width: 719px) 90vw, 42vw" widths={[480, 800, 1122]} defer class="sp__cardimg" />
         </figure>
       ))
     }

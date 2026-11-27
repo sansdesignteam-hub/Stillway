@@ -34,7 +34,7 @@ const digits = Array.from({ length: 20 }, (_, i) => i % 10); // 0–9 twice: a d
       {
         d.frames.map((f) => (
           <div class="act__card" data-a-card data-a data-time={f.time}>
-            <Img src={srcs[f.key as keyof typeof srcs]} alt="" sizes="(max-width: 719px) 270px, 400px" widths={[540, 800, 1060]} ready />
+            <Img src={srcs[f.key as keyof typeof srcs]} alt="" sizes="(max-width: 719px) 270px, 400px" widths={[540, 800, 1060]} defer />
           </div>
         ))
       }

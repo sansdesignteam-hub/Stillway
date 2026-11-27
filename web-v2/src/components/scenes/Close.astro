@@ -22,7 +22,7 @@ import { close as d, finishes as f } from '../../content/copy';
     <div class="cl__glow" data-cl-glow data-a><canvas class="cl__light" data-cl-light aria-hidden="true"></canvas></div>
   </div>
   <!-- reduced motion / no WebGL: the polished still of the finish chosen in S10 -->
-  <img class="ring-fallback cl__fb" src={f.finishes[0].still} alt="" width="1024" height="1024" data-ring-fallback data-fb-range="0,1" data-cl-still data-a loading="lazy" decoding="async" />
+  <img class="ring-fallback cl__fb" data-src={f.finishes[0].still} alt="" width="1024" height="1024" data-ring-fallback data-fb-range="0,1" data-cl-still data-a loading="lazy" decoding="async" />
 
   <div class="scene__front">
     <div class="cl__track" data-cl-track>

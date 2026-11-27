@@ -476,8 +476,8 @@ const dialTicks = Array.from({ length: 49 }, (_, i) => {
   </div>
 
   <!-- z2: the hand and the phone (screen transparent); z3: fingertips over the bezel -->
-  <img class="ap__hand" src={hand1600.src} srcset={`${hand1600.src} 1067w, ${hand2400.src} 1600w`} sizes="(max-width: 719px) 440px, 640px" width="1600" height="2400" alt="" decoding="async" />
-  <img class="ap__front" src={front1600.src} srcset={`${front1600.src} 1067w, ${front2400.src} 1600w`} sizes="(max-width: 719px) 440px, 640px" width="1600" height="2400" alt="" decoding="async" />
+  <img class="ap__hand" data-src={hand1600.src} data-srcset={`${hand1600.src} 1067w, ${hand2400.src} 1600w`} sizes="(max-width: 719px) 440px, 640px" width="1600" height="2400" alt="" decoding="async" />
+  <img class="ap__front" data-src={front1600.src} data-srcset={`${front1600.src} 1067w, ${front2400.src} 1600w`} sizes="(max-width: 719px) 440px, 640px" width="1600" height="2400" alt="" decoding="async" />
 </div>
 
 <style>

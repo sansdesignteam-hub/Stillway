@@ -206,6 +206,11 @@ html.js .scene--close .scene__front {
   }
 }
 
+/* QA27 G-19: a picture whose URL is still held back (scripts/lazy.ts) shows nothing, not its alt text */
+.scene img:not([src]):not([srcset]) {
+  visibility: hidden;
+}
+
 /* ---------- ring stills (3D fallback/): between the back and front layers ---------- */
 .ring-fallback {
   position: absolute;
