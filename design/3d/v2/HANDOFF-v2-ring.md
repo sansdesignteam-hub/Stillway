@@ -233,3 +233,25 @@ Pengguna memilih ring V1 yang glossy untuk S01: pantulan lumut dan bayangan di b
 - Env: Silver/Black memakai `paperPolished`, Gold memakai `lamp` (D-069). Night memakai `nightPolished`.
 - Render pembanding (`renders/polished-finishes/`): `sheet-blender.png` dan `sheet-web.png` (baris Paper polished / Lamp / Night polished × kolom Silver / Black / Gold), dengan file per finish dan env `blender-*-polished-*.png` dan `web-*-polished-*.png`.
 - Cadangan S10 (`fallback/`): `fb-s10-silver-polished`, `fb-s10-black-polished`, `fb-s10-gold-polished` (PNG 1024 transparan + WebP, 24–26 KB). Versi brushed lama tetap ada.
+
+## QA G-18: tepi grafir "Stillway" (27 November 2026)
+
+Penyebab (direproduksi di S03, `origin/Developer` 483dc7f, 1440×900 DPR 2): dinding ukiran tegak 0,10 mm bertepi tajam tampil sebagai irisan di bawah 1 px, sehingga jadi garis putih putus-putus.
+
+Perbaikan di model: bibir membulat radius **0,04 mm** (3 segmen) di tepi huruf, dengan custom normal kontinu dari permukaan ke dinding. Garis huruf di dasar ukiran, kedalaman 0,10 mm, dan posisi (D-071) tetap. Bibir memakai `Ring_Silver_Engrave`, sehingga nama mesh dan material tidak berubah. Di permukaan, huruf tampak sekitar 0,04 mm lebih lebar di tiap sisi.
+
+| File | Sebelum | Sesudah |
+| --- | --- | --- |
+| `stillway-ring-v2-silver_web.glb` | 150.944 B | 133.228 B (−17.716) |
+| `stillway-ring-v2-silver-polished_web.glb` | 120.496 B | 103.524 B (−16.972) |
+
+Vertex `Ring_Shell` naik (±15,2 rb → ±19 rb); file tetap lebih kecil setelah ekspor Draco ulang.
+
+**Pasang (Developer):** salin `design/3d/v2/stillway-ring-v2-silver_web.glb` ke `web-v2/public/models/` (nama sama). Tidak ada perubahan kode wajib.
+
+**Catatan web (opsional):** masih ada sedikit tangga piksel atau titik di bagian tertipis pada sudut sangat miring. Itu aliasing shading pada highlight kontras: MSAA hanya menghaluskan siluet, dan DPR desktop sudah 2. Bila masih terlihat di perangkat asli, coba naikkan roughness `engrave` untuk S03 (0,38 → ±0,45). Ini belum diuji.
+
+**Belum diubah:** gambar cadangan di `fallback/` masih memakai ukiran lama.
+
+Bukti (kiri sebelum, kanan sesudah): `renders/g18/` (S03 gelap depan dan samping, S02 terang, render Blender `Cam_LogoCloseup`).
+Membangun ulang: `ring-engrave-bevel.py` (sudah diterapkan di `.blend`; mesh lama disimpan sebagai `Ring_Shell_pre_g18`), ekspor dengan `ring-export-web.py`.
