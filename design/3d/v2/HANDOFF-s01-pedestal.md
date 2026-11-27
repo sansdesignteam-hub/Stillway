@@ -70,6 +70,12 @@ Hanya `still-s01(-mobile)-3632.png` dan `ring-overlay-s01(-mobile)-3632` yang be
 - Bukti: `renders/s01-plate/s01-ring-poster-vs-live-D182b.jpg` (kiri poster baru, kanan crop ring hidup dari `D182_poster_left_live_right.jpg`; crop tidak diregistrasi piksel).
 - Belum diuji di web (cross-fade) dan 375 tidak disetel ke angka ring hidup ponsel (p50 66). Di crop bukti, ring hidup tampak lebih sempit daripada poster; pose tidak diubah, Developer perlu memeriksa apakah itu ayunan/tilt saat capture.
 
+### D-182d: grade ulang ke ring hidup terukur (menggantikan angka D-182b)
+
+Kurva saja, tanpa render ulang; desktop dan ponsel punya kurva sendiri. Nama file sama; plate, GLB, pose tetap. Sumber target: `d182c-poster/README.md` (Developer), ring diam, ayunan netral: live 1440 23/45/64/142/188, 375 23/45/65/142/188. Target D-182b (p50 100) diambil dari kondisi yang keliru.
+
+Diukur di sini (pass ring, frame diam desktop): desktop **27/47/66/146/194**, ponsel **27/47/67/145/195**. Angka ini sengaja di atas target karena mask Developer membaca poster `f59c740` beberapa tingkat lebih rendah daripada ukuran di sini; perkiraan dalam ukuran Developer = angka live, belum diverifikasi di web. `s01-ring-poster-vs-live-D182b.jpg` sudah usang.
+
 ### File
 
 Semua 3632×2072, frame dan kamera sama dengan foto latar. Folder `plate/`:

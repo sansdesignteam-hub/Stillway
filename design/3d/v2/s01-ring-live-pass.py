@@ -17,7 +17,11 @@ ped, PASS = pb.ped, pb.PASS
 WEB_PHOTO = HERE + "/env/hero-env-warm.jpg"
 if not os.path.exists(WEB_PHOTO):
     WEB_PHOTO = os.path.join(HERE, "../../../../Developer/web-v2/public/env/hero-env-warm.jpg")
-TARGET = (33, 50, 100, 155, 245)          # live ring luma p05..p95 (D-182)
+# D-182d: live ring at rest, neutral sway (Developer d182c-poster README): 1440 23/45/64/142/188,
+# 375 23/45/65/142/188. The Developer's mask reads the f59c740 poster a few levels lower than stats() here
+# (28/48/98/151/236 vs 33/50/100/155/245; 375 29/48/98/153/225 vs 33/50/100/156/240), so the targets below
+# are the live numbers converted to this file's measure by that same offset.
+TARGET = {"": (27, 47, 66, 146, 194), "m": (27, 47, 67, 145, 195)}
 TARGET_RGB = np.array([120, 108, 99], np.float32)   # live mean colour (D-182, middle of the sway range)
 
 
@@ -145,25 +149,25 @@ def apply(rgba, xs, ys, gain):
 
 def grade():
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    raw = pb.load(f"{PASS}/RG_lin.png")
-    p, mean = stats(raw)
-    print("PLATE raw ring", [round(v) for v in p], mean.round())
-    xs = [0] + p + [255]; ys = [0] + list(TARGET) + [255]
-    gain = np.ones(3, np.float32)
-    for _ in range(6):          # curve and tint interact (clipping, interpolation): iterate
-        out = apply(raw, xs, ys, gain)
-        q, mean = stats(out)
-        ratio = TARGET_RGB / mean
-        gain = gain * (ratio / (ratio @ LUMA))     # hue only; the curve owns the level
-        q, mean = stats(apply(raw, xs, ys, gain))
-        ys = [0] + [float(y + (t - v)) for y, v, t in zip(ys[1:-1], q, TARGET)] + [255]
-        ys = list(np.maximum.accumulate(ys))
     for sfx in ("", "m"):
-        out = apply(pb.load(f"{PASS}/RG{sfx}_lin.png"), xs, ys, gain)
+        raw = pb.load(f"{PASS}/RG{sfx}_lin.png")
+        target = TARGET[sfx]
+        p, mean = stats(raw)
+        print("PLATE raw ring", sfx or "desktop", [round(v) for v in p], mean.round())
+        xs = [0] + p + [255]; ys = [0] + list(target) + [255]
+        gain = np.ones(3, np.float32)
+        for _ in range(8):          # curve and tint interact (clipping, interpolation): iterate
+            q, mean = stats(apply(raw, xs, ys, gain))
+            ratio = TARGET_RGB / mean
+            gain = gain * (ratio / (ratio @ LUMA))     # hue only; the curve owns the level
+            q, mean = stats(apply(raw, xs, ys, gain))
+            ys = [0] + [float(y + (t - v)) for y, v, t in zip(ys[1:-1], q, target)] + [255]
+            ys = list(np.maximum.accumulate(ys))
+        out = apply(raw, xs, ys, gain)
         pb.save(out, f"{PASS}/RG{sfx}.png")
         q, mean = stats(out)
         print("PLATE ring", sfx or "desktop", [round(v) for v in q], mean.round())
-    print("PLATE curve", [round(float(v)) for v in xs], [round(float(v)) for v in ys], gain)
+        print("PLATE curve", sfx or "desktop", [round(float(v)) for v in xs], [round(float(v)) for v in ys], gain)
 
 
 if __name__ == "__main__":
