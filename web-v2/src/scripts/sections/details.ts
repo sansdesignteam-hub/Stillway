@@ -16,7 +16,8 @@
  *              tumble settles progressively into the finger's orientation over the fingertip (6)
  *  5.6 → 6.7   one smooth move from the fingertip down to the seat (onFinger pose, finger proxy)
  *  6.85 → 7.2  "Then, it just fit." and the S06 body appear (hidden through the fall); (D-157: no tag)
- *  > END to S07 (specs.ts drives the card shrink through this module's update)
+ *  > END to S07 (D-192): a crossfade — the hand with the ring slides down and out, the text up and
+ *        out, both fading, and then "Through the day." (specs.ts) fades in
  * The hand photo's cut bottom is always below the viewport (and melted into Paper), on every screen.
  */
 import { view } from '../viewport';
@@ -169,23 +170,28 @@ function fingerPose(slide: number, L: ReturnType<typeof layout>, extra: Partial<
 }
 
 /**
- * 06 → 07 (D-147): a plain scroll, like 02 → 03 — the hand with the 3D ring on it and
- * "Then, it just fit." go up 1:1 with the page, no fade, blur or scale. The connection is long
- * enough (S07 tin) for the whole photo to leave; its melted bottom keeps the cut out of sight.
+ * 06 → 07 (D-192, replaces the plain scroll of D-147): x = 0..1 of the connection. The hand with the
+ * ring on it slides down and out, "Then, it just fit." slides up and out, both fading; all of it is
+ * gone at 60%, then "Through the day." fades in (specs.ts). Transform and opacity only, and a pure
+ * function of the scroll, so it plays the same backwards.
  */
 const SPECS_TIN = sections.find((d) => d.id === 'specs')!.tin;
-let vhPx = 0;
-const measureVh = () => (vhPx = view.h);
+const LEAVE = {
+  move: (x: number) => seg(x, 0, 0.62),
+  o: (x: number) => 1 - seg(x, 0.1, 0.6),
+  /** travel, fractions of the screen height: the fingertip (≈ 48%) ends below the screen */
+  hand: 0.5,
+  text: 0.18,
+};
 
-/** the 3D ring on the finger goes up with the hand (it is not part of the photo) */
+/** the 3D ring leaves with the hand (it is not part of the photo): the pose stays the seated one and
+ * the whole canvas (ring, finger proxy, contact shadow) is moved and faded by exactly what the photo
+ * is, so nothing can slide against the finger */
 export function detailsLeaveRing(x: number, ctx: Ctx): Pose {
   const L = layout(ctx);
   const p = fingerPose(1, L, { shadow: 0, skin: 1 });
-  if (!vhPx) measureVh();
-  const up = ctx.reduced ? 0 : (x * SPECS_TIN * vhPx) / L.H; // fraction of the height, y up
-  // QA G-14: the ring (WebGL, not under the CSS fade) is gone before it reaches the navbar
-  const fromTop = (0.5 - (p.y + up)) * L.H;
-  return { ...p, y: p.y + up, fy: p.fy + up, alpha: ctx.reduced ? 1 - seg(x, 0.3, 0.6) : seg(fromTop, 80, 180) };
+  if (ctx.reduced) return { ...p, alpha: 1 - seg(x, 0.3, 0.6) };
+  return { ...p, drop: LEAVE.move(x) * LEAVE.hand * L.H, alpha: LEAVE.o(x) };
 }
 
 /** the pine table GLB (D-146) in the ring stage: at the same contact line and scale as the ring */
@@ -289,15 +295,14 @@ export const details: SectionMotion = {
       fb: q('[data-d-fb]'),
     };
     steps = [...r.querySelectorAll<HTMLElement>('[data-d-step]')];
-    measureVh();
-    window.addEventListener('resize', measureVh);
     ticks = [...r.querySelectorAll<HTMLElement>('[data-d-tick]')];
   },
   update(u, ctx) {
     const L = setVars(ctx);
-    // 06 → 07 (D-147): everything still on screen goes up with the page, 1:1 (reduced motion fades)
-    const up = ctx.reduced ? 0 : Math.max(0, u - DETAILS_END) * vhPx;
-    const gone = ctx.reduced ? seg(u, DETAILS_END, DETAILS_END + 0.3) : 0;
+    // 06 → 07 (D-192): the hand goes down, the text goes up, both fade (reduced motion: a fade only)
+    const x = clamp01((u - DETAILS_END) / SPECS_TIN);
+    const kept = ctx.reduced ? 1 - seg(u, DETAILS_END, DETAILS_END + 0.3) : LEAVE.o(x);
+    const move = ctx.reduced ? 0 : LEAVE.move(x) * L.H;
     // the table: in with the end of the connection, out once the ring is in the hand
     // (the CSS stand-in table, until the GLB is in) rises with the same timing as the GLB table
     const tableIn = ctx.reduced ? (u >= -0.5 ? 1 : 0) : seg(u, -0.55, -0.15);
@@ -323,7 +328,7 @@ export const details: SectionMotion = {
     });
     // D-173: hidden through the fall and the fitting; in once the ring has seated
     const fits = ctx.reduced ? (u >= 7 ? 1 : 0) : seg(u, TEXT[0], TEXT[1]);
-    put(el.fits, { o: fits * (1 - gone), y: (1 - fits) * 16 - up }, ctx);
+    put(el.fits, { o: fits * kept, y: (1 - fits) * 16 - move * LEAVE.text }, ctx);
     put(el.progress, { o: window4(u, -0.3, 0.05, 2.4, 2.6) }, ctx);
     const on = Math.min(3, Math.max(0, Math.round(u)));
     ticks.forEach((t, i) => t.classList.toggle('is-on', i === on));
@@ -335,7 +340,7 @@ export const details: SectionMotion = {
     // D-093 r1: the polished 3D ring stays on the finger (D-085); A-1b only without WebGL / reduced
     const live = document.documentElement.classList.contains('ring-ready');
     if (el.ringed) el.ringed.style.opacity = live ? '0' : seg(u, 6.6, 6.9).toFixed(3);
-    if (el.card) put(el.card, { o: (ctx.reduced ? (u >= 5 ? 1 : 0) : rise > 0 ? 1 : 0) * (1 - gone), y: -up }, ctx);
+    if (el.card) put(el.card, { o: (ctx.reduced ? (u >= 5 ? 1 : 0) : rise > 0 ? 1 : 0) * kept, y: move * LEAVE.hand }, ctx);
     put(el.hand, { o: 1, x: off.dx, y: off.dy }, ctx);
     // D-173, reduced motion / no WebGL: the still follows the fall — centred in the air (state 3), then
     // over the fingertip as the hand comes up (state 4); A-1b (ring on the hand) takes over at the seat

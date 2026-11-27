@@ -1128,6 +1128,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const Z_AXIS = new THREE.Vector3(0, 0, 1);
   const X_AXIS = new THREE.Vector3(1, 0, 0);
   let lastAlpha = -1;
+  let lastDrop = 0;
   let lastBlur = 0;
   let lastEnv = '';
   let lastLedKey = '';
@@ -1416,6 +1417,12 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     if (p.alpha !== lastAlpha) {
       lastAlpha = p.alpha;
       canvas.style.opacity = String(p.alpha);
+    }
+    // 06 → 07 (D-192): the canvas goes down with the hand photo (a compositor move, the picture is the same)
+    const dr = Math.round(p.drop * 10) / 10;
+    if (dr !== lastDrop) {
+      lastDrop = dr;
+      canvas.style.transform = dr ? `translate3d(0, ${dr}px, 0)` : '';
     }
     // 03 → 04 lens (D-138): the camera passes through the hole, the ring goes soft
     const bl = Math.round(Math.max(0, p.blur) * 10) / 10;

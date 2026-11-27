@@ -1,8 +1,8 @@
 /**
  * S07 Specs & benefits — 21:00 · Sand → the everyday photo (D-149, Figma Design 07 State 1–7 with
  * the user's notes; Specs.astro has the layout).
- * u: -1.6..0 connection from S06 (D-147, unchanged: the hand goes up 1:1 — details.ts — and
- *          "Through the day." comes in at the end)
+ * u: -1.6..0 connection from S06 (D-192, a crossfade: the S06 hand and text leave in its first 60% —
+ *          details.ts — then "Through the day." fades in)
  *  0     State 1  "Through the day." in the middle
  *  0 → 1 State 2  the words part and shrink to fit beside the row (D-172); the four cards scale up
  *                 and fade in where they stand, left to right
@@ -391,7 +391,7 @@ export const specs: SectionMotion = {
     const { W, H, m, k } = L;
     const vh = vhPx || H;
     const out = seg(u, END, END + 0.3); // leaving for S08
-    const inn = seg(u, -0.3, 0); // 70–100 % of the incoming connection (D-147)
+    const inn = seg(u, -0.62, -0.15); // D-192: fades in once the S06 hand and text have gone
 
     /* ----- States 1–2: the words ----- */
     const split = seg(u, 0.1, 0.62); // D-172: the words are apart before the cards come in
@@ -411,8 +411,8 @@ export const specs: SectionMotion = {
       const h = wordH * sc;
       const y0 = lerp(L.cy - wordH, L.cy - rowH / 2 - 12 - h, split);
       const y1 = lerp(L.cy, L.cy + rowH / 2 + 12, split);
-      tf(words[0], inn * (1 - leave), tsl(W / 2 - (w0 * sc) / 2, y0 + (1 - inn) * 20, sc));
-      tf(words[1], inn * (1 - leave), tsl(W / 2 - (w1 * sc) / 2, y1 + (1 - inn) * 20, sc));
+      tf(words[0], inn * (1 - leave), tsl(W / 2 - (w0 * sc) / 2, y0, sc));
+      tf(words[1], inn * (1 - leave), tsl(W / 2 - (w1 * sc) / 2, y1, sc));
     } else {
       // State 1: one line centred on the stack line; State 2: 'Through' at the left margin, 'the
       // day.' at the right one, each scaled to fit the room between the margin and the row (20 px air)
@@ -422,7 +422,7 @@ export const specs: SectionMotion = {
       const s0 = W / 2 - (w0 + space + w1) / 2;
       const x0 = lerp(s0, margin, split);
       const x1 = lerp(s0 + w0 + space, W - margin - w1 * sc, split);
-      const y = L.cy - (wordH * sc) / 2 + (1 - inn) * 20;
+      const y = L.cy - (wordH * sc) / 2;
       tf(words[0], inn * (1 - leave), tsl(x0, y, sc));
       tf(words[1], inn * (1 - leave), tsl(x1, y, sc));
     }
@@ -532,6 +532,6 @@ export const specs: SectionMotion = {
   },
   // no 3D ring in S07 (it is only in the card photos)
   ring: () => pose({ x: 0.2, y: 0, w: 0.1, alpha: 0 }),
-  // 06 → 07 (D-147): the ring stays on the finger and leaves with the hand, 1:1
+  // 06 → 07 (D-192): the ring stays on the finger and leaves with the hand
   ringIn: (x, ctx) => detailsLeaveRing(x, ctx),
 };

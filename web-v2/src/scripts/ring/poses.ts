@@ -55,6 +55,7 @@
  *       from the upper right, warm skin bounce on the lower and inner band); its contact shadow on the
  *       finger is drawn on the finger proxy whenever the proxy is on (fing).
  * alpha: canvas opacity (the ring is the only object, so fading the canvas fades the ring).
+ * drop: the canvas moved down by this many CSS px (06 → 07, D-192: the ring leaves with the hand photo).
  */
 export interface Pose {
   x: number;
@@ -102,6 +103,8 @@ export interface Pose {
   tableY: number;
   tableShadow: number;
   alpha: number;
+  /** D-192: CSS translate of the ring canvas, px down */
+  drop: number;
   /** D-182: turn of the environment about the vertical axis (rad): the moving reflections of S01 */
   envRot: number;
   /** D-185: 0..1 warm specular highlight of the S01 desk lamp on the band (live ring only) */
@@ -153,4 +156,4 @@ export function along(u: number, frames: Array<[number, Pose]>): Pose {
   return frames[frames.length - 1][1];
 }
 
-export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, desk: 0, deskZoom: 1, rest: 0, fwd: 0, tiltX: 0, tiltY: 0, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, ledc: 0, flare: 0, custom: 0, finA: 0, finB: 0, finT: 0, lamp: 0, corner: 0, edge: 0, envDim: 0, blur: 0, table: 0, tableD: 0, tableY: 0, tableShadow: 0, alpha: 1, envRot: 0, glint: 0, skin: 0, ...p });
+export const pose = (p: Partial<Pose>): Pose => ({ x: 0, y: 0, w: 0.34, rx: 0, ry: 0, rz: 0, spin: 0, roll: 0, light: 0, dusk: 0, rim: 0, warm: 0, photo: 0, uncap: 0, led: 0, gloss: 1, shadow: 0, desk: 0, deskZoom: 1, rest: 0, fwd: 0, tiltX: 0, tiltY: 0, pitch: 0, fing: 0, fx: 0, fy: 0, fs: 1, ledc: 0, flare: 0, custom: 0, finA: 0, finB: 0, finT: 0, lamp: 0, corner: 0, edge: 0, envDim: 0, blur: 0, table: 0, tableD: 0, tableY: 0, tableShadow: 0, alpha: 1, drop: 0, envRot: 0, glint: 0, skin: 0, ...p });
