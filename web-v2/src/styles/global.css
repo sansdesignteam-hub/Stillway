@@ -170,6 +170,13 @@ html[data-surface='photo'],
 .scene button {
   pointer-events: auto;
 }
+/* D-191: a section is laid out when story.ts raises it ([data-up]): the first frame is the hero's
+   alone, the others follow one per turn right after it. Only while motion is going to run: without
+   JS, with reduced motion, or if the script never starts (Base.astro takes motion-ready away after
+   2.5 s) every scene is laid out as before. */
+html.motion-ready .scene:not(.scene--hero):not([data-up]) {
+  display: none;
+}
 /* until story.ts runs, only the hero shows (no JS: everything stacks, see .no-story) */
 html.js .scene [data-a] {
   opacity: 0;

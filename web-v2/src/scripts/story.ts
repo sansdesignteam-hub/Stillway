@@ -102,6 +102,8 @@ interface Item {
   top: number; // px
   end: number; // states-1+hold
   visible: boolean;
+  /** D-191: laid out and initialised (see `raise`) */
+  up: boolean;
   /** QA27 G-19: pictures fetched / decoded / ring stills fetched (scripts/lazy.ts) */
   fetched: boolean;
   decoded: boolean;
@@ -134,7 +136,6 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
   const items: Item[] = sections.map((def) => {
     const m = motions[def.id] ?? placeholder;
     const scene = document.querySelector<HTMLElement>(`[data-scene="${def.id}"]`)!;
-    m.init?.(scene);
     return {
       def,
       m,
@@ -143,11 +144,31 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       top: 0,
       end: def.states - 1 + def.hold,
       visible: true,
+      up: false,
       fetched: false,
       decoded: false,
       stills: false,
     };
   });
+
+  /* D-191: the first layout of the page is the hero's alone. Until a section is "raised" its scene is
+     display: none (global.css, html.motion-ready .scene:not([data-up])), so the browser neither styles
+     nor lays out the ten sections nobody can see yet in the task that paints the first frame. Raising
+     = show it to layout and run its init, as before. The sections around the scroll position are
+     raised before the first frame; the others follow one per turn right after it, each laid out in
+     its own short task instead of all in one long one. The pictures on screen are the same: a waiting
+     scene had opacity 0 / visibility hidden anyway. */
+  const raise = (it: Item) => {
+    if (it.up) return;
+    it.up = true;
+    it.scene.setAttribute('data-up', '');
+    it.m.init?.(it.scene);
+  };
+  const raiseAll = () => {
+    if (items.every((it) => it.up)) return;
+    items.forEach(raise);
+    measure();
+  };
 
   let vh = view.h;
   const measure = () => {
@@ -254,6 +275,10 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       if (show !== it.visible) {
         it.visible = show;
         it.scene.style.visibility = show ? '' : 'hidden';
+      }
+      if (show && !it.up) {
+        raise(it); // a jump ahead of the queue below
+        measure();
       }
       if (show && it.m.update) it.m.update(snap(it, (y - it.top) / vh - it.def.tin), ctx, it.scene);
     });
@@ -398,8 +423,6 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     }
   };
 
-  measure();
-  frame();
   const onResize = () => {
     measure();
     lastPoseKey = '';
@@ -407,15 +430,45 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     // the ring stage resizes (and clears) its canvas after this listener: draw once more
     requestAnimationFrame(() => (lastPoseKey = ''));
   };
-  window.addEventListener('resize', onResize);
-  mq.addEventListener('change', onResize);
-  document.fonts?.ready.then(onResize);
+  /* A section's init may size its own track (S10 on phones) and registers its own resize / font
+     listeners, which have to run before this file measures. So: the sections around the scroll
+     position first, then measure, then the first frame; the rest one per turn, measuring after each;
+     and this file's listeners only once every section has registered its own. */
+  measure();
+  {
+    let ci = 0;
+    for (let i = 0; i < items.length; i++) if (window.scrollY >= items[i].top - 0.5) ci = i;
+    for (let i = Math.max(0, ci - 1); i <= Math.min(items.length - 1, ci + 1); i++) raise(items[i]);
+  }
+  measure();
+  frame();
+  {
+    const rest = items.filter((it) => !it.up);
+    const next = () => {
+      const it = rest.shift();
+      if (!it) {
+        window.addEventListener('resize', onResize);
+        mq.addEventListener('change', onResize);
+        document.fonts?.ready.then(onResize);
+        onResize(); // also covers a resize in the moments before the listeners were on
+        return;
+      }
+      if (!it.up) {
+        raise(it);
+        void it.scene.offsetHeight; // its layout now, in this turn, not pooled into the next frame
+        measure();
+      }
+      setTimeout(next, 0);
+    };
+    setTimeout(next, 0);
+  }
   opts.subscribe(frame);
 
   return {
     frame,
     async setRing(r: RingStage) {
       // D-191: programs and textures of the first frame are prepared in short turns, then it is drawn
+      raiseAll(); // poses of every section are asked for from here on
       priming = r;
       frame();
       if (primed) await r.prime(primed.pose, { breathe: primed.breathe }).catch(() => {});
