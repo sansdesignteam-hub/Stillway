@@ -10,6 +10,7 @@
  * Finish changes only by click (D-069). The button shows an inline note (role="status"), no cart
  * (D-074). CTA = btn-primary (Ink), hover btn-primary-hover (D-134). Motion and controls: scripts/sections/finishes.ts.
  */
+import Button from '../Button.astro';
 import { finishes as d } from '../../content/copy';
 ---
 
@@ -83,7 +84,7 @@ import { finishes as d } from '../../content/copy';
           </div>
         </div>
         <p class="fn__muted fn__box">{d.trial} · {d.box}</p>
-        <button type="button" class="fn__cta" data-fn-cta>{d.button(d.finishes[0].name)}</button>
+        <Button class="fn__cta" label={d.button(d.finishes[0].name)} variant="paper" data-fn-cta />
         <p class="fn__note" data-fn-note role="status" aria-live="polite"></p>
       </div>
     </div>
@@ -340,27 +341,9 @@ import { finishes as d } from '../../content/copy';
     border-color: var(--ink);
     background: var(--paper);
   }
-  .fn__cta {
+  /* the shared pill (nav.css), across the panel */
+  .fn__panel :global(.fn__cta) {
     width: 100%;
-    height: 52px;
-    border-radius: var(--radius-pill);
-    border: 0;
-    background: var(--ink); /* btn-primary */
-    color: var(--paper);
-    font: inherit;
-    /* Buttons/Medium */
-    font-weight: var(--w-label);
-    font-size: var(--t-btn-md-size);
-    line-height: var(--t-btn-md-lh);
-    letter-spacing: var(--t-btn-md-ls);
-    cursor: pointer;
-    transition: transform 0.15s ease, background 0.2s;
-  }
-  .fn__cta:hover {
-    background: var(--btn-primary-hover);
-  }
-  .fn__cta:active {
-    transform: scale(0.99);
   }
   .fn__note {
     min-height: 1.4em;
@@ -425,8 +408,9 @@ import { finishes as d } from '../../content/copy';
       width: 32px;
       height: 32px;
     }
-    .fn__cta {
-      height: 44px;
+    .fn__panel :global(.fn__cta) {
+      --dot: 34px;
+      min-height: 44px;
     }
     /* as on phones: the chosen finish is named above, the swatch names stay for screen readers */
     .fn__swatch span {
@@ -538,8 +522,9 @@ import { finishes as d } from '../../content/copy';
     .fn__sizes button {
       height: 36px;
     }
-    .fn__cta {
-      height: 46px;
+    .fn__panel :global(.fn__cta) {
+      --dot: 36px;
+      min-height: 46px;
     }
   }
   /* QA27 M-15: large phones / small tablets (the one-column layout) keep a 24 px margin */

@@ -157,20 +157,27 @@
 .site-header[data-theme='photo'] .clock__part {
   opacity: 0.85;
 }
+/* ---------- button (after ayocin.com) ----------
+   QA27 HE-09: --btn-bg is the pill at rest, --btn-dot the contrasting colour. The circle widens to
+   fill the pill, so on hover the pill is --btn-dot (never the colour of the ground behind it), the
+   label turns to --btn-bg and the one arrow stays on it. Light grounds: light pill, dark circle;
+   dark grounds: dark pill, light circle. */
+.btn,
+.btn--paper,
+.site-header .nav-cta {
+  --btn-bg: var(--paper);
+  --btn-dot: var(--ink);
+}
+.btn--ink,
 .site-header[data-theme='dark'] .nav-cta,
 .site-header[data-theme='photo'] .nav-cta {
-  --btn-bg: var(--paper);
-  --btn-ink: var(--ink);
-  --btn-dot: var(--ink);
-  --btn-dot-ink: var(--paper);
-}
-
-/* ---------- button (after ayocin.com, V1) ---------- */
-.btn {
   --btn-bg: var(--ink);
-  --btn-ink: var(--paper);
   --btn-dot: var(--paper);
-  --btn-dot-ink: var(--ink);
+}
+.btn {
+  --dot: 42px;
+  --pad: 5px;
+  --fill: 0.8s cubic-bezier(0.77, 0, 0.18, 1);
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -179,94 +186,95 @@
   justify-content: space-between;
   gap: 18px;
   min-height: 52px;
-  padding: 5px 5px 5px 24px;
+  padding: var(--pad) var(--pad) var(--pad) 24px;
+  border: 0;
   border-radius: 999px;
   background: var(--btn-bg);
-  color: var(--btn-ink);
+  /* a hairline keeps the resting pill apart from a ground of nearly its own colour */
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--btn-dot) 22%, transparent);
+  color: var(--btn-dot);
   /* Buttons/Medium */
   font: var(--w-label) var(--t-btn-md-size) / var(--t-btn-md-lh) var(--font-sans);
   letter-spacing: var(--t-btn-md-ls);
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
   pointer-events: auto;
   transition: transform 0.4s var(--ease-out), background-color 0.5s var(--ease-out), color 0.5s var(--ease-out);
 }
+/* the circle: behind the arrow at rest, the whole pill on hover */
 .btn::before {
   content: '';
   position: absolute;
   z-index: -1;
-  right: 5px;
-  top: 50%;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
+  top: var(--pad);
+  right: var(--pad);
+  bottom: var(--pad);
+  left: calc(100% - var(--pad) - var(--dot));
+  border-radius: 999px;
   background: var(--btn-dot);
-  transform: translateY(-50%) scale(1);
-  transition: transform 0.7s cubic-bezier(0.7, 0, 0.2, 1);
+  transition:
+    top var(--fill),
+    right var(--fill),
+    bottom var(--fill),
+    left var(--fill);
 }
 .btn__label {
-  transition: color 0.45s cubic-bezier(0.7, 0, 0.2, 1);
+  transition: color var(--fill);
 }
 .btn__icon {
-  position: relative;
   flex: none;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  color: var(--btn-dot-ink);
-  overflow: hidden;
+  display: grid;
+  place-items: center;
+  width: var(--dot);
+  height: var(--dot);
+  color: var(--btn-bg);
 }
 .btn__arrow {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  margin: -7.5px 0 0 -7.5px;
-  transition: transform 0.55s cubic-bezier(0.7, 0, 0.2, 1);
-}
-.btn__arrow--next {
-  transform: translateX(-30px);
+  transition: transform var(--fill);
 }
 .btn:hover::before,
 .btn:focus-visible::before {
-  transform: translateY(-50%) scale(9);
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
 .btn:hover .btn__label,
 .btn:focus-visible .btn__label {
-  color: var(--btn-dot-ink);
+  color: var(--btn-bg);
 }
 .btn:hover .btn__arrow,
 .btn:focus-visible .btn__arrow {
-  transform: translateX(30px);
-}
-.btn:hover .btn__arrow--next,
-.btn:focus-visible .btn__arrow--next {
-  transform: translateX(0);
+  transform: translateX(2px);
 }
 .btn:active {
   transform: scale(0.97);
 }
-.btn--paper {
-  --btn-bg: var(--paper);
-  --btn-ink: var(--ink);
-  --btn-dot: var(--ink);
-  --btn-dot-ink: var(--paper);
-}
 .btn--compact {
+  --dot: 36px;
+  --pad: 4px;
   min-height: 44px;
   gap: 14px;
-  padding: 4px 4px 4px 18px;
+  padding-left: 18px;
   /* Buttons/Small */
   font-size: var(--t-btn-sm-size);
   line-height: var(--t-btn-sm-lh);
   letter-spacing: var(--t-btn-sm-ls);
 }
-.btn--compact::before,
-.btn--compact .btn__icon {
-  width: 36px;
-  height: 36px;
+html.reduced .btn,
+html.reduced .btn::before,
+html.reduced .btn__label,
+html.reduced .btn__arrow {
+  transition: none;
 }
-.btn--compact::before {
-  right: 4px;
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .btn::before,
+  .btn__label,
+  .btn__arrow {
+    transition: none;
+  }
 }
 
 /* ---------- tablet / phone ---------- */

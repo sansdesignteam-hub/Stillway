@@ -13,6 +13,7 @@
  * No newsletter, no share (D-069). One unbroken dark canvas: the column below moves like a page
  * (scripts/sections/close.ts). FAQ Battery approved in full (D-099).
  */
+import Button from '../Button.astro';
 import { close as d, finishes as f } from '../../content/copy';
 ---
 
@@ -32,7 +33,7 @@ import { close as d, finishes as f } from '../../content/copy';
           <span class="cl__line">{d.line}</span>
         </h2>
         <div class="cl__cta" data-cl-cta data-a>
-          <a class="cl__btn" href="#finishes">{d.cta} <span aria-hidden="true">→</span></a>
+          <Button class="cl__btn" href="#finishes" label={d.cta} variant="ink" />
           <p class="cl__small">{d.ctaLine}</p>
         </div>
       </div>
@@ -57,7 +58,7 @@ import { close as d, finishes as f } from '../../content/copy';
             ))
           }
         </ul>
-        <a class="cl__btn" href="#finishes">{d.cta} <span aria-hidden="true">→</span></a>
+        <Button class="cl__btn" href="#finishes" label={d.cta} variant="ink" />
       </div>
 
       <!-- 4 · statement, footer, wordmark -->
@@ -153,29 +154,6 @@ import { close as d, finishes as f } from '../../content/copy';
     display: grid;
     justify-items: center;
     gap: var(--space-4);
-  }
-  .cl__btn {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-4) var(--space-6);
-    border-radius: var(--radius-pill);
-    background: var(--paper);
-    color: var(--ink);
-    /* Buttons/Medium */
-    font-weight: var(--w-label);
-    font-size: var(--t-btn-md-size);
-    line-height: var(--t-btn-md-lh);
-    letter-spacing: var(--t-btn-md-ls);
-    text-decoration: none;
-    pointer-events: auto;
-    transition: background 0.2s, transform 0.15s;
-  }
-  .cl__btn:hover {
-    background: var(--cream);
-  }
-  .cl__btn:active {
-    transform: scale(0.98);
   }
   /* Paragraph/Small */
   .cl__small {
@@ -421,7 +399,7 @@ import { close as d, finishes as f } from '../../content/copy';
   :global(html.reduced) .cl__word:hover {
     filter: brightness(1.12);
   }
-  .cl__btn:focus-visible,
+  .cl__block :global(.btn:focus-visible),
   .cl__q:focus-visible,
   .cl__block--foot a:focus-visible {
     outline: 2px solid var(--focus);
