@@ -61,5 +61,19 @@ const len = (i: number) => {
 
 <script>
   import { initMotion } from '../scripts/motion';
-  initMotion();
+  /* D-191: the browser paints the hero first, then motion starts — the order the page has always had
+     in practice (the script used to arrive after the first paint). Kept on purpose now that start-up
+     is lighter: the first paint is then never held back by script, and the hero photo and intro are
+     on screen in that first frame. A hidden tab has no frames, so a timer starts it there. */
+  let started = false;
+  const start = () => {
+    if (started) return;
+    started = true;
+    initMotion();
+  };
+  if (document.visibilityState === 'hidden') start();
+  else {
+    requestAnimationFrame(() => setTimeout(start, 0));
+    setTimeout(start, 600);
+  }
 </script>
