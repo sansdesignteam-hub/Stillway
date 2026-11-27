@@ -22,6 +22,9 @@ const mouse = { x: 0, y: 0 };
 const tilt = { x: 0, y: 0 };
 /** D-182: start of the reflection movement (s), set once the poster has cross-faded, so it begins at 0 */
 let envT0 = 0;
+/** D-185: pause after the cross-fade and the length of the highlight's fade-in (s) */
+const GLINT_DELAY = 0.15;
+const GLINT_IN = 1.6;
 /** pitch share of the tilt while resting (yaw is full): keeps the band on the pedestal */
 const REST_PITCH = 0.5;
 const canTilt = () => matchMedia('(hover: hover) and (pointer: fine)').matches && window.innerWidth >= 720;
@@ -148,6 +151,9 @@ export const hero: SectionMotion = {
     const now = performance.now() / 1000;
     if (live && !envT0) envT0 = now;
     const et = envT0 && !ctx.reduced ? now - envT0 : 0;
+    // D-185 desk-lamp highlight: only on the live ring, fading in after the 0.9 s poster cross-fade
+    // (ring-live comes at 1 s), so the cross-fade has no tone change; it leaves as the ring lifts
+    const glint = envT0 ? seg(now - envT0, GLINT_DELAY, GLINT_DELAY + GLINT_IN) * (1 - seg(u, 0.05, 0.85)) : 0;
     const envRot = (0.28 * Math.sin(et * 0.55) + 0.1 * Math.sin(et * 0.23) + tilt.y * 0.6) * w0;
     // zoom out (2 → 3): one eased segment for position/rotation (no keyframe in between, so no
     // stop-and-go); env photo → paper, exposure and the green light fade over the same stretch
@@ -156,6 +162,7 @@ export const hero: SectionMotion = {
     return {
       ...p,
       envRot,
+      glint,
       rx: p.rx + tilt.x * w,
       ry: p.ry + tilt.y * w,
       tiltX: tilt.x * w0 * REST_PITCH,

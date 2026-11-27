@@ -424,6 +424,15 @@ export const specs: SectionMotion = {
       if (inP <= 0 || outP >= 1) tf(n, 0);
     });
 
+    /* D-185: fetch the photo only when S07 is next (update first runs from S06 on); sources first */
+    const lazy = el.every?.querySelectorAll<HTMLElement>('[data-srcset], [data-src]');
+    lazy?.forEach((s) => {
+      if (s.dataset.srcset) s.setAttribute('srcset', s.dataset.srcset);
+      if (s.dataset.src) s.setAttribute('src', s.dataset.src);
+      delete s.dataset.srcset;
+      delete s.dataset.src;
+    });
+
     /* ----- the end: the big photo comes up 1:1, its content slower ----- */
     const shut = 1 - seg(u, END, END + 0.45); // to S08: the frame opens to full bleed
     const frameTop = Math.max(L.ey, H - Math.max(0, u - RISE) * vh);

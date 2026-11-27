@@ -1,0 +1,74 @@
+[
+ {
+  "file": "everyday-960",
+  "width": 960,
+  "height": 600,
+  "avifKB": 48.5,
+  "avifQ": 80,
+  "budgetKB": 70,
+  "webpKB": 36.7
+ },
+ {
+  "file": "everyday-1280",
+  "width": 1280,
+  "height": 800,
+  "avifKB": 74.3,
+  "avifQ": 80,
+  "budgetKB": 110,
+  "webpKB": 56.9
+ },
+ {
+  "file": "everyday-1920",
+  "width": 1920,
+  "height": 1200,
+  "avifKB": 124.8,
+  "avifQ": 80,
+  "budgetKB": 180,
+  "webpKB": 95.8
+ },
+ {
+  "file": "everyday-2560",
+  "width": 2560,
+  "height": 1600,
+  "avifKB": 176.5,
+  "avifQ": 80,
+  "budgetKB": 250,
+  "webpKB": 132.1
+ },
+ {
+  "file": "everyday-3840",
+  "width": 3840,
+  "height": 2400,
+  "avifKB": 305,
+  "avifQ": 80,
+  "budgetKB": 450,
+  "webpKB": 217.7
+ },
+ {
+  "file": "everyday-p-768",
+  "width": 768,
+  "height": 960,
+  "avifKB": 49.3,
+  "avifQ": 80,
+  "budgetKB": 80,
+  "webpKB": 39.1
+ },
+ {
+  "file": "everyday-p-1280",
+  "width": 1280,
+  "height": 1600,
+  "avifKB": 91.5,
+  "avifQ": 80,
+  "budgetKB": 160,
+  "webpKB": 71.5
+ },
+ {
+  "file": "everyday-p-1920",
+  "width": 1920,
+  "height": 2400,
+  "avifKB": 157.7,
+  "avifQ": 80,
+  "budgetKB": 280,
+  "webpKB": 114.1
+ }
+]

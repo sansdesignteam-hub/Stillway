@@ -661,6 +661,46 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       m.clearcoatRoughness = target.ccr;
     }
   };
+  /* D-185 desk-lamp highlight on the S01 band: an analytic specular hotspot of the lamp (a large warm
+     area light) from the direction of lights.key (upper right, behind), laid over the shaded pixel in
+     display space. It depends on the surface normal and the view ray only, so it sits where the polished
+     metal would mirror the lamp (top rim, band edge, the inner edge facing it) and moves with the hover
+     tilt and the sway. No scene light: shadows, catchers and the rest of the picture are untouched, and
+     at strength 0 (poster cross-fade, every other section) the pixel is exactly as before. */
+  const GLINT = {
+    uGlint: { value: 0 },
+    uGlintDir: { value: new THREE.Vector3(0.57, 0.74, -0.36) }, // toward the lamp, view space (= world: the camera never rotates)
+  };
+  if (band) {
+    band.onBeforeCompile = (sh) => {
+      Object.assign(sh.uniforms, GLINT);
+      sh.fragmentShader = sh.fragmentShader
+        .replace('void main() {', 'uniform float uGlint; uniform vec3 uGlintDir;\nvoid main() {')
+        .replace(
+          '#include <dithering_fragment>',
+          `#include <dithering_fragment>
+          if ( uGlint > 0.0 ) {
+            vec3 gV = normalize( vViewPosition );
+            vec3 gN = normalize( normal );
+            float gNV = clamp( dot( gN, gV ), 0.0, 1.0 );
+            vec3 gR = reflect( - gV, gN );
+            float gRL = max( dot( gR, uGlintDir ), 0.0 );
+            // the lamp shade mirrored in the metal: a bright core inside a soft halo
+            float core = pow( gRL, 90.0 );
+            float halo = pow( gRL, 12.0 );
+            // grazing light along the rim on the lamp side (the band's silhouette toward upper right)
+            // (leaning upward: the shade sits above, so the top rim catches it too)
+            float edge = pow( 1.0 - gNV, 1.8 ) * smoothstep( 0.25, 0.95, dot( gN.xy, normalize( uGlintDir.xy * vec2( 0.35, 1.0 ) ) ) );
+            float a = uGlint * clamp( 0.9 * core + 0.4 * halo + 0.95 * edge, 0.0, 1.0 );
+            vec3 warm = mix( vec3( 1.0, 0.70, 0.28 ), vec3( 1.0, 0.91, 0.62 ), core ); // sRGB gold → pale core
+            gl_FragColor.rgb += a * warm * ( 1.0 - 0.55 * gl_FragColor.rgb ); // soft add: warms silver, never clips hard
+            gl_FragColor.rgb = min( gl_FragColor.rgb, vec3( 1.0 ) );
+          }`,
+        );
+      if (!sh.fragmentShader.includes('uGlint * clamp')) console.warn('glint: band shader not patched');
+    };
+    band.customProgramCacheKey = () => 'glint';
+  }
   let lastFin = '';
   // LEDs (D-062): both off until a section asks (S08 colours, "off" = red dot)
   const ledMain = ring.getObjectByName(RING_MODEL.meshes.ledMain)?.material as THREE.MeshStandardMaterial | undefined;
@@ -972,6 +1012,16 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     deskFill.distance = w * 2.6;
     cornerLight.intensity = 14 * Math.min(1, Math.max(0, p.corner));
     coldEdge.intensity = 34 * Math.min(1, Math.max(0, p.edge));
+    GLINT.uGlint.value = Math.min(1, Math.max(0, p.glint));
+    if (GLINT.uGlint.value > 0 && deskPose) {
+      const K = deskPose.lights.key;
+      // key direction (target → lamp) from desk space into the world, swayed a little with the room
+      GLINT.uGlintDir.value
+        .fromArray(K.position)
+        .sub(_v.fromArray(K.target))
+        .transformDirection(desk.matrix)
+        .applyAxisAngle(_v.set(0, 1, 0), p.envRot * 0.5);
+    }
     // D-179 desk: pedestal, key light and the shadow catcher fade with the photo
     desk.visible = dsk > 0.002;
     lampKey.castShadow = desk.visible;
