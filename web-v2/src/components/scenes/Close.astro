@@ -387,14 +387,13 @@ import { close as d, finishes as f } from '../../content/copy';
   .cl__top {
     margin-top: 10px;
   }
-  /* D-183: lockup 03A, left on the margin, as tall as the capital wordmark's line (Display 1). The
-     shape is a mask, so the hover shine still sweeps across it */
+  /* D-183b: lockup 03A across the full content width (margin to margin), height from its own ratio.
+     The shape is a mask, so the hover shine still sweeps across it */
   .cl__word {
     grid-row: 4;
     margin: 24px 0 calc(var(--t-display-1-size) * 0.04);
-    justify-self: start;
-    height: var(--t-display-1-lh);
-    max-width: 100%;
+    justify-self: stretch;
+    min-width: 0;
     aspect-ratio: 204.76 / 38.55;
     -webkit-mask: url('../../assets/stillway-lockup-03a.svg') left center / contain no-repeat;
     mask: url('../../assets/stillway-lockup-03a.svg') left center / contain no-repeat;
