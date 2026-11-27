@@ -8,8 +8,11 @@
  *                 and fade in where they stand, left to right
  *  1 → 2 State 3  the words fade where they stand, then the cards close into a stack, the line grows from the
  *                 middle; (I) Night: title letter by letter from behind the line, lines rise
- *  2 → 5 States 4–6  the front card rises behind the stack, the next comes forward (II)–(IV); the
- *                 counter circle fills; by (IV) Rinse the cards behind it are gone (Figma State 6)
+ *  2 → 5 States 4–6  QA27 S7-06 (obsidianassembly.com "Origin Objects"): a 3:4 front card 68 % of the
+ *                 screen high with ONE card behind it, peeking evenly above and below. With the scroll
+ *                 the front card slides out (down; phones: to the left), never toward the navbar, and
+ *                 the card behind grows into its place; titles and captions roll old → new together
+ *                 (II)–(IV); the counter circle fills; (IV) Rinse stands alone (Figma State 6)
  *  5.1 → 6.1 end  (obsidianassembly.com "The Connection") the big photo comes up from below at
  *                 scroll speed (1:1), its content slower (parallax); the Rinse card moves down and
  *                 shrinks in front of it, then the words run over it (D-151: photo → card → words →
@@ -51,9 +54,7 @@ let headerH = 76;
 
 /* ---------- layout ---------- */
 
-/** card box in Figma px (the slots are clip windows inside it) */
-const BW = 392;
-const BH = 602;
+/** a card slot; the box (bw × bh) is the same for all cards, the slot is a clip window inside it */
 interface Slot {
   x: number; // centre, viewport px
   y: number;
@@ -62,6 +63,10 @@ interface Slot {
   s: number; // scale of the box
   o: number;
 }
+/** QA27 S7-06: front card 3:4, 68 % of the screen high; scale of the one card behind it */
+const FRONT_H = 0.68;
+const BACK_S = 0.92;
+const RADIUS = 10;
 const lerpSlot = (a: Slot, b: Slot, t: number): Slot => ({
   x: lerp(a.x, b.x, t),
   y: lerp(a.y, b.y, t),
@@ -75,27 +80,37 @@ function layout(ctx: Ctx) {
   const W = window.innerWidth;
   const H = view.h;
   const m = ctx.mobile;
-  // Figma frame 1440 × 900; phones: the front card 60 % of the width
-  const k = m ? Math.min((W * 0.6) / BW, (H * 0.36) / 490) : Math.min(W / 1440, H / 900);
+  const nav = m ? 60 : 76; // --header-h
+  // Figma frame 1440 × 900 (State 2 row, the end card)
+  const k = m ? Math.min((W * 0.6) / 392, (H * 0.36) / 490) : Math.min(W / 1440, H / 900);
   const cx = W / 2;
-  const cy = m ? H * 0.4 : H / 2 + 32 * k; // Figma: stack and line centred on y 482
-  const ly = m ? cy + (BH / 2) * k + 60 : cy; // phones: the line under the stack
-  // stack slots (Figma State 3: front 392 × 490, behind 352 × 602, then 312 wide from y 125)
-  const F: Slot = { x: cx, y: cy, w: 392 * k, h: 490 * k, s: 1, o: 1 };
-  const B1: Slot = { x: cx, y: cy, w: 352 * k, h: 602 * k, s: 1, o: 1 };
-  const s2 = 312 / BW;
-  const B2: Slot = { x: cx, y: cy - (482 - 125 - (BH * s2) / 2) * k, w: 312 * k, h: BH * s2 * k, s: s2, o: 1 };
-  // State 2 row (Figma 180 × 225 every 200 px, centred on y 482)
+  // front card: 3:4; desktop it also leaves room for the two caption columns, phones for the text below
+  const margin = Math.min(40, Math.max(16, W * 0.028));
+  const col = Math.min(316, W * 0.22); // = Specs.astro .sp__ttl / .sp__right
+  const fw = m ? Math.min(W * 0.68, (H - nav - 270) * 0.75) : Math.min(H * FRONT_H * 0.75, W - 2 * (margin + col + 24));
+  const fh = fw / 0.75;
+  const peek = m ? Math.max(14, fh * 0.055) : fh * 0.065; // the back card, above and below
+  // desktop: centred below the navbar; phones: stack, counter row and text centred as one
+  const phoneTop = nav + Math.max(12, (H - nav - (fh + 2 * peek + 72 + 140)) / 2);
+  const cy = m ? phoneTop + peek + fh / 2 : (H + nav) / 2;
+  const ly = m ? cy + fh / 2 + peek + 72 : cy; // phones: the line under the stack
+  const bw = fw;
+  const bh = (fh + 2 * peek) / BACK_S;
+  const F: Slot = { x: cx, y: cy, w: fw, h: fh, s: 1, o: 1 };
+  const B: Slot = { x: cx, y: cy, w: fw * BACK_S, h: fh + 2 * peek, s: BACK_S, o: 1 };
+  // waiting, unseen, behind the back card
+  const Z: Slot = { x: cx, y: cy, w: fw * 0.84, h: fh, s: 0.84, o: 0 };
+  // State 2 row (Figma 180 × 225 every 200 px)
   const rw = m ? (W - 32 - 3 * 8) / 4 : 179.93 * k;
   const rgap = m ? 8 : 19.99 * k;
   const rowW = 4 * rw + 3 * rgap;
-  const row = (i: number): Slot => ({ x: cx - rowW / 2 + rw / 2 + i * (rw + rgap), y: cy, w: rw, h: rw * 1.25, s: rw / (BW * k), o: 1 });
+  const row = (i: number): Slot => ({ x: cx - rowW / 2 + rw / 2 + i * (rw + rgap), y: cy, w: rw, h: rw * 1.25, s: rw / bw, o: 1 });
   // the end: the small Rinse card (Figma State 7 195 × 244); its y is set by endLayout (D-150)
   const ew = m ? Math.min(W * 0.4, H * 0.21) : 195 * k;
-  const E: Slot = { x: cx, y: H / 2, w: ew, h: ew * 1.25, s: ew / (BW * k), o: 1 };
+  const E: Slot = { x: cx, y: H / 2, w: ew, h: ew * 1.25, s: ew / bw, o: 1 };
   // the photo frame (Figma inset 24 / 40)
   const ey = m ? 16 : 24;
-  return { W, H, m, k, cx, cy, ly, F, B1, B2, row, rowW, E, ey };
+  return { W, H, m, k, cx, cy, ly, bw, bh, F, B, Z, row, rowW, E, ey };
 }
 type L7 = ReturnType<typeof layout>;
 
@@ -105,8 +120,8 @@ function measure(ctx: Ctx): L7 {
   const key = `${L.W}x${L.H}${ctx.mobile}`;
   if (key !== lastKey && root) {
     lastKey = key;
-    root.style.setProperty('--bw', `${(BW * L.k).toFixed(1)}px`);
-    root.style.setProperty('--bh', `${(BH * L.k).toFixed(1)}px`);
+    root.style.setProperty('--bw', `${L.bw.toFixed(1)}px`);
+    root.style.setProperty('--bh', `${L.bh.toFixed(1)}px`);
     root.style.setProperty('--ly', `${L.ly.toFixed(1)}px`);
     root.style.setProperty('--par', `${(PAR * (L.H - L.ey)).toFixed(1)}px`);
     headerH = parseFloat(getComputedStyle(root).getPropertyValue('--header-h')) || (ctx.mobile ? 60 : 76);
@@ -136,12 +151,10 @@ const tr = (x: number, y: number, s = 1) => `translate3d(${x.toFixed(1)}px, ${y.
 /** a y shift inside a mask, in % of the element */
 const ty = (p: number) => (Math.abs(p) < 0.05 ? '' : `translate3d(0, ${p.toFixed(1)}%, 0)`);
 
-function placeCard(c: HTMLElement, r: Slot, k: number, z: number) {
-  const bw = BW * k;
-  const bh = BH * k;
+function placeCard(c: HTMLElement, r: Slot, bw: number, bh: number, z: number) {
   const ix = Math.max(0, (bw - r.w / r.s) / 2);
   const iy = Math.max(0, (bh - r.h / r.s) / 2);
-  const rad = 6 / r.s;
+  const rad = RADIUS / r.s;
   tf(c, r.o, tr(r.x - bw / 2, r.y - bh / 2, r.s), `inset(${iy.toFixed(1)}px ${ix.toFixed(1)}px round ${rad.toFixed(1)}px)`);
   const zs = String(z);
   if (c.style.zIndex !== zs) c.style.zIndex = zs;
@@ -197,22 +210,24 @@ function buildMasks() {
   rightLines = texts.map((t) => [...t.querySelectorAll<HTMLElement>('.sp__right [data-s-lines]')].flatMap((p) => splitLines(p)));
 }
 
-/** letters rise from behind the line (in), sink back behind it (out); stagger per letter */
+/* QA27 S7-06: a swap is a roll — the old text leaves upward by exactly what the new one still has to
+   rise, on the same stagger, so the slot is never empty and the two never sit on each other */
+const STAGGER = 0.02; // per letter
+/** letters rise from behind the line (in), go on up out of the mask (out) */
 function letters(list: HTMLElement[], inP: number, outP: number) {
-  const n = list.length;
-  const st = 0.5 / Math.max(1, n);
   list.forEach((c, j) => {
-    const a = smooth(clamp01((inP - j * st) / 0.5));
-    const b = smooth(clamp01((outP - j * st) / 0.5));
-    tf(c, 1, ty((1 - a) * 130 + b * 130));
+    const d = Math.min(0.3, j * STAGGER);
+    const a = smooth(clamp01((inP - d) / 0.7));
+    const b = smooth(clamp01((outP - d) / 0.7));
+    tf(c, 1, ty((1 - a) * 130 - b * 130));
   });
 }
 /** lines rise into their masks (in) and on out of them (out), one after another */
-function lines(list: HTMLElement[], inP: number, outP: number, delay = 0) {
+function lines(list: HTMLElement[], inP: number, outP: number) {
   list.forEach((l, j) => {
-    const d = delay + j * 0.12;
-    const a = smooth(clamp01((inP - d) / (1 - Math.min(0.6, d))));
-    const b = smooth(clamp01((outP - j * 0.12) / 0.88));
+    const d = Math.min(0.3, j * 0.1);
+    const a = smooth(clamp01((inP - d) / 0.7));
+    const b = smooth(clamp01((outP - d) / 0.7));
     tf(l, 1, ty((1 - a) * 105 - b * 105));
   });
 }
@@ -242,26 +257,27 @@ function endLayout(L: L7) {
   return { E: { ...L.E, y }, textTop: y + textTop, capTop: y + capTop };
 }
 
-/** the focused card, 0..3, with a dwell at each card */
+/** the focused card, 0..3: follows the scroll, with a short rest on each card */
 const focusOf = (u: number) => {
   const raw = clamp01((u - 2) / 3) * 3;
   const base = Math.floor(raw);
-  return Math.min(3, base + smooth(smooth(raw - base)));
+  return Math.min(3, base + smooth(clamp01((raw - base - 0.1) / 0.8)));
 };
-const mod4 = (v: number) => ((v % 4) + 4) % 4;
+/** 0 → 1 while text i hands over to text i + 1 (the same stretch in which the cards swap) */
+const swapOf = (f: number, i: number) => clamp01((f - i - 0.28) / 0.44);
 
-/** where card i sits in the stack for focus f; z order with it */
+/** where card i sits for focus f; z order with it. p = how far card i is behind the front */
 function stackSlot(i: number, f: number, L: L7): [Slot, number] {
-  const p = mod4(i - f);
-  if (p <= 1) return [lerpSlot(L.F, L.B1, p), 40 - p * 10];
-  if (p <= 2) return [lerpSlot(L.B1, L.B2, p - 1), 30 - (p - 1) * 10];
-  if (p <= 3) return [{ ...L.B2, o: 1 - (p - 2) }, 20 - (p - 2) * 10];
-  // leaving the front: it rises, goes behind the stack and settles at the back (hidden)
-  const q = 4 - p;
-  const r = lerpSlot(L.F, L.B2, smooth(q));
-  r.y -= Math.sin(Math.PI * q) * (L.m ? 0.3 : 0.42) * L.F.h;
-  r.o = q < 0.7 ? 1 : 1 - (q - 0.7) / 0.3;
-  return [r, q < 0.5 ? 50 : 5];
+  const p = i - f;
+  if (p >= 2) return [L.Z, 40 - i];
+  if (p >= 1) return [lerpSlot(L.B, L.Z, p - 1), 40 - i]; // comes into view behind
+  if (p >= 0) return [lerpSlot(L.F, L.B, p), 40 - i]; // grows into the front
+  // leaving: slides out of the screen on top — down (phones: left, clear of the text below the line)
+  const t = Math.min(1, -p);
+  const r = { ...L.F, o: t < 1 ? 1 : 0 };
+  if (L.m) r.x -= t * (L.cx + L.F.w / 2 + 8);
+  else r.y += t * (L.H - L.cy + L.F.h / 2 + 8);
+  return [r, 50];
 }
 
 export const specs: SectionMotion = {
@@ -372,7 +388,6 @@ export const specs: SectionMotion = {
     const close = seg(u, 1.1, 1.75);
     const pe = seg(u, RISE, RISE + 0.98); // the end
     const G = endLayout(L);
-    const backsGo = 1 - seg(f, 2.1, 2.9); // Figma State 6: only Rinse is left
     cards.forEach((c, i) => {
       // D-172: the intro cards scale up and fade in where they stand (no rise from below), left to right
       const rise = seg(u, 0.45 + 0.07 * i, 0.85 + 0.07 * i);
@@ -384,12 +399,13 @@ export const specs: SectionMotion = {
       rw.o *= rise;
       const [st, z] = stackSlot(i, f, L);
       let r = lerpSlot(rw, st, close);
-      if (i !== 3) r.o *= backsGo;
+      // the two that end up unseen stay solid until they are covered, then go (no see-through pile)
+      if (st.o === 0 && f === 0) r.o = rw.o * (1 - seg(close, 0.7, 1));
       if (i === 3) r = lerpSlot(r, G.E, pe);
       r.o *= 1 - out;
       // D-172: while the row closes, the leftmost card (Night) is on top, then Desk, Move, Rinse —
       // the same order the stack keeps, so the last card left in front is Rinse for "Everyday"
-      placeCard(c, r, k, close < 0.5 ? 40 - i : i === 3 && pe > 0 ? 60 : Math.round(z));
+      placeCard(c, r, L.bw, L.bh, close < 0.5 ? 40 - i : i === 3 && pe > 0 ? 60 : z);
     });
 
     /* ----- States 3–6: line, (n) name, lines, counter ----- */
@@ -399,8 +415,8 @@ export const specs: SectionMotion = {
     tf(el.count, furn);
     if (el.arc) el.arc.style.setProperty('--p', (((Math.max(0, f) + 1) / 4) * 100 * seg(u, 1.5, 2)).toFixed(2));
     texts.forEach((t, i) => {
-      const inP = i === 0 ? clamp01((u - 1.5) / 0.45) : clamp01((f - i + 0.5) / 0.4);
-      const outP = i === 3 ? clamp01((u - 5.05) / 0.4) : clamp01((f - i - 0.1) / 0.4);
+      const inP = i === 0 ? clamp01((u - 1.5) / 0.45) : swapOf(f, i - 1);
+      const outP = i === 3 ? clamp01((u - 5.05) / 0.4) : swapOf(f, i);
       const shown = inP > 0 && outP < 1;
       if (ctx.reduced) {
         // whole state: no masks moving, a short fade (global.css)
@@ -416,12 +432,12 @@ export const specs: SectionMotion = {
       if (!shown) return;
       letters(chars[i] ?? [], inP, outP);
       lines(leftLines[i] ?? [], inP, outP);
-      lines(rightLines[i] ?? [], inP, outP, 0.08);
+      lines(rightLines[i] ?? [], inP, outP);
       tf(nums[i], 1, ty((1 - smooth(inP)) * 110 - smooth(outP) * 110));
     });
     if (!ctx.reduced) nums.forEach((n, i) => {
-      const inP = i === 0 ? 1 : clamp01((f - i + 0.5) / 0.4);
-      const outP = i === 3 ? 0 : clamp01((f - i - 0.1) / 0.4);
+      const inP = i === 0 ? 1 : swapOf(f, i - 1);
+      const outP = i === 3 ? 0 : swapOf(f, i);
       if (inP <= 0 || outP >= 1) tf(n, 0);
     });
 

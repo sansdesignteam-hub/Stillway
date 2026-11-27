@@ -5,10 +5,11 @@
  *  - State 1: "Through the day." (Display 2) in the middle.
  *  - State 2: the words part ('Through' left, 'the day.' right, cut at the cards' edges); four
  *    photo cards rise from below into a row between them.
+ *  - QA27 S7-06: front card 3:4, 68 % of the screen high, radius 10, one card behind it; each step the
+ *    front card slides out and the one behind grows forward (replaces "rises behind the stack").
  *  - States 3–6, (I) Night … (IV) Rinse: the cards close into a stack in the middle, a full-width
  *    hairline behind it; title above the line and the sentence below it on the left, a counter above
- *    and the spec + small note below on the right. Each step the front card rises behind the stack
- *    and the next one comes forward; titles rise letter by letter from behind the line, the lines
+ *    and the spec + small note below on the right. Titles rise letter by letter from behind the line, the lines
  *    below rise line by line (masks), the counter circle fills. No orbit lines (D-149 note 1).
  *  - End (obsidianassembly.com "The Connection"): the Rinse card moves down and shrinks while the
  *    big photo (inset frame, radius 14) comes up from below at scroll speed, its content slower
@@ -68,7 +69,7 @@ const EV = [
     {
       d.cards.map((c, i) => (
         <figure class="sp__card" data-s-card={i} data-a>
-          <Img src={img[c.key]} alt={c.alt} sizes="(max-width: 719px) 60vw, 28vw" widths={[480, 800, 1122]} ready class="sp__cardimg" />
+          <Img src={img[c.key]} alt={c.alt} sizes="(max-width: 719px) 90vw, 42vw" widths={[480, 800, 1122]} ready class="sp__cardimg" />
         </figure>
       ))
     }
@@ -303,10 +304,10 @@ const EV = [
     white-space: pre-line;
   }
   .sp__ttl {
-    width: 316px;
+    width: min(316px, 22vw);
   }
   .sp__right {
-    width: 316px;
+    width: min(316px, 22vw);
     display: grid;
     justify-items: end;
     gap: 8px;
@@ -314,7 +315,7 @@ const EV = [
   }
   /* Paragraph/Medium, text-surface */
   .sp__note {
-    width: var(--nw);
+    width: min(var(--nw), 100%);
     font-size: var(--t-para-md-size);
     line-height: var(--t-para-md-lh);
     letter-spacing: var(--t-para-md-ls);
