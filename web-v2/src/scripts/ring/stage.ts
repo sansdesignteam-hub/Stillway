@@ -113,6 +113,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
    */
   const buildBlends = async () => {
     if (!photoTex || !paperTex) return;
+    renderer.initTexture(photoTex); // D-191: the photo's upload in its own turn, not inside the first blend
+    await breath();
     const mat = new THREE.ShaderMaterial({
       side: THREE.BackSide,
       depthWrite: false,
@@ -1476,7 +1478,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   let warmBusy = false;
   /** the variant being compiled: its pose and the objects still to do */
   let warmJob: { p: Pose; todo: Array<[THREE.Object3D, boolean]> } | null = null;
-  const WARM_MS = 5; // prewarm work per idle turn; one object is always finished
+  const WARM_MS = 3; // prewarm work per idle turn; one object is always finished
   const warmStep = (left: () => number) => {
     warmBusy = false;
     if (!lastPose || (!warmJob && !warmQueue.length)) return;
