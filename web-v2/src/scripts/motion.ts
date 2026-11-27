@@ -22,7 +22,8 @@ export function initMotion() {
   window.__stillwayMotion = true;
   // D-135 inspect mode: ?inspect lets the DevTools picker reach the stage (text, images) instead
   // of the empty scroll tracks; see global.css "inspect mode". No effect without the parameter.
-  if (new URLSearchParams(location.search).has('inspect')) document.documentElement.classList.add('inspect');
+  // D-182: local dev server only; removed from production builds.
+  if (import.meta.env.DEV && new URLSearchParams(location.search).has('inspect')) document.documentElement.classList.add('inspect');
   // dev only: ?reduced-test on localhost simulates prefers-reduced-motion (review screenshots)
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('reduced');
 

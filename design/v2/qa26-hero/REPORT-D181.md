@@ -166,3 +166,37 @@ Overlay/still baru disalin dan `hero-plate.mjs` dijalankan ulang; plate, GLB tid
 - **Uji toggle** (`?inspect&near=1`, `&nograde`, `&noshadow`; `D181e_sensors_1440_2x_rest_before_nograde_noshadow_after_poster.jpg`): dengan near = 1 bercak tetap ada saat grade dimatikan dan saat shadow map dimatikan; dengan near baru bercak hilang tanpa mengubah yang lain. Pantulan liner ×0,3 dan normal map sensor tidak diuji terpisah, karena perbaikan near saja sudah menghilangkannya.
 - **Perbaikan:** `camera.near = max(1, 0,02 × F)` (mengikuti lensa). Tidak ada objek yang lebih dekat dari 0,1 F. Grade, bayangan, dan material tidak diubah.
 - **Hasil:** sensor, titik LED, dan liner bersih pada 1440@2x diam dan tilt (`D181e_sensors_1440_2x_tilt_before_after.jpg`) serta 375@3x (`D181e_sensors_375_3x_before_after_poster.jpg`). Persentil luma ring tetap 3/16/99/118/251 (poster 2/17/100/117/252). fps 59,8–60,4 (`D181e_perf.txt`), clearance tidak berubah. Urutan scroll u 0 → 3 dijalankan ulang tanpa galat, tetapi belum saya periksa frame per frame untuk section lain.
+
+---
+
+# D-182: tepi ring, refleksi ala produksi, pembersihan (permintaan pengguna)
+
+## 1. Pixelation
+- **Penyebab:** resolusi render, bukan MSAA (aktif, tanpa render target/post pass), bukan near plane, bukan ukuran CSS. Ponsel dibatasi DPR 1,5 (375@3x: canvas 562 px lalu diperbesar 2×); layar 1× dirender 1×, sehingga highlight tipis pada chrome dan lengkung tipis tampak bertangga (MSAA hanya menghaluskan siluet).
+- **Perbaikan:** desktop supersample sampai 2× dengan anggaran ±5,6 MP (1440×900: 2880×1800, juga di layar 1×; jendela lebih besar tidak turun di bawah min(DPR, 1,5)); ponsel DPR maks 2,5 (375@3x: 937×2030). Ini menggantikan batas DPR 1,5 pada D-052.
+- **Garis bergerigi** pada pantulan bawah pita: sambungan kiri-kanan foto env; kedua sisi sekarang di-cross-fade.
+
+## 2. Refleksi
+- Beda produksi (`182048e`) vs staging sebelumnya: env produksi = foto adegan 100%, band 1,5, liner 1,0, rig matahari + hemisphere aktif, tanpa grade. Staging: 60% paper, gain 1,85, liner ×0,3, rig mati saat di alas, grade kurva luma.
+- Sekarang mengikuti produksi, dengan foto meja hangat sebagai env. **Satu penyimpangan:** 25% env paper tetap dicampur saat di alas, karena dengan foto saja pita terbaca cokelat/gunmetal, bukan silver.
+- **Gerak:** env berayun pelan (±0,38 rad, periode ±11 dan ±27 detik) plus sedikit mengikuti pointer; ring tidak bergerak. Mati untuk reduced motion; hilang bersama env foto.
+- Bayangan kontak, near plane, tilt, geometri/clearance, wordmark: kodenya tidak diubah (clearance tidak diukur ulang).
+
+## Poster vs hidup (persentil luma piksel ring, `D182_poster_left_live_right.jpg`)
+| | p05 | p25 | p50 | p75 | p95 | RGB rata-rata |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1440@2x poster | 2 | 20 | 90 | 111 | 216 | 95/81/72 |
+| 1440@2x hidup | 32–33 | 49–52 | 95–105 | 151–158 | 245 | 118–122 / 106–110 / 97–101 |
+| 375@3x poster | 2 | 18 | 91 | 115 | 248 | 93/85/80 |
+| 375@3x hidup | 23 | 44–46 | 66 | 142–144 | 186–188 | 100–102 / 88–90 / 79–81 |
+
+Rentang = beberapa saat berbeda dalam ayunan. Cara ukur berbeda dari D-181d (mask di sini dari alpha canvas), jadi angka poster tidak sama persis dengan tabel lama. **Cross-fade poster → hidup sekarang jelas terlihat** (liner poster hitam, hidup cokelat gelap). Keputusan PM: render ulang poster oleh 3D Designer ke tampilan ini atau tidak.
+
+## 3. Pembersihan
+- `?inspect` (termasuk hook QA dan mode inspect D-135) hanya ada di dev server; `&near`, `&nograde`, `&noshadow` dihapus. Skrip QA lama yang memakai `?inspect` harus dijalankan pada `npm run dev`.
+- S02–S11 (`D182_sections_1440.jpg`, `_375.jpg`, 23 posisi): tidak terlihat clipping atau z-fighting, tanpa galat JS. Frame awal S06 menangkap meja sebagai blok di kiri atas (di tengah transisi; belum dibandingkan dengan build sebelumnya). Close-up S01 sekarang juga memakai rig dan env baru.
+
+## fps (jujur)
+Mesin sedang baterai 19% dan Chrome terkunci 30 fps, juga pada `about:blank` dan produksi, jadi **60 fps pada vsync belum terbukti**. Tanpa batas frame: build ini 96–105 fps (p95 ±20 ms), produksi 98–104, pada 1440, throttle CPU 4×, dan 375 (perf.mjs memakai DPR 1, jadi tidak menguji 2×/3×). Ponsel asli belum diuji.
+
+Bukti lain: `D182_closeup_1440_2x_before_after.jpg`, `D182_closeup_375_3x_before_after.jpg`, `D182_prod_left_staging_right.jpg`, `D182_motion_1440.jpg`, `D182_motion_375.jpg` (6 frame, jarak ±2 detik).

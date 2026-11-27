@@ -20,6 +20,8 @@ import type { SectionMotion } from '../story';
 let el: Record<string, HTMLElement | null> = {};
 const mouse = { x: 0, y: 0 };
 const tilt = { x: 0, y: 0 };
+/** D-182: start of the reflection movement (s), set once the poster has cross-faded, so it begins at 0 */
+let envT0 = 0;
 /** pitch share of the tilt while resting (yaw is full): keeps the band on the pedestal */
 const REST_PITCH = 0.5;
 const canTilt = () => matchMedia('(hover: hover) and (pointer: fine)').matches && window.innerWidth >= 720;
@@ -60,7 +62,7 @@ const floatPose = (ctx: Ctx): Pose => {
   });
 };
 
-if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('inspect'))
+if (import.meta.env.DEV && typeof location !== 'undefined' && new URLSearchParams(location.search).has('inspect'))
   (window as any).__heroRing = (u: number, mobile: boolean) => hero.ring!(u, { mobile, reduced: true } as Ctx);
 
 export const hero: SectionMotion = {
@@ -141,12 +143,19 @@ export const hero: SectionMotion = {
     tilt.x += (mouse.y * 0.22 * tk - tilt.x) * 0.06;
     tilt.y += (mouse.x * 0.32 * tk - tilt.y) * 0.06;
     const bob = Math.sin(performance.now() / 1000 * 1.3) * 0.008 * w * (ctx.reduced ? 0 : 1);
+    // D-182 reflections: the environment sways slowly and a little with the pointer, so the band stays
+    // alive while the ring stands still; none for reduced motion, gone with the photo env
+    const now = performance.now() / 1000;
+    if (live && !envT0) envT0 = now;
+    const et = envT0 && !ctx.reduced ? now - envT0 : 0;
+    const envRot = (0.28 * Math.sin(et * 0.55) + 0.1 * Math.sin(et * 0.23) + tilt.y * 0.6) * w0;
     // zoom out (2 → 3): one eased segment for position/rotation (no keyframe in between, so no
     // stop-and-go); env photo → paper, exposure and the green light fade over the same stretch
     // (D-083). The finish stays polished throughout (D-085).
     const out = seg(u, 2, 2.95);
     return {
       ...p,
+      envRot,
       rx: p.rx + tilt.x * w,
       ry: p.ry + tilt.y * w,
       tiltX: tilt.x * w0 * REST_PITCH,

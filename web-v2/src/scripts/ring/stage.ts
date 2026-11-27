@@ -39,20 +39,22 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   if (!renderer.getContext()) return null;
 
   const isPhone = () => window.innerWidth < 720;
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isPhone() ? 1.5 : 2));
+  /* D-182 edges: MSAA (antialias) only smooths silhouettes, not the polished band's thin highlights,
+     and the old caps (phone 1.5, a 1× screen at 1) left stair steps. Desktop: supersample to 2× even on
+     1× screens; phones: up to 2.5×. Large windows are held to a pixel budget so they stay at 60 fps,
+     never below what they had before. */
+  const pixelRatio = () => {
+    const d = window.devicePixelRatio || 1;
+    if (isPhone()) return Math.min(d, 2.5);
+    const budget = Math.sqrt(5.6e6 / (window.innerWidth * window.innerHeight));
+    return Math.max(Math.min(d, 1.5), Math.min(2, budget));
+  };
   renderer.toneMapping = THREE.AgXToneMapping;
   renderer.toneMappingExposure = 1.0;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(FOV, 1, 1, 40000);
-  /** ?inspect only: &near=1 restores the old near plane, &nograde turns the S01 rest grade off, &noshadow the lamp shadow map (QA toggles for D-181e) */
-  const DBG = (() => {
-    const q = new URLSearchParams(location.search);
-    if (!q.has('inspect')) return {} as { near?: number; nograde?: boolean; noshadow?: boolean };
-    return { near: q.has('near') ? Number(q.get('near')) : undefined, nograde: q.has('nograde'), noshadow: q.has('noshadow') };
-  })();
-
   const pmrem = new THREE.PMREMGenerator(renderer);
   const envs: { paper?: THREE.Texture; night?: THREE.Texture; dusk?: THREE.Texture } = {};
   /** photo → paper blends, index 0 = photo env (S01), last = paper env (S02); see buildBlends */
@@ -72,6 +74,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     photoTex = await new THREE.TextureLoader().loadAsync(RING_MODEL.env.photo);
     photoTex.mapping = THREE.EquirectangularReflectionMapping;
     photoTex.colorSpace = THREE.SRGBColorSpace;
+    photoTex.generateMipmaps = false; // no mip jump at the wrap
+    photoTex.minFilter = THREE.LinearFilter;
   } catch {
     /* falls back to paper */
   }
@@ -94,7 +98,11 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
           vec3 d = normalize(vDir);
           float c = cos(rot), s = sin(rot);
           vec3 r = vec3(c * d.x + s * d.z, d.y, -s * d.x + c * d.z);
-          vec3 a = texture2D(photo, equi(r)).rgb;
+          // D-182: the photo's left and right edges do not match; reflected in the polished band that
+          // wrap seam showed as a serrated line, so the two sides are cross-faded
+          vec2 uv = equi(r);
+          float seam = 0.5 * (1.0 - smoothstep(0.0, 0.12, min(uv.x, 1.0 - uv.x)));
+          vec3 a = mix(texture2D(photo, uv).rgb, texture2D(photo, vec2(1.0 - uv.x, uv.y)).rgb, seam);
           vec3 b = texture2D(paper, equi(d)).rgb;
           gl_FragColor = vec4(mix(a, b, t), 1.0);
         }`,
@@ -174,14 +182,6 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
      lights.pedestal_envMapIntensity); these are only the fallbacks and one gain each, tuned by eye
      against the 3D Designer's poster, so a new JSON drop retunes itself */
   const LAMP_GAIN = 1;
-  const RING_DESK_ENV = 1.85;
-  const DESK_PAPER = 0.6;
-  const DESK_EXPOSURE = 1.0;
-  /** the poster band is a touch warmer than the live one (lamp-lit oak in its reflections) */
-  const BAND_DESK = new THREE.Color().setRGB(1, 1, 1);
-  /** the liner must not follow that exposure: the poster's inner wall stays dark. Its base colour is
-   *  near black, so what shows is its reflection of the env: that is what is held back on the desk */
-  const LINER_DESK_ENV = 0.3;
   const SHADOW_RADIUS = 24;
   /* D-181c catcher density, physical: the ring's shadow takes the KEY away and leaves the rest, so
        alpha = K / (K + S + A)
@@ -606,58 +606,11 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const ringSize = box.getSize(new THREE.Vector3()).x; // outer diameter
   const M = RING_MODEL.materials;
   const shells: THREE.MeshStandardMaterial[] = [];
-  const liners = new Map<THREE.MeshStandardMaterial, number>();
-  /* D-181d ring grade, S01 rest only. The poster ring is the 3D Designer's Cycles chrome (Figma-like:
-     near-black liner, flat mid-grey band, hard highlights); the live ring is lit by an env map and
-     has a different tonal spread. A luma curve on the ring's own output (display space, after tone
-     mapping) maps the live ring's luma percentiles onto the poster's, so the poster → live
-     cross-fade does not change the ring's tone. Knots: live p05/p25/p50/p75/p95 (GRADE.from,
-     measured with the grade off) → the poster's (GRADE.to). uGrade.value = rest: full while the ring
-     stands on the pedestal, easing out as it lifts, so the close-up and S02 are untouched. */
-  const GRADE = { from: [24, 59, 98, 152, 177].map((v) => v / 255), to: [2, 24, 105, 118, 252].map((v) => v / 255), sat: 0.8 };
-  const uGrade = { value: 0 };
-  const uGradeFrom = { value: GRADE.from };
-  const uGradeTo = { value: GRADE.to };
-  const uGradeSat = { value: GRADE.sat };
-  const graded = new Set<THREE.Material>();
-  const grade = (m: THREE.Material) => {
-    if (graded.has(m)) return;
-    graded.add(m);
-    const prev = m.onBeforeCompile;
-    m.onBeforeCompile = (sh, r) => {
-      prev?.call(m, sh, r);
-      Object.assign(sh.uniforms, { uGrade, uGradeFrom, uGradeTo, uGradeSat });
-      sh.fragmentShader = sh.fragmentShader
-        .replace('void main() {', 'uniform float uGrade; uniform float uGradeFrom[5]; uniform float uGradeTo[5]; uniform float uGradeSat;\nvoid main() {')
-        .replace(
-          '#include <colorspace_fragment>',
-          `#include <colorspace_fragment>
-          if ( uGrade > 0.0 ) {
-            float gl = dot( gl_FragColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );
-            float x0 = 0.0; float y0 = 0.0; float go = gl;
-            bool done = false;
-            for ( int i = 0; i < 5; i ++ ) {
-              if ( ! done && gl <= uGradeFrom[ i ] ) { go = y0 + ( uGradeTo[ i ] - y0 ) * ( gl - x0 ) / max( uGradeFrom[ i ] - x0, 1e-4 ); done = true; }
-              x0 = uGradeFrom[ i ]; y0 = uGradeTo[ i ];
-            }
-            if ( ! done ) go = y0 + ( 1.0 - y0 ) * ( gl - x0 ) / max( 1.0 - x0, 1e-4 );
-            vec3 gc = gl_FragColor.rgb * ( go / max( gl, 1e-4 ) );
-            gc = mix( vec3( go ), gc, uGradeSat );
-            gl_FragColor.rgb = mix( gl_FragColor.rgb, clamp( gc, 0.0, 1.0 ), uGrade );
-          }`,
-        );
-    };
-    const key = m.customProgramCacheKey?.bind(m);
-    m.customProgramCacheKey = () => (key ? key() : '') + 'grade';
-    m.needsUpdate = true;
-  };
   ring.traverse((o) => {
     if (!o.isMesh) return;
     const m = o.material;
     o.castShadow = true;
-    grade(m);
     if (M.shell.test(m.name)) shells.push(m); // brushed silver as authored in the GLB
-    if (M.liner.test(m.name) && !liners.has(m)) liners.set(m, m.envMapIntensity ?? 1);
   });
   // polished (S01, D-081) vs brushed (authored). Values = finishes.json "silver_polished" from the
   // 3D Designer, applied to this same GLB (normal map and anisotropy off), so S01 → S02 can blend the
@@ -859,6 +812,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const resize = () => {
     W = window.innerWidth;
     H = window.innerHeight;
+    renderer.setPixelRatio(pixelRatio());
     renderer.setSize(W, H, false);
     camera.aspect = W / H;
     camera.position.set(0, 0, H / 2 / Math.tan(THREE.MathUtils.degToRad(FOV / 2)));
@@ -900,10 +854,10 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       /* D-181e: the near plane follows the lens. With near = 1 and the S01 photo camera ~3500–7000 px
          from the ring, a 24-bit depth buffer resolved only ~0.7–3 px (≈ 0.05–0.2 mm) at the ring, so
          the sensor glass, LED dots and their frames, which sit a few hundredths of a millimetre over
-         the liner, z-fought into a mottle (there since D-179; the D-181d rest grade then turned its
+         the liner, z-fought into a mottle (there since D-179; a later rest grade then turned its
          dark half black). Nothing is ever nearer than 0.1 F (pose.fwd ≤ 0.9, the ring shrinking with
          it), so 0.02 F costs nothing and gives ~100× the depth precision. */
-      camera.near = DBG.near ?? Math.max(1, F * 0.02);
+      camera.near = Math.max(1, F * 0.02);
       if (Px || Py) camera.setViewOffset(W, H, -Px, -Py, W, H);
       else camera.clearViewOffset();
       camera.updateProjectionMatrix();
@@ -954,7 +908,6 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
         if (dip > 0) pivot.position.addScaledVector(U, (dip + 0.00003) * deskK); // + 0.03 mm: float margin
       }
     }
-    uGrade.value = DBG.nograde ? 0 : rest;
     finger.visible = p.fing > 0.5;
     if (finger.visible) {
       finger.position.set(p.fx * W, p.fy * H, 0);
@@ -988,7 +941,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     }
 
     // finish: brushed → polished (V1)
-    const finKey = `${p.gloss}|${p.custom.toFixed(3)}|${p.finA}|${p.finB}|${p.finT.toFixed(3)}|${dsk.toFixed(3)}|${rest.toFixed(3)}`;
+    const finKey = `${p.gloss}|${p.custom.toFixed(3)}|${p.finA}|${p.finB}|${p.finT.toFixed(3)}`;
     if (finKey !== lastFin) {
       lastFin = finKey;
       mix(band, brushed.band, POLISHED.band, p.gloss);
@@ -999,19 +952,12 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       } else {
         if (band && 'clearcoat' in band) band.clearcoat = 0;
       }
-      // D-179: on the desk the D-177 rig is off (JSON: key + hemisphere only), so the polished band
-      // takes more of the warm env to match the poster's bright silver; fades out with the desk
-      const rg = 1 + (RING_DESK_ENV - 1) * dsk;
-      if (band) band.envMapIntensity *= rg;
-      if (band && p.custom <= 0.001) band.color.multiply(_c.setRGB(1, 1, 1).lerp(BAND_DESK, rest));
-      liners.forEach((base, m) => (m.envMapIntensity = base * (1 + (LINER_DESK_ENV - 1) * rest)));
-      if (engrave) engrave.envMapIntensity *= rg;
     }
 
     // V1 rig and cast shadow, S01 only
-    // D-179: on the desk the lamp key (lampKey) takes over from the D-177 rig, so the shadows it casts
-    // are the dominant shade on the pedestal (a shadow only removes the light that casts it)
-    const rig = p.photo * (1 - dsk); // JSON: key + hemisphere only, no front fill
+    // D-182: the production look: the rig stays on while the ring rests (the desk key and hemisphere
+    // add their light and cast the shadow)
+    const rig = p.photo;
     sun.intensity = 2.6 * rig;
     hemi.intensity = 0.55 * rig;
     fill.intensity = 0.35 * rig;
@@ -1028,7 +974,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     coldEdge.intensity = 34 * Math.min(1, Math.max(0, p.edge));
     // D-179 desk: pedestal, key light and the shadow catcher fade with the photo
     desk.visible = dsk > 0.002;
-    lampKey.castShadow = desk.visible && !DBG.noshadow;
+    lampKey.castShadow = desk.visible;
     if (desk.visible) {
       const sh = Math.max(0, p.shadow);
       lampKey.intensity = LAMP * dsk;
@@ -1075,10 +1021,9 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     const n = Math.min(1, Math.max(0, p.light));
     const ph = Math.min(1, Math.max(0, p.photo));
     // photo ↔ paper: step through the prebuilt blends (no pop); paper ↔ night: dip and swap at 0.5
-    // D-179: the poster lights the ring with the paper studio env (warm-tinted), so on the desk the
-    // env starts DESK_PAPER of the way from the photo env toward paper; as the desk fades the photo→paper
-    // walk continues from there (no pop)
-    const pw = Math.max(1 - ph, DESK_PAPER * Math.min(1, Math.max(0, p.desk)));
+    // D-182: the ring reflects the photo itself, as in production; a quarter of the paper studio env stays
+    // in because the warm desk alone is too dark for the band to read as silver
+    const pw = Math.max(1 - ph, 0.25 * Math.min(1, Math.max(0, p.desk)));
     const step = blends.length ? Math.round(pw * (blends.length - 1)) : -1;
     const dk = Math.min(1, Math.max(0, p.dusk));
     const key = dk >= 0.5 && envs.dusk ? 'dusk' : n >= 0.5 && envs.night ? 'night' : step >= 0 ? `blend${step}` : 'paper';
@@ -1086,11 +1031,9 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       lastEnv = key;
       scene.environment = key === 'dusk' ? envs.dusk! : key === 'night' ? envs.night! : step >= 0 ? blends[step] : envs.paper ?? null;
     }
-    // D-181b polish: on the desk the live ring is exposed up to the 3D Designer's poster ring (measured
-    // on the ring pixels, poster vs live); only the ring is tone mapped here (catchers are not), and
-    // the gain follows `rest`, so it is there only while the ring stands on the pedestal (the frame the
-    // poster shows) and eases out as the ring lifts off: the close-up and S02 keep their look
-    renderer.toneMappingExposure = (1.0 + 0.15 * ph) * (1 + (DESK_EXPOSURE - 1) * rest); // V1 hero exposure 1.15 → 1.0, continuous
+    renderer.toneMappingExposure = 1.0 + 0.15 * ph; // V1 hero exposure 1.15 → 1.0, continuous
+    // D-182: slow reflection movement on the S01 ring (hero.ts drives it), also while it rests
+    scene.environmentRotation.y = p.envRot;
     const dip = Math.min(1, Math.abs(n - 0.5) * 2.5, Math.abs(dk - 0.5) * 2.5);
     // on Night the polished env is almost black: lift it with the rim so the band keeps a silver gradient
     // the swap dip never goes below 0.45, so the ring is never a black shape in a connection (D-090 r1)
@@ -1203,7 +1146,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     }
     return { l, t, r, b };
   };
-  if (new URLSearchParams(location.search).has('inspect')) {
+  if (import.meta.env.DEV && new URLSearchParams(location.search).has('inspect')) {
     (window as any).__ringClearance = (pose: Pose) => (apply(pose), clearance());
     (window as any).__ringScreenBox = (pose: Pose) => (apply(pose), screenBox());
     // light travel direction mapped back into pedestal space (must equal JSON direction_unit)
