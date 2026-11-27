@@ -36,6 +36,13 @@ const centre = (ctx: Ctx, u = 0): Pose =>
 const close = (ctx: Ctx): Pose =>
   pose({ x: ctx.mobile ? 0.22 : 0.25, y: ctx.mobile ? (view.h < 740 ? -0.3 : -0.2) : -0.04, w: ctx.mobile ? 0.92 : 0.64, rx: -0.36, ry: -0.5, rz: 0.12, spin: -0.36, uncap: 1, ...NIGHT, led: 1, flare: 1 });
 
+let spareH = -1;
+if (typeof window !== 'undefined') {
+  const again = () => (spareH = -1);
+  window.addEventListener('resize', again);
+  document.fonts?.ready.then(again);
+}
+
 export const features: SectionMotion = {
   init(r) {
     const all = (s: string) => [...r.querySelectorAll<HTMLElement>(s)];
@@ -68,11 +75,15 @@ export const features: SectionMotion = {
     put(el.bottom, { o: legIn * out }, ctx);
     if (el.col && el.top && el.bottom && !ctx.mobile) {
       const gap = 40;
-      const head0 = heads[0]?.offsetHeight ?? 0;
-      const cell = el.top.offsetHeight;
-      const kick = (kicks[0]?.offsetHeight ?? 0) + 16;
-      // the space the legend, the note and the empty second title line take in state 1
-      const spare = el.bottom.offsetHeight + gap + (cell - kick - head0);
+      // QA27 G-19: measured once per size, not in every frame (a read forces layout)
+      if (spareH < 0) {
+        const head0 = heads[0]?.offsetHeight ?? 0;
+        const cell = el.top.offsetHeight;
+        const kick = (kicks[0]?.offsetHeight ?? 0) + 16;
+        // the space the legend, the note and the empty second title line take in state 1
+        spareH = el.bottom.offsetHeight + gap + (cell - kick - head0);
+      }
+      const spare = spareH;
       put(el.col, { y: (spare / 2) * (1 - legIn) }, ctx);
     } else put(el.col, {}, ctx);
 

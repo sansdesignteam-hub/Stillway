@@ -68,6 +68,8 @@ const lightAt = (u: number) => {
   };
 };
 
+let statH: number[] = [];
+
 export const sleep: SectionMotion = {
   init(r) {
     const q = (s: string) => r.querySelector<HTMLElement>(s);
@@ -75,6 +77,9 @@ export const sleep: SectionMotion = {
     stats = [...r.querySelectorAll<HTMLElement>('[data-s-stat]')];
     measureVh();
     window.addEventListener('resize', measureVh);
+    const again = () => (statH = []);
+    window.addEventListener('resize', again);
+    document.fonts?.ready.then(again);
     // corner light canvas (glow.ts), painted once per size; phones have their own shape
     const beam = r.querySelector<HTMLCanvasElement>('[data-s-beam]');
     if (beam) keepLit(beam, () => (window.matchMedia('(max-width: 719px)').matches ? S03_LIGHT_PHONE : S03_LIGHT));
@@ -86,6 +91,8 @@ export const sleep: SectionMotion = {
     // corner light: comes in once Night is in, stays through S03, gives way to the dawn in the lens
     put(el.light, { o: seg(u, CORNER[0], CORNER[1]) * (1 - seg(u, END, END + 0.7)) }, ctx);
     put(el.head, { o: seg(u, 0.45, 0.95) * out, y: up, yv: 0.02 * (1 - seg(u, 0.45, 0.95)) }, ctx);
+    // QA27 G-19: block heights are read once per size, not in every frame (a read forces layout)
+    if (!statH.length) statH = stats.map((s) => s.offsetHeight);
     stats.forEach((s, i) => {
       const a = 0.5 + i; // number i arrives on the way to state i + 2
       // QA R-04: the number before moves out of the slot first, only then does the next one come in
@@ -97,7 +104,7 @@ export const sleep: SectionMotion = {
       const gone = last ? 0 : seg(u, a + 2, a + 2.2); // two numbers later: out
       const scale = 1 - 0.76 * back; // the previous number ends small (≈ a quarter) and dim
       // the dimmed number moves up by the height of the block that replaces it, so they never overlap
-      const lift = (stats[i + 1]?.offsetHeight ?? s.offsetHeight) + 14;
+      const lift = (statH[i + 1] ?? statH[i]) + 14;
       const y = (1 - inn) * 40 - back * lift + up;
       // reduced motion has no transforms, so a dimmed older number would sit on the new one: it goes
       const dim = ctx.reduced ? back : 0.72 * back;
