@@ -4,7 +4,7 @@
  *          Sand, the ring comes in on the left, the panel content appears; clock 21:00 → 22:00)
  *  0  state 1  "Turn it yourself." — the ring turns by drag / swipe / ‹ ›, finish swatches + light
  *  1  state 4  "Find your size and finish." — size, trial, box, the button and its inline note
- *  D-165: S09 → S10 is a plain scroll (app.ts); the S10 panel and ring come in after S09 has left
+ *  D-192: S09 → S10 on desktop is a crossfade (app.ts); S10 fades in where it stands once S09 has gone
  *  > 2         to S11: the panel leaves right, the ring moves to the middle (close.ts ringIn)
  * D-171 phones: no pin, fade or ring scale. Title, ring, arrows and panel are one column that moves
  *   1:1 with the page; the S10 track is sized to the column (flowTrack), so its height is the content's.
@@ -205,18 +205,18 @@ export const finishes: SectionMotion = {
     if (front) front.style.transform = '';
     if (still) still.style.transform = '';
     const W = window.innerWidth;
-    const inn = seg(u, -0.3, 0);
+    const inn = seg(u, -0.58, -0.08); // D-192: 55–94% of the connection, after S09 has gone
     const out = seg(u, FINISHES_END, FINISHES_END + 0.45); // 10 → 11: the panel leaves right
-    put(heads[0], { o: window4(u, -0.25, 0.05, 0.45, 0.7) }, ctx);
+    put(heads[0], { o: window4(u, -0.58, -0.08, 0.45, 0.7) }, ctx);
     put(heads[1], { o: seg(u, 0.72, 0.95) * (1 - out) }, ctx);
-    put(el.panel, { o: inn * (1 - out), x: (1 - inn) * W * 0.12 + out * W * 0.4 }, ctx);
+    put(el.panel, { o: inn * (1 - out), x: out * W * 0.4 }, ctx);
     // desktop: the whole panel from state 1 (Shift PDP); phone: size, box and button join at state 4
     const more = ctx.mobile ? seg(u, 0.5, 0.95) : 1;
     put(el.more, { o: more }, ctx);
     if (el.more) el.more.style.display = ctx.mobile && more < 0.01 ? 'none' : '';
     // turning needs the 3D ring (no WebGL / reduced motion: a still, so no hint or arrows)
     const live = document.documentElement.classList.contains('ring-ready');
-    put(el.turn, { o: live ? window4(u, -0.2, 0.1, 0.55, 0.85) : 0 }, ctx);
+    put(el.turn, { o: live ? window4(u, -0.5, -0.05, 0.55, 0.85) : 0 }, ctx);
     if (el.drag) el.drag.style.pointerEvents = u > -0.3 && u < FINISHES_END + 0.2 ? 'auto' : 'none';
   },
   ring(u, ctx) {
@@ -251,10 +251,9 @@ export const finishes: SectionMotion = {
       lamp: choice.lamp,
     });
   },
-  // 09 → 10 (D-165): the ring comes in on the left once S09 has scrolled away
+  // 09 → 10 (D-192): the ring fades in where it stands, with the rest of S10, once S09 has gone
   ringIn(x, ctx, _from, to): Pose {
     if (ctx.mobile) return to; // D-171: phones — the ring comes up with the column, no fade or scale
-    const t = seg(x, 0.55, 0.95);
-    return { ...to, w: to.w * lerp(0.85, 1, t), alpha: t };
+    return { ...to, alpha: seg(x, 0.55, 0.95) };
   },
 };

@@ -12,14 +12,26 @@
  * Between modes: the page and the corner light cross-fade (the texts outside the phone change with
  * them). Soft easing, no bounce.
  * Reduced motion: whole states, every screen shown complete, short opacity fades (global.css).
- *  > 6.6  to S10 (D-165, D-172 phones too): a plain scroll — the hand, phone and texts go up 1:1.
+ *  > 6.6  to S10. Desktop (D-192): a crossfade — the hand with the phone slides down and out, the left
+ *          text out to the left, the right text to the right, then S10 fades in (finishes.ts).
+ *          Phones (D-172): a plain scroll — the hand, phone and texts go up 1:1.
  */
 import { view } from '../viewport';
 import { put, seg, lerp, clamp01, smooth, window4 } from '../anim';
 import { pose, type Pose } from '../ring/poses';
+import { sections } from '../../content/sections';
 import type { SectionMotion } from '../story';
 
 const END = 6.6;
+/** D-192: 09 → 10 on desktop, x = 0..1 of the connection; all of S09 is gone at 55%, where S10 starts
+ * to fade in (finishes.ts). Travel: the phone in screen heights, the texts in screen widths */
+const S10_TIN = sections.find((d) => d.id === 'finishes')!.tin;
+const LEAVE = {
+  move: (x: number) => seg(x, 0, 0.58),
+  o: (x: number) => 1 - seg(x, 0.08, 0.55),
+  phone: 0.5,
+  text: 0.18,
+};
 /** section units per mode */
 const MODE = 2;
 
@@ -119,27 +131,31 @@ export const app: SectionMotion = {
   },
   update(u, ctx) {
     const H = view.h;
-    // 09 → 10 (D-165): a plain scroll, like 06 → 07 — the hand, the phone and the texts go up 1:1
-    // with the page, no fade; the photo's melted foot keeps its cut out of sight. Reduced motion: fade.
-    // D-172: phones too go up 1:1 (no fade); the navbar mask (global.css, QA G-14) hides what passes
-    // under the bar. Only reduced motion fades.
+    // 09 → 10, desktop (D-192): the phone goes down, the texts go out to the sides, all of it fading.
+    // Phones (D-172): a plain scroll, 1:1 with the page, no fade; the navbar mask (global.css, QA G-14)
+    // hides what passes under the bar. Reduced motion: a fade only.
     const fade = ctx.reduced;
+    const cross = !ctx.reduced && !ctx.mobile;
+    const x = cross ? clamp01((u - END) / S10_TIN) : 0;
     // D-172 PM review: reduced motion on phones — S10's column scrolls in right under S09 (finishes.ts),
     // so S09 is gone at once when its track ends (no fade that overlaps the incoming column)
     const cut = ctx.reduced && ctx.mobile;
-    const out = cut ? (u < END ? 1 : 0) : fade ? 1 - seg(u, END, END + 0.3) : 1;
+    const out = cut ? (u < END ? 1 : 0) : fade ? 1 - seg(u, END, END + 0.3) : cross ? LEAVE.o(x) : 1;
     noFade(cut && u >= END - 0.01);
-    const up = fade ? 0 : Math.max(0, u - END) * (vhPx || H);
+    const up = fade || cross ? 0 : Math.max(0, u - END) * (vhPx || H);
+    const move = cross ? LEAVE.move(x) : 0;
+    const down = move * LEAVE.phone * H;
+    const aside = move * LEAVE.text * window.innerWidth;
     const rise = ctx.reduced ? (u >= -0.5 ? 1 : 0) : seg(u, -0.5, -0.05);
     const inn = seg(u, -0.3, 0); // 70–100%: chip, texts, footer
-    put(el.phone, { o: Math.min(1, rise * 1.6) * out, y: (1 - rise) * H * 0.55 - up }, ctx);
+    put(el.phone, { o: Math.min(1, rise * 1.6) * out, y: (1 - rise) * H * 0.55 - up + down }, ctx);
     measure();
 
     // the mode: continuous for the tab highlight and the side texts; whole under reduced motion
     const f = ctx.reduced ? Math.min(2, Math.floor(Math.max(0, u) / MODE)) : modeOf(u);
     const near = (i: number) => clamp01(1 - Math.abs(f - i) * 2.2);
-    lefts.forEach((l, i) => put(l, { o: near(i) * inn * out, y: (1 - near(i)) * 10 - up }, ctx));
-    rights.forEach((l, i) => put(l, { o: near(i) * inn * out, y: (1 - near(i)) * 10 - up }, ctx));
+    lefts.forEach((l, i) => put(l, { o: near(i) * inn * out, x: -aside, y: (1 - near(i)) * 10 - up }, ctx));
+    rights.forEach((l, i) => put(l, { o: near(i) * inn * out, x: aside, y: (1 - near(i)) * 10 - up }, ctx));
 
     pages.forEach((pg, k) => {
       const show = ctx.reduced ? (k === f ? 1 : 0) : showOf(k, u);
