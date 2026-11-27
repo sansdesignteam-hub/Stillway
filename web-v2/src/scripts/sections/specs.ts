@@ -8,11 +8,12 @@
  *                 and fade in where they stand, left to right
  *  1 → 2 State 3  the words fade where they stand, then the cards close into a stack, the line grows from the
  *                 middle; (I) Night: title letter by letter from behind the line, lines rise
- *  2 → 5 States 4–6  QA27 S7-06 (obsidianassembly.com "Origin Objects"): a 3:4 front card 68 % of the
- *                 screen high with ONE card behind it, peeking evenly above and below. With the scroll
- *                 the front card slides out (down; phones: to the left), never toward the navbar, and
- *                 the card behind grows into its place; titles and captions roll old → new together
- *                 (II)–(IV); the counter circle fills; (IV) Rinse stands alone (Figma State 6)
+ *  2 → 5 States 4–6  QA27 S7-06 / S7-06b (obsidianassembly.com "Objects"): a 3:4 front card 68 % of
+ *                 the screen high on a deck — two smaller layers stepping up behind it, the next card's
+ *                 foot below it. With the scroll the next card comes up over the front one and grows
+ *                 into its place while the front one goes back into the layers (stackSlot); titles and
+ *                 captions roll old → new together (II)–(IV); the counter circle fills; (IV) Rinse
+ *                 stands alone before the end (Figma State 6)
  *  5.1 → 6.1 end  (obsidianassembly.com "The Connection") the big photo comes up from below at
  *                 scroll speed (1:1), its content slower (parallax); the Rinse card moves down and
  *                 shrinks in front of it, then the words run over it (D-151: photo → card → words →
@@ -62,10 +63,15 @@ interface Slot {
   h: number;
   s: number; // scale of the box
   o: number;
+  /** QA27 S7-06b: px of the window hidden from its top (the next card, where the front one covers it) */
+  ct?: number;
 }
-/** QA27 S7-06: front card 3:4, 68 % of the screen high; scale of the one card behind it */
+/** QA27 S7-06: front card 3:4, 68 % of the screen high.
+ *  S7-06b (obsidianassembly.com "Objects", measured on its frames): each layer behind is 12.5 % smaller
+ *  than the one before it and stands higher; the next card waits below the front one at the first
+ *  layer's size */
 const FRONT_H = 0.68;
-const BACK_S = 0.92;
+const LAYER_S = 0.875;
 const RADIUS = 10;
 const lerpSlot = (a: Slot, b: Slot, t: number): Slot => ({
   x: lerp(a.x, b.x, t),
@@ -74,6 +80,7 @@ const lerpSlot = (a: Slot, b: Slot, t: number): Slot => ({
   h: lerp(a.h, b.h, t),
   s: lerp(a.s, b.s, t),
   o: lerp(a.o, b.o, t),
+  ct: lerp(a.ct ?? 0, b.ct ?? 0, t),
 });
 
 function layout(ctx: Ctx) {
@@ -89,17 +96,31 @@ function layout(ctx: Ctx) {
   const col = Math.min(316, W * 0.22); // = Specs.astro .sp__ttl / .sp__right
   const fw = m ? Math.min(W * 0.68, (H - nav - 270) * 0.75) : Math.min(H * FRONT_H * 0.75, W - 2 * (margin + col + 24));
   const fh = fw / 0.75;
-  const peek = m ? Math.max(14, fh * 0.055) : fh * 0.065; // the back card, above and below
   // desktop: centred below the navbar; phones: stack, counter row and text centred as one
-  const phoneTop = nav + Math.max(12, (H - nav - (fh + 2 * peek + 72 + 140)) / 2);
-  const cy = m ? phoneTop + peek + fh / 2 : (H + nav) / 2;
-  const ly = m ? cy + fh / 2 + peek + 72 : cy; // phones: the line under the stack
+  // the layers behind step up (reference ≈ 12 % of the card per layer), never into the navbar; the
+  // next card shows this much below the front one
+  const down = m ? Math.max(14, fh * 0.055) : Math.min(fh * 0.112, H - ((H + nav) / 2 + fh / 2) - 12);
+  const upRoom = m ? Math.max(10, fh * 0.04) : ((H + nav) / 2 - fh / 2 - nav - 6) / 2;
+  const up = Math.max(8, Math.min(fh * 0.118, upRoom));
+  const phoneTop = nav + Math.max(6, (H - nav - (fh + 2 * up + down + 72 + 140)) / 2);
+  const cy = m ? phoneTop + 2 * up + fh / 2 : (H + nav) / 2;
+  const ly = m ? cy + fh / 2 + down + 72 : cy; // phones: the line under the stack
   const bw = fw;
-  const bh = (fh + 2 * peek) / BACK_S;
+  const bh = fh;
+  const top = cy - fh / 2;
   const F: Slot = { x: cx, y: cy, w: fw, h: fh, s: 1, o: 1 };
-  const B: Slot = { x: cx, y: cy, w: fw * BACK_S, h: fh + 2 * peek, s: BACK_S, o: 1 };
-  // waiting, unseen, behind the back card
-  const Z: Slot = { x: cx, y: cy, w: fw * 0.84, h: fh, s: 0.84, o: 0 };
+  // behind, higher: layer n is LAYER_S^n… as in the reference 1, 0.875, 0.75 (linear), top edge n steps up
+  const layer = (n: number, o = 1): Slot => {
+    const sc = 1 - (1 - LAYER_S) * n;
+    return { x: cx, y: top - n * up + (fh * sc) / 2, w: fw * sc, h: fh * sc, s: sc, o };
+  };
+  const B1 = layer(1);
+  const B2 = layer(2);
+  const B3 = { ...layer(3, 0), y: B2.y - (B2.h - fh * (1 - (1 - LAYER_S) * 3)) / 2 }; // fades where B2 stands, a size smaller
+  // the next card: first layer's size, its foot `down` below the front card; the rest is behind the front
+  const N: Slot = { x: cx, y: top + fh + down - (fh * LAYER_S) / 2, w: fw * LAYER_S, h: fh * LAYER_S, s: LAYER_S, o: 1, ct: fh * LAYER_S - down };
+  // the one after it: unseen behind the front card, on its way to N
+  const N2: Slot = { x: cx, y: cy + fh * 0.06, w: fw * 0.75, h: fh * 0.75, s: 0.75, o: 0, ct: 0 };
   // State 2 row (Figma 180 × 225 every 200 px)
   const rw = m ? (W - 32 - 3 * 8) / 4 : 179.93 * k;
   const rgap = m ? 8 : 19.99 * k;
@@ -110,7 +131,7 @@ function layout(ctx: Ctx) {
   const E: Slot = { x: cx, y: H / 2, w: ew, h: ew * 1.25, s: ew / bw, o: 1 };
   // the photo frame (Figma inset 24 / 40)
   const ey = m ? 16 : 24;
-  return { W, H, m, k, cx, cy, ly, bw, bh, F, B, Z, row, rowW, E, ey };
+  return { W, H, m, k, cx, cy, ly, bw, bh, F, B1, B2, B3, N, N2, row, rowW, E, ey };
 }
 type L7 = ReturnType<typeof layout>;
 
@@ -155,7 +176,10 @@ function placeCard(c: HTMLElement, r: Slot, bw: number, bh: number, z: number) {
   const ix = Math.max(0, (bw - r.w / r.s) / 2);
   const iy = Math.max(0, (bh - r.h / r.s) / 2);
   const rad = RADIUS / r.s;
-  tf(c, r.o, tr(r.x - bw / 2, r.y - bh / 2, r.s), `inset(${iy.toFixed(1)}px ${ix.toFixed(1)}px round ${rad.toFixed(1)}px)`);
+  const ct = (r.ct ?? 0) / r.s;
+  // the covered part of the next card is cut square (it is behind the front card's edge), the rest round
+  const clip = ct > 0.5 ? `inset(${(iy + ct).toFixed(1)}px ${ix.toFixed(1)}px ${iy.toFixed(1)}px round 0 0 ${rad.toFixed(1)}px ${rad.toFixed(1)}px)` : `inset(${iy.toFixed(1)}px ${ix.toFixed(1)}px round ${rad.toFixed(1)}px)`;
+  tf(c, r.o, tr(r.x - bw / 2, r.y - bh / 2, r.s), clip);
   const zs = String(z);
   if (c.style.zIndex !== zs) c.style.zIndex = zs;
 }
@@ -266,18 +290,38 @@ const focusOf = (u: number) => {
 /** 0 → 1 while text i hands over to text i + 1 (the same stretch in which the cards swap) */
 const swapOf = (f: number, i: number) => clamp01((f - i - 0.28) / 0.44);
 
-/** where card i sits for focus f; z order with it. p = how far card i is behind the front */
+/**
+ * QA27 S7-06b — the deck of obsidianassembly.com "Objects", bound to the scroll. Where card i sits for
+ * focus f, and its z order. q = how many places card i is from the front, wrapped over the four cards
+ * (the deck goes round, as in the reference, so the stack is full at 1/4 and at 4/4 alike):
+ *    0   the front card
+ *   −1   first layer behind: smaller, one step up        −2  second layer, another step up
+ *   +1   the next card: first-layer size, its foot showing below the front card
+ * A change (f → f + 1): the next card comes over the front one — it is uncovered from its foot up in
+ * the first part of the move — rising and growing into the front place, while the front card shrinks
+ * back and up into the first layer, the first layer into the second, and the second fades a size
+ * smaller where it stands; it then comes round, unseen behind the front card, to wait below as "next".
+ */
+const REVEAL = 0.22; // share of the move in which the next card is uncovered
 function stackSlot(i: number, f: number, L: L7): [Slot, number] {
-  const p = i - f;
-  if (p >= 2) return [L.Z, 40 - i];
-  if (p >= 1) return [lerpSlot(L.B, L.Z, p - 1), 40 - i]; // comes into view behind
-  if (p >= 0) return [lerpSlot(L.F, L.B, p), 40 - i]; // grows into the front
-  // leaving: slides out of the screen on top — down (phones: left, clear of the text below the line)
-  const t = Math.min(1, -p);
-  const r = { ...L.F, o: t < 1 ? 1 : 0 };
-  if (L.m) r.x -= t * (L.cx + L.F.w / 2 + 8);
-  else r.y += t * (L.H - L.cy + L.F.h / 2 + 8);
-  return [r, 50];
+  const q = ((((i - f + 2) % 4) + 4) % 4) - 2; // −2 ≤ q < 2
+  if (q <= -1) return [lerpSlot(L.B1, L.B2, -q - 1), 20 + Math.round(q * 4)];
+  if (q <= 0) return [lerpSlot(L.F, L.B1, -q), 30];
+  if (q <= 1) {
+    // rising to the front, on top; q = 1 is the wait below (covered part cut away)
+    const t = 1 - q;
+    const r = lerpSlot(L.N, L.F, smooth(t));
+    r.ct = (L.N.ct ?? 0) * (1 - smooth(clamp01(t / REVEAL)));
+    return [r, t > 0 ? 50 : 25]; // waiting: under the front card (the row closing must not show it on top)
+  }
+  // 1 < q < 2: leaving the second layer (fades, first half), then round to the wait below (second half)
+  const t = 2 - q;
+  if (t < 0.5) return [lerpSlot(L.B2, L.B3, smooth(t * 2)), 10];
+  const a = smooth((t - 0.5) * 2);
+  const r = lerpSlot(L.N2, L.N, a);
+  r.o = a > 0 ? 1 : 0;
+  r.ct = lerp(L.N2.h, L.N.ct ?? 0, a); // stays behind the front card until its foot comes out below
+  return [r, 25];
 }
 
 export const specs: SectionMotion = {
@@ -399,8 +443,8 @@ export const specs: SectionMotion = {
       rw.o *= rise;
       const [st, z] = stackSlot(i, f, L);
       let r = lerpSlot(rw, st, close);
-      // the two that end up unseen stay solid until they are covered, then go (no see-through pile)
-      if (st.o === 0 && f === 0) r.o = rw.o * (1 - seg(close, 0.7, 1));
+      // (IV) Rinse stands alone before the end (Figma State 6): the rest of the deck goes first
+      if (i !== 3) r.o *= 1 - seg(u, 4.98, 5.1);
       if (i === 3) r = lerpSlot(r, G.E, pe);
       r.o *= 1 - out;
       // D-172: while the row closes, the leftmost card (Night) is on top, then Desk, Move, Rinse —
