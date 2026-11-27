@@ -46,6 +46,12 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(FOV, 1, 1, 40000);
+  /** ?inspect only: &near=1 restores the old near plane, &nograde turns the S01 rest grade off, &noshadow the lamp shadow map (QA toggles for D-181e) */
+  const DBG = (() => {
+    const q = new URLSearchParams(location.search);
+    if (!q.has('inspect')) return {} as { near?: number; nograde?: boolean; noshadow?: boolean };
+    return { near: q.has('near') ? Number(q.get('near')) : undefined, nograde: q.has('nograde'), noshadow: q.has('noshadow') };
+  })();
 
   const pmrem = new THREE.PMREMGenerator(renderer);
   const envs: { paper?: THREE.Texture; night?: THREE.Texture; dusk?: THREE.Texture } = {};
@@ -891,6 +897,13 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(H / 2 / F));
       camera.position.set(0, 0, F);
       camera.far = Math.max(40000, F * 4);
+      /* D-181e: the near plane follows the lens. With near = 1 and the S01 photo camera ~3500–7000 px
+         from the ring, a 24-bit depth buffer resolved only ~0.7–3 px (≈ 0.05–0.2 mm) at the ring, so
+         the sensor glass, LED dots and their frames, which sit a few hundredths of a millimetre over
+         the liner, z-fought into a mottle (there since D-179; the D-181d rest grade then turned its
+         dark half black). Nothing is ever nearer than 0.1 F (pose.fwd ≤ 0.9, the ring shrinking with
+         it), so 0.02 F costs nothing and gives ~100× the depth precision. */
+      camera.near = DBG.near ?? Math.max(1, F * 0.02);
       if (Px || Py) camera.setViewOffset(W, H, -Px, -Py, W, H);
       else camera.clearViewOffset();
       camera.updateProjectionMatrix();
@@ -941,7 +954,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
         if (dip > 0) pivot.position.addScaledVector(U, (dip + 0.00003) * deskK); // + 0.03 mm: float margin
       }
     }
-    uGrade.value = rest;
+    uGrade.value = DBG.nograde ? 0 : rest;
     finger.visible = p.fing > 0.5;
     if (finger.visible) {
       finger.position.set(p.fx * W, p.fy * H, 0);
@@ -1015,7 +1028,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     coldEdge.intensity = 34 * Math.min(1, Math.max(0, p.edge));
     // D-179 desk: pedestal, key light and the shadow catcher fade with the photo
     desk.visible = dsk > 0.002;
-    lampKey.castShadow = desk.visible;
+    lampKey.castShadow = desk.visible && !DBG.noshadow;
     if (desk.visible) {
       const sh = Math.max(0, p.shadow);
       lampKey.intensity = LAMP * dsk;

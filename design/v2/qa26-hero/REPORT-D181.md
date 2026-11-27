@@ -155,3 +155,14 @@ Overlay/still baru disalin dan `hero-plate.mjs` dijalankan ulang; plate, GLB tid
 - Wordmark 1440×900 149,6 px, jarak bbox 33 px; clearance diam −0,0002 mm (pembulatan JSON), tidak berubah.
 - Tidak ada frame Figma 375; 375 dibandingkan dengan still ponsel 3D Designer (`D181d_375_live_vs_3d_still.jpg`).
 - Bukti lain: `D181d_1440_2x_vs_figma.jpg`, `D181d_onion_figma_vs_live_1440.jpg`, `D181d_onion_poster_vs_live_1440.jpg` / `_375.jpg`, `D181d_pedestal_closeup_poster_live_figma.jpg`, `D181d_shadow_only_poster_top_live_bottom.jpg`, `D181d_frames_1440.jpg` / `_375.jpg`.
+
+---
+
+# D-181e: bercak hitam di dalam ring (laporan pengguna pada `12010a9`)
+
+- **Di mana:** ring 3D hidup. Poster bersih, jadi tidak ada yang perlu dikirim ke 3D Designer.
+- **Penyebab:** z-fighting di depth buffer, bukan grade, bukan bayangan, bukan material. Sejak D-179 ring S01 dirender dengan kamera foto berlensa panjang (ring ±3500 px dari kamera, lebih jauh di layar besar), sedangkan near plane tetap 1. Depth 24-bit hanya memisahkan ±0,7–3 px (±0,05–0,2 mm) di posisi ring. Kaca sensor, titik LED, dan bingkainya berada beberapa perseratus milimeter di atas liner, sehingga saling berebut piksel dan tampil berbintik.
+- **Kenapa baru terlihat hitam:** bintiknya sudah ada sejak D-179 (abu terang). Grade D-181d menggelapkan separuh gelap bintik itu menjadi hitam. Produksi bersih karena belum memakai kamera foto D-179.
+- **Uji toggle** (`?inspect&near=1`, `&nograde`, `&noshadow`; `D181e_sensors_1440_2x_rest_before_nograde_noshadow_after_poster.jpg`): dengan near = 1 bercak tetap ada saat grade dimatikan dan saat shadow map dimatikan; dengan near baru bercak hilang tanpa mengubah yang lain. Pantulan liner ×0,3 dan normal map sensor tidak diuji terpisah, karena perbaikan near saja sudah menghilangkannya.
+- **Perbaikan:** `camera.near = max(1, 0,02 × F)` (mengikuti lensa). Tidak ada objek yang lebih dekat dari 0,1 F. Grade, bayangan, dan material tidak diubah.
+- **Hasil:** sensor, titik LED, dan liner bersih pada 1440@2x diam dan tilt (`D181e_sensors_1440_2x_tilt_before_after.jpg`) serta 375@3x (`D181e_sensors_375_3x_before_after_poster.jpg`). Persentil luma ring tetap 3/16/99/118/251 (poster 2/17/100/117/252). fps 59,8–60,4 (`D181e_perf.txt`), clearance tidak berubah. Urutan scroll u 0 → 3 dijalankan ulang tanpa galat, tetapi belum saya periksa frame per frame untuk section lain.
