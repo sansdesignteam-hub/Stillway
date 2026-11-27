@@ -191,6 +191,21 @@ html.js .scene--close .scene__front {
   mask-image: linear-gradient(to bottom, transparent calc(var(--header-h) - 12px), #000 calc(var(--header-h) + 8px));
 }
 
+/* QA27 M-13: phones — nothing shows beside the logo or the pills: gone at the navbar's lower edge,
+   whole again 16 px below it (the S10 column moves, so its mask counter-moves by --fn-y) */
+@media (max-width: 719px) {
+  html.js .scene--why .scene__front,
+  html.js .scene--why .scene__back,
+  html.js .scene--sleep .scene__front,
+  html.js .scene--details .scene__front,
+  html.js .scene--details .scene__back,
+  html.js .scene--app .scene__front,
+  html.js .scene--close .scene__front {
+    -webkit-mask-image: linear-gradient(to bottom, transparent var(--header-h), #000 calc(var(--header-h) + 16px));
+    mask-image: linear-gradient(to bottom, transparent var(--header-h), #000 calc(var(--header-h) + 16px));
+  }
+}
+
 /* ---------- ring stills (3D fallback/): between the back and front layers ---------- */
 .ring-fallback {
   position: absolute;
@@ -260,7 +275,7 @@ html.reduced .scene [data-a] {
 /* D-171: the S10 column scrolls like a page on phones, so it fades out under the navbar too */
 @media (max-width: 719px) {
   html.js .scene--finishes .scene__front {
-    -webkit-mask-image: linear-gradient(to bottom, transparent calc(var(--header-h) - 12px), #000 calc(var(--header-h) + 8px));
-    mask-image: linear-gradient(to bottom, transparent calc(var(--header-h) - 12px), #000 calc(var(--header-h) + 8px));
+    -webkit-mask-image: linear-gradient(to bottom, transparent calc(var(--header-h) - var(--fn-y, 0px)), #000 calc(var(--header-h) + 16px - var(--fn-y, 0px)));
+    mask-image: linear-gradient(to bottom, transparent calc(var(--header-h) - var(--fn-y, 0px)), #000 calc(var(--header-h) + 16px - var(--fn-y, 0px)));
   }
 }

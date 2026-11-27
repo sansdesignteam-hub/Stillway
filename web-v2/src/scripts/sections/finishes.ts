@@ -185,7 +185,10 @@ export const finishes: SectionMotion = {
     if (phoneMq.matches) {
       // D-171: plain flow on phones — everything visible, the column moves with the page
       const y = flowY();
-      if (front) front.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0)`;
+      if (front) {
+        front.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0)`;
+        front.style.setProperty('--fn-y', `${y.toFixed(1)}px`); // QA27 M-13: the navbar mask stays put
+      }
       [heads[1], el.panel, el.more].forEach(clearInline);
       if (el.more) el.more.style.display = '';
       const live = document.documentElement.classList.contains('ring-ready');
