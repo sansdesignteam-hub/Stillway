@@ -18,6 +18,7 @@
  *  > 3.6      connection to S04 (D-138 lens): the text goes up with the page 1:1 (reduced: fades),
  *             the corner light gives way to the dawn
  */
+import { view } from '../viewport';
 import { put, seg, window4, clamp01, lerp, type Ctx } from '../anim';
 import { along, pose, ANGLE, lerpPose, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
@@ -28,7 +29,7 @@ let stats: HTMLElement[] = [];
 const END = 3.6;
 /** 100svh in px (the scroll length of one u) */
 let vhPx = 0;
-const measureVh = () => (vhPx = (document.querySelector('[data-vh]') as HTMLElement | null)?.offsetHeight || window.innerHeight);
+const measureVh = () => (vhPx = view.h);
 /** D-136 timing inside the 02 → 03 connection (x 0..1) */
 const EDGE: [number, number] = [0.62, 0.84];
 /** QA SL-02: state 1 → 2 (u 0..1) — corner light, then the warm ring, then the green LED */

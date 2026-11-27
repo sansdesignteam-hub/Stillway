@@ -17,6 +17,7 @@
  * Reduced motion: u is snapped to whole states; elements fade over 300 ms; the ring jumps to the
  * pose of the state; no breathing loop.
  */
+import { view } from './viewport';
 import { keepLit, LIGHT } from './glow';
 import { sections, dayparts, type SectionDef } from '../content/sections';
 import { clamp01, seg, lerp, put, window4, type Ctx } from './anim';
@@ -124,7 +125,6 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
   const nav = document.querySelector<HTMLElement>('[data-nav]');
   const clockTime = document.querySelectorAll<HTMLElement>('[data-clock-time]');
   const clockPart = document.querySelectorAll<HTMLElement>('[data-clock-part]');
-  const vhProbe = document.querySelector<HTMLElement>('[data-vh]')!;
 
   const items: Item[] = sections.map((def) => {
     const m = motions[def.id] ?? placeholder;
@@ -141,9 +141,9 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     };
   });
 
-  let vh = window.innerHeight;
+  let vh = view.h;
   const measure = () => {
-    vh = vhProbe.offsetHeight || window.innerHeight;
+    vh = view.h;
     ctx.mobile = mq.matches;
     for (const it of items) it.top = it.track.getBoundingClientRect().top + window.scrollY;
   };
@@ -374,6 +374,8 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     measure();
     lastPoseKey = '';
     frame();
+    // the ring stage resizes (and clears) its canvas after this listener: draw once more
+    requestAnimationFrame(() => (lastPoseKey = ''));
   };
   window.addEventListener('resize', onResize);
   mq.addEventListener('change', onResize);

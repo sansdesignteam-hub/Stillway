@@ -19,6 +19,7 @@
  *  > END to S07 (specs.ts drives the card shrink through this module's update)
  * The hand photo's cut bottom is always below the viewport (and melted into Paper), on every screen.
  */
+import { view } from '../viewport';
 import { put, seg, lerp, clamp01, window4, type Ctx } from '../anim';
 import { lerpPose, pose, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
@@ -46,7 +47,7 @@ const D2R = Math.PI / 180;
 /** layout in px: table, ring, roll stops, hand box (s06-pose.json image px × hs) */
 function layout(ctx: Ctx) {
   const W = window.innerWidth;
-  const H = window.innerHeight;
+  const H = view.h;
   const m = ctx.mobile;
   const sy = H / 900;
   const s = Math.min(W / 1440, sy);
@@ -174,7 +175,7 @@ function fingerPose(slide: number, L: ReturnType<typeof layout>, extra: Partial<
  */
 const SPECS_TIN = sections.find((d) => d.id === 'specs')!.tin;
 let vhPx = 0;
-const measureVh = () => (vhPx = (document.querySelector('[data-vh]') as HTMLElement | null)?.offsetHeight || window.innerHeight);
+const measureVh = () => (vhPx = view.h);
 
 /** the 3D ring on the finger goes up with the hand (it is not part of the photo) */
 export function detailsLeaveRing(x: number, ctx: Ctx): Pose {

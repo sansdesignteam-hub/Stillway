@@ -11,6 +11,7 @@
  *  3 state 4  the glass card fully legible + the small paragraph under it; ring still
  *  > 3.6      to S06: the card fades (0–30%), the camera backs out, Dusk → Paper
  */
+import { view } from '../viewport';
 import { put, seg, lerp, type Ctx } from '../anim';
 import { along, pose, ANGLE, type Pose } from '../ring/poses';
 import { keepLit, LIGHT } from '../glow';
@@ -52,7 +53,7 @@ export const insight: SectionMotion = {
     if (glow) keepLit(glow, () => ({ ellipses: [{ token: LIGHT, cx: 820, cy: 580, rx: 560, ry: 410, stops: [[0, 0.42]], power: 4 }], blur: 40 }));
   },
   update(u, ctx) {
-    const H = window.innerHeight;
+    const H = view.h;
     const out = 1 - seg(u, END, END + 0.3);
     // text (D-143): one fixed box, three lines, never reflowed. State 1 shows "Everything it /
     // noticed."; in State 2 the block moves down to the edge and dims (transform + opacity on the

@@ -120,7 +120,7 @@ import { finishes as d } from '../../content/copy';
   }
   .fn__fb {
     left: 32%;
-    width: min(40vw, 70vh);
+    width: min(40vw, calc(70 * var(--lvh)));
   }
   .fn__heads {
     position: absolute;
@@ -143,9 +143,9 @@ import { finishes as d } from '../../content/copy';
   .fn__drag {
     position: absolute;
     left: 0;
-    top: calc(var(--header-h) + 16vh);
+    top: calc(var(--header-h) + calc(16 * var(--lvh)));
     width: 62vw;
-    bottom: 12vh;
+    bottom: calc(12 * var(--lvh));
     pointer-events: auto;
     touch-action: pan-y;
     cursor: grab;
@@ -191,7 +191,7 @@ import { finishes as d } from '../../content/copy';
     right: var(--margin);
     top: var(--content-top);
     width: min(30rem, 36vw);
-    max-height: calc(100svh - var(--content-top) - var(--content-bottom));
+    max-height: calc(calc(100 * var(--svh)) - var(--content-top) - var(--content-bottom));
     padding: var(--space-5) var(--space-6);
     border-radius: var(--radius-m);
     background: var(--panel);
@@ -417,7 +417,7 @@ import { finishes as d } from '../../content/copy';
       inset: auto;
       flex: none;
       width: auto;
-      height: min(42vh, 320px);
+      height: min(calc(42 * var(--lvh)), 320px);
     }
     .fn__turn {
       position: static;

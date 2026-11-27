@@ -15,6 +15,7 @@
  * Background: plain Paper (D-148, the D-088 wall photo is removed).
  * The ring turns with the scroll the whole time (one continuous tumble, no stops between states).
  */
+import { view } from '../viewport';
 import { put, seg, smooth, clamp01, type Ctx } from '../anim';
 import { pose, ANGLE, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
@@ -27,7 +28,7 @@ let smallWraps: HTMLElement[] = [];
 const END = 3.6;
 /** 100svh in px, the scroll length of one u (story.ts measures the same probe) */
 let vhPx = 0;
-const measureVh = () => (vhPx = (document.querySelector('[data-vh]') as HTMLElement | null)?.offsetHeight || window.innerHeight);
+const measureVh = () => (vhPx = view.h);
 const cache = new WeakMap<HTMLElement, number>();
 
 /**

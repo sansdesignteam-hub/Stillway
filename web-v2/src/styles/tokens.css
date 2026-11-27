@@ -5,7 +5,10 @@
  * No colour is written outside this file: everything else uses these tokens or color-mix() of them.
  * Page proportion: Paper ±45% · Night ±30% (Cocoa included) · Sand ±15% · Ink ±8% · Ochre ≤ 2%.
  */
+/* QA27 M-11: viewport height units, locked in px on touch screens (scripts/viewport.ts) */
 :root {
+  --svh: 1svh;
+  --lvh: 1lvh;
   /* 🌈 Primitive Color (Figma ejtNpUf0FdEYMgAbcENMCH, synced 25 Nov, D-168). No ochre any more. */
   --neutral-0: #ffffff;
   --neutral-50: #f7f5f0;
@@ -235,9 +238,9 @@
   --col: calc((100vw - 2 * var(--margin) - 11 * var(--gutter)) / 12);
   --grid: repeat(12, minmax(0, 1fr));
   /* 144 at 900 tall (76 navbar + 68); less on short screens so nothing is cut */
-  --content-top: calc(var(--header-h) + clamp(24px, 7.5556svh, 68px));
+  --content-top: calc(var(--header-h) + clamp(24px, calc(7.5556 * var(--svh)), 68px));
   /* bottom row: 40 px from the bottom (y 860 of 900) */
-  --content-bottom: clamp(24px, 4.4445svh, 40px);
+  --content-bottom: clamp(24px, calc(4.4445 * var(--svh)), 40px);
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;

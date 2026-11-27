@@ -10,6 +10,7 @@
  *    comes back up (handoff: "tween intensity down → swap → up").
  * Returns null without WebGL or if the model fails; the page then shows no ring (sections still read).
  */
+import { view } from '../viewport';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
@@ -46,7 +47,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   const pixelRatio = () => {
     const d = window.devicePixelRatio || 1;
     if (isPhone()) return Math.min(d, 2.5);
-    const budget = Math.sqrt(5.6e6 / (window.innerWidth * window.innerHeight));
+    const budget = Math.sqrt(5.6e6 / (view.w * view.lh));
     return Math.max(Math.min(d, 1.5), Math.min(2, budget));
   };
   renderer.toneMapping = THREE.AgXToneMapping;
@@ -537,7 +538,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
    *  through the photo's cover size and its CSS zoom around heroBg.anchor */
   const photoCam = (zoom: number) => {
     const C = heroBg.cam;
-    const cw = Math.max(W, H * heroBg.v1Ratio);
+    const cw = Math.max(W, LH * heroBg.v1Ratio);
     const ch = cw / heroBg.v1Ratio;
     const toScreen = (fu: number, fv: number) => {
       const ax = (heroBg.anchor.x - 0.5) * cw;
@@ -849,12 +850,24 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
 
   let W = 0;
   let H = 0;
+  let lastCam = '';
+  /* QA27 M-11: poses are laid out in W × H (the small viewport, stable while the address bar moves);
+     the canvas is W × LH (the large one), so the view is extended downward, never stretched */
+  let LH = 0;
+  const frameView = (px: number, py: number) => {
+    if (px || py || LH !== H) camera.setViewOffset(W, H, -px, -py, W, LH);
+    else camera.clearViewOffset();
+  };
   const resize = () => {
-    W = window.innerWidth;
-    H = window.innerHeight;
+    if (W === view.w && H === view.h && LH === view.lh) return; // the browser's bars moved: nothing changes
+    W = view.w;
+    H = view.h;
+    LH = view.lh;
+    lastCam = '';
     renderer.setPixelRatio(pixelRatio());
-    renderer.setSize(W, H, false);
+    renderer.setSize(W, LH, false);
     camera.aspect = W / H;
+    frameView(0, 0);
     camera.position.set(0, 0, H / 2 / Math.tan(THREE.MathUtils.degToRad(FOV / 2)));
     camera.updateProjectionMatrix();
   };
@@ -868,7 +881,6 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
   let lastBlur = 0;
   let lastEnv = '';
   let lastLedKey = '';
-  let lastCam = '';
   const apply = (p: Pose, extra: { breathe?: number } = {}) => {
     // width: fraction of viewport width, but never taller than 82% of the viewport
     const raw = p.w * W;
@@ -885,7 +897,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     const F = F0 + (pc.F - F0) * cb;
     const Px = pc.px * cb;
     const Py = pc.py * cb;
-    const camKey = `${F.toFixed(2)}|${Px.toFixed(2)}|${Py.toFixed(2)}|${W}x${H}`;
+    const camKey = `${F.toFixed(2)}|${Px.toFixed(2)}|${Py.toFixed(2)}|${W}x${H}x${LH}`;
     if (camKey !== lastCam) {
       lastCam = camKey;
       camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(H / 2 / F));
@@ -898,8 +910,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
          dark half black). Nothing is ever nearer than 0.1 F (pose.fwd ≤ 0.9, the ring shrinking with
          it), so 0.02 F costs nothing and gives ~100× the depth precision. */
       camera.near = Math.max(1, F * 0.02);
-      if (Px || Py) camera.setViewOffset(W, H, -Px, -Py, W, H);
-      else camera.clearViewOffset();
+      frameView(Px, Py);
       camera.updateProjectionMatrix();
       placeDesk(F);
     }
@@ -1191,7 +1202,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
     for (const v of ringPts) {
       const q = v.clone().applyMatrix4(M).project(camera);
-      const x = (q.x + 1) / 2 * W, y = (1 - q.y) / 2 * H;
+      const x = (q.x + 1) / 2 * W, y = (1 - q.y) / 2 * LH;
       l = Math.min(l, x); r = Math.max(r, x); t = Math.min(t, y); b = Math.max(b, y);
     }
     return { l, t, r, b };
@@ -1210,7 +1221,7 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       const t = (deskPose.pedestal.top_y - hi!.y) / d.y;
       const hit = hi!.clone().addScaledVector(d, t);
       const low = restLow()!;
-      const toScr = (v: THREE.Vector3) => { const q2 = v.clone().applyMatrix4(desk.matrix).project(camera); return [Math.round((q2.x + 1) / 2 * W), Math.round((1 - q2.y) / 2 * H)]; };
+      const toScr = (v: THREE.Vector3) => { const q2 = v.clone().applyMatrix4(desk.matrix).project(camera); return [Math.round((q2.x + 1) / 2 * W), Math.round((1 - q2.y) / 2 * LH)]; };
       return { high: hi!.toArray(), hit: hit.toArray(), contact: low.toArray(), scrHigh: toScr(hi!), scrHit: toScr(hit), scrContact: toScr(low) };
     };
     (window as any).__keyDir = () => {

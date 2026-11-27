@@ -70,9 +70,9 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     color: var(--ink);
     /* set by details.ts from the viewport */
     --hx: 60vw;
-    --hy: 50vh;
+    --hy: calc(50 * var(--lvh));
     --hs: 0.8;
-    --ty: 66.7lvh; /* table top (Figma y 600 of 900) */
+    --ty: calc(66.7 * var(--lvh)); /* table top (Figma y 600 of 900) */
     --tx: 50vw; /* table right edge (Figma x 720) */
   }
   /* temporary table: a light pine top seen from above, a lit right edge with a darker side and its

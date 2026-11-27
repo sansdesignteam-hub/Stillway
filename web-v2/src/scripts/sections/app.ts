@@ -14,6 +14,7 @@
  * Reduced motion: whole states, every screen shown complete, short opacity fades (global.css).
  *  > 6.6  to S10 (D-165, D-172 phones too): a plain scroll — the hand, phone and texts go up 1:1.
  */
+import { view } from '../viewport';
 import { put, seg, lerp, clamp01, smooth, window4 } from '../anim';
 import { pose, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
@@ -66,7 +67,7 @@ function set(e: HTMLElement | SVGElement, prop: 'transform' | 'clipPath' | 'opac
 }
 
 function measure() {
-  const key = `${window.innerWidth}x${window.innerHeight}`;
+  const key = `${window.innerWidth}x${view.h}`;
   if (key === measured || !el.pages) return;
   measured = key;
   const h = el.pages.clientHeight;
@@ -109,7 +110,7 @@ export const app: SectionMotion = {
       })(),
       over: 0,
     }));
-    const vh = () => (vhPx = (document.querySelector('[data-vh]') as HTMLElement | null)?.offsetHeight || window.innerHeight);
+    const vh = () => (vhPx = view.h);
     vh();
     window.addEventListener('resize', vh);
     const reset = () => (measured = '');
@@ -117,7 +118,7 @@ export const app: SectionMotion = {
     document.fonts?.ready.then(reset);
   },
   update(u, ctx) {
-    const H = window.innerHeight;
+    const H = view.h;
     // 09 → 10 (D-165): a plain scroll, like 06 → 07 — the hand, the phone and the texts go up 1:1
     // with the page, no fade; the photo's melted foot keeps its cut out of sight. Reduced motion: fade.
     // D-172: phones too go up 1:1 (no fade); the navbar mask (global.css, QA G-14) hides what passes

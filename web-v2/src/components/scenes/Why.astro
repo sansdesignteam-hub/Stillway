@@ -156,7 +156,7 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
     opacity: var(--o, 0.12);
   }
   .why__fb {
-    --rw: min(36vw, 82vh);
+    --rw: min(36vw, calc(82 * var(--lvh)));
     width: calc(var(--rw) * 1.6);
     max-width: none;
     translate: -50% 0;

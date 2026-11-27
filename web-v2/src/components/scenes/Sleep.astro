@@ -135,7 +135,7 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
     letter-spacing: var(--t-para-sm-ls);
   }
   .sleep__fb {
-    --rw: min(56vw, 82vh);
+    --rw: min(56vw, calc(82 * var(--lvh)));
     left: 72%;
     width: calc(var(--rw) * 1.6);
     max-width: none;

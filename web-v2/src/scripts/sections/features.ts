@@ -11,6 +11,7 @@
  *  > 3.6       to S09 (sections/app.ts ringIn: the light dims, a brief green, the ring leaves upward)
  * Colour by scroll only (D-062 mode lights, not sensor claims).
  */
+import { view } from '../viewport';
 import { put, seg, lerp, clamp01, window4, type Ctx } from '../anim';
 import { along, pose, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
@@ -33,7 +34,7 @@ const INSIDE = { rx: -0.3, ry: -0.42, rz: 0.1, spin: -0.3 };
 const centre = (ctx: Ctx, u = 0): Pose =>
   pose({ x: 0, y: (ctx.mobile ? -0.1 : 0) + 0.012 * Math.sin(u * Math.PI * 1.5), w: ctx.mobile ? 0.72 : 0.46, ...INSIDE, ...NIGHT, led: 0.25, flare: 0.12 });
 const close = (ctx: Ctx): Pose =>
-  pose({ x: ctx.mobile ? 0.22 : 0.25, y: ctx.mobile ? (window.innerHeight < 740 ? -0.3 : -0.2) : -0.04, w: ctx.mobile ? 0.92 : 0.64, rx: -0.36, ry: -0.5, rz: 0.12, spin: -0.36, uncap: 1, ...NIGHT, led: 1, flare: 1 });
+  pose({ x: ctx.mobile ? 0.22 : 0.25, y: ctx.mobile ? (view.h < 740 ? -0.3 : -0.2) : -0.04, w: ctx.mobile ? 0.92 : 0.64, rx: -0.36, ry: -0.5, rz: 0.12, spin: -0.36, uncap: 1, ...NIGHT, led: 1, flare: 1 });
 
 export const features: SectionMotion = {
   init(r) {

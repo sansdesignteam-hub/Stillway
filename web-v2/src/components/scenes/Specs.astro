@@ -125,7 +125,7 @@ const EV = [
     /* set by specs.ts: the card box (Figma 392 × 602 at 1440 × 900), the hairline y */
     --bw: 392px;
     --bh: 602px;
-    --ly: 53.5lvh;
+    --ly: calc(53.5 * var(--lvh));
     /* D-153: exposure of the big "The Everyday" photo, one place to tune (also for the D-152 photo):
        brightness of the photo itself, plus an optional warm shade (photo-dim) over it, in %.
        The Rinse card is never touched by either. */

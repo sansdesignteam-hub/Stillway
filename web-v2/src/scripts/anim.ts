@@ -1,3 +1,4 @@
+import { view } from './viewport';
 /** Small scrub helpers shared by the section modules. Everything is a pure function of scroll. */
 export const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 export const smooth = (t: number) => t * t * (3 - 2 * t);
@@ -31,7 +32,7 @@ export function put(el: HTMLElement | null | undefined, st: Style, ctx: Ctx) {
   const o = st.o ?? 1;
   let tr = '';
   if (!ctx.reduced) {
-    const y = (st.y ?? 0) + (st.yv ?? 0) * window.innerHeight;
+    const y = (st.y ?? 0) + (st.yv ?? 0) * view.h;
     if (st.x || y) tr += `translate3d(${(st.x ?? 0).toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
     if (st.s !== undefined && st.s !== 1) tr += ` scale(${st.s.toFixed(4)})`;
   }

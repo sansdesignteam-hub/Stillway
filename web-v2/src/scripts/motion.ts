@@ -5,6 +5,7 @@
  * - The ring (three.js) loads lazily after first paint and joins the story when ready.
  * - Mobile menu panel.
  */
+import { view } from './viewport';
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { initStory } from './story';
@@ -56,7 +57,7 @@ export function initMotion() {
 
 /** where an in-page target lands: state 1 of the section (after its incoming connection) */
 function landing(target: HTMLElement) {
-  const vh = document.querySelector<HTMLElement>('[data-vh]')?.offsetHeight || window.innerHeight;
+  const vh = view.h;
   return target.getBoundingClientRect().top + window.scrollY + Number(target.dataset.tin ?? 0) * vh;
 }
 

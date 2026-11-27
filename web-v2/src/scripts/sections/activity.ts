@@ -20,6 +20,7 @@
  * Phones (no Figma frame, proposal): the same arc, smaller (active card 200 wide, R 860 at 390),
  * active card centred a little above the middle, big time under it; the paragraph is hidden.
  */
+import { view } from '../viewport';
 import { put, seg, clamp01, lerp, type Ctx } from '../anim';
 import { pose, lerpPose, type Pose } from '../ring/poses';
 import { insightStart } from './insight';
@@ -44,7 +45,7 @@ let el: Record<string, HTMLElement | null> = {};
 let L = { W: 1440, H: 900, s: 1, cw: 264, ch: 352, R: 1340, cx: 720, yc: 418, labelOff: 140, nowTop: 616, mobile: false };
 function measure(mobile: boolean) {
   const W = window.innerWidth;
-  const H = (document.querySelector('[data-vh]') as HTMLElement | null)?.offsetHeight || window.innerHeight;
+  const H = view.h;
   if (mobile) {
     // proposal: active card 200 × 266 at 390, neighbours half in view at the edges
     const s = Math.min((0.758 * W) / 390, (0.758 * H) / 844);

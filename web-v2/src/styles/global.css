@@ -197,7 +197,7 @@ html.js .scene--close .scene__front {
   z-index: 2;
   left: 50%;
   top: 50%;
-  width: min(44vw, 82vh);
+  width: min(44vw, calc(82 * var(--lvh)));
   height: auto;
   translate: -50% -50%;
   pointer-events: none;
@@ -230,14 +230,14 @@ html.inspect .tracks {
 
 /* ---------- tracks: scroll length + anchors ---------- */
 .track {
-  height: calc(var(--len) * 100svh);
+  height: calc(var(--len) * calc(100 * var(--svh)));
 }
 .vh-probe {
   position: absolute;
   top: 0;
   left: 0;
   width: 1px;
-  height: 100svh;
+  height: calc(100 * var(--svh));
   visibility: hidden;
   pointer-events: none;
 }

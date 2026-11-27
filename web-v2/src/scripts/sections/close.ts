@@ -9,6 +9,7 @@
  *  3  state 4  statement, footer and the full-width wordmark
  * One unbroken dark canvas: past state 2 the column moves like a page (track measured from the blocks).
  */
+import { view } from '../viewport';
 import { put, seg, lerp, clamp01, type Ctx } from '../anim';
 import { pose, ANGLE, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
@@ -27,7 +28,7 @@ const ANGLES = new Set<keyof Pose>(['rx', 'ry', 'rz', 'spin', 'roll', 'pitch']);
 
 function measure() {
   if (!el.faq || !el.foot) return;
-  const H = window.innerHeight;
+  const H = view.h;
   stops = [0, el.faq.offsetTop, Math.max(el.faq.offsetTop, el.foot.offsetTop + el.foot.offsetHeight - H)];
 }
 
@@ -42,7 +43,7 @@ const yOf = (u: number) => {
 function scrollToState(uTarget: number) {
   const track = document.getElementById('close');
   if (!track) return;
-  const vh = (document.querySelector('[data-vh]') as HTMLElement | null)?.offsetHeight || window.innerHeight;
+  const vh = view.h;
   const top = track.getBoundingClientRect().top + window.scrollY + (Number(track.dataset.tin) + uTarget) * vh;
   window.scrollTo({ top });
 }
@@ -120,7 +121,7 @@ export const close: SectionMotion = {
     document.fonts?.ready.then(() => (measured = ''));
   },
   update(u, ctx) {
-    const key = `${window.innerWidth}x${window.innerHeight}`;
+    const key = `${window.innerWidth}x${view.h}`;
     if (key !== measured) {
       measured = key;
       measure();
@@ -130,11 +131,11 @@ export const close: SectionMotion = {
     put(el.title, { o: seg(u, -0.3, 0), y: (1 - seg(u, -0.3, 0)) * 24 }, ctx);
     put(el.cta, { o: seg(u, 0.35, 0.85), y: (1 - seg(u, 0.35, 0.85)) * 16 }, ctx);
     // the glow rises with the end of the connection and leaves upward with the ring
-    put(el.glow, { o: seg(u, -0.5, 0) * (1 - seg(trackY / window.innerHeight, 0.6, 1)), y: -trackY }, ctx);
+    put(el.glow, { o: seg(u, -0.5, 0) * (1 - seg(trackY / view.h, 0.6, 1)), y: -trackY }, ctx);
   },
   ring(u, ctx) {
     const m = ctx.mobile;
-    const H = window.innerHeight;
+    const H = view.h;
     const w = lerp(m ? 0.78 : 0.42, m ? 0.56 : 0.3, seg(u, 0.3, 1));
     const up = yOf(u) / H; // moves with the canvas
     return pose({

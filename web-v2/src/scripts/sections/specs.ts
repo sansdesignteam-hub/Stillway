@@ -18,6 +18,7 @@
  * Reduced motion: story.ts snaps u to whole states; everything is placed for that state and only
  * the opacity changes (short fade per state, global.css).
  */
+import { view } from '../viewport';
 import { seg, lerp, clamp01, smooth, type Ctx } from '../anim';
 import { pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
@@ -72,7 +73,7 @@ const lerpSlot = (a: Slot, b: Slot, t: number): Slot => ({
 
 function layout(ctx: Ctx) {
   const W = window.innerWidth;
-  const H = window.innerHeight;
+  const H = view.h;
   const m = ctx.mobile;
   // Figma frame 1440 × 900; phones: the front card 60 % of the width
   const k = m ? Math.min((W * 0.6) / BW, (H * 0.36) / 490) : Math.min(W / 1440, H / 900);
@@ -287,7 +288,7 @@ export const specs: SectionMotion = {
     texts = all('[data-s-text]');
     nums = all('[data-s-num]');
     chars = texts.map((t) => all('[data-s-ch]', t));
-    const vhProbe = () => (vhPx = (document.querySelector('[data-vh]') as HTMLElement | null)?.offsetHeight || window.innerHeight);
+    const vhProbe = () => (vhPx = view.h);
     // "The" flush with the E of "Everyday": move it by the difference of the two side bearings
     const alignThe = () => {
       if (!el.the || !el.evword) return;

@@ -10,6 +10,7 @@
  *   1:1 with the page; the S10 track is sized to the column (flowTrack), so its height is the content's.
  * States 2–3 of the Storyboard (Black, Gold + Lamp) are the visitor's own clicks, not scroll (D-069).
  */
+import { view as vp } from '../viewport';
 import gsap from 'gsap';
 import { put, seg, lerp, window4, type Ctx } from '../anim';
 import { pose, ANGLE, type Pose } from '../ring/poses';
@@ -136,7 +137,7 @@ let front: HTMLElement | null = null;
 let still: HTMLElement | null = null;
 let track: HTMLElement | null = null;
 const TIN = 1.3; // sections.ts finishes.tin
-const vhNow = () => (document.querySelector('[data-vh]') as HTMLElement | null)?.offsetHeight || window.innerHeight;
+const vhNow = () => vp.h;
 /** D-171: phones — the S10 track is as long as its column (+ a short rest), desktop keeps --len */
 const flowTrack = () => {
   if (!track || !front) return;
@@ -218,7 +219,7 @@ export const finishes: SectionMotion = {
     // QA F-17: smaller and a little lower, with air to the title above and the arrows below
     // QA M-06: phones — the ring sits in the gap between the title and the panel, never under it
     const W = window.innerWidth;
-    const H = window.innerHeight;
+    const H = vp.h;
     const desk = { x: -0.17, y: -0.065, w: Math.min(0.28, (0.5 * H) / W) };
     const phone = () => {
       const h = heads[u < 0.6 ? 0 : 1];

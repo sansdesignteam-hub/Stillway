@@ -10,6 +10,7 @@
  *               the photo fades to Paper, the env swaps from the photo to the paper studio
  *  3 → 3.5      hold; "rhythm" (S02) starts to show
  */
+import { view } from '../viewport';
 import { gsap } from 'gsap';
 import { put, seg, lerp, type Ctx } from '../anim';
 import { along, pose, type Pose } from '../ring/poses';
@@ -50,7 +51,7 @@ const photoZoom = (u: number, ctx: Ctx) => lerp(ctx.mobile ? heroBg.mobile.zoomF
  */
 const floatPose = (ctx: Ctx): Pose => {
   const W = window.innerWidth;
-  const H = window.innerHeight;
+  const H = view.h;
   return pose({
     x: 0,
     y: ctx.mobile ? 0.1 : -0.03,
@@ -83,12 +84,12 @@ export const hero: SectionMotion = {
       const word = el.word;
       if (!word) return;
       const W = window.innerWidth;
-      const H = window.innerHeight;
+      const H = view.h;
       if (W <= 760) {
         word.style.fontSize = '';
         return;
       }
-      const cw = Math.max(W, H * heroBg.v1Ratio);
+      const cw = Math.max(W, view.lh * heroBg.v1Ratio);
       const ax = (heroBg.anchor.x - 0.5) * cw;
       const z = heroBg.desktop.zoomFrom; // the rest frame (u 0)
       const ringLeft = W / 2 + ax + ((heroBg.ringLeft - 0.5) * cw - ax) * z;
@@ -101,7 +102,7 @@ export const hero: SectionMotion = {
     document.fonts?.ready.then(fitWord);
     window.addEventListener('pointermove', (e) => {
       mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = (e.clientY / window.innerHeight) * 2 - 1;
+      mouse.y = (e.clientY / view.h) * 2 - 1;
     });
     // V1 load intro: the photo settles, the letters rise (not for reduced motion)
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {

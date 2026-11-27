@@ -24,7 +24,7 @@
   .stage {
     position: fixed;
     inset: 0;
-    height: 100lvh;
+    height: calc(100 * var(--lvh));
     pointer-events: none;
   }
   .stage__bg,
@@ -124,7 +124,7 @@
     position: absolute;
     inset: 0;
     width: 100vw;
-    height: 100vh;
+    height: calc(100 * var(--lvh));
     z-index: 2;
     opacity: 0;
     transition: opacity 0.9s ease;
@@ -137,7 +137,7 @@
   .stage__scenes {
     position: absolute;
     inset: 0;
-    height: 100svh;
+    height: calc(100 * var(--svh));
     outline: none;
   }
 </style>

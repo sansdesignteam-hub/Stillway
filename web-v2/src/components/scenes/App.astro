@@ -55,14 +55,14 @@ import AppPhone from '../AppPhone.astro';
     color: var(--ink);
     /* D-160 / D-162: the hand photo (B) is placed by its screen's centre and the photo's height; its
        bottom runs out of the viewport (and melts into Paper, AppPhone.astro), so no cut shows */
-    --hh: min(100svh, 980px);
+    --hh: min(calc(100 * var(--svh)), 980px);
     --p-cx: 50%;
-    --p-cy: calc(50% + 1.5vh);
+    --p-cy: calc(50% + calc(1.5 * var(--lvh)));
   }
   .ap__left {
     position: absolute;
     left: 8vw;
-    top: 22vh;
+    top: calc(22 * var(--lvh));
     width: min(22vw, 20rem);
   }
   .ap__lstate {
@@ -115,7 +115,7 @@ import AppPhone from '../AppPhone.astro';
   .ap__right {
     position: absolute;
     left: 68vw;
-    top: 54vh;
+    top: calc(54 * var(--lvh));
     width: min(22vw, 20rem);
   }
   .ap__rtext {
@@ -133,7 +133,7 @@ import AppPhone from '../AppPhone.astro';
   }
   @media (max-width: 719px) {
     .scene--app {
-      --hh: min(660px, 78svh, 165vw);
+      --hh: min(660px, calc(78 * var(--svh)), 165vw);
       --p-cy: 49%;
     }
     .ap__left {
