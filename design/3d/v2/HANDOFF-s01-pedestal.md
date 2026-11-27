@@ -61,6 +61,15 @@ Hanya pass ring yang dirender ulang. Plate tidak berubah. `still-s01(-mobile)-36
 - Bukti: `renders/s01-plate/s01-plate-ring-closeup-vs-figma.png`.
 - **Akibat untuk web:** pencocokan nada ring hidup vs poster dari D-181c perlu diulang terhadap poster baru.
 
+### D-182b: ring poster mengikuti ring hidup D-182 (Developer `a7eea87`)
+
+Hanya `still-s01(-mobile)-3632.png` dan `ring-overlay-s01(-mobile)-3632` yang berubah (nama sama). Plate, GLB, pose JSON, dan kontak AO tetap. Bagian nada ring di D-181d tidak berlaku lagi.
+
+- Skrip: `s01-ring-live-pass.py`, lalu `s01-plate-build.py -- comp`. Cycles dengan env web (`env/hero-env-warm.jpg` diputar 0,6π + 25% env paper, di ruang kamera), rig web, material band web, AgX exposure 1,15. Setelah itu kurva luma, gain warna, dan tint hangat pada bagian gelap (grade, bukan hasil fisik).
+- Luma piksel ring, 1440@2x frame diam, p05/25/50/75/95: **33 / 50 / 100 / 155 / 245** (target 33/50/100/155/245; sebelumnya 2/17/93/114/254).
+- Bukti: `renders/s01-plate/s01-ring-poster-vs-live-D182b.jpg` (kiri poster baru, kanan crop ring hidup dari `D182_poster_left_live_right.jpg`; crop tidak diregistrasi piksel).
+- Belum diuji di web (cross-fade) dan 375 tidak disetel ke angka ring hidup ponsel (p50 66). Di crop bukti, ring hidup tampak lebih sempit daripada poster; pose tidak diubah, Developer perlu memeriksa apakah itu ayunan/tilt saat capture.
+
 ### File
 
 Semua 3632×2072, frame dan kamera sama dengan foto latar. Folder `plate/`:
