@@ -4,10 +4,13 @@
  *          Sand, the ring comes in on the left, the panel content appears; clock 21:00 → 22:00)
  *  0  state 1  "Turn it yourself." — the ring turns by drag / swipe / ‹ ›, finish swatches + light
  *  1  state 4  "Find your size and finish." — size, trial, box, the button and its inline note
- *  D-165: S09 → S10 is a plain scroll (app.ts); the S10 panel and ring come in after S09 has left
+ *  D-192: S09 → S10 on desktop is a crossfade (app.ts); S10 fades in where it stands once S09 has gone
  *  > 2         to S11: the panel leaves right, the ring moves to the middle (close.ts ringIn)
+ * D-171 phones: no pin, fade or ring scale. Title, ring, arrows and panel are one column that moves
+ *   1:1 with the page; the S10 track is sized to the column (flowTrack), so its height is the content's.
  * States 2–3 of the Storyboard (Black, Gold + Lamp) are the visitor's own clicks, not scroll (D-069).
  */
+import { view as vp } from '../viewport';
 import gsap from 'gsap';
 import { put, seg, lerp, window4, type Ctx } from '../anim';
 import { pose, ANGLE, type Pose } from '../ring/poses';
@@ -119,15 +122,50 @@ function initControls(r: HTMLElement) {
     r.querySelectorAll<HTMLButtonElement>('[data-fn-light]').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.fnLight === '1') === choice.lampOn)));
     const nm = q('[data-fn-finish-name]');
     if (nm) nm.textContent = FINISHES[i];
-    const cta = q('[data-fn-cta]');
-    if (cta) cta.textContent = d.button(FINISHES[i]);
+    r.querySelectorAll('[data-fn-cta] [data-btn-text]').forEach((n) => (n.textContent = d.button(FINISHES[i])));
     if (note) note.textContent = '';
     r.dataset.lamp = choice.lampOn ? '1' : '0';
     // reduced motion / no WebGL: the still of the chosen finish
-    document.querySelectorAll<HTMLImageElement>('[data-fn-still], [data-cl-still]').forEach((img) => (img.src = d.finishes[i].still));
+    document.querySelectorAll<HTMLImageElement>('[data-fn-still], [data-cl-still]').forEach((img) => {
+      // QA27 G-19: a still that has not been fetched yet (the 3D ring is on) only takes the new URL
+      if (img.dataset.src !== undefined) img.dataset.src = d.finishes[i].still;
+      else img.src = d.finishes[i].still;
+    });
   };
   onChoice(sync);
 }
+
+const phoneMq = window.matchMedia('(max-width: 719px)');
+let front: HTMLElement | null = null;
+let still: HTMLElement | null = null;
+let track: HTMLElement | null = null;
+const TIN = 1.3; // sections.ts finishes.tin
+const vhNow = () => vp.h;
+/** D-171: phones — the S10 track is as long as its column (+ a short rest), desktop keeps --len */
+const flowTrack = () => {
+  if (!track || !front) return;
+  if (!phoneMq.matches) {
+    track.style.height = '';
+    track.dataset.tin = String(TIN);
+    return;
+  }
+  const H = vhNow();
+  // the column starts right under S09 as it leaves (FLOW screens after the track top), so 09 → 10
+  // reads as one page; at least TIN + a rest, so u still reaches the S10 states (clock, hash, nav)
+  track.style.height = `${Math.round(Math.max((TIN + 0.25) * H, FLOW * H + Math.max(0, front.offsetHeight - H) + 0.25 * H))}px`;
+  track.dataset.tin = String(FLOW); // deep links / nav land with the column's top at the top
+};
+/** D-172: phones — S09 goes up 1:1 at the start of the S10 track, the column follows straight on */
+const FLOW = 1;
+/** the column's screen y: the page position of the S10 content */
+const flowY = () => (track ? track.getBoundingClientRect().top + FLOW * vhNow() : 0);
+/** fully shown, no motion offset ([data-a] starts at opacity 0 in CSS, so 1 is written inline) */
+const clearInline = (n: HTMLElement | null) => {
+  if (!n) return;
+  n.style.opacity = '1';
+  n.style.visibility = '';
+  n.style.transform = '';
+};
 
 export const finishes: SectionMotion = {
   init(r) {
@@ -136,28 +174,72 @@ export const finishes: SectionMotion = {
     const q = (s: string) => r.querySelector<HTMLElement>(s);
     el = { panel: q('[data-fn-panel]'), more: q('[data-fn-more]'), turn: q('[data-fn-turn]'), drag: q('[data-fn-drag]') };
     heads = [...r.querySelectorAll<HTMLElement>('[data-fn-head]')];
+    front = r.querySelector<HTMLElement>('[data-fn-col]'); // the moving column (phones)
+    still = q('[data-fn-still]');
+    track = document.getElementById('finishes');
     initControls(r);
+    // registered before story.ts's own listeners, so the track has its new height when story measures
+    flowTrack();
+    window.addEventListener('resize', flowTrack);
+    phoneMq.addEventListener('change', flowTrack);
+    document.fonts?.ready.then(flowTrack);
   },
   update(u, ctx) {
+    if (phoneMq.matches) {
+      // D-171: plain flow on phones — everything visible, the column moves with the page
+      const y = flowY();
+      if (front) {
+        front.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0)`; // QA27 M-13: the navbar mask is on its still parent
+      }
+      [heads[1], el.panel, el.more].forEach(clearInline);
+      if (el.more) el.more.style.display = '';
+      const live = document.documentElement.classList.contains('ring-ready');
+      if (el.turn) {
+        clearInline(el.turn);
+        el.turn.style.visibility = live ? '' : 'hidden';
+      }
+      if (still && el.drag) still.style.transform = `translate3d(0, ${(y + el.drag.offsetTop + el.drag.offsetHeight / 2 - still.offsetHeight / 2).toFixed(1)}px, 0)`;
+      if (el.drag) el.drag.style.pointerEvents = 'auto';
+      return;
+    }
+    if (front) front.style.transform = '';
+    if (still) still.style.transform = '';
     const W = window.innerWidth;
-    const inn = seg(u, -0.3, 0);
+    const inn = seg(u, -0.58, -0.08); // D-192: 55–94% of the connection, after S09 has gone
     const out = seg(u, FINISHES_END, FINISHES_END + 0.45); // 10 → 11: the panel leaves right
-    put(heads[0], { o: window4(u, -0.25, 0.05, 0.45, 0.7) }, ctx);
-    put(heads[1], { o: seg(u, 0.55, 0.9) * (1 - out) }, ctx);
-    put(el.panel, { o: inn * (1 - out), x: (1 - inn) * W * 0.12 + out * W * 0.4 }, ctx);
+    put(heads[0], { o: window4(u, -0.58, -0.08, 0.45, 0.7) }, ctx);
+    put(heads[1], { o: seg(u, 0.72, 0.95) * (1 - out) }, ctx);
+    put(el.panel, { o: inn * (1 - out), x: out * W * 0.4 }, ctx);
     // desktop: the whole panel from state 1 (Shift PDP); phone: size, box and button join at state 4
     const more = ctx.mobile ? seg(u, 0.5, 0.95) : 1;
     put(el.more, { o: more }, ctx);
     if (el.more) el.more.style.display = ctx.mobile && more < 0.01 ? 'none' : '';
     // turning needs the 3D ring (no WebGL / reduced motion: a still, so no hint or arrows)
     const live = document.documentElement.classList.contains('ring-ready');
-    put(el.turn, { o: live ? window4(u, -0.2, 0.1, 0.55, 0.85) : 0 }, ctx);
+    put(el.turn, { o: live ? window4(u, -0.5, -0.05, 0.55, 0.85) : 0 }, ctx);
     if (el.drag) el.drag.style.pointerEvents = u > -0.3 && u < FINISHES_END + 0.2 ? 'auto' : 'none';
   },
   ring(u, ctx) {
     const m = ctx.mobile;
-    const s1 = { x: m ? 0 : -0.17, y: m ? 0.2 : -0.05, w: m ? 0.62 : 0.34 };
-    const s4 = { x: m ? 0 : -0.17, y: m ? 0.25 : -0.05, w: m ? 0.34 : 0.34 };
+    // QA F-17: smaller and a little lower, with air to the title above and the arrows below
+    // QA M-06: phones — the ring sits in the gap between the title and the panel, never under it
+    const W = window.innerWidth;
+    const H = vp.h;
+    const desk = { x: -0.17, y: -0.065, w: Math.min(0.28, (0.5 * H) / W) };
+    const phone = () => {
+      const h = heads[u < 0.6 ? 0 : 1];
+      const top = (h?.parentElement?.offsetTop ?? 0) + (h?.offsetHeight ?? 0);
+      const bottom = Math.min(el.panel?.offsetTop ?? H, u < 0.6 ? H * 0.58 : H); // state 1: the arrows sit above the panel
+      const zone = Math.max(60, bottom - top);
+      return { x: 0, y: 0.5 - (top + zone / 2) / H, w: Math.min(0.56, (zone * 0.78) / W) };
+    };
+    if (m && el.drag) {
+      // D-171: the ring sits in the column's ring area and scrolls with it, no scale change
+      const r = el.drag.getBoundingClientRect();
+      return pose({ x: 0, y: 0.5 - (r.top + r.height / 2) / H, w: Math.min(0.56, (r.height * 0.78) / W), ...ANGLE.threeQuarter, ry: ANGLE.threeQuarter.ry + view.yaw, ...finishPose(1), lamp: choice.lamp });
+    }
+    const s1 = m ? phone() : desk;
+    const s4 = s1;
     const k = seg(u, 0.4, 1);
     return pose({
       x: lerp(s1.x, s4.x, k),
@@ -169,9 +251,9 @@ export const finishes: SectionMotion = {
       lamp: choice.lamp,
     });
   },
-  // 09 → 10 (D-165): the ring comes in on the left once S09 has scrolled away
-  ringIn(x, _ctx, _from, to): Pose {
-    const t = seg(x, 0.55, 0.95);
-    return { ...to, w: to.w * lerp(0.85, 1, t), alpha: t };
+  // 09 → 10 (D-192): the ring fades in where it stands, with the rest of S10, once S09 has gone
+  ringIn(x, ctx, _from, to): Pose {
+    if (ctx.mobile) return to; // D-171: phones — the ring comes up with the column, no fade or scale
+    return { ...to, alpha: seg(x, 0.55, 0.95) };
   },
 };

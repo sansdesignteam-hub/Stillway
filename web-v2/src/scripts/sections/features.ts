@@ -11,6 +11,7 @@
  *  > 3.6       to S09 (sections/app.ts ringIn: the light dims, a brief green, the ring leaves upward)
  * Colour by scroll only (D-062 mode lights, not sensor claims).
  */
+import { view } from '../viewport';
 import { put, seg, lerp, clamp01, window4, type Ctx } from '../anim';
 import { along, pose, type Pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
@@ -31,9 +32,16 @@ const INSIDE = { rx: -0.3, ry: -0.42, rz: 0.1, spin: -0.3 };
 
 // Figma State 1: the ring about 0.47 of the width, centred
 const centre = (ctx: Ctx, u = 0): Pose =>
-  pose({ x: 0, y: (ctx.mobile ? 0.02 : 0) + 0.012 * Math.sin(u * Math.PI * 1.5), w: ctx.mobile ? 0.72 : 0.46, ...INSIDE, ...NIGHT, led: 0.25, flare: 0.12 });
+  pose({ x: 0, y: (ctx.mobile ? -0.1 : 0) + 0.012 * Math.sin(u * Math.PI * 1.5), w: ctx.mobile ? 0.72 : 0.46, ...INSIDE, ...NIGHT, led: 0.25, flare: 0.12 });
 const close = (ctx: Ctx): Pose =>
-  pose({ x: ctx.mobile ? 0.22 : 0.25, y: ctx.mobile ? 0.02 : -0.04, w: ctx.mobile ? 1.05 : 0.64, rx: -0.36, ry: -0.5, rz: 0.12, spin: -0.36, uncap: 1, ...NIGHT, led: 1, flare: 1 });
+  pose({ x: ctx.mobile ? 0.22 : 0.25, y: ctx.mobile ? (view.h < 740 ? -0.3 : -0.2) : -0.04, w: ctx.mobile ? 0.92 : 0.64, rx: -0.36, ry: -0.5, rz: 0.12, spin: -0.36, uncap: 1, ...NIGHT, led: 1, flare: 1 });
+
+let spareH = -1;
+if (typeof window !== 'undefined') {
+  const again = () => (spareH = -1);
+  window.addEventListener('resize', again);
+  document.fonts?.ready.then(again);
+}
 
 export const features: SectionMotion = {
   init(r) {
@@ -56,7 +64,8 @@ export const features: SectionMotion = {
   },
   update(u, ctx) {
     const out = 1 - seg(u, FEATURES_END, FEATURES_END + 0.3); // the words fade first in 08 → 09
-    const win = [window4(u, -0.3, 0, 0.35, 0.6), window4(u, 0.55, 0.85, 1.15, 1.35), window4(u, 1.3, 1.55, 2.35, 2.55), seg(u, 2.5, 2.75)];
+    // QA R-04: one title is gone before the next comes in
+    const win = [window4(u, -0.3, 0, 0.35, 0.55), window4(u, 0.57, 0.85, 1.1, 1.28), window4(u, 1.3, 1.55, 2.3, 2.5), seg(u, 2.52, 2.77)];
     heads.forEach((h, i) => put(h, { o: win[i] * out, y: (1 - Math.min(1, win[i] * 1.5)) * 12 }, ctx));
     put(kicks[0], { o: win[0] * out }, ctx);
     put(kicks[1], { o: Math.max(win[1], win[2], win[3]) * out }, ctx);
@@ -66,11 +75,15 @@ export const features: SectionMotion = {
     put(el.bottom, { o: legIn * out }, ctx);
     if (el.col && el.top && el.bottom && !ctx.mobile) {
       const gap = 40;
-      const head0 = heads[0]?.offsetHeight ?? 0;
-      const cell = el.top.offsetHeight;
-      const kick = (kicks[0]?.offsetHeight ?? 0) + 16;
-      // the space the legend, the note and the empty second title line take in state 1
-      const spare = el.bottom.offsetHeight + gap + (cell - kick - head0);
+      // QA27 G-19: measured once per size, not in every frame (a read forces layout)
+      if (spareH < 0) {
+        const head0 = heads[0]?.offsetHeight ?? 0;
+        const cell = el.top.offsetHeight;
+        const kick = (kicks[0]?.offsetHeight ?? 0) + 16;
+        // the space the legend, the note and the empty second title line take in state 1
+        spareH = el.bottom.offsetHeight + gap + (cell - kick - head0);
+      }
+      const spare = spareH;
       put(el.col, { y: (spare / 2) * (1 - legIn) }, ctx);
     } else put(el.col, {}, ctx);
 
@@ -86,7 +99,7 @@ export const features: SectionMotion = {
     // the note: the short line in state 3, the long one in state 4
     put(el.offwrap, { o: seg(u, 1.6, 1.9) }, ctx);
     el.offwrap?.style.setProperty('--glow', red.toFixed(3));
-    put(offs[0], { o: 1 - seg(u, 2.45, 2.65) }, ctx);
+    put(offs[0], { o: 1 - seg(u, 2.4, 2.58) }, ctx);
     put(offs[1], { o: seg(u, 2.6, 2.85) }, ctx);
     // the light comes with the Night ground and leaves before the Paper sweeps in (08 → 09)
     put(el.light, { o: window4(u, -0.5, 0, FEATURES_END, FEATURES_END + 0.45) }, ctx);
@@ -113,7 +126,7 @@ export const features: SectionMotion = {
     const t = seg(x, 0.3, 1);
     return {
       ...to,
-      y: lerp(ctx.mobile ? 0.07 : 0, to.y, t),
+      y: lerp(ctx.mobile ? -0.05 : 0, to.y, t),
       w: to.w * lerp(0.4, 1, t),
       alpha: seg(x, 0.3, 0.55),
       led: to.led * seg(x, 0.7, 1),

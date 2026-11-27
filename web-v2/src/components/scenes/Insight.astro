@@ -25,7 +25,7 @@ const [settled, up] = c.line.split(' · ');
   <div class="scene__front">
     <div class="ins__text" data-i-text data-a>
       <p class="ins__eyebrow">{d.eyebrow}</p>
-      <h2 id="insight-title" class="ins__head" data-i-head>
+      <h2 id="insight-title" class="ins__head" data-i-head aria-label={d.headline.join(' ')}>
         <span>{d.headline[0]}</span>{' '}
         {
           /* D-143: "One calm view." word by word (inline-block), always in the layout so the three lines
@@ -88,9 +88,9 @@ const [settled, up] = c.line.split(' · ');
   .ins__text {
     position: absolute;
     left: var(--margin);
-    bottom: calc(100svh * 50 / 900);
+    bottom: var(--content-bottom);
     display: grid;
-    gap: 18px;
+    gap: var(--space-4);
     will-change: transform, opacity;
   }
   /* Label/X-Small in capitals, neutral/400 (D-156) */
@@ -122,7 +122,7 @@ const [settled, up] = c.line.split(' · ');
   .ins__group {
     position: absolute;
     left: 50%;
-    top: calc((100svh + 144px - 40px) / 2);
+    top: calc((calc(100 * var(--svh)) + var(--content-top) - var(--content-bottom)) / 2);
     width: min(432px, calc(100vw - 2 * var(--margin)));
     translate: -50% -50%;
     display: grid;
@@ -155,7 +155,7 @@ const [settled, up] = c.line.split(' · ');
   /* Label/X-Small in capitals in a thin Paper 45 % outline (D-158); the label is Paper
      (D-156: no ochre text) */
   .ins__chip {
-    padding: 6px 14px;
+    padding: var(--space-1) var(--space-3);
     border-radius: 100px;
     border: 1px solid color-mix(in srgb, var(--paper) 45%, transparent); /* D-158: white, not ochre */
     font-weight: var(--w-label);
@@ -249,7 +249,7 @@ const [settled, up] = c.line.split(' · ');
     left: 72.42%;
     top: 56.15%;
   }
-  /* Label/X-Small, white 60% (D-156) */
+  /* Label/X-Small, white 70% (D-156; 60% fell to 4.05:1 on the card with the new Cocoa light) */
   .ins__times {
     display: flex;
     justify-content: space-between;
@@ -258,7 +258,7 @@ const [settled, up] = c.line.split(' · ');
     line-height: var(--t-label-xs-lh);
     letter-spacing: var(--t-caps-ls);
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--white) 60%, transparent);
+    color: var(--white-alpha-70);
     font-variant-numeric: tabular-nums;
   }
   .ins__divider {
@@ -288,11 +288,11 @@ const [settled, up] = c.line.split(' · ');
       border-radius: 32px;
     }
     .ins__in {
-      gap: 18px;
+      gap: var(--space-4);
     }
     .ins__group {
-      top: calc((100svh + var(--header-h) - 16px) / 2);
-      gap: 18px;
+      top: calc((calc(100 * var(--svh)) + var(--header-h) - 16px) / 2);
+      gap: var(--space-4);
     }
     .ins__body {
       font-size: var(--t-para-sm-size);

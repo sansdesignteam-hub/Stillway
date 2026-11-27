@@ -9,15 +9,16 @@
  *    big time + status under the active card; scroll turns the arc to the left, one photo per state
  *  - Night with a soft --cocoa-300 light lower left (Figma "Ember glow" place, colour D-139) and a
  *    night shade (upper right), painted with dither (scripts/glow.ts)
- * Photos: the 5 C-02 frames from V1, read from ../design (not copied, not retouched — D-073).
+ * Photos: the 5 Day arc frames of Figma Day arc / State 3 (D-172, design/assets/v2/s04, 1024 × 1536
+ *   originals), optimised by Img.astro.
  */
 import Img from '../Img.astro';
 import { activity as d } from '../../content/copy';
-import s0740 from '../../../../design/assets/v1/home/S3p-0740-moving-walk.png';
-import s0900 from '../../../../design/assets/v1/home/S3p-0900-resting-focus.png';
-import s1030 from '../../../../design/assets/v1/home/S3p-1030-moving-stretch.png';
-import s1230 from '../../../../design/assets/v1/home/S3p-1230-resting-lunch.png';
-import s1530 from '../../../../design/assets/v1/home/S3p-1530-moving-stairs.png';
+import s0740 from '../../../../design/assets/v2/s04/s04-0740.png';
+import s0900 from '../../../../design/assets/v2/s04/s04-0900.png';
+import s1030 from '../../../../design/assets/v2/s04/s04-1030.png';
+import s1230 from '../../../../design/assets/v2/s04/s04-1230.png';
+import s1530 from '../../../../design/assets/v2/s04/s04-1530.png';
 
 const srcs = { s0740, s0900, s1030, s1230, s1530 } as const;
 const first = d.frames[0];
@@ -33,7 +34,7 @@ const digits = Array.from({ length: 20 }, (_, i) => i % 10); // 0–9 twice: a d
       {
         d.frames.map((f) => (
           <div class="act__card" data-a-card data-a data-time={f.time}>
-            <Img src={srcs[f.key as keyof typeof srcs]} alt="" sizes="(max-width: 719px) 200px, 264px" widths={[400, 560, 800]} ready />
+            <Img src={srcs[f.key as keyof typeof srcs]} alt="" sizes="(max-width: 719px) 270px, 400px" widths={[540, 800, 1060]} defer />
           </div>
         ))
       }
@@ -48,8 +49,8 @@ const digits = Array.from({ length: 20 }, (_, i) => i % 10); // 0–9 twice: a d
   </div>
   <div class="scene__front">
     <div class="act__intro" data-a-intro data-a>
-      <h2 id="activity-title" class="act__title">
-        <span class="act__t1">{d.heading[0]}</span>
+      <h2 id="activity-title" class="act__title" aria-label={d.heading.join(' ')}>
+        <span class="act__t1">{d.heading[0]}</span>{' '}
         <span>{d.heading[1]}</span>
       </h2>
       <p class="act__body">{d.body}</p>
@@ -172,10 +173,10 @@ const digits = Array.from({ length: 20 }, (_, i) => i % 10); // 0–9 twice: a d
   .act__intro {
     position: absolute;
     left: var(--margin);
-    top: calc(var(--header-h) + 68px);
+    top: var(--content-top);
     width: min(416px, calc(100vw - 2 * var(--margin)));
     display: grid;
-    gap: 18px;
+    gap: var(--space-4);
   }
   /* Heading/Heading 1: "Activity" neutral/400, "and rest." Paper */
   .act__title {
@@ -205,7 +206,7 @@ const digits = Array.from({ length: 20 }, (_, i) => i % 10); // 0–9 twice: a d
     top: 0;
     display: grid;
     justify-items: center;
-    gap: 6px;
+    gap: var(--space-2);
     will-change: transform, opacity;
   }
   /* Display/Display 4; each digit rolls on its own strip (line height = size for Display 4) */
@@ -236,7 +237,7 @@ const digits = Array.from({ length: 20 }, (_, i) => i % 10); // 0–9 twice: a d
   .act__status {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-2);
     font-weight: var(--w-label);
     font-size: var(--t-label-lg-size);
     line-height: var(--t-label-lg-lh);
@@ -269,7 +270,7 @@ const digits = Array.from({ length: 20 }, (_, i) => i % 10); // 0–9 twice: a d
   }
   @media (max-width: 719px) {
     .act__intro {
-      top: calc(var(--header-h) + 16px);
+      top: var(--content-top);
       gap: 8px;
     }
     .act__body {

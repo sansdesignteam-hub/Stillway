@@ -19,7 +19,9 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   <div class="scene__back">
     <div class="sleep__light" data-s-light data-a aria-hidden="true"><canvas class="sleep__beam" data-s-beam></canvas></div>
   </div>
-  <img class="ring-fallback sleep__fb" src="/ring-fallback/fb-s03-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
+  <!-- QA SL-02: this still is already the night look of state 1 (dark band, one cold edge); there is
+       no warm/green still yet for states 2–4 (3D Designer asset) -->
+  <img class="ring-fallback sleep__fb" data-src="/ring-fallback/fb-s03-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
   <div class="scene__front">
     <div class="sleep__col">
       <!-- no kicker: the navbar clock already reads "23:10 · Last night" (D-090 r1) -->
@@ -93,7 +95,7 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   .stat {
     grid-area: 1 / 1;
     display: grid;
-    gap: 6px;
+    gap: var(--space-2);
     transform-origin: 0 100%;
     will-change: transform, opacity;
   }
@@ -123,7 +125,7 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   }
   .sleep__foot {
     display: grid;
-    gap: 6px;
+    gap: var(--space-2);
     min-height: 3.2em;
   }
   /* Paragraph/Small */
@@ -133,7 +135,7 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
     letter-spacing: var(--t-para-sm-ls);
   }
   .sleep__fb {
-    --rw: min(56vw, 82vh);
+    --rw: min(56vw, calc(82 * var(--lvh)));
     left: 72%;
     width: calc(var(--rw) * 1.6);
     max-width: none;
@@ -143,22 +145,22 @@ const split = (v: string) => [...v.matchAll(/(\d[\d:]*×?)|([a-z]+)|(\s+)/g)].ma
   @media (max-width: 719px) {
     .sleep__col {
       top: auto;
-      bottom: 24px;
+      bottom: var(--content-bottom);
       translate: none;
       right: var(--margin);
       width: auto;
       gap: 12px;
     }
     .sleep__slot {
-      margin-top: 52px;
+      margin-top: var(--space-8);
     }
     .sleep__col {
-      --n: 27vw;
+      --n: min(25.6vw, 96px); /* QA M-03: the big number ≈ 96 px at most */
     }
     .sleep__fb {
-      --rw: 80vw;
+      --rw: 56vw;
       left: 50%;
-      top: calc(28% - var(--rw) * 1.6 * 0.4316);
+      top: calc(25% - var(--rw) * 1.6 * 0.4316);
     }
   }
 </style>

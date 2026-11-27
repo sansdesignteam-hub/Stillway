@@ -1,0 +1,3 @@
+{"label":"1440 desktop","rest":{"fps":60.2,"avgMs":16.62,"p95Ms":17.4},"tilt":{"fps":52.6,"avgMs":19.02,"p95Ms":17.6}}
+{"label":"1440 4x CPU throttle","rest":{"fps":60.3,"avgMs":16.58,"p95Ms":17.5},"tilt":{"fps":59.8,"avgMs":16.73,"p95Ms":17.5}}
+{"label":"375 mobile-size (12 taps)","rest":{"fps":60.5,"avgMs":16.54,"p95Ms":17.6},"tilt":{"fps":60,"avgMs":16.67,"p95Ms":17.6}}

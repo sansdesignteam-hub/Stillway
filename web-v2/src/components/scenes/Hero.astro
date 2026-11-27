@@ -6,33 +6,49 @@
  * Motion: scripts/sections/hero.ts. Photo + zoom settings: content/heroBg.ts.
  */
 import { hero } from '../../content/copy';
-import { heroBg } from '../../content/heroBg';
+import { heroBg, plateSet } from '../../content/heroBg';
 const D = heroBg.desktop;
 const M = heroBg.mobile;
+const P = M.portrait;
+const R = heroBg.poster;
+/** first paint under the full image: AVIF where the browser has it, else WebP */
+const ph = (b: string) => `image-set(url(${b}.avif) type('image/avif'), url(${b}.webp) type('image/webp'))`;
 
-const icons = [
-  'M11.5 9.6A4.6 4.6 0 0 1 6.4 4.5a4.6 4.6 0 1 0 5.1 5.1Z', // sleep: crescent
-  'M5 12V6M9 12V3M13 12V8', // activity and rest: bars
-  'M3 10h10M3 13h6M8 3.5a1.5 1.5 0 1 1 0 .01', // insight
-];
 ---
 
 <section
   class="scene scene--hero"
   data-scene="hero"
   aria-labelledby="hero-title"
-  style={`--ph-d:url(${D.placeholder}); --ph-m:url(${M.placeholder}); --v1-ratio:${heroBg.v1Ratio}; --d-ratio:${D.width / D.height}; --d-orig:${D.origW}; --m-ratio:${M.width / M.height}; --m-orig:${M.origW}`}
+  style={`--ph-d:${ph(D.placeholder)}; --ph-m:${ph(M.placeholder)}; --crop-m:${P.crop}; --v1-ratio:${heroBg.v1Ratio}; --d-ratio:${D.width / D.height}; --d-orig:${D.origW}; --m-ratio:${M.width / M.height}; --m-orig:${M.origW}; --anchor-x:${heroBg.anchor.x * 100}%; --anchor-y:${heroBg.anchor.y * 100}%; --subj-x:${heroBg.subjectOrigin.x * 100}%; --subj-y:${heroBg.subjectOrigin.y * 100}%; --subj-m:${M.subject}; --subj-dy:${M.subjectDy}; --ped-k:${heroBg.keepPedestal.ped}; --ped-room:${heroBg.keepPedestal.room}`}
 >
   <div class="scene__back">
     <div class="hero__photo" data-h-photo data-a>
       <picture>
-        <source media={M.media} type="image/webp" srcset={M.srcset} sizes="max(85vw, 150lvh)" />
-        <img src={D.src} srcset={D.srcset} sizes="max(226vw, 400lvh)" width={D.width} height={D.height} alt="" fetchpriority="low" decoding="async" data-h-img />
+        <!-- D-181: plate = desk photo + Cycles pedestal. AVIF, then WebP; portrait phones the centre
+             crop of the phone plate, other narrow windows the full phone plate, the rest the desktop one -->
+        <source media={P.media} type="image/avif" srcset={plateSet(P, 'avif')} sizes={P.sizes} />
+        <source media={P.media} type="image/webp" srcset={plateSet(P, 'webp')} sizes={P.sizes} />
+        <source media={M.media} type="image/avif" srcset={plateSet(M, 'avif')} sizes={M.sizes} />
+        <source media={M.media} type="image/webp" srcset={plateSet(M, 'webp')} sizes={M.sizes} />
+        <source type="image/avif" srcset={plateSet(D, 'avif')} sizes={D.sizes} />
+        <img src={`${D.base}-1920.webp`} srcset={plateSet(D, 'webp')} sizes={D.sizes} width={D.width} height={D.height} alt="" fetchpriority="low" decoding="async" data-h-img />
       </picture>
       <div class="hero__dim" style={`opacity:${heroBg.dim}`}></div>
+      <!-- D-181 poster: ring + ring shadow, transparent, in the plate's own frame (3D Designer
+           ring-overlay-s01*; the pedestal is in the plate), so it zooms with the photo. First paint,
+           reduced motion and no WebGL; once the live ring is up it cross-fades to the identical 3D frame. -->
+      <picture class="hero__poster">
+        <source media={P.media} type="image/avif" srcset={plateSet(R.portrait, 'avif')} sizes={P.sizes} />
+        <source media={P.media} type="image/webp" srcset={plateSet(R.portrait, 'webp')} sizes={P.sizes} />
+        <source media={M.media} type="image/avif" srcset={plateSet(R.mobile, 'avif')} sizes={M.sizes} />
+        <source media={M.media} type="image/webp" srcset={plateSet(R.mobile, 'webp')} sizes={M.sizes} />
+        <source type="image/avif" srcset={plateSet(R.desktop, 'avif')} sizes={D.sizes} />
+        <img src={`${R.desktop.base}-1920.webp`} srcset={plateSet(R.desktop, 'webp')} sizes={D.sizes} alt={hero.ringAlt} width={D.width} height={D.height} data-ring-fallback data-fb-range="0,1.6" decoding="async" fetchpriority="high" />
+      </picture>
     </div>
     <h1 class="hero__word" id="hero-title" data-h-word data-a>
-      <span class="sr-only">Stillway. {hero.tagline}</span>
+      <span class="sr-only">Stillway</span>
       <span class="hero__word-inner" aria-hidden="true">
         {hero.wordmark.split('').map((ch) => <span class="hero__char">{ch}</span>)}
       </span>
@@ -40,32 +56,14 @@ const icons = [
   </div>
 
 
-  <!-- polished stills (3D Designer 16cfbaf): reduced motion / WebGL failure only; frame 1024, ring 640 px
-       centred at (512, 442), so the image is 1.6× the ring width -->
-  <img class="ring-fallback hero__fb hero__fb--shadow" src="/ring-fallback/fb-s01-polished-shadow.webp" alt="" width="1024" height="1024" data-ring-fallback data-fb-range="0,1" data-a decoding="async" />
-  <img class="ring-fallback hero__fb" src="/ring-fallback/fb-s01-polished.webp" alt={hero.ringAlt} width="1024" height="1024" data-ring-fallback data-fb-range="0,1" data-a decoding="async" />
-  <img class="ring-fallback hero__fb hero__fb--end" src="/ring-fallback/fb-s02-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-fb-range="3,3.5" data-a loading="lazy" decoding="async" />
+  <!-- S02 start still (reduced motion / WebGL failure only) -->
+  <img class="ring-fallback hero__fb hero__fb--end" data-src="/ring-fallback/fb-s02-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-fb-range="3,3.5" data-a loading="lazy" decoding="async" />
+  <!-- D-179 Stage 2 (Figma 40004725:5602): scrim, "SCROLL DOWN" bottom-left, intro bottom-right -->
+  <div class="hero__scrim" aria-hidden="true"></div>
   <div class="scene__front">
-    <div class="hero__meta" data-h-meta data-a>
-      <p class="hero__tag" data-h-tag><i class="dot" aria-hidden="true"></i>{hero.tagline}</p>
-      <ul class="hero__features" data-h-features>
-        {
-          hero.features.map((f, i) => (
-            <li>
-              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                <path d={icons[i]} fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-              {f}
-            </li>
-          ))
-        }
-      </ul>
-      <p class="hero__price" data-h-price>{hero.price}</p>
-    </div>
-    <!-- D-087: statement bottom-left and "Scroll down" bottom-right on one baseline; no "• Stillway" -->
     <div class="hero__bottom">
-      <p class="hero__statement" data-h-statement data-a>{hero.statement}</p>
       <span class="hero__foot" data-h-foot data-a aria-hidden="true">{hero.scroll}</span>
+      <p class="hero__statement" data-h-statement data-a>{hero.statement}</p>
     </div>
   </div>
 </section>
@@ -74,17 +72,25 @@ const icons = [
   .scene--hero {
     color: var(--white);
   }
+  /* QA27 M-11: the scene is svh tall; with the address bar away the screen is lvh, so the photo and
+     its scrim carry on into that strip (nothing moves: the containing block stays svh) */
+  .scene--hero .scene__back {
+    overflow: visible;
+  }
   /* the ORIGINAL photo inside the extended canvas covers the viewport like V1's .hero__stage;
      the canvas around it is what the zoom-out reveals (content/heroBg.ts) */
   .hero__photo {
-    --cover: max(100vw, 100lvh * var(--v1-ratio));
+    --cover: max(100vw, calc(100 * var(--lvh)) * var(--v1-ratio));
     position: absolute;
     left: 50%;
-    top: 50%;
+    /* D-186: above 16:9 move up so the pedestal stays on screen (heroBg.keepPedestal) */
+    --ped-lift: max(0px, var(--cover) / var(--v1-ratio) * var(--ped-k) - 100 * var(--lvh) * var(--ped-room));
+    top: calc(50% - var(--ped-lift));
     width: calc(var(--cover) / var(--d-orig));
     aspect-ratio: var(--d-ratio);
     translate: -50% -50%;
-    transform-origin: 50% 50%;
+    /* D-177: zoom around the pedestal, so the landing point stays put */
+    transform-origin: var(--anchor-x) var(--anchor-y);
     will-change: transform, opacity;
     background: var(--ph-d) center / 100% 100% no-repeat; /* light first paint under the full image */
   }
@@ -94,113 +100,94 @@ const icons = [
     width: 100%;
     height: 100%;
   }
+  .hero__photo picture {
+    position: absolute;
+    inset: 0;
+  }
   .hero__photo img {
     object-fit: cover;
+  }
+  .hero__poster {
+    pointer-events: none;
+  }
+  :global(html.ring-ready) .hero__poster {
+    opacity: 0;
+    transition: opacity 0.9s ease; /* same as the canvas fade-in, so the two cross */
   }
   .hero__dim {
     position: absolute;
     inset: 0;
     background: var(--photo-dim); /* photo tint, unchanged */
   }
-  /* V1 wordmark: Geist Medium, justified across the width, behind the ring.
+  /* V1 wordmark: Hanken Grotesk Medium, justified across the width, behind the ring.
      Display/Display 1 size and line height; its letter spacing does not apply (the letters are
      spread with space-between, a negative tracking would only push the last letter out). */
+  /* D-179 Stage 2 wordmark (Figma 40004725:5606): title case, left 40 / top 126.3, 193.59 px,
+     line 143.4, tracking −5.81 px plus the frame's −4.92 px per letter (≈ −0.0554em in all) */
   .hero__word {
     position: absolute;
-    top: var(--header-h);
-    left: 0;
-    right: 0;
+    top: 126.3px;
+    left: var(--margin);
     margin: 0;
-    padding: 1.6vw var(--margin) 1.2vw;
     font-weight: var(--w-display);
-    font-size: var(--t-display-1-size);
-    line-height: var(--t-display-1-lh);
-    letter-spacing: 0;
+    font-size: min(193.59px, 13.44vw);
+    line-height: 0.7407;
+    letter-spacing: -0.0554em;
+    white-space: nowrap;
     color: var(--white);
   }
+
   .hero__word-inner {
-    display: flex;
-    justify-content: space-between;
+    display: inline-flex;
   }
+
   .hero__char {
     display: inline-block;
   }
-  .hero__meta {
+  .hero__scrim {
     position: absolute;
-    left: 0;
-    right: 0;
-    top: calc(var(--header-h) + var(--t-display-1-lh) + 2.8vw + 18px);
-    padding-inline: var(--margin);
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: clamp(16px, 1.6vw, 24px);
-    /* Paragraph/Small */
-    font-size: var(--t-para-sm-size);
-    line-height: var(--t-para-sm-lh);
-    letter-spacing: var(--t-para-sm-ls);
+    inset: 0;
+    bottom: calc(100 * var(--svh) - 100 * var(--lvh));
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, 0.35) 100%);
   }
-  .hero__tag {
-    grid-column: 1 / span 5;
-  }
-  .hero__features {
-    grid-column: 10 / span 2;
-    display: grid;
-    gap: 10px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .hero__features li {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .hero__price {
-    grid-column: 12;
-    justify-self: end;
-    font-variant-numeric: tabular-nums;
-  }
+  /* Figma "Bottom": x 40, y 752, 1360 × 108, bottom-aligned, space-between */
   .hero__bottom {
     position: absolute;
     left: var(--margin);
     right: var(--margin);
-    bottom: 18px;
+    bottom: var(--margin);
     display: flex;
     justify-content: space-between;
-    align-items: last baseline;
+    align-items: flex-end;
     gap: 24px;
   }
+
+  /* Heading/Heading 2, 389 px wide → three lines, left-aligned inside the block */
   .hero__statement {
-    /* exactly 3 balanced lines at 1440 (D-087): ~27 characters per line, no orphan */
-    max-width: 14.6em;
-    text-wrap: balance;
-    /* Heading/Heading 2 */
+    width: 389px;
+    max-width: 100%;
+    margin: 0;
     font-weight: var(--w-heading);
     font-size: var(--t-heading-2-size);
     line-height: var(--t-heading-2-lh);
     letter-spacing: var(--t-heading-2-ls);
   }
-  /* matches no text style (uppercase sans label): kept, reported (D-134) */
+
+  /* Mono/Medium in capitals (QA G-09) */
   .hero__foot {
     flex: none;
-    font-size: 13px;
     font-weight: var(--w-label);
-    letter-spacing: var(--track-label);
+    font-size: var(--t-mono-md-size);
+    line-height: var(--t-mono-md-lh);
+    letter-spacing: var(--t-mono-md-ls);
     text-transform: uppercase;
-  }
-  .dot {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-    margin-right: 10px;
-    vertical-align: 2px;
   }
   /* stills: float pose (state 1–2), close-up (state 3), S02 start (state 4) */
   .hero__fb--float {
     top: 46%;
-    width: min(30vw, 62vh);
+    width: min(30vw, calc(62 * var(--lvh)));
   }
   .hero__fb--zoom {
     left: 56%;
@@ -208,17 +195,17 @@ const icons = [
     max-width: none;
   }
   .hero__fb--end {
-    width: min(36vw, 82vh);
+    width: min(36vw, calc(82 * var(--lvh)));
   }
   .hero__fb {
-    --rw: min(30vw, 62vh); /* ring width, as the 3D float pose */
+    --rw: min(30vw, calc(62 * var(--lvh))); /* ring width, as the 3D float pose */
     width: calc(var(--rw) * 1.6);
     max-width: none;
     translate: -50% 0;
     top: calc(53% - var(--rw) * 1.6 * 0.4316);
   }
   .hero__fb--end {
-    --rw: min(36vw, 82vh);
+    --rw: min(36vw, calc(82 * var(--lvh)));
     top: calc(50% - var(--rw) * 1.6 * 0.4316);
   }
   @media (max-width: 760px) {
@@ -226,36 +213,40 @@ const icons = [
       --rw: 66vw;
       top: calc(40% - var(--rw) * 1.6 * 0.4316);
     }
-    .hero__fb--shadow {
-      display: none;
-    }
     .hero__fb--end {
       --rw: 70vw;
       top: calc(50% - var(--rw) * 1.6 * 0.4316);
     }
     .hero__photo {
+      top: 50%;
       width: calc(var(--cover) / var(--m-orig));
       aspect-ratio: var(--m-ratio);
       background-image: var(--ph-m);
     }
+    /* portrait phones load the centre crop of the phone plate (heroBg.mobile.portrait): the image
+       fills only that strip of the photo box; the full-frame first-paint plate stays underneath */
+    @media (max-aspect-ratio: 3/4) {
+      .hero__photo picture {
+        width: calc(var(--crop-m) * 100%);
+        left: calc((1 - var(--crop-m)) * 50%);
+      }
+    }
+    /* D-179 mobile: wordmark full width under the nav; intro on top of "SCROLL DOWN" at the bottom */
     .hero__word {
       top: calc(var(--header-h) + 18px);
+      left: 20px;
+      font-size: calc((100vw - 40px) / 3.1); /* full width: "Stillway" ≈ 3.07 em wide */
     }
-    .hero__meta {
-      top: calc(var(--header-h) + 18px + var(--t-display-1-lh) + 2.8vw + 14px);
-      grid-template-columns: 1fr auto;
-    }
-    .hero__tag {
-      grid-column: 1;
-    }
-    .hero__features {
-      display: none;
-    }
-    .hero__price {
-      grid-column: 2;
+    .hero__bottom {
+      flex-direction: column-reverse;
+      align-items: flex-start;
+      gap: 14px;
+      left: 20px;
+      right: 20px;
     }
     .hero__statement {
-      max-width: 11.5em;
+      width: auto;
+      max-width: 15em;
     }
     .hero__fb--float {
       top: 52%;
@@ -268,4 +259,16 @@ const icons = [
       width: 70vw;
     }
     }
+  /* D-186 follow-up: landscape phones (740 × 360): the full-width phone wordmark ran over the ring and
+     the intro; there it sits left of the ring, and the intro stays left of the pedestal */
+  @media (max-width: 760px) and (orientation: landscape) and (max-height: 500px) {
+    .hero__word {
+      font-size: calc(36vw / 3.1);
+    }
+    .hero__statement {
+      max-width: calc(35vw - 20px);
+      font-size: 15px;
+      line-height: 20px;
+    }
+  }
 </style>

@@ -1,0 +1,2 @@
+1440x900 {"tilt(0,0)":{"rest_mm":0.0003,"minAfterRest_mm":0.0005,"at_u":0.0075},"tilt(-1,-1)":{"rest_mm":0.0183,"minAfterRest_mm":0.0058,"at_u":0.105},"tilt(-1,1)":{"rest_mm":0.0183,"minAfterRest_mm":0.0045,"at_u":0.105},"tilt(1,-1)":{"rest_mm":0.014,"minAfterRest_mm":0.0054,"at_u":0.0975},"tilt(1,1)":{"rest_mm":0.014,"minAfterRest_mm":0.005,"at_u":0.0975}}
+375x812 {"tilt(0,0)":{"rest_mm":0.0003,"minAfterRest_mm":0.0024,"at_u":0.0075}}

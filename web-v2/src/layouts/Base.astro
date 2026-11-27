@@ -1,5 +1,5 @@
 ---
-import '@fontsource-variable/geist/index.css';
+import '@fontsource-variable/hanken-grotesk/index.css';
 import 'lenis/dist/lenis.css';
 import '../styles/global.css';
 import '../styles/nav.css';
@@ -23,11 +23,13 @@ const SITE = 'https://stillway-two.vercel.app/';
     <meta name="description" content={description} />
     <!-- Concept project (D-025): keep it out of search indexes. -->
     <meta name="robots" content="noindex, nofollow" />
-    <meta name="theme-color" content="#F9F5EF" /><!-- = --paper (neutral/50); meta tags cannot read CSS tokens -->
-    <!-- favicon and share image (D-132, Visual Director e2d2e5e, design/assets/v2/meta) -->
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#F7F5F0" /><!-- = --paper (neutral/50); meta tags cannot read CSS tokens -->
+    <!-- favicon F-07 (D-188, Visual Director d23e526, design/assets/v2/meta/README.md); share image D-132 -->
+    <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
     <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" crossorigin="use-credentials" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -61,7 +63,7 @@ const SITE = 'https://stillway-two.vercel.app/';
         .stage { position: static; height: auto; }
         .stage__scenes { position: static; height: auto; }
         .scene { position: relative; min-height: 100svh; }
-        .tracks, .stage__ring, .rail { display: none; }
+        .tracks, .stage__ring, .rail, .gprog { display: none; }
       </style>
     </noscript>
   </head>

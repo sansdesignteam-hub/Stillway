@@ -5,10 +5,11 @@
  *  - State 1: "Through the day." (Display 2) in the middle.
  *  - State 2: the words part ('Through' left, 'the day.' right, cut at the cards' edges); four
  *    photo cards rise from below into a row between them.
+ *  - QA27 S7-06: front card 3:4, 68 % of the screen high, radius 10, one card behind it; each step the
+ *    front card slides out and the one behind grows forward (replaces "rises behind the stack").
  *  - States 3–6, (I) Night … (IV) Rinse: the cards close into a stack in the middle, a full-width
  *    hairline behind it; title above the line and the sentence below it on the left, a counter above
- *    and the spec + small note below on the right. Each step the front card rises behind the stack
- *    and the next one comes forward; titles rise letter by letter from behind the line, the lines
+ *    and the spec + small note below on the right. Titles rise letter by letter from behind the line, the lines
  *    below rise line by line (masks), the counter circle fills. No orbit lines (D-149 note 1).
  *  - End (obsidianassembly.com "The Connection"): the Rinse card moves down and shrinks while the
  *    big photo (inset frame, radius 14) comes up from below at scroll speed, its content slower
@@ -20,18 +21,24 @@
  */
 import Img from '../Img.astro';
 import { specs as d } from '../../content/copy';
-import night from '../../../../design/assets/v2/A-2-card-night.png';
-import desk from '../../../../design/assets/v2/A-2-card-desk.png';
-import move from '../../../../design/assets/v2/A-2-card-move.png';
-import rinse from '../../../../design/assets/v2/A-2-card-rinse.png';
+// D-175: card photos and the end photo from Figma State 9 / State 15 (design/assets/v2/s07)
+import night from '../../../../design/assets/v2/s07/s07-night.png';
+import desk from '../../../../design/assets/v2/s07/s07-desk.png';
+import move from '../../../../design/assets/v2/s07/s07-move.png';
+import rinse from '../../../../design/assets/v2/s07/s07-rinse.png';
 // D-155: Visual Director's A-11b variation C (dock + Black top right, Silver standing top left, Gold
 // lying bottom right, the middle of the stone empty); the two web sizes as they are (PNG = master)
-import ev1920 from '../../../../design/assets/v2/everyday/A-11b-everyday-c-1920.webp';
-import ev2880 from '../../../../design/assets/v2/everyday/A-11b-everyday-c-2880.webp';
 
 const img: Record<string, any> = { night, desk, move, rinse };
 // Figma: the Desk note wraps in a 217 px box, the others sit in 316
 const noteW: Record<string, number> = { desk: 217 };
+// D-185: the user's 4K photo (3840 × 2400), sets built by scripts/s07-plate.mjs. The frame covers by
+// height on tall screens (frame + parallax), hence the sizes; portrait phones get the right half.
+const evSet = (name: string, widths: number[], ext: string) => widths.map((w) => `/s07/${name}-${w}.${ext} ${w}w`).join(', ');
+const EV = [
+  { name: 'everyday-p', widths: [768, 1280, 1920], media: '(max-width: 719px) and (max-aspect-ratio: 3/4)', sizes: 'calc((100lvh + 128px) * 0.8)' },
+  { name: 'everyday', widths: [960, 1280, 1920, 2560, 3840], media: undefined, sizes: 'max(100vw, calc((100lvh + 112px) * 1.6))' },
+];
 ---
 
 <section class="scene scene--specs" data-scene="specs" aria-labelledby="specs-title">
@@ -39,7 +46,12 @@ const noteW: Record<string, number> = { desk: 217 };
   <div class="scene__back">
     <div class="sp__every" data-s-every data-a>
       <div class="sp__par" data-s-par>
-        <img class="sp__everyimg" src={ev1920.src} srcset={`${ev1920.src} 1920w, ${ev2880.src} 2880w`} sizes="100vw" width={ev2880.width} height={ev2880.height} alt={d.everyday.alt} decoding="async" />
+        <!-- D-185: not above the fold: specs.ts moves data-srcset → srcset once S07 is next (the stage is
+             fixed, so loading="lazy" alone would fetch it at page load) -->
+        <picture>
+          {EV.flatMap((v) => ['avif', 'webp'].map((ext) => <source media={v.media} type={`image/${ext}`} data-srcset={evSet(v.name, v.widths, ext)} sizes={v.sizes} />))}
+          <img class="sp__everyimg" data-src="/s07/everyday-1920.webp" width="3840" height="2400" alt={d.everyday.alt} loading="lazy" decoding="async" />
+        </picture>
       </div>
       <i class="sp__evshade" aria-hidden="true"></i>
       <i class="sp__dark" data-s-dark></i>
@@ -57,7 +69,7 @@ const noteW: Record<string, number> = { desk: 217 };
     {
       d.cards.map((c, i) => (
         <figure class="sp__card" data-s-card={i} data-a>
-          <Img src={img[c.key]} alt={c.alt} sizes="(max-width: 719px) 60vw, 28vw" widths={[480, 800, 1122]} ready class="sp__cardimg" />
+          <Img src={img[c.key]} alt={c.alt} sizes="(max-width: 719px) 90vw, 42vw" widths={[480, 800, 1122]} defer class="sp__cardimg" />
         </figure>
       ))
     }
@@ -100,7 +112,8 @@ const noteW: Record<string, number> = { desk: 217 };
 
     <!-- D-151: the words are drawn over the card (obsidianassembly.com "The Connection") -->
     <div class="sp__everytext" data-s-etext data-a>
-      <p class="sp__the" data-s-the>{d.everyday.the}</p>
+      <!-- D-175: one line, one size, centred: "The everyday." (the old small "The" stays empty) -->
+      <p class="sp__the" data-s-the hidden></p>
       <p class="sp__evword" data-s-evword>{d.everyday.word}</p>
     </div>
     <p class="sp__caption" data-s-caption data-a><span class="sp__capi" data-s-capi>{d.everyday.caption}</span></p>
@@ -113,7 +126,7 @@ const noteW: Record<string, number> = { desk: 217 };
     /* set by specs.ts: the card box (Figma 392 × 602 at 1440 × 900), the hairline y */
     --bw: 392px;
     --bh: 602px;
-    --ly: 53.5lvh;
+    --ly: calc(53.5 * var(--lvh));
     /* D-153: exposure of the big "The Everyday" photo, one place to tune (also for the D-152 photo):
        brightness of the photo itself, plus an optional warm shade (photo-dim) over it, in %.
        The Rinse card is never touched by either. */
@@ -184,12 +197,16 @@ const noteW: Record<string, number> = { desk: 217 };
     letter-spacing: var(--t-display-4-ls);
     margin-left: var(--the-x, 0px);
   }
-  /* Display/Display 1 */
+  /* D-171/D-175: sized to the photo, not to a text style — "The everyday." spans about 86 % of the
+     photo's width on one line (measured 5.93 em wide in Hanken Grotesk 500 with −3 % tracking).
+     Line height and tracking keep the Display proportions (204 / 275.4, −3 %). */
   .sp__evword {
+    --ev-size: calc((100vw - 2 * var(--margin)) * 0.86 / var(--ev-em, 5.93));
     font-weight: var(--w-display);
-    font-size: var(--t-display-1-size);
-    line-height: var(--t-display-1-lh);
-    letter-spacing: var(--t-display-1-ls);
+    font-size: var(--ev-size);
+    line-height: calc(var(--ev-size) * 0.7407);
+    letter-spacing: -0.03em;
+    white-space: nowrap;
   }
 
   /* ---------- State 1–2 words ---------- */
@@ -287,10 +304,10 @@ const noteW: Record<string, number> = { desk: 217 };
     white-space: pre-line;
   }
   .sp__ttl {
-    width: 316px;
+    width: min(316px, 22vw);
   }
   .sp__right {
-    width: 316px;
+    width: min(316px, 22vw);
     display: grid;
     justify-items: end;
     gap: 8px;
@@ -298,7 +315,7 @@ const noteW: Record<string, number> = { desk: 217 };
   }
   /* Paragraph/Medium, text-surface */
   .sp__note {
-    width: var(--nw);
+    width: min(var(--nw), 100%);
     font-size: var(--t-para-md-size);
     line-height: var(--t-para-md-lh);
     letter-spacing: var(--t-para-md-ls);
@@ -359,9 +376,10 @@ const noteW: Record<string, number> = { desk: 217 };
     position: absolute;
     left: 0;
     top: 0;
-    width: 7em;
+    width: auto;
     overflow: hidden;
-    text-align: left;
+    text-align: center;
+    white-space: nowrap;
     color: var(--white);
     text-shadow:
       0 0 1px color-mix(in srgb, var(--photo-dim) 60%, transparent),
@@ -384,7 +402,12 @@ const noteW: Record<string, number> = { desk: 217 };
     /* phones: the portrait frame shows a quarter of the width; keep the dock + Black and the Gold,
        with the empty stone between them behind the words (Silver, far left, is cropped) */
     .sp__par :global(img) {
-      object-position: 81% 50%;
+      object-position: 86% 50%; /* D-185: same framing (the black ring) on the 16:10 photo */
+    }
+    @media (max-aspect-ratio: 3/4) {
+      .sp__par :global(img) {
+        object-position: 60% 50%; /* the right-half file (everyday-p): the same framing */
+      }
     }
     .sp__below {
       flex-direction: column;
@@ -406,9 +429,10 @@ const noteW: Record<string, number> = { desk: 217 };
       width: 56px;
       height: 56px;
     }
+    /* D-175: centred under the card on phones too, one line */
     .sp__caption {
-      width: 9em;
-      text-align: right;
+      font-size: var(--t-para-md-size);
+      line-height: var(--t-para-md-lh);
     }
   }
 </style>

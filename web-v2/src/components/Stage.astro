@@ -24,7 +24,7 @@
   .stage {
     position: fixed;
     inset: 0;
-    height: 100lvh;
+    height: calc(100 * var(--lvh));
     pointer-events: none;
   }
   .stage__bg,
@@ -44,51 +44,87 @@
     width: 100%;
     height: 100%;
   }
-  /* Dusk → Paper (D-093): light sweeps down — paper, sand, a warm edge (--cocoa-300, D-139), then
-     clear — so the middle of the change is never a grey mix of Night and Paper */
+  /* QA G-16: every light ↔ dark change is the same ramp — 12 stops (Neutral/50 → Neutral/100 →
+     Cocoa/100–900 → Neutral/950 = bg-night-strong) at smootherstep positions (Figma "Design -
+     25 Nov" 02 → 03), with a fine grain over the ramp only, so both ends merge with no seam */
   .stage__wipe {
+    --light-end: var(--paper);
+    --light-next: var(--neutral-100);
     position: absolute;
     left: 0;
     right: 0;
     top: 0;
-    height: 250lvh;
-    background: linear-gradient(
-      to bottom,
-      var(--paper) 0%,
-      var(--paper) 56%,
-      var(--sand) 63%,
-      color-mix(in srgb, color-mix(in srgb, var(--cocoa-300) 60%, var(--sand)) 90%, transparent) 69%,
-      color-mix(in srgb, var(--cocoa-300) 45%, transparent) 75%,
-      transparent 84%
-    );
+    height: 300lvh;
     visibility: hidden;
     will-change: transform;
   }
-  .stage__wipe[data-tone='rise'] {
-    /* → S11 (D-139): the rising edge in the light colour, not ochre */
-    background: linear-gradient(to top, var(--night) 0%, var(--night) 56%, color-mix(in srgb, var(--cocoa-300) 45%, transparent) 64%, color-mix(in srgb, var(--cocoa-300) 16%, transparent) 72%, transparent 82%);
+  .stage__wipe::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: var(--grain-top);
+    height: var(--grain-h);
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode: soft-light;
+    opacity: 0.22;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 25%, #000 75%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 25%, #000 75%, transparent);
   }
-  /* D-136 (02 → 03): Night rising from below through warm Cocoa steps into the Paper above */
-  .stage__wipe[data-tone='rise-cocoa'] {
+  /* rising from below (02 → 03 D-136, → S11 D-098) */
+  .stage__wipe[data-tone^='rise'] {
+    --grain-top: 0lvh;
+    --grain-h: 200lvh;
     background: linear-gradient(
-      to top,
-      var(--night) 0%,
-      var(--night) 40%,
-      var(--cocoa-900) 47%,
-      var(--cocoa-700) 54%,
-      color-mix(in srgb, var(--cocoa-500) 85%, transparent) 61%,
-      color-mix(in srgb, var(--cocoa-300) 45%, transparent) 70%,
-      transparent 80%
+      to bottom,
+      var(--light-end) 0.0lvh,
+      var(--light-next) 38.2lvh,
+      var(--cocoa-100) 59.6lvh,
+      var(--cocoa-200) 75.4lvh,
+      var(--cocoa-300) 88.2lvh,
+      var(--cocoa-400) 99.6lvh,
+      var(--cocoa-500) 109.8lvh,
+      var(--cocoa-600) 120.2lvh,
+      var(--cocoa-700) 131.8lvh,
+      var(--cocoa-800) 144.8lvh,
+      var(--cocoa-900) 161.2lvh,
+      var(--night) 200.0lvh,
+      var(--night) 300lvh
     );
   }
+  /* → S11 starts from the Sand of S10 */
+  .stage__wipe[data-tone='rise'] {
+    --light-end: var(--sand);
+    --light-next: var(--sand);
+  }
+  /* light sweeping down (Dusk → Paper D-093, Night → Paper D-096) */
+  .stage__wipe[data-tone='warm'],
   .stage__wipe[data-tone='plain'] {
-    background: linear-gradient(to bottom, var(--paper) 0%, var(--paper) 58%, var(--sand) 66%, color-mix(in srgb, var(--sand) 50%, transparent) 74%, transparent 84%);
+    --grain-top: 100lvh;
+    --grain-h: 170lvh;
+    background: linear-gradient(
+      to bottom,
+      var(--light-end) 0lvh,
+      var(--light-end) 100.0lvh,
+      var(--light-next) 132.5lvh,
+      var(--cocoa-100) 150.7lvh,
+      var(--cocoa-200) 164.1lvh,
+      var(--cocoa-300) 175.0lvh,
+      var(--cocoa-400) 184.7lvh,
+      var(--cocoa-500) 193.3lvh,
+      var(--cocoa-600) 202.2lvh,
+      var(--cocoa-700) 212.0lvh,
+      var(--cocoa-800) 223.1lvh,
+      var(--cocoa-900) 237.0lvh,
+      var(--night) 270.0lvh,
+      transparent 300lvh
+    );
   }
   .stage__ring {
     position: absolute;
     inset: 0;
     width: 100vw;
-    height: 100vh;
+    height: calc(100 * var(--lvh));
     z-index: 2;
     opacity: 0;
     transition: opacity 0.9s ease;
@@ -101,7 +137,7 @@
   .stage__scenes {
     position: absolute;
     inset: 0;
-    height: 100svh;
+    height: calc(100 * var(--svh));
     outline: none;
   }
 </style>

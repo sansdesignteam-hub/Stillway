@@ -1,0 +1,1136 @@
+{
+ "before-desktop-1": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 2894,
+  "performance": 77,
+  "FCP": 287,
+  "LCP": 287,
+  "TBT": 563,
+  "CLS": 0.0095,
+  "SI": 576,
+  "bytes": 1787731,
+  "longTasks": [
+   [
+    1394,
+    190,
+    "Unattributable"
+   ],
+   [
+    547,
+    166,
+    "Unattributable"
+   ],
+   [
+    390,
+    157,
+    "Unattributable"
+   ],
+   [
+    259,
+    131,
+    "Unattributable"
+   ],
+   [
+    821,
+    94,
+    "_lighthouse-eval.js"
+   ],
+   [
+    1022,
+    84,
+    "_lighthouse-eval.js"
+   ],
+   [
+    748,
+    73,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    915,
+    65,
+    "_lighthouse-eval.js"
+   ],
+   [
+    1153,
+    62,
+    "_lighthouse-eval.js"
+   ],
+   [
+    1307,
+    62,
+    "stage.Dyd8bWVj.js"
+   ],
+   [
+    2037,
+    57,
+    "_lighthouse-eval.js"
+   ],
+   [
+    1925,
+    54,
+    "Unattributable"
+   ]
+  ]
+ },
+ "before-desktop-2": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 2831,
+  "performance": 79,
+  "FCP": 412,
+  "LCP": 1356,
+  "TBT": 401,
+  "CLS": 0.0012,
+  "SI": 657,
+  "bytes": 1787731,
+  "longTasks": [
+   [
+    230,
+    155,
+    "Unattributable"
+   ],
+   [
+    385,
+    144,
+    "Unattributable"
+   ],
+   [
+    1363,
+    118,
+    "Unattributable"
+   ],
+   [
+    529,
+    112,
+    "Unattributable"
+   ],
+   [
+    781,
+    102,
+    "_lighthouse-eval.js"
+   ],
+   [
+    688,
+    93,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    992,
+    88,
+    "_lighthouse-eval.js"
+   ],
+   [
+    1127,
+    75,
+    "_lighthouse-eval.js"
+   ],
+   [
+    1290,
+    73,
+    "stage.Dyd8bWVj.js"
+   ],
+   [
+    883,
+    65,
+    "_lighthouse-eval.js"
+   ],
+   [
+    1937,
+    61,
+    "_lighthouse-eval.js"
+   ],
+   [
+    1768,
+    53,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    1830,
+    50,
+    "Unattributable"
+   ]
+  ]
+ },
+ "before-desktop-3": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 2313,
+  "performance": 80,
+  "FCP": 412,
+  "LCP": 1153,
+  "TBT": 394,
+  "CLS": 0.0012,
+  "SI": 620,
+  "bytes": 1787731,
+  "longTasks": [
+   [
+    212,
+    147,
+    "Unattributable"
+   ],
+   [
+    359,
+    147,
+    "Unattributable"
+   ],
+   [
+    506,
+    113,
+    "Unattributable"
+   ],
+   [
+    751,
+    109,
+    "_lighthouse-eval.js"
+   ],
+   [
+    1356,
+    107,
+    "Unattributable"
+   ],
+   [
+    980,
+    98,
+    "_lighthouse-eval.js"
+   ],
+   [
+    666,
+    85,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    860,
+    71,
+    "_lighthouse-eval.js"
+   ],
+   [
+    1131,
+    71,
+    "_lighthouse-eval.js"
+   ],
+   [
+    1501,
+    67,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    1292,
+    64,
+    "stage.Dyd8bWVj.js"
+   ],
+   [
+    1751,
+    61,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    1920,
+    53,
+    "_lighthouse-eval.js"
+   ],
+   [
+    1078,
+    53,
+    "_lighthouse-eval.js"
+   ]
+  ]
+ },
+ "before-mobile-1": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 2559,
+  "performance": 69,
+  "FCP": 1219,
+  "LCP": 2516,
+  "TBT": 2443,
+  "CLS": 0.0317,
+  "SI": 2061,
+  "bytes": 1734035,
+  "longTasks": [
+   [
+    1266,
+    595,
+    "Unattributable"
+   ],
+   [
+    2105,
+    438,
+    "Unattributable"
+   ],
+   [
+    2543,
+    397,
+    "Unattributable"
+   ],
+   [
+    980,
+    286,
+    ""
+   ],
+   [
+    1861,
+    244,
+    "Unattributable"
+   ],
+   [
+    4619,
+    237,
+    "stage.Dyd8bWVj.js"
+   ],
+   [
+    2940,
+    227,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    4267,
+    203,
+    ""
+   ],
+   [
+    5209,
+    175,
+    "_lighthouse-eval.js"
+   ],
+   [
+    3356,
+    173,
+    "_lighthouse-eval.js"
+   ],
+   [
+    3195,
+    161,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    3656,
+    133,
+    "_lighthouse-eval.js"
+   ],
+   [
+    770,
+    97,
+    "Unattributable"
+   ],
+   [
+    4470,
+    94,
+    "stage.Dyd8bWVj.js"
+   ],
+   [
+    3789,
+    88,
+    "_lighthouse-eval.js"
+   ],
+   [
+    3877,
+    85,
+    "_lighthouse-eval.js"
+   ],
+   [
+    3529,
+    71,
+    "_lighthouse-eval.js"
+   ],
+   [
+    867,
+    68,
+    "Unattributable"
+   ],
+   [
+    4201,
+    66,
+    "_lighthouse-eval.js"
+   ],
+   [
+    5082,
+    66,
+    "_lighthouse-eval.js"
+   ]
+  ]
+ },
+ "before-mobile-2": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 2469,
+  "performance": 48,
+  "FCP": 1610,
+  "LCP": 7358,
+  "TBT": 1792,
+  "CLS": 0.0039,
+  "SI": 2007,
+  "bytes": 1734035,
+  "longTasks": [
+   [
+    901,
+    692,
+    "Unattributable"
+   ],
+   [
+    1711,
+    421,
+    "Unattributable"
+   ],
+   [
+    2132,
+    391,
+    "Unattributable"
+   ],
+   [
+    4542,
+    385,
+    "stage.Dyd8bWVj.js"
+   ],
+   [
+    2752,
+    204,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    4211,
+    202,
+    ""
+   ],
+   [
+    3581,
+    174,
+    "_lighthouse-eval.js"
+   ],
+   [
+    3121,
+    141,
+    "_lighthouse-eval.js"
+   ],
+   [
+    3000,
+    121,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    1593,
+    118,
+    "Unattributable"
+   ],
+   [
+    4413,
+    90,
+    "stage.Dyd8bWVj.js"
+   ],
+   [
+    4927,
+    82,
+    "stage.Dyd8bWVj.js"
+   ],
+   [
+    3262,
+    72,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    753,
+    61,
+    "Unattributable"
+   ],
+   [
+    3360,
+    53,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    2523,
+    53,
+    "_lighthouse-eval.js"
+   ],
+   [
+    3479,
+    53,
+    "_lighthouse-eval.js"
+   ],
+   [
+    2616,
+    50,
+    "_lighthouse-eval.js"
+   ]
+  ]
+ },
+ "before-mobile-3": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 2709,
+  "performance": 69,
+  "FCP": 1207,
+  "LCP": 2582,
+  "TBT": 2236,
+  "CLS": 0.0317,
+  "SI": 1706,
+  "bytes": 1734289,
+  "longTasks": [
+   [
+    1233,
+    589,
+    "Unattributable"
+   ],
+   [
+    2364,
+    440,
+    "Unattributable"
+   ],
+   [
+    1924,
+    440,
+    "Unattributable"
+   ],
+   [
+    4654,
+    347,
+    "stage.Dyd8bWVj.js"
+   ],
+   [
+    2901,
+    247,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    4419,
+    184,
+    "stage.Dyd8bWVj.js"
+   ],
+   [
+    4239,
+    180,
+    ""
+   ],
+   [
+    1035,
+    165,
+    ""
+   ],
+   [
+    5091,
+    158,
+    "_lighthouse-eval.js"
+   ],
+   [
+    3364,
+    138,
+    "_lighthouse-eval.js"
+   ],
+   [
+    3237,
+    127,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    3634,
+    108,
+    "_lighthouse-eval.js"
+   ],
+   [
+    1822,
+    102,
+    "Unattributable"
+   ],
+   [
+    766,
+    99,
+    "Unattributable"
+   ],
+   [
+    3502,
+    78,
+    "_lighthouse-eval.js"
+   ],
+   [
+    3799,
+    75,
+    "_lighthouse-eval.js"
+   ],
+   [
+    5001,
+    72,
+    "stage.Dyd8bWVj.js"
+   ],
+   [
+    4120,
+    68,
+    "_lighthouse-eval.js"
+   ],
+   [
+    865,
+    62,
+    "Unattributable"
+   ],
+   [
+    3742,
+    57,
+    "_lighthouse-eval.js"
+   ]
+  ]
+ },
+ "after-desktop-1": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 2697,
+  "performance": 100,
+  "FCP": 412,
+  "LCP": 412,
+  "TBT": 9,
+  "CLS": 0.0095,
+  "SI": 483,
+  "bytes": 1778962,
+  "longTasks": [
+   [
+    649,
+    56,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    998,
+    55,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    229,
+    51,
+    "Unattributable"
+   ]
+  ]
+ },
+ "after-desktop-2": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 2243,
+  "performance": 100,
+  "FCP": 416,
+  "LCP": 416,
+  "TBT": 47,
+  "CLS": 0.0095,
+  "SI": 480,
+  "bytes": 1778962,
+  "longTasks": [
+   [
+    1043,
+    94,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    312,
+    82,
+    "Unattributable"
+   ],
+   [
+    713,
+    64,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    657,
+    56,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    851,
+    55,
+    "index.astro_astro_type_script_index_0_la"
+   ]
+  ]
+ },
+ "after-desktop-3": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 2238,
+  "performance": 100,
+  "FCP": 287,
+  "LCP": 287,
+  "TBT": 21,
+  "CLS": 0.0142,
+  "SI": 386,
+  "bytes": 1778962,
+  "longTasks": [
+   [
+    285,
+    69,
+    "Unattributable"
+   ],
+   [
+    638,
+    57,
+    "index.astro_astro_type_script_index_0_la"
+   ]
+  ]
+ },
+ "after-mobile-1": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 2992,
+  "performance": 97,
+  "FCP": 1204,
+  "LCP": 2359,
+  "TBT": 125,
+  "CLS": 0.0039,
+  "SI": 1204,
+  "bytes": 1725520,
+  "longTasks": [
+   [
+    1049,
+    222,
+    "Unattributable"
+   ],
+   [
+    4278,
+    159,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    921,
+    77,
+    ""
+   ],
+   [
+    761,
+    72,
+    "Unattributable"
+   ],
+   [
+    4207,
+    71,
+    "Unattributable"
+   ],
+   [
+    4437,
+    68,
+    "Unattributable"
+   ],
+   [
+    1271,
+    66,
+    "Unattributable"
+   ],
+   [
+    2959,
+    62,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    2856,
+    56,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    998,
+    51,
+    ""
+   ]
+  ]
+ },
+ "after-mobile-2": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 2772,
+  "performance": 98,
+  "FCP": 1205,
+  "LCP": 2354,
+  "TBT": 23,
+  "CLS": 0.0039,
+  "SI": 1205,
+  "bytes": 1725520,
+  "longTasks": [
+   [
+    878,
+    98,
+    "Unattributable"
+   ],
+   [
+    4059,
+    83,
+    "Unattributable"
+   ],
+   [
+    752,
+    77,
+    "Unattributable"
+   ],
+   [
+    976,
+    60,
+    "Unattributable"
+   ],
+   [
+    4194,
+    59,
+    "Unattributable"
+   ],
+   [
+    4142,
+    52,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    4253,
+    51,
+    "stage.yKmhmbt_.js"
+   ]
+  ]
+ },
+ "after-mobile-3": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 2849,
+  "performance": 96,
+  "FCP": 1705,
+  "LCP": 2622,
+  "TBT": 21,
+  "CLS": 0.0317,
+  "SI": 1705,
+  "bytes": 1725774,
+  "longTasks": [
+   [
+    757,
+    91,
+    "Unattributable"
+   ],
+   [
+    4064,
+    80,
+    "Unattributable"
+   ],
+   [
+    4144,
+    62,
+    "index.astro_astro_type_script_index_0_la"
+   ]
+  ]
+ },
+ "after-under-load-desktop-1": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 1995,
+  "performance": 100,
+  "FCP": 292,
+  "LCP": 292,
+  "TBT": 77,
+  "CLS": 0.0142,
+  "SI": 442,
+  "bytes": 1778957,
+  "longTasks": [
+   [
+    325,
+    122,
+    "Unattributable"
+   ],
+   [
+    690,
+    59,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    270,
+    55,
+    "Unattributable"
+   ]
+  ]
+ },
+ "after-under-load-desktop-2": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 2180,
+  "performance": 100,
+  "FCP": 289,
+  "LCP": 289,
+  "TBT": 63,
+  "CLS": 0.0142,
+  "SI": 451,
+  "bytes": 1778957,
+  "longTasks": [
+   [
+    234,
+    79,
+    "Unattributable"
+   ],
+   [
+    1174,
+    76,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    656,
+    71,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    326,
+    65,
+    "Unattributable"
+   ],
+   [
+    850,
+    64,
+    "index.astro_astro_type_script_index_0_la"
+   ]
+  ]
+ },
+ "after-under-load-desktop-3": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 2052,
+  "performance": 94,
+  "FCP": 303,
+  "LCP": 303,
+  "TBT": 192,
+  "CLS": 0.0108,
+  "SI": 618,
+  "bytes": 1778957,
+  "longTasks": [
+   [
+    434,
+    186,
+    "Unattributable"
+   ],
+   [
+    961,
+    119,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    882,
+    57,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    829,
+    53,
+    "index.astro_astro_type_script_index_0_la"
+   ]
+  ]
+ },
+ "after-under-load-mobile-1": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 1828,
+  "performance": 90,
+  "FCP": 1208,
+  "LCP": 2402,
+  "TBT": 348,
+  "CLS": 0.0039,
+  "SI": 1542,
+  "bytes": 1725515,
+  "longTasks": [
+   [
+    997,
+    217,
+    "Unattributable"
+   ],
+   [
+    1295,
+    180,
+    "Unattributable"
+   ],
+   [
+    4195,
+    131,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    4066,
+    129,
+    "Unattributable"
+   ],
+   [
+    4326,
+    112,
+    "Unattributable"
+   ],
+   [
+    869,
+    99,
+    ""
+   ],
+   [
+    4438,
+    98,
+    "stage.C2bILgB2.js"
+   ],
+   [
+    1214,
+    81,
+    "Unattributable"
+   ],
+   [
+    2741,
+    72,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    3040,
+    64,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    762,
+    63,
+    "Unattributable"
+   ],
+   [
+    4595,
+    62,
+    ""
+   ],
+   [
+    4536,
+    59,
+    ""
+   ],
+   [
+    2890,
+    55,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    1475,
+    50,
+    ""
+   ]
+  ]
+ },
+ "after-under-load-mobile-2": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 2188,
+  "performance": 78,
+  "FCP": 1211,
+  "LCP": 2706,
+  "TBT": 721,
+  "CLS": 0.0317,
+  "SI": 1714,
+  "bytes": 1725515,
+  "longTasks": [
+   [
+    850,
+    773,
+    "Unattributable"
+   ],
+   [
+    4462,
+    230,
+    "stage.C2bILgB2.js"
+   ],
+   [
+    4213,
+    161,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    4072,
+    141,
+    "Unattributable"
+   ],
+   [
+    4764,
+    110,
+    ""
+   ],
+   [
+    1623,
+    88,
+    "Unattributable"
+   ],
+   [
+    4374,
+    88,
+    "Unattributable"
+   ],
+   [
+    2717,
+    78,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    2795,
+    77,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    4692,
+    72,
+    ""
+   ],
+   [
+    4895,
+    66,
+    "Unattributable"
+   ],
+   [
+    3047,
+    56,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    1711,
+    52,
+    "Unattributable"
+   ]
+  ]
+ },
+ "after-under-load-mobile-3": {
+  "lighthouse": "13.6.0",
+  "benchmarkIndex": 1524,
+  "performance": 82,
+  "FCP": 1208,
+  "LCP": 2506,
+  "TBT": 610,
+  "CLS": 0.0317,
+  "SI": 1787,
+  "bytes": 1725515,
+  "longTasks": [
+   [
+    1207,
+    336,
+    "Unattributable"
+   ],
+   [
+    920,
+    245,
+    "Unattributable"
+   ],
+   [
+    3035,
+    159,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    4180,
+    145,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    4066,
+    114,
+    "Unattributable"
+   ],
+   [
+    2851,
+    107,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    2712,
+    92,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    3194,
+    74,
+    "index.astro_astro_type_script_index_0_la"
+   ],
+   [
+    816,
+    61,
+    "Unattributable"
+   ],
+   [
+    4350,
+    56,
+    "stage.C2bILgB2.js"
+   ],
+   [
+    1543,
+    56,
+    "Unattributable"
+   ],
+   [
+    4444,
+    54,
+    ""
+   ],
+   [
+    1599,
+    53,
+    "Unattributable"
+   ]
+  ]
+ }
+}

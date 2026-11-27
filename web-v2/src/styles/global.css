@@ -44,8 +44,28 @@ button {
   font: inherit;
   color: inherit;
 }
+/* G-13: the focus ring is white wherever it sits on a dark surface */
+html[data-surface='dark'],
+html[data-surface='photo'],
+.scene--sleep,
+.scene--activity,
+.scene--insight,
+.scene--features,
+.scene--close,
+.site-header[data-theme='dark'],
+.site-header[data-theme='photo'] {
+  --focus: var(--stroke-white);
+}
+/* light panels keep the dark ring, whatever the page behind them is */
+.menu__panel,
+.scene--finishes,
+.scene--details,
+.scene--app,
+.scene--why {
+  --focus: var(--stroke-strong);
+}
 :focus-visible {
-  outline: 2px solid var(--ochre);
+  outline: 2px solid var(--focus);
   outline-offset: 3px;
 }
 
@@ -80,7 +100,7 @@ button {
   line-height: var(--t-heading-1-lh);
   letter-spacing: var(--t-heading-1-ls);
 }
-/* D-156: eyebrow, tag, chip — Label/X-Small in capitals, Geist (no Geist Mono, no [ ], no ochre:
+/* D-156: eyebrow, tag, chip — Label/X-Small in capitals, Hanken Grotesk (no Geist Mono, no [ ], no ochre:
    the colour is the section's neutral text colour) */
 .t-caps,
 .t-tag {
@@ -97,12 +117,12 @@ button {
   color: var(--stone);
 }
 
-/* S01 label style (uppercase sans, Hero foot). Matches no text style (caps are for Mono only):
-   kept as it was and reported (D-134). */
+/* Mono/Medium in capitals (QA G-09): the small uppercase labels */
 .t-label {
-  font-size: 13px;
   font-weight: var(--w-label);
-  letter-spacing: var(--track-label);
+  font-size: var(--t-mono-md-size);
+  line-height: var(--t-mono-md-lh);
+  letter-spacing: var(--t-mono-md-ls);
   text-transform: uppercase;
 }
 
@@ -150,6 +170,13 @@ button {
 .scene button {
   pointer-events: auto;
 }
+/* D-191: a section is laid out when story.ts raises it ([data-up]): the first frame is the hero's
+   alone, the others follow one per turn right after it. Only while motion is going to run: without
+   JS, with reduced motion, or if the script never starts (Base.astro takes motion-ready away after
+   2.5 s) every scene is laid out as before. */
+html.motion-ready .scene:not(.scene--hero):not([data-up]) {
+  display: none;
+}
 /* until story.ts runs, only the hero shows (no JS: everything stacks, see .no-story) */
 html.js .scene [data-a] {
   opacity: 0;
@@ -158,13 +185,46 @@ html.js .scene--hero [data-a] {
   opacity: 1;
 }
 
+/* QA G-14: copy and images that scroll up with the page (02→03, 06→07, 09→10, the S11 column)
+   fade out before they reach the navbar, so nothing ever sits under the logo or the bar */
+html.js .scene--why .scene__front,
+html.js .scene--why .scene__back,
+html.js .scene--sleep .scene__front,
+html.js .scene--details .scene__front,
+html.js .scene--details .scene__back,
+html.js .scene--app .scene__front,
+html.js .scene--close .scene__front {
+  -webkit-mask-image: linear-gradient(to bottom, transparent calc(var(--header-h) - 12px), #000 calc(var(--header-h) + 8px));
+  mask-image: linear-gradient(to bottom, transparent calc(var(--header-h) - 12px), #000 calc(var(--header-h) + 8px));
+}
+
+/* QA27 M-13: phones — nothing shows beside the logo or the pills: gone at the navbar's lower edge,
+   whole again 16 px below it */
+@media (max-width: 719px) {
+  html.js .scene--why .scene__front,
+  html.js .scene--why .scene__back,
+  html.js .scene--sleep .scene__front,
+  html.js .scene--details .scene__front,
+  html.js .scene--details .scene__back,
+  html.js .scene--app .scene__front,
+  html.js .scene--close .scene__front {
+    -webkit-mask-image: linear-gradient(to bottom, transparent var(--header-h), #000 calc(var(--header-h) + 16px));
+    mask-image: linear-gradient(to bottom, transparent var(--header-h), #000 calc(var(--header-h) + 16px));
+  }
+}
+
+/* QA27 G-19: a picture whose URL is still held back (scripts/lazy.ts) shows nothing, not its alt text */
+.scene img:not([src]):not([srcset]) {
+  visibility: hidden;
+}
+
 /* ---------- ring stills (3D fallback/): between the back and front layers ---------- */
 .ring-fallback {
   position: absolute;
   z-index: 2;
   left: 50%;
   top: 50%;
-  width: min(44vw, 82vh);
+  width: min(44vw, calc(82 * var(--lvh)));
   height: auto;
   translate: -50% -50%;
   pointer-events: none;
@@ -197,14 +257,14 @@ html.inspect .tracks {
 
 /* ---------- tracks: scroll length + anchors ---------- */
 .track {
-  height: calc(var(--len) * 100svh);
+  height: calc(var(--len) * calc(100 * var(--svh)));
 }
 .vh-probe {
   position: absolute;
   top: 0;
   left: 0;
   width: 1px;
-  height: 100svh;
+  height: calc(100 * var(--svh));
   visibility: hidden;
   pointer-events: none;
 }
@@ -222,5 +282,13 @@ html.reduced .scene [data-a] {
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
+  }
+}
+/* D-171: the S10 column scrolls like a page on phones, so it fades out under the navbar too.
+   QA27 G-19: the mask sits on the front layer, which no longer moves (the column inside it does) */
+@media (max-width: 719px) {
+  html.js .scene--finishes .scene__front {
+    -webkit-mask-image: linear-gradient(to bottom, transparent var(--header-h), #000 calc(var(--header-h) + 16px));
+    mask-image: linear-gradient(to bottom, transparent var(--header-h), #000 calc(var(--header-h) + 16px));
   }
 }

@@ -8,7 +8,7 @@
  *  - At the edge it tips over and falls (oryzo.ai): turning as it drops, slowing near the finger.
  *  - Hand A–C: the hand photo A-1 (no ring, D-133) rises from below the screen — its cut bottom is
  *    always below the viewport and melted into Paper — the ring slides onto the finger to the seat
- *    (s06-pose.json) (D-157: no finish tag beside it), "Then, it just fits." centred on top.
+ *    (s06-pose.json) (D-157: no finish tag beside it), "Then, it just fit." centred on top.
  * The table is the 3D Designer's pine table GLB in the ring stage (D-146, stage.ts); the CSS table here
  * stands in until it has loaded and without WebGL.
  * Motion: scripts/sections/details.ts.
@@ -33,16 +33,15 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     </div>
     <div class="det__card" data-d-card data-a>
       <div class="det__hand" data-d-hand>
-        <Img src={hand} alt={d.alt.hand} sizes="(max-width: 719px) 60vw, 40vw" widths={[400, 579]} ready fallbackFormat="png" class="det__img" />
-        <i class="det__seat" data-d-seat aria-hidden="true"></i>
+        <Img src={hand} alt={d.alt.hand} sizes="(max-width: 719px) 60vw, 40vw" widths={[400, 579]} defer fallbackFormat="png" class="det__img" />
         <div class="det__ringed" data-d-ringed aria-hidden="true">
-          <Img src={ringed} alt="" sizes="(max-width: 719px) 120vw, 90vw" widths={[800, 1254]} ready class="det__img" />
+          <Img src={ringed} alt="" sizes="(max-width: 719px) 120vw, 90vw" widths={[800, 1254]} defer class="det__img" />
         </div>
       </div>
     </div>
   </div>
 
-  <img class="ring-fallback det__fb" src="/ring-fallback/fb-s02-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-fb-range="0,2" data-a loading="lazy" decoding="async" />
+  <img class="ring-fallback det__fb" data-src="/ring-fallback/fb-s02-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-fb-range="0,6" data-d-fb data-a loading="lazy" decoding="async" />
 
   <div class="scene__front">
     <p class="sr-only">{d.alt.ring}</p>
@@ -70,9 +69,10 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     color: var(--ink);
     /* set by details.ts from the viewport */
     --hx: 60vw;
-    --hy: 50vh;
+    --hy: calc(50 * var(--lvh));
     --hs: 0.8;
-    --ty: 66.7lvh; /* table top (Figma y 600 of 900) */
+    --tip: calc(48 * var(--svh)); /* the fingertip's height on phones */
+    --ty: calc(66.7 * var(--lvh)); /* table top (Figma y 600 of 900) */
     --tx: 50vw; /* table right edge (Figma x 720) */
   }
   /* temporary table: a light pine top seen from above, a lit right edge with a darker side and its
@@ -159,7 +159,7 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     );
     will-change: transform, opacity;
   }
-  /* the hand layer; 06 → 07 scrolls it up with the page (D-147: no card) */
+  /* the hand layer; 06 → 07 slides it down and fades it (D-192; no card, D-147) */
   .det__card {
     position: absolute;
     inset: 0;
@@ -193,18 +193,6 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     -webkit-mask-image: radial-gradient(ellipse 8% 5.2% at 31.3% 33.1%, #000 62%, transparent 100%);
     mask-image: radial-gradient(ellipse 8% 5.2% at 31.3% 33.1%, #000 62%, transparent 100%);
   }
-  /* contact shadow of the 3D ring on the finger, just under the band */
-  .det__seat {
-    position: absolute;
-    left: calc((343px - 62px) * var(--hs));
-    top: calc((360px + 22px) * var(--hs));
-    width: calc(124px * var(--hs));
-    height: calc(26px * var(--hs));
-    border-radius: 50%;
-    background: radial-gradient(closest-side, color-mix(in srgb, var(--cocoa) 42%, transparent), color-mix(in srgb, var(--cocoa) 16%, transparent) 60%, transparent 100%);
-    filter: blur(calc(3px * var(--hs)));
-    opacity: 0;
-  }
   /* reduced motion / no WebGL: a polished still on the table (states 1–3) */
   .det__fb {
     left: var(--fbx);
@@ -217,7 +205,7 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
   .det__step {
     position: absolute;
     left: var(--margin);
-    top: calc(var(--header-h) + 68px);
+    top: var(--content-top);
   }
   .det__head,
   .det__stitle {
@@ -229,7 +217,7 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
   .det__head {
     width: min(7.15em, calc(100vw - 2 * var(--margin)));
   }
-  /* Figma 380 px; Geist runs a little wider here, 440 keeps each step title on one line */
+  /* Figma 380 px; Hanken Grotesk runs a little wider here, 440 keeps each step title on one line */
   .det__step {
     width: min(440px, calc(100vw - 2 * var(--margin)));
     display: grid;
@@ -243,12 +231,12 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
     letter-spacing: var(--t-para-md-ls);
     color: var(--stone);
   }
-  /* "Then, it just fits." centred on top (Figma Content pt 120, gap 20) */
+  /* "Then, it just fit." centred on top (Figma Content pt 120, gap 20) */
   .det__fits {
     position: absolute;
     left: var(--margin);
     right: var(--margin);
-    top: calc(var(--header-h) + 44px);
+    top: var(--content-top);
     display: grid;
     justify-items: center;
     gap: 20px;
@@ -267,7 +255,7 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
   .det__progress {
     position: absolute;
     left: var(--margin);
-    bottom: 57px;
+    bottom: var(--content-bottom);
     display: flex;
     gap: 8px;
   }
@@ -293,18 +281,22 @@ import ringed from '../../../../design/assets/v2/A-1b-hand-with-ring.png';
   @media (max-width: 719px) {
     .det__head,
     .det__step {
-      top: calc(var(--header-h) + 16px);
+      top: var(--content-top);
       right: var(--margin);
     }
     .det__step {
-      gap: 10px;
+      gap: var(--space-2);
     }
+    /* D-192: not right under the navbar but centred in the room above the fingertip (16 px of it kept
+       free), so there is no big gap between the text and the hand */
     .det__fits {
-      top: calc(var(--header-h) + 16px);
-      gap: 10px;
+      top: var(--content-top);
+      height: calc(var(--tip) - var(--space-4) - var(--content-top));
+      align-content: safe center;
+      gap: var(--space-2);
     }
     .det__progress {
-      bottom: 24px;
+      bottom: var(--content-bottom);
     }
   }
 </style>

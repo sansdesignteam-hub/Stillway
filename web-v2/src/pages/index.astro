@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import Header from '../components/Header.astro';
+import Progress from '../components/Progress.astro';
 import Stage from '../components/Stage.astro';
 import Hero from '../components/scenes/Hero.astro';
 import Why from '../components/scenes/Why.astro';
@@ -15,7 +16,7 @@ import Finishes from '../components/scenes/Finishes.astro';
 import Close from '../components/scenes/Close.astro';
 import Placeholder from '../components/scenes/Placeholder.astro';
 import { sections } from '../content/sections';
-import { heroBg } from '../content/heroBg';
+import { heroBg, plateSet } from '../content/heroBg';
 
 const built: Record<string, any> = { hero: Hero, why: Why, sleep: Sleep, activity: Activity, insight: Insight, details: Details, specs: Specs, features: Features, app: App, finishes: Finishes, close: Close };
 const len = (i: number) => {
@@ -27,10 +28,14 @@ const len = (i: number) => {
 <Base>
   <Fragment slot="head">
     <!-- S01 photo: the light version paints first (LCP), the full one replaces it -->
-    <link rel="preload" as="image" type="image/webp" href={heroBg.desktop.placeholder} media="(min-width: 761px)" fetchpriority="high" />
-    <link rel="preload" as="image" type="image/webp" href={heroBg.mobile.placeholder} media="(max-width: 760px)" fetchpriority="high" />
+    <link rel="preload" as="image" type="image/avif" href={`${heroBg.desktop.placeholder}.avif`} media="(min-width: 761px)" fetchpriority="high" />
+    <link rel="preload" as="image" type="image/avif" href={`${heroBg.mobile.placeholder}.avif`} media="(max-width: 760px)" fetchpriority="high" />
+    <link rel="preload" as="image" type="image/avif" imagesrcset={plateSet(heroBg.poster.desktop, 'avif')} imagesizes={heroBg.desktop.sizes} media="(min-width: 761px)" fetchpriority="high" />
+    <link rel="preload" as="image" type="image/avif" imagesrcset={plateSet(heroBg.poster.portrait, 'avif')} imagesizes={heroBg.mobile.portrait.sizes} media={heroBg.mobile.portrait.media} fetchpriority="high" />
+    <link rel="preload" as="image" type="image/avif" imagesrcset={plateSet(heroBg.poster.mobile, 'avif')} imagesizes={heroBg.mobile.sizes} media="(max-width: 760px) and (min-aspect-ratio: 3/4)" fetchpriority="high" />
   </Fragment>
   <Header />
+  <Progress />
   <Stage>
     {
       sections.map((def) => {
@@ -56,5 +61,19 @@ const len = (i: number) => {
 
 <script>
   import { initMotion } from '../scripts/motion';
-  initMotion();
+  /* D-191: the browser paints the hero first, then motion starts — the order the page has always had
+     in practice (the script used to arrive after the first paint). Kept on purpose now that start-up
+     is lighter: the first paint is then never held back by script, and the hero photo and intro are
+     on screen in that first frame. A hidden tab has no frames, so a timer starts it there. */
+  let started = false;
+  const start = () => {
+    if (started) return;
+    started = true;
+    initMotion();
+  };
+  if (document.visibilityState === 'hidden') start();
+  else {
+    requestAnimationFrame(() => setTimeout(start, 0));
+    setTimeout(start, 600);
+  }
 </script>

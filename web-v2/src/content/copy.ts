@@ -22,13 +22,13 @@ export const nav = {
  */
 export const hero = {
   status: 'V1 copy per D-080 (headline working copy D-014)',
-  wordmark: 'STILLWAY',
+  wordmark: 'Stillway', // D-179 Stage 2: title case (Figma 40004725:5602)
   tagline: 'Understand your rhythm.',
   features: ['Sleep summary', 'Activity and rest', 'Daily insight'],
   price: '$299',
   statement: 'A smart ring that brings your sleep, activity, and rest into one everyday view.',
   scroll: 'Scroll down',
-  ringAlt: 'The silver Stillway ring, the engraved name on its band, floating above a pale stone in a bed of moss.',
+  ringAlt: 'The silver Stillway ring, the engraved name on its band, resting on a small oak block on a warm desk.',
 };
 
 export const why = {
@@ -45,7 +45,7 @@ export const why = {
       small: 'Scores, streaks and red alerts can make rest feel like homework.',
     },
     {
-      big: 'Stillway just keeps the pattern.',
+      big: 'Stillway notes the days and stays quiet.',
       small: 'No score to chase. Just what your days look like, kept quietly.',
     },
   ],
@@ -69,13 +69,13 @@ export const activity = {
   status: 'title + body draft; states approved D-066',
   heading: ['Activity', 'and rest.'], // shown as "ACTIVITY" caps + "and rest."
   body: 'Through the day the ring keeps two quiet tallies: the time you spend moving and the moments you stop. Seen together they show the rhythm of a day.',
-  // photos: 5 C-02 frames from V1, not retouched (D-073); alt text draft (home-copy-v2), adjusted to the frames
+  // photos: Figma Day arc / State 3 (D-172); alt text describes the new frames
   frames: [
-    { key: 's0740', time: '07:40', state: 'Moving', detail: '25 min walk', alt: '07:40 — A man walking outside in early light, the ring on his left index finger.' },
-    { key: 's0900', time: '09:00', state: 'Resting', detail: '40 min focus', alt: '09:00 — Reading with a coffee at a desk, the ring in view.' },
-    { key: 's1030', time: '10:30', state: 'Moving', detail: '15 min stretch', alt: '10:30 — A short stretch by the window, both arms out, the ring on his left index finger.' },
-    { key: 's1230', time: '12:30', state: 'Resting', detail: '30 min lunch', alt: '12:30 — Lunch at a table, the ring resting on the hand.' },
-    { key: 's1530', time: '15:30', state: 'Moving', detail: '20 min stairs', alt: '15:30 — Taking the stairs on an errand, his hand on the rail.' },
+    { key: 's0740', time: '07:40', state: 'Moving', detail: '25 min walk', alt: '07:40 — A hand on the rail of a treadmill, the silver ring on one finger.' },
+    { key: 's0900', time: '09:00', state: 'Resting', detail: '40 min focus', alt: '09:00 — A hand resting near his face, a black ring on one finger.' },
+    { key: 's1030', time: '10:30', state: 'Moving', detail: '15 min stretch', alt: '10:30 — A hand holding the ring up between finger and thumb.' },
+    { key: 's1230', time: '12:30', state: 'Resting', detail: '30 min lunch', alt: '12:30 — A man in sunglasses by the water, a gold ring on his hand.' },
+    { key: 's1530', time: '15:30', state: 'Moving', detail: '20 min stairs', alt: '15:30 — The ring on a ledge in warm amber light.' },
   ],
 };
 
@@ -90,7 +90,7 @@ export const insight = {
     sr: 'Rested 7 hours 12 minutes',
     progress: 0.9, // bar length only, rested against a personal target; no percent label (home-copy-v2)
     line: 'Settled 23:10 · Up 06:22',
-    insight: 'You took more short pauses this afternoon than on most weekdays.',
+    insight: 'You woke briefly twice, both before 03:00.',
     },
 };
 
@@ -101,7 +101,7 @@ export const details = {
     { title: 'One quiet band', body: 'A single band with nothing raised on its surface to catch on a sleeve or a keyboard. There is no front to remember and no wrong way to put it on.' },
     { title: 'Softened edges', body: 'Both edges are bevelled where they meet the finger, so the ring sits easily at night and slides on without catching.' },
   ],
-  fits: { title: 'Then, it just fits.', body: 'Slip it on in the morning and stop thinking about it.' },
+  fits: { title: 'Then, it just fit.', body: 'Slip it on in the morning and stop thinking about it.' },
   alt: {
     ring: 'The Stillway ring rolling to a stop on a sand-coloured tile.',
     hand: 'A hand on a plain cream background, the ring settling at the base of one raised finger.',
@@ -114,12 +114,12 @@ export const specs = {
   // Figma State 3–6: title above the line, sentence below it (left); spec + small note (right).
   // '\n' = a line break kept from Figma
   cards: [
-    { key: 'night', n: 'I', name: 'Night', title: 'Sleeps with you.\nCharges while you don’t.', spec: 'Up to 7 days on a charge.', note: 'Top up on the dock while you shower.', alt: 'Night: asleep under a linen cover, the ring on the index finger of the resting hand.' },
-    { key: 'desk', n: 'II', name: 'Desk', title: 'Sized to forget.', spec: 'Sizes 6–13.', note: 'Try them on with the sizing kit before you choose.', alt: 'Desk: hands on a keyboard, the plain silver ring on the index finger.' },
-    { key: 'move', n: 'III', name: 'Move', title: 'Light enough to lose track of.', spec: 'About 4 g, 2.6 mm thin.', note: '', alt: 'Move: tying a shoe on a studio floor, the ring on the left hand.' },
-    { key: 'rinse', n: 'IV', name: 'Rinse', title: 'Hands in water. Ring stays on.', spec: 'Water resistant to 100 m.', note: 'Washing up, rain, a swim.', alt: 'Rinse: hands under running water, the wet ring on the index finger.' },
+    { key: 'night', n: 'I', name: 'Night', title: 'Sleeps with you.\nCharges while you don’t.', spec: 'Up to 7 days on a charge.', note: 'Top up on the dock while you shower.', alt: 'Night: asleep on a pillow, the ring on the hand under his cheek.' },
+    { key: 'desk', n: 'II', name: 'Desk', title: 'Sized to forget.', spec: 'Sizes 6–13.', note: 'Try them on with the sizing kit before you choose.', alt: 'Desk: the ring charging in its dock on a wooden bedside table, lamp light behind.' },
+    { key: 'move', n: 'III', name: 'Move', title: 'Light enough to lose track of.', spec: 'About 4 g, 2.6 mm thin.', note: '', alt: 'Move: a man in sunglasses, hand at his temple, the black ring on his finger.' },
+    { key: 'rinse', n: 'IV', name: 'Rinse', title: 'Hands in water. Ring stays on.', spec: 'Water resistant to 100 m.', note: 'Washing up, rain, a swim.', alt: 'Rinse: a wet hand on the stone edge of a pool, the silver ring on one finger.' },
   ],
-  everyday: { the: 'The', word: 'Everyday', caption: 'Ring shown where it’s worn.', alt: 'Three Stillway rings on a mossy stone in warm light: silver standing, black in its charging dock, gold lying down.' },
+  everyday: { the: '', word: 'The everyday.', caption: 'Ring shown where it’s worn.', alt: 'Three Stillway rings, silver, gold and black, on a warm wooden desk by a laptop and a lamp.' },
 };
 
 export const features = {

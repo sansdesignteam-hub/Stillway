@@ -1,7 +1,7 @@
 ---
 /**
  * S11 Closing, FAQ & footer — 06:50 tomorrow · Night + a soft light from above (D-098, D-099; colour D-139). References (Figma
- * sticky 40004118:150, Oryzo ×3), Geist with D-082 weights (not Oryzo's heavy face):
+ * sticky 40004118:150, Oryzo ×3), Hanken Grotesk with D-082 weights (not Oryzo's heavy face):
  *  - "Choose your own" → states 1–2: the ring in the middle under a warm glow from above (behind the
  *    ring, never over it), one closing line across it — a small caps kicker and one very large line —
  *    then one button and one small line.
@@ -13,6 +13,7 @@
  * No newsletter, no share (D-069). One unbroken dark canvas: the column below moves like a page
  * (scripts/sections/close.ts). FAQ Battery approved in full (D-099).
  */
+import Button from '../Button.astro';
 import { close as d, finishes as f } from '../../content/copy';
 ---
 
@@ -21,18 +22,18 @@ import { close as d, finishes as f } from '../../content/copy';
     <div class="cl__glow" data-cl-glow data-a><canvas class="cl__light" data-cl-light aria-hidden="true"></canvas></div>
   </div>
   <!-- reduced motion / no WebGL: the polished still of the finish chosen in S10 -->
-  <img class="ring-fallback cl__fb" src={f.finishes[0].still} alt="" width="1024" height="1024" data-ring-fallback data-fb-range="0,1" data-cl-still data-a loading="lazy" decoding="async" />
+  <img class="ring-fallback cl__fb" data-src={f.finishes[0].still} alt="" width="1024" height="1024" data-ring-fallback data-fb-range="0,1" data-cl-still data-a loading="lazy" decoding="async" />
 
   <div class="scene__front">
     <div class="cl__track" data-cl-track>
       <!-- 1–2 · the closing line across the ring, then one button -->
       <div class="cl__block cl__block--hero" data-cl-hero>
         <h2 id="close-title" class="cl__title" data-cl-title data-a>
-          <span class="cl__kicker">{d.kicker}</span>
+          <span class="cl__kicker">{d.kicker}</span>{' '}
           <span class="cl__line">{d.line}</span>
         </h2>
         <div class="cl__cta" data-cl-cta data-a>
-          <a class="cl__btn" href="#finishes">{d.cta} <span aria-hidden="true">→</span></a>
+          <Button class="cl__btn" href="#finishes" label={d.cta} variant="paper" />
           <p class="cl__small">{d.ctaLine}</p>
         </div>
       </div>
@@ -57,7 +58,7 @@ import { close as d, finishes as f } from '../../content/copy';
             ))
           }
         </ul>
-        <a class="cl__btn" href="#finishes">{d.cta} <span aria-hidden="true">→</span></a>
+        <Button class="cl__btn" href="#finishes" label={d.cta} variant="paper" />
       </div>
 
       <!-- 4 · statement, footer, wordmark -->
@@ -78,9 +79,7 @@ import { close as d, finishes as f } from '../../content/copy';
             <a class="cl__top" href="#top">{d.top} ↑</a>
           </nav>
         </div>
-        <p class="cl__word" data-cl-word aria-label={d.wordmark}>
-          {d.wordmark.toUpperCase().split('').map((c) => <span aria-hidden="true">{c}</span>)}
-        </p>
+        <p class="cl__word" data-cl-word role="img" aria-label={d.wordmark}></p>
       </footer>
     </div>
   </div>
@@ -104,7 +103,7 @@ import { close as d, finishes as f } from '../../content/copy';
     height: 100%;
   }
   .cl__fb {
-    width: min(38vw, 64vh);
+    width: min(38vw, calc(64 * var(--lvh)));
   }
   .cl__track {
     position: absolute;
@@ -118,7 +117,7 @@ import { close as d, finishes as f } from '../../content/copy';
     padding: 0 var(--margin);
   }
   .cl__block--hero {
-    height: 100svh;
+    height: calc(100 * var(--svh));
   }
   .cl__title {
     position: absolute;
@@ -131,11 +130,12 @@ import { close as d, finishes as f } from '../../content/copy';
     text-align: center;
     color: var(--cream);
   }
-  /* uppercase sans label: matches no text style, kept, reported */
+  /* Mono/Large in capitals (QA G-09) */
   .cl__kicker {
-    font-size: clamp(14px, 1.2vw, 18px);
     font-weight: var(--w-label);
-    letter-spacing: var(--track-label);
+    font-size: var(--t-mono-lg-size);
+    line-height: var(--t-mono-lg-lh);
+    letter-spacing: var(--t-mono-lg-ls);
     text-transform: uppercase;
     margin-bottom: 0.4em;
   }
@@ -150,33 +150,10 @@ import { close as d, finishes as f } from '../../content/copy';
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 12vh;
+    bottom: calc(var(--content-bottom) + var(--space-10));
     display: grid;
     justify-items: center;
-    gap: 14px;
-  }
-  .cl__btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 15px 26px;
-    border-radius: var(--radius-pill);
-    background: var(--paper);
-    color: var(--ink);
-    /* Buttons/Medium */
-    font-weight: var(--w-label);
-    font-size: var(--t-btn-md-size);
-    line-height: var(--t-btn-md-lh);
-    letter-spacing: var(--t-btn-md-ls);
-    text-decoration: none;
-    pointer-events: auto;
-    transition: background 0.2s, transform 0.15s;
-  }
-  .cl__btn:hover {
-    background: var(--cream);
-  }
-  .cl__btn:active {
-    transform: scale(0.98);
+    gap: var(--space-4);
   }
   /* Paragraph/Small */
   .cl__small {
@@ -189,10 +166,10 @@ import { close as d, finishes as f } from '../../content/copy';
   .cl__block--faq {
     width: min(40rem, 100%);
     margin: 0 auto;
-    padding-top: calc(var(--header-h) + 6vh);
-    padding-bottom: 14vh;
+    padding-top: var(--content-top);
+    padding-bottom: calc(14 * var(--lvh));
     display: grid;
-    gap: 22px;
+    gap: var(--space-5);
     justify-items: start;
   }
   /* Heading/Heading 1 */
@@ -221,7 +198,7 @@ import { close as d, finishes as f } from '../../content/copy';
     justify-content: space-between;
     align-items: center;
     gap: 20px;
-    padding: 18px 0;
+    padding: var(--space-4) 0;
     border: 0;
     background: none;
     color: var(--paper);
@@ -316,13 +293,15 @@ import { close as d, finishes as f } from '../../content/copy';
     max-width: 34em;
   }
   /* footer on the same canvas — Figma Design "11 · Closing, FAQ & footer" State 4 (40004265:1480):
-     the line right at the top, three columns on the 12-column grid (1–5, 6–9, 10–12), the wordmark
-     in capitals across the full width at the foot (D-165) */
+     the line right at the top, three columns on the 12-column grid (1–5, 6–9, 10–12), the logo
+     lockup at the foot (D-165, D-183) */
+  /* D-171: the footer is as tall as its content (no full-screen height, no empty band above the
+     wordmark); the last scroll stop puts its bottom on the bottom of the screen (close.ts) */
   .cl__block--foot {
-    min-height: 100svh;
-    padding-top: calc(var(--header-h) + 100px);
+    padding-top: calc(var(--header-h) + var(--space-10));
     display: grid;
-    grid-template-rows: auto auto 1fr auto;
+    grid-template-rows: auto auto auto;
+    row-gap: var(--space-9);
     overflow: hidden;
   }
   /* Heading/Heading 1, cream, right (Figma 1000 px box) */
@@ -337,10 +316,10 @@ import { close as d, finishes as f } from '../../content/copy';
     color: var(--cream);
   }
   .cl__cols {
-    margin-top: clamp(64px, 19.3vh, 174px);
+    margin-top: var(--space-6);
     display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: 20px;
+    grid-template-columns: var(--grid);
+    column-gap: var(--gutter);
     /* Paragraph/Small */
     font-size: var(--t-para-sm-size);
     line-height: var(--t-para-sm-lh);
@@ -348,7 +327,7 @@ import { close as d, finishes as f } from '../../content/copy';
   }
   .cl__col {
     display: grid;
-    gap: 6px;
+    gap: var(--space-2);
     align-content: start;
   }
   .cl__cols > :nth-child(1) {
@@ -360,12 +339,12 @@ import { close as d, finishes as f } from '../../content/copy';
   .cl__cols > :nth-child(3) {
     grid-column: 10 / span 3;
   }
-  /* Label/X-Small, as written in capitals (Figma Mono/Medium; Geist only, D-156) */
+  /* Mono/Medium (Figma), Hanken Grotesk (QA G-09) */
   .cl__sig {
     font-weight: var(--w-label);
-    font-size: var(--t-label-xs-size);
-    line-height: var(--t-para-sm-lh);
-    letter-spacing: var(--t-caps-ls);
+    font-size: var(--t-mono-md-size);
+    line-height: var(--t-mono-md-lh);
+    letter-spacing: var(--t-mono-md-ls);
   }
   .cl__disc,
   .cl__dim {
@@ -386,29 +365,21 @@ import { close as d, finishes as f } from '../../content/copy';
   .cl__top {
     margin-top: 10px;
   }
-  /* the wordmark: Display/Display 1, capitals, its letters spread edge to edge (Figma), cream, with
-     the hover shine */
+  /* D-183b: lockup 03A across the full content width (margin to margin), height from its own ratio.
+     The shape is a mask, so the hover shine still sweeps across it */
   .cl__word {
     grid-row: 4;
-    margin: 0;
-    padding-top: 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    font-weight: var(--w-display);
-    font-size: var(--t-display-1-size);
-    line-height: var(--t-display-1-lh);
-    letter-spacing: 0;
-    white-space: nowrap;
+    margin: 24px 0 calc(var(--t-display-1-size) * 0.04);
+    justify-self: stretch;
+    min-width: 0;
+    aspect-ratio: 204.76 / 38.55;
+    -webkit-mask: url('../../assets/stillway-lockup-03a.svg') left center / contain no-repeat;
+    mask: url('../../assets/stillway-lockup-03a.svg') left center / contain no-repeat;
     pointer-events: auto;
-    color: var(--cream);
+    background-color: var(--cream);
     background-image: linear-gradient(110deg, var(--cream) 0%, var(--cream) 40%, var(--white) 47%, var(--shine-amber) 53%, var(--cream) 60%, var(--cream) 100%);
     background-size: 300% 100%;
     background-position: 100% 0;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    padding-bottom: calc(var(--t-display-1-size) * 0.04);
   }
   .cl__word.is-shine {
     animation: cl-shine 0.9s ease-in-out 1;
@@ -428,30 +399,45 @@ import { close as d, finishes as f } from '../../content/copy';
   :global(html.reduced) .cl__word:hover {
     filter: brightness(1.12);
   }
-  .cl__btn:focus-visible,
+  .cl__block :global(.btn:focus-visible),
   .cl__q:focus-visible,
   .cl__block--foot a:focus-visible {
-    outline: 2px solid var(--ochre);
+    outline: 2px solid var(--focus);
     outline-offset: 3px;
   }
   @media (max-width: 719px) {
     .cl__cta {
-      bottom: 10vh;
+      bottom: calc(10 * var(--lvh));
       padding: 0 var(--margin);
       text-align: center;
     }
     .cl__q {
       padding: 15px 0;
     }
+    /* QA M-07: the closing line never runs past 335 px */
+    .cl__title {
+      width: min(335px, calc(100vw - 40px));
+      margin-inline: auto;
+    }
+    .cl__line {
+      font-size: min(var(--t-display-2-size), 16.5vw);
+      line-height: 0.98;
+      text-wrap: balance;
+    }
 
     .cl__block--foot {
-      padding-top: calc(var(--header-h) + 40px);
+      padding-top: calc(var(--header-h) + var(--space-7));
+      row-gap: var(--space-8);
     }
     .cl__statement {
       width: 100%;
     }
+    /* QA M-07: the footer never widens past the screen */
+    .cl__block--foot {
+      grid-template-columns: minmax(0, 1fr);
+    }
     .cl__cols {
-      margin-top: 48px;
+      margin-top: 0;
       grid-template-columns: 1fr 1fr;
       gap: 28px 20px;
     }

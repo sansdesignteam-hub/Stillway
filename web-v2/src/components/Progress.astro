@@ -1,0 +1,102 @@
+---
+/**
+ * QA HE-02 (D-169, revised D-171, links D-176): global page progress, minimal like VITURE Mobile Dock
+ * Mini. 11 small dots in a column fixed on the left edge, one per section; the current section is a
+ * short horizontal line. Black on light grounds, white on dark ones and on the photo; inactive dots at
+ * a soft opacity. It shows while the page scrolls and hides after 2.5 s without scrolling (story.ts);
+ * it stays while hovered (pointer devices) or while a marker has keyboard focus.
+ * QA27 M-12: not shown below 768 px.
+ * D-176: each marker is a link to its section (motion.ts initAnchors: Lenis to state 1 of the
+ * section, the same landing as the navbar); the current one carries aria-current="location".
+ * Hidden, it takes no pointer or touch; each target is 24 × 24 px, in the page margin.
+ */
+import { sections } from '../content/sections';
+---
+
+<nav class="gprog" data-gprog aria-label="Page sections">
+  {
+    sections.map((d, i) => (
+      <a href={i === 0 ? '#top' : `#${d.id}`} class:list={{ 'is-on': i === 0 }} aria-current={i === 0 ? 'location' : undefined} data-id={d.id} aria-label={d.name}>
+        <i aria-hidden="true" />
+      </a>
+    ))
+  }
+</nav>
+
+<style>
+  .gprog {
+    --c: var(--text-strong);
+    --t: 24px; /* target size (WCAG 2.5.8): 24 × 24, stacked without overlap */
+    position: fixed;
+    z-index: 40; /* above the stage, under the navbar (50) and its menu (80) */
+    left: 0;
+    top: 50%;
+    translate: 0 -50%;
+    display: grid;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  /* shown: scrolling (is-awake), a marker focused from the keyboard, or hovered with a mouse */
+  .gprog:global(.is-awake),
+  .gprog:has(a:focus-visible) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  @media (hover: hover) {
+    .gprog:hover {
+      opacity: 1;
+      pointer-events: auto; /* only reachable while shown; then it stays while the pointer is on it */
+    }
+  }
+  :global(html[data-surface='dark']) .gprog,
+  :global(html[data-surface='photo']) .gprog {
+    --c: var(--text-white);
+  }
+  .gprog a {
+    display: grid;
+    align-items: center;
+    width: max(var(--t), calc(var(--margin) - 4px));
+    height: var(--t);
+    padding-left: calc((var(--margin) - 8px) / 2);
+    color: var(--c);
+    border-radius: var(--radius-s);
+    text-decoration: none;
+  }
+  .gprog a:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+  }
+  .gprog i {
+    display: block;
+    width: 3px;
+    height: 3px;
+    border-radius: var(--radius-pill);
+    background: var(--c);
+    opacity: 0.4;
+    transition:
+      width 0.3s var(--ease-out),
+      opacity 0.3s ease,
+      background-color 0.3s ease;
+  }
+  @media (hover: hover) {
+    .gprog a:hover i {
+      opacity: 0.8;
+    }
+  }
+  .gprog a.is-on i {
+    width: 8px;
+    height: 2px;
+    opacity: 1;
+  }
+  /* QA27 M-12 (D-187): hidden below 768 px, where the margin is too narrow and the dots sat on text */
+  @media (max-width: 767px) {
+    .gprog {
+      display: none;
+    }
+  }
+  :global(html.reduced) .gprog,
+  :global(html.reduced) .gprog i {
+    transition: none;
+  }
+</style>

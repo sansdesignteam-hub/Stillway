@@ -1,38 +1,124 @@
 /**
- * S01 background photograph (D-080). ONE place to swap it.
+ * S01 background photograph (D-080, D-177, D-179, D-181). ONE place to swap it.
  *
- * Extended by the Visual Director (design/assets/v2/hero/, branch Visual-Director 72973fa):
- * the V1 hero photo (H-01-hero-bg-noshadow.png, 2556 × 1448) sits pixel-identical in the centre of
- * an outpainted canvas, so the scene can zoom OUT while the ring zooms in (Oryzo pattern).
+ * D-186: the plate is built on the user's 16:10 desk photo (3840 × 2400)
+ * D-181: the photo is now a PLATE: the desk photo with the oak pedestal rendered
+ * into it in Cycles (3D Designer, design/3d/v2/plate/, HANDOFF-s01-pedestal.md). The web no longer
+ * shades a pedestal; stage.ts keeps its shape as an invisible proxy for depth and the live ring's
+ * shadow. The poster is the ring + its shadow as a transparent layer over the plate (still = plate +
+ * overlay), so it cross-fades to the live ring with no change on the pedestal. All files are built
+ * by scripts/hero-plate.mjs; a new drop with the same names needs no code change. The D-179 notes
+ * below describe the camera and framing, which are unchanged.
  *
- * Sizing: the element is sized so that the ORIGINAL photo rectangle covers the viewport exactly as
- * V1's hero did (cover of a 2556:1448 box), i.e. element width = V1 cover width / orig.w.
- * At scale 1 the first frame is V1; scaling happens around the canvas centre (= photo centre).
- * Safe minimum scale (no empty edge): ≈ 0.45 desktop 16:9, 0.42 at 16:10, 0.38 mobile 390 × 844.
+ * D-179: the warm desk WITHOUT the pedestal (design/assets/v2/s01/hero-warm-desk-v2-*.webp, from
+ * hero-warm-desk-nopedestal-src.png, 1818 × 1037). The pedestal is now 3D (3D Designer,
+ * public/models/s01-pedestal.glb + s01-pedestal-pose.json) on the ring's canvas, and the poster
+ * (reduced motion / no WebGL / first paint) is fb-s01-pedestal-alpha.webp laid over the photo in
+ * the same frame, so both zoom together. D-177 zoom kept: the photo starts a little zoomed in
+ * (zoomFrom) and settles to cover (scale 1) around `anchor` (the pedestal top).
  */
+import { camera as poseCam } from '../../public/models/s01-pedestal-pose.json';
+
 export const heroBg = {
-  /** V1 photo ratio: the cover box every layout starts from */
-  v1Ratio: 2556 / 1448,
-  desktop: {
-    srcset: '/hero/hero-bg-v2-3840.webp 3840w, /hero/hero-bg-v2-5760.webp 5760w',
-    src: '/hero/hero-bg-v2-3840.webp',
-    width: 3840,
-    height: 2560,
-    /** original photo width as a fraction of the canvas width */
-    origW: 2556 / 5760,
-    zoomTo: 0.55,
-    /** light first paint (sharp resize of the 3840, no AI): preloaded, shown under the full image */
-    placeholder: '/hero/hero-bg-v2-1920.webp',
+  /** photo ratio: the element covers the viewport at this ratio */
+  v1Ratio: 3840 / 2400,
+  /** the pedestal top (fractions of the photo): zoom origin, so the pedestal keeps its place */
+  anchor: { x: 0.503, y: 0.8 },
+  /**
+   * D-186: the 3D Designer's camera for this photo, read from s01-pedestal-pose.json: frame size,
+   * focal length in px of that width (lens_mm / 36 mm sensor) and the optical axis shifted down by
+   * shiftY of the width (Blender shift_y). The ring stage maps the pedestal scene onto the photo with
+   * these. The camera position, lookAt and the lights are read from the same file at runtime.
+   */
+  cam: {
+    frameW: poseCam.plate.size_px[0],
+    frameH: poseCam.plate.size_px[1],
+    focalPx: poseCam.plate.focal_fraction_of_width * poseCam.plate.size_px[0],
+    shiftY: poseCam.filmOffset_or_viewOffset.shift_y_fraction_of_width,
   },
+  /**
+   * D-186: above 16:9 the 16:10 cover would cut the pedestal's front off at the bottom (≈ 110 px at
+   * 2560 × 1080). Desktop only, the photo box (and with it the 3D camera) moves up by
+   * max(0, ped × photo height − room × viewport height): `ped` = pedestal bottom below the viewport
+   * centre in the rest frame (0.3 + 0.095 × zoomFrom), `room` = 0.455, so 16:9 and taller do not move.
+   */
+  keepPedestal: { ped: 0.4083, room: 0.455 },
+  /** where the pedestal's origin (bottom centre, on the desk) falls in the photo (fractions): phones
+   *  scale ring + pedestal + shadows about this point (`subject` below), 3D and poster alike */
+  subjectOrigin: { x: 0.5, y: 0.86 },
+  /**
+   * D-180: left edge of the resting ring's screen bbox, maximum hover tilt included, as a fraction of
+   * the photo width (measured with ?inspect __ringScreenBox at 43f5c91's pose; re-measure if the pose
+   * JSON changes). The desktop wordmark is sized so its right edge stays wordGap px left of it.
+   */
+  /* D-186 (16:10 plate, 3D 2bcd5bb): 532 px at 1440 × 900 and 709 px at 1920 × 1080 → 0.3858 */
+  ringLeft: 0.3858,
+  wordGap: 33,
+  /** the poster: transparent ring + ring shadow in the plate's own frame (ring-overlay-s01*), one set
+   *  per plate; the phone ones are rendered in the phone framing, so no CSS scale is applied */
+  poster: {
+    desktop: { base: '/hero/ring-s01', widths: [1280, 1920, 3840] },
+    mobile: { base: '/hero/ring-s01-m', widths: [1280, 1920] },
+    portrait: { base: '/hero/ring-s01-mp', widths: [908, 1816] },
+  },
+  /**
+   * D-181 plate sets (scripts/hero-plate.mjs): AVIF first, WebP fallback. `sizes` is the photo's real
+   * width on screen at rest, cover × zoomFrom, so a 1440 px retina screen (3283 px needed) takes the
+   * 3632 file and a 1440 px 1x screen the 1920 one; nothing larger than needed is fetched.
+   */
+  desktop: {
+    widths: [1280, 1920, 2560, 3840],
+    base: '/hero/plate-s01',
+    sizes: 'max(114vw, 182.4lvh)',
+    width: 3840,
+    height: 2400,
+    origW: 1,
+    zoomFrom: 1.14,
+    /** ring + pedestal size against the photo (1 = the 3D Designer's framing) */
+    subject: 1,
+    /** vertical shift of ring + pedestal against the photo (fraction of the photo height, − = up) */
+    subjectDy: 0,
+    /** light first paint: preloaded, shown under the full image */
+    placeholder: '/hero/plate-s01-960',
+  },
+  /**
+   * Phones (≤ 760 px) have their OWN plate: the pedestal is in the photo now, so the phone framing
+   * (pedestal at `subject` of its desktop size about subjectOrigin, lifted by subjectDy) is rendered
+   * into plate-s01-m by the 3D Designer; the live ring + shadows use the same 2D transform (stage.ts
+   * photoCam), as before.
+   */
   mobile: {
     media: '(max-width: 760px)',
-    srcset: '/hero/hero-bg-v2-mobile-1080x1920.webp 1080w, /hero/hero-bg-v2-mobile-2160x3840.webp 2160w',
-    width: 2160,
-    height: 3840,
-    origW: 2556 / 2160,
-    zoomTo: 0.5,
-    placeholder: '/hero/hero-bg-v2-mobile-1080x1920.webp',
+    widths: [960, 1280, 1920],
+    base: '/hero/plate-s01-m',
+    sizes: 'max(110vw, 176lvh)',
+    width: 3840,
+    height: 2400,
+    origW: 1,
+    zoomFrom: 1.1,
+    /** D-179: a portrait phone covers the photo by its height, so at 1 the 41 mm pedestal (~490 px)
+     *  would run off both sides and read as the desk; at 0.62 it is ~300 px of 375 and reads as a
+     *  pedestal (the ring stays ~175 px wide) */
+    subject: 0.62,
+    /** D-179 Stage 2: lifted so the intro + scroll hint at the bottom do not cover the pedestal */
+    subjectDy: -0.14,
+    placeholder: '/hero/plate-s01-m-960',
+    /**
+     * Portrait phones only ever show ≤ 43 % of the photo's width (aspect ≤ 3/4), so they get the
+     * centre `crop` of the phone plate at full height: 2400 px of height for ~1/4 of the bytes of the
+     * full frame. The <img> then fills only that centre strip of the photo box (Hero.astro).
+     */
+    portrait: {
+      media: '(max-width: 760px) and (max-aspect-ratio: 3/4)',
+      crop: 0.5,
+      widths: [908, 1280, 1816],
+      base: '/hero/plate-s01-mp',
+      sizes: '88lvh', // crop × cover × zoomFrom = 0.5 × 160lvh × 1.1
+    },
   },
-  /** warm dim over the photo, as in V1 (0..1) */
-  dim: 0.3,
+  /** warm dim over the photo (0..1); the photo is already a night scene */
+  dim: 0.12,
 };
+
+/** "/hero/plate-s01-1280.avif 1280w, …" */
+export const plateSet = (set: { base: string; widths: readonly number[] }, ext: 'avif' | 'webp') => set.widths.map((w) => `${set.base}-${w}.${ext} ${w}w`).join(', ');

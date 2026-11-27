@@ -12,13 +12,26 @@
  * Between modes: the page and the corner light cross-fade (the texts outside the phone change with
  * them). Soft easing, no bounce.
  * Reduced motion: whole states, every screen shown complete, short opacity fades (global.css).
- *  > 6.6  to S10 (D-165): a plain scroll — the hand, phone and texts go up 1:1 with the page.
+ *  > 6.6  to S10. Desktop (D-192): a crossfade — the hand with the phone slides down and out, the left
+ *          text out to the left, the right text to the right, then S10 fades in (finishes.ts).
+ *          Phones (D-172): a plain scroll — the hand, phone and texts go up 1:1.
  */
+import { view } from '../viewport';
 import { put, seg, lerp, clamp01, smooth, window4 } from '../anim';
 import { pose, type Pose } from '../ring/poses';
+import { sections } from '../../content/sections';
 import type { SectionMotion } from '../story';
 
 const END = 6.6;
+/** D-192: 09 → 10 on desktop, x = 0..1 of the connection; all of S09 is gone at 55%, where S10 starts
+ * to fade in (finishes.ts). Travel: the phone in screen heights, the texts in screen widths */
+const S10_TIN = sections.find((d) => d.id === 'finishes')!.tin;
+const LEAVE = {
+  move: (x: number) => seg(x, 0, 0.58),
+  o: (x: number) => 1 - seg(x, 0.08, 0.55),
+  phone: 0.5,
+  text: 0.18,
+};
 /** section units per mode */
 const MODE = 2;
 
@@ -38,11 +51,9 @@ interface Page {
 let el: Record<string, HTMLElement | null> = {};
 let lefts: HTMLElement[] = [];
 let rights: HTMLElement[] = [];
-let flabels: HTMLElement[] = [];
 let glows: HTMLElement[] = [];
 let pages: Page[] = [];
 let measured = '';
-let lastIdx = -1;
 let vhPx = 0;
 
 /** the active mode as a continuous value 0..2 (the tab highlight, the texts) */
@@ -68,7 +79,7 @@ function set(e: HTMLElement | SVGElement, prop: 'transform' | 'clipPath' | 'opac
 }
 
 function measure() {
-  const key = `${window.innerWidth}x${window.innerHeight}`;
+  const key = `${window.innerWidth}x${view.h}`;
   if (key === measured || !el.pages) return;
   measured = key;
   const h = el.pages.clientHeight;
@@ -77,14 +88,23 @@ function measure() {
   });
 }
 
+/** D-172: drop the reduced-motion opacity transition on S09 while it is cut at the 09 → 10 edge */
+let noFadeOn = false;
+const noFade = (on: boolean) => {
+  if (on === noFadeOn || !rootEl) return;
+  noFadeOn = on;
+  rootEl.querySelectorAll<HTMLElement>('[data-a]').forEach((e) => (e.style.transition = on ? 'none' : ''));
+};
+let rootEl: HTMLElement | null = null;
+
 export const app: SectionMotion = {
   init(r) {
+    rootEl = r;
     const q = (s: string) => r.querySelector<HTMLElement>(s);
     const all = (s: string, from: ParentNode = r) => [...from.querySelectorAll<HTMLElement>(s)];
-    el = { phone: q('[data-p-phone]'), pages: q('[data-p-pages]'), foot: q('[data-p-foot]'), prog: q('[data-p-prog]'), pct: q('[data-p-pct]') };
+    el = { phone: q('[data-p-phone]'), pages: q('[data-p-pages]') };
     lefts = all('[data-p-left]');
     rights = all('[data-p-right]');
-    flabels = all('[data-p-flabel]');
     glows = all('[data-p-glow]');
     pages = all('[data-p-page]').map((pg) => ({
       el: pg,
@@ -102,7 +122,7 @@ export const app: SectionMotion = {
       })(),
       over: 0,
     }));
-    const vh = () => (vhPx = (document.querySelector('[data-vh]') as HTMLElement | null)?.offsetHeight || window.innerHeight);
+    const vh = () => (vhPx = view.h);
     vh();
     window.addEventListener('resize', vh);
     const reset = () => (measured = '');
@@ -110,23 +130,32 @@ export const app: SectionMotion = {
     document.fonts?.ready.then(reset);
   },
   update(u, ctx) {
-    const H = window.innerHeight;
-    // 09 → 10 (D-165): a plain scroll, like 06 → 07 — the hand, the phone and the texts go up 1:1
-    // with the page, no fade; the photo's melted foot keeps its cut out of sight. Reduced motion: fade.
-    const out = ctx.reduced ? 1 - seg(u, END, END + 0.3) : 1;
-    const up = ctx.reduced ? 0 : Math.max(0, u - END) * (vhPx || H);
+    const H = view.h;
+    // 09 → 10, desktop (D-192): the phone goes down, the texts go out to the sides, all of it fading.
+    // Phones (D-172): a plain scroll, 1:1 with the page, no fade; the navbar mask (global.css, QA G-14)
+    // hides what passes under the bar. Reduced motion: a fade only.
+    const fade = ctx.reduced;
+    const cross = !ctx.reduced && !ctx.mobile;
+    const x = cross ? clamp01((u - END) / S10_TIN) : 0;
+    // D-172 PM review: reduced motion on phones — S10's column scrolls in right under S09 (finishes.ts),
+    // so S09 is gone at once when its track ends (no fade that overlaps the incoming column)
+    const cut = ctx.reduced && ctx.mobile;
+    const out = cut ? (u < END ? 1 : 0) : fade ? 1 - seg(u, END, END + 0.3) : cross ? LEAVE.o(x) : 1;
+    noFade(cut && u >= END - 0.01);
+    const up = fade || cross ? 0 : Math.max(0, u - END) * (vhPx || H);
+    const move = cross ? LEAVE.move(x) : 0;
+    const down = move * LEAVE.phone * H;
+    const aside = move * LEAVE.text * window.innerWidth;
     const rise = ctx.reduced ? (u >= -0.5 ? 1 : 0) : seg(u, -0.5, -0.05);
     const inn = seg(u, -0.3, 0); // 70–100%: chip, texts, footer
-    put(el.phone, { o: Math.min(1, rise * 1.6) * out, y: (1 - rise) * H * 0.55 - up }, ctx);
-    put(el.foot, { o: inn * out, y: -up }, ctx);
+    put(el.phone, { o: Math.min(1, rise * 1.6) * out, y: (1 - rise) * H * 0.55 - up + down }, ctx);
     measure();
 
     // the mode: continuous for the tab highlight and the side texts; whole under reduced motion
     const f = ctx.reduced ? Math.min(2, Math.floor(Math.max(0, u) / MODE)) : modeOf(u);
     const near = (i: number) => clamp01(1 - Math.abs(f - i) * 2.2);
-    lefts.forEach((l, i) => put(l, { o: near(i) * inn * out, y: (1 - near(i)) * 10 - up }, ctx));
-    rights.forEach((l, i) => put(l, { o: near(i) * inn * out, y: (1 - near(i)) * 10 - up }, ctx));
-    flabels.forEach((l, i) => (l.style.opacity = near(i).toFixed(3)));
+    lefts.forEach((l, i) => put(l, { o: near(i) * inn * out, x: -aside, y: (1 - near(i)) * 10 - up }, ctx));
+    rights.forEach((l, i) => put(l, { o: near(i) * inn * out, x: aside, y: (1 - near(i)) * 10 - up }, ctx));
 
     pages.forEach((pg, k) => {
       const show = ctx.reduced ? (k === f ? 1 : 0) : showOf(k, u);
@@ -181,12 +210,6 @@ export const app: SectionMotion = {
       }
     });
 
-    const idx = Math.round(f);
-    if (idx !== lastIdx) {
-      lastIdx = idx;
-      if (el.pct) el.pct.textContent = `${[33, 66, 100][idx]}%`;
-    }
-    el.prog?.style.setProperty('--p', ((f + 1) / 3).toFixed(3));
   },
   // no ring in S09
   ring: () => pose({ x: 0, y: 0.6, w: 0.12, alpha: 0, light: 0 }),
@@ -202,7 +225,7 @@ export const app: SectionMotion = {
       flare: from.flare * (1 - seg(x, 0, 0.16)) + flash * 0.8,
       y: from.y + go * 0.75,
       w: from.w * lerp(1, 0.45, go),
-      alpha: 1 - seg(x, 0.42, 0.62),
+      alpha: 1 - seg(x, 0.32, 0.48), // QA G-14: gone before it reaches the navbar
     };
   },
 };

@@ -476,8 +476,8 @@ const dialTicks = Array.from({ length: 49 }, (_, i) => {
   </div>
 
   <!-- z2: the hand and the phone (screen transparent); z3: fingertips over the bezel -->
-  <img class="ap__hand" src={hand1600.src} srcset={`${hand1600.src} 1067w, ${hand2400.src} 1600w`} sizes="(max-width: 719px) 440px, 640px" width="1600" height="2400" alt="" decoding="async" />
-  <img class="ap__front" src={front1600.src} srcset={`${front1600.src} 1067w, ${front2400.src} 1600w`} sizes="(max-width: 719px) 440px, 640px" width="1600" height="2400" alt="" decoding="async" />
+  <img class="ap__hand" data-src={hand1600.src} data-srcset={`${hand1600.src} 1067w, ${hand2400.src} 1600w`} sizes="(max-width: 719px) 440px, 640px" width="1600" height="2400" alt="" decoding="async" />
+  <img class="ap__front" data-src={front1600.src} data-srcset={`${front1600.src} 1067w, ${front2400.src} 1600w`} sizes="(max-width: 719px) 440px, 640px" width="1600" height="2400" alt="" decoding="async" />
 </div>
 
 <style>
@@ -1089,7 +1089,7 @@ const dialTicks = Array.from({ length: 49 }, (_, i) => {
   .ap__glow--rec {
     background:
       radial-gradient(70% 34% at 50% 26%, color-mix(in srgb, var(--led-recovery) 30%, transparent), transparent 72%),
-      radial-gradient(90% 40% at 50% 100%, color-mix(in srgb, var(--cocoa) 60%, transparent), transparent 75%),
+      radial-gradient(90% 40% at 50% 100%, color-mix(in srgb, var(--cocoa-800) 60%, transparent), transparent 75%),
       linear-gradient(180deg, color-mix(in srgb, var(--led-recovery) 12%, var(--night)), var(--night) 60%);
   }
   /* every small card: label, value, note, then its chart at the foot (rows align) */

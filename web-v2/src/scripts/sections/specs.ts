@@ -1,14 +1,19 @@
 /**
  * S07 Specs & benefits — 21:00 · Sand → the everyday photo (D-149, Figma Design 07 State 1–7 with
  * the user's notes; Specs.astro has the layout).
- * u: -1.6..0 connection from S06 (D-147, unchanged: the hand goes up 1:1 — details.ts — and
- *          "Through the day." comes in at the end)
+ * u: -1.6..0 connection from S06 (D-192, a crossfade: the S06 hand and text leave in its first 60% —
+ *          details.ts — then "Through the day." fades in)
  *  0     State 1  "Through the day." in the middle
- *  0 → 1 State 2  the words part, cut at the cards' edges; the four cards rise from below into a row
- *  1 → 2 State 3  the cards close into a stack, the words leave sideways, the line grows from the
+ *  0 → 1 State 2  the words part and shrink to fit beside the row (D-172); the four cards scale up
+ *                 and fade in where they stand, left to right
+ *  1 → 2 State 3  the words fade where they stand, then the cards close into a stack, the line grows from the
  *                 middle; (I) Night: title letter by letter from behind the line, lines rise
- *  2 → 5 States 4–6  the front card rises behind the stack, the next comes forward (II)–(IV); the
- *                 counter circle fills; by (IV) Rinse the cards behind it are gone (Figma State 6)
+ *  2 → 5 States 4–6  QA27 S7-06 / S7-06b (obsidianassembly.com "Objects"): a 3:4 front card 68 % of
+ *                 the screen high on a deck — two smaller layers stepping up behind it, the next card's
+ *                 foot below it. With the scroll the next card comes up over the front one and grows
+ *                 into its place while the front one goes back into the layers (stackSlot); titles and
+ *                 captions roll old → new together (II)–(IV); the counter circle fills; (IV) Rinse
+ *                 stands alone before the end (Figma State 6)
  *  5.1 → 6.1 end  (obsidianassembly.com "The Connection") the big photo comes up from below at
  *                 scroll speed (1:1), its content slower (parallax); the Rinse card moves down and
  *                 shrinks in front of it, then the words run over it (D-151: photo → card → words →
@@ -17,6 +22,7 @@
  * Reduced motion: story.ts snaps u to whole states; everything is placed for that state and only
  * the opacity changes (short fade per state, global.css).
  */
+import { view } from '../viewport';
 import { seg, lerp, clamp01, smooth, type Ctx } from '../anim';
 import { pose } from '../ring/poses';
 import type { SectionMotion } from '../story';
@@ -49,9 +55,7 @@ let headerH = 76;
 
 /* ---------- layout ---------- */
 
-/** card box in Figma px (the slots are clip windows inside it) */
-const BW = 392;
-const BH = 602;
+/** a card slot; the box (bw × bh) is the same for all cards, the slot is a clip window inside it */
 interface Slot {
   x: number; // centre, viewport px
   y: number;
@@ -59,7 +63,16 @@ interface Slot {
   h: number;
   s: number; // scale of the box
   o: number;
+  /** QA27 S7-06b: px of the window hidden from its top (the next card, where the front one covers it) */
+  ct?: number;
 }
+/** QA27 S7-06: front card 3:4, 68 % of the screen high.
+ *  S7-06b (obsidianassembly.com "Objects", measured on its frames): each layer behind is 12.5 % smaller
+ *  than the one before it and stands higher; the next card waits below the front one at the first
+ *  layer's size */
+const FRONT_H = 0.68;
+const LAYER_S = 0.875;
+const RADIUS = 10;
 const lerpSlot = (a: Slot, b: Slot, t: number): Slot => ({
   x: lerp(a.x, b.x, t),
   y: lerp(a.y, b.y, t),
@@ -67,33 +80,58 @@ const lerpSlot = (a: Slot, b: Slot, t: number): Slot => ({
   h: lerp(a.h, b.h, t),
   s: lerp(a.s, b.s, t),
   o: lerp(a.o, b.o, t),
+  ct: lerp(a.ct ?? 0, b.ct ?? 0, t),
 });
 
 function layout(ctx: Ctx) {
   const W = window.innerWidth;
-  const H = window.innerHeight;
+  const H = view.h;
   const m = ctx.mobile;
-  // Figma frame 1440 × 900; phones: the front card 60 % of the width
-  const k = m ? Math.min((W * 0.6) / BW, (H * 0.36) / 490) : Math.min(W / 1440, H / 900);
+  const nav = m ? 60 : 76; // --header-h
+  // Figma frame 1440 × 900 (State 2 row, the end card)
+  const k = m ? Math.min((W * 0.6) / 392, (H * 0.36) / 490) : Math.min(W / 1440, H / 900);
   const cx = W / 2;
-  const cy = m ? H * 0.4 : H / 2 + 32 * k; // Figma: stack and line centred on y 482
-  const ly = m ? cy + (BH / 2) * k + 60 : cy; // phones: the line under the stack
-  // stack slots (Figma State 3: front 392 × 490, behind 352 × 602, then 312 wide from y 125)
-  const F: Slot = { x: cx, y: cy, w: 392 * k, h: 490 * k, s: 1, o: 1 };
-  const B1: Slot = { x: cx, y: cy, w: 352 * k, h: 602 * k, s: 1, o: 1 };
-  const s2 = 312 / BW;
-  const B2: Slot = { x: cx, y: cy - (482 - 125 - (BH * s2) / 2) * k, w: 312 * k, h: BH * s2 * k, s: s2, o: 1 };
-  // State 2 row (Figma 180 × 225 every 200 px, centred on y 482)
+  // front card: 3:4; desktop it also leaves room for the two caption columns, phones for the text below
+  const margin = Math.min(40, Math.max(16, W * 0.028));
+  const col = Math.min(316, W * 0.22); // = Specs.astro .sp__ttl / .sp__right
+  const fw = m ? Math.min(W * 0.68, (H - nav - 270) * 0.75) : Math.min(H * FRONT_H * 0.75, W - 2 * (margin + col + 24));
+  const fh = fw / 0.75;
+  // desktop: centred below the navbar; phones: stack, counter row and text centred as one
+  // the layers behind step up (reference ≈ 12 % of the card per layer), never into the navbar; the
+  // next card shows this much below the front one
+  const down = m ? Math.max(14, fh * 0.055) : Math.min(fh * 0.112, H - ((H + nav) / 2 + fh / 2) - 12);
+  const upRoom = m ? Math.max(10, fh * 0.04) : ((H + nav) / 2 - fh / 2 - nav - 6) / 2;
+  const up = Math.max(8, Math.min(fh * 0.118, upRoom));
+  const phoneTop = nav + Math.max(6, (H - nav - (fh + 2 * up + down + 72 + 140)) / 2);
+  const cy = m ? phoneTop + 2 * up + fh / 2 : (H + nav) / 2;
+  const ly = m ? cy + fh / 2 + down + 72 : cy; // phones: the line under the stack
+  const bw = fw;
+  const bh = fh;
+  const top = cy - fh / 2;
+  const F: Slot = { x: cx, y: cy, w: fw, h: fh, s: 1, o: 1 };
+  // behind, higher: layer n is LAYER_S^n… as in the reference 1, 0.875, 0.75 (linear), top edge n steps up
+  const layer = (n: number, o = 1): Slot => {
+    const sc = 1 - (1 - LAYER_S) * n;
+    return { x: cx, y: top - n * up + (fh * sc) / 2, w: fw * sc, h: fh * sc, s: sc, o };
+  };
+  const B1 = layer(1);
+  const B2 = layer(2);
+  const B3 = { ...layer(3, 0), y: B2.y - (B2.h - fh * (1 - (1 - LAYER_S) * 3)) / 2 }; // fades where B2 stands, a size smaller
+  // the next card: first layer's size, its foot `down` below the front card; the rest is behind the front
+  const N: Slot = { x: cx, y: top + fh + down - (fh * LAYER_S) / 2, w: fw * LAYER_S, h: fh * LAYER_S, s: LAYER_S, o: 1, ct: fh * LAYER_S - down };
+  // the one after it: unseen behind the front card, on its way to N
+  const N2: Slot = { x: cx, y: cy + fh * 0.06, w: fw * 0.75, h: fh * 0.75, s: 0.75, o: 0, ct: 0 };
+  // State 2 row (Figma 180 × 225 every 200 px)
   const rw = m ? (W - 32 - 3 * 8) / 4 : 179.93 * k;
   const rgap = m ? 8 : 19.99 * k;
   const rowW = 4 * rw + 3 * rgap;
-  const row = (i: number): Slot => ({ x: cx - rowW / 2 + rw / 2 + i * (rw + rgap), y: cy, w: rw, h: rw * 1.25, s: rw / (BW * k), o: 1 });
+  const row = (i: number): Slot => ({ x: cx - rowW / 2 + rw / 2 + i * (rw + rgap), y: cy, w: rw, h: rw * 1.25, s: rw / bw, o: 1 });
   // the end: the small Rinse card (Figma State 7 195 × 244); its y is set by endLayout (D-150)
   const ew = m ? Math.min(W * 0.4, H * 0.21) : 195 * k;
-  const E: Slot = { x: cx, y: H / 2, w: ew, h: ew * 1.25, s: ew / (BW * k), o: 1 };
+  const E: Slot = { x: cx, y: H / 2, w: ew, h: ew * 1.25, s: ew / bw, o: 1 };
   // the photo frame (Figma inset 24 / 40)
   const ey = m ? 16 : 24;
-  return { W, H, m, k, cx, cy, ly, F, B1, B2, row, rowW, E, ey };
+  return { W, H, m, k, cx, cy, ly, bw, bh, F, B1, B2, B3, N, N2, row, rowW, E, ey };
 }
 type L7 = ReturnType<typeof layout>;
 
@@ -103,8 +141,8 @@ function measure(ctx: Ctx): L7 {
   const key = `${L.W}x${L.H}${ctx.mobile}`;
   if (key !== lastKey && root) {
     lastKey = key;
-    root.style.setProperty('--bw', `${(BW * L.k).toFixed(1)}px`);
-    root.style.setProperty('--bh', `${(BH * L.k).toFixed(1)}px`);
+    root.style.setProperty('--bw', `${L.bw.toFixed(1)}px`);
+    root.style.setProperty('--bh', `${L.bh.toFixed(1)}px`);
     root.style.setProperty('--ly', `${L.ly.toFixed(1)}px`);
     root.style.setProperty('--par', `${(PAR * (L.H - L.ey)).toFixed(1)}px`);
     headerH = parseFloat(getComputedStyle(root).getPropertyValue('--header-h')) || (ctx.mobile ? 60 : 76);
@@ -134,13 +172,14 @@ const tr = (x: number, y: number, s = 1) => `translate3d(${x.toFixed(1)}px, ${y.
 /** a y shift inside a mask, in % of the element */
 const ty = (p: number) => (Math.abs(p) < 0.05 ? '' : `translate3d(0, ${p.toFixed(1)}%, 0)`);
 
-function placeCard(c: HTMLElement, r: Slot, k: number, z: number) {
-  const bw = BW * k;
-  const bh = BH * k;
+function placeCard(c: HTMLElement, r: Slot, bw: number, bh: number, z: number) {
   const ix = Math.max(0, (bw - r.w / r.s) / 2);
   const iy = Math.max(0, (bh - r.h / r.s) / 2);
-  const rad = 6 / r.s;
-  tf(c, r.o, tr(r.x - bw / 2, r.y - bh / 2, r.s), `inset(${iy.toFixed(1)}px ${ix.toFixed(1)}px round ${rad.toFixed(1)}px)`);
+  const rad = RADIUS / r.s;
+  const ct = (r.ct ?? 0) / r.s;
+  // the covered part of the next card is cut square (it is behind the front card's edge), the rest round
+  const clip = ct > 0.5 ? `inset(${(iy + ct).toFixed(1)}px ${ix.toFixed(1)}px ${iy.toFixed(1)}px round 0 0 ${rad.toFixed(1)}px ${rad.toFixed(1)}px)` : `inset(${iy.toFixed(1)}px ${ix.toFixed(1)}px round ${rad.toFixed(1)}px)`;
+  tf(c, r.o, tr(r.x - bw / 2, r.y - bh / 2, r.s), clip);
   const zs = String(z);
   if (c.style.zIndex !== zs) c.style.zIndex = zs;
 }
@@ -195,22 +234,24 @@ function buildMasks() {
   rightLines = texts.map((t) => [...t.querySelectorAll<HTMLElement>('.sp__right [data-s-lines]')].flatMap((p) => splitLines(p)));
 }
 
-/** letters rise from behind the line (in), sink back behind it (out); stagger per letter */
+/* QA27 S7-06: a swap is a roll — the old text leaves upward by exactly what the new one still has to
+   rise, on the same stagger, so the slot is never empty and the two never sit on each other */
+const STAGGER = 0.02; // per letter
+/** letters rise from behind the line (in), go on up out of the mask (out) */
 function letters(list: HTMLElement[], inP: number, outP: number) {
-  const n = list.length;
-  const st = 0.5 / Math.max(1, n);
   list.forEach((c, j) => {
-    const a = smooth(clamp01((inP - j * st) / 0.5));
-    const b = smooth(clamp01((outP - j * st) / 0.5));
-    tf(c, 1, ty((1 - a) * 130 + b * 130));
+    const d = Math.min(0.3, j * STAGGER);
+    const a = smooth(clamp01((inP - d) / 0.7));
+    const b = smooth(clamp01((outP - d) / 0.7));
+    tf(c, 1, ty((1 - a) * 130 - b * 130));
   });
 }
 /** lines rise into their masks (in) and on out of them (out), one after another */
-function lines(list: HTMLElement[], inP: number, outP: number, delay = 0) {
+function lines(list: HTMLElement[], inP: number, outP: number) {
   list.forEach((l, j) => {
-    const d = delay + j * 0.12;
-    const a = smooth(clamp01((inP - d) / (1 - Math.min(0.6, d))));
-    const b = smooth(clamp01((outP - j * 0.12) / 0.88));
+    const d = Math.min(0.3, j * 0.1);
+    const a = smooth(clamp01((inP - d) / 0.7));
+    const b = smooth(clamp01((outP - d) / 0.7));
     tf(l, 1, ty((1 - a) * 105 - b * 105));
   });
 }
@@ -228,7 +269,8 @@ function endLayout(L: L7) {
   const ch = el.caption?.offsetHeight ?? 0;
   const h = L.E.h;
   // offsets from the card centre
-  const textTop = h * 0.12 - eh / 2 - th;
+  // D-175: one line "The everyday." across the middle of the card, a little below its centre (State 15)
+  const textTop = h * 0.06 - eh / 2 - th;
   const desc = textTop + th + ev.base + ev.desc;
   const capTop = Math.max(desc, h / 2) + (L.m ? 14 : 22);
   const gTop = Math.min(-h / 2, textTop);
@@ -239,26 +281,47 @@ function endLayout(L: L7) {
   return { E: { ...L.E, y }, textTop: y + textTop, capTop: y + capTop };
 }
 
-/** the focused card, 0..3, with a dwell at each card */
+/** the focused card, 0..3: follows the scroll, with a short rest on each card */
 const focusOf = (u: number) => {
   const raw = clamp01((u - 2) / 3) * 3;
   const base = Math.floor(raw);
-  return Math.min(3, base + smooth(smooth(raw - base)));
+  return Math.min(3, base + smooth(clamp01((raw - base - 0.1) / 0.8)));
 };
-const mod4 = (v: number) => ((v % 4) + 4) % 4;
+/** 0 → 1 while text i hands over to text i + 1 (the same stretch in which the cards swap) */
+const swapOf = (f: number, i: number) => clamp01((f - i - 0.28) / 0.44);
 
-/** where card i sits in the stack for focus f; z order with it */
+/**
+ * QA27 S7-06b — the deck of obsidianassembly.com "Objects", bound to the scroll. Where card i sits for
+ * focus f, and its z order. q = how many places card i is from the front, wrapped over the four cards
+ * (the deck goes round, as in the reference, so the stack is full at 1/4 and at 4/4 alike):
+ *    0   the front card
+ *   −1   first layer behind: smaller, one step up        −2  second layer, another step up
+ *   +1   the next card: first-layer size, its foot showing below the front card
+ * A change (f → f + 1): the next card comes over the front one — it is uncovered from its foot up in
+ * the first part of the move — rising and growing into the front place, while the front card shrinks
+ * back and up into the first layer, the first layer into the second, and the second fades a size
+ * smaller where it stands; it then comes round, unseen behind the front card, to wait below as "next".
+ */
+const REVEAL = 0.22; // share of the move in which the next card is uncovered
 function stackSlot(i: number, f: number, L: L7): [Slot, number] {
-  const p = mod4(i - f);
-  if (p <= 1) return [lerpSlot(L.F, L.B1, p), 40 - p * 10];
-  if (p <= 2) return [lerpSlot(L.B1, L.B2, p - 1), 30 - (p - 1) * 10];
-  if (p <= 3) return [{ ...L.B2, o: 1 - (p - 2) }, 20 - (p - 2) * 10];
-  // leaving the front: it rises, goes behind the stack and settles at the back (hidden)
-  const q = 4 - p;
-  const r = lerpSlot(L.F, L.B2, smooth(q));
-  r.y -= Math.sin(Math.PI * q) * (L.m ? 0.3 : 0.42) * L.F.h;
-  r.o = q < 0.7 ? 1 : 1 - (q - 0.7) / 0.3;
-  return [r, q < 0.5 ? 50 : 5];
+  const q = ((((i - f + 2) % 4) + 4) % 4) - 2; // −2 ≤ q < 2
+  if (q <= -1) return [lerpSlot(L.B1, L.B2, -q - 1), 20 + Math.round(q * 4)];
+  if (q <= 0) return [lerpSlot(L.F, L.B1, -q), 30];
+  if (q <= 1) {
+    // rising to the front, on top; q = 1 is the wait below (covered part cut away)
+    const t = 1 - q;
+    const r = lerpSlot(L.N, L.F, smooth(t));
+    r.ct = (L.N.ct ?? 0) * (1 - smooth(clamp01(t / REVEAL)));
+    return [r, t > 0 ? 50 : 25]; // waiting: under the front card (the row closing must not show it on top)
+  }
+  // 1 < q < 2: leaving the second layer (fades, first half), then round to the wait below (second half)
+  const t = 2 - q;
+  if (t < 0.5) return [lerpSlot(L.B2, L.B3, smooth(t * 2)), 10];
+  const a = smooth((t - 0.5) * 2);
+  const r = lerpSlot(L.N2, L.N, a);
+  r.o = a > 0 ? 1 : 0;
+  r.ct = lerp(L.N2.h, L.N.ct ?? 0, a); // stays behind the front card until its foot comes out below
+  return [r, 25];
 }
 
 export const specs: SectionMotion = {
@@ -281,10 +344,11 @@ export const specs: SectionMotion = {
     const all = (s: string, from: ParentNode = r) => [...from.querySelectorAll<HTMLElement>(s)];
     cards = all('[data-s-card]');
     words = all('[data-s-w]');
+    words.forEach((w) => (w.style.transformOrigin = '0 0')); // D-172: the parts shrink from their top left
     texts = all('[data-s-text]');
     nums = all('[data-s-num]');
     chars = texts.map((t) => all('[data-s-ch]', t));
-    const vhProbe = () => (vhPx = (document.querySelector('[data-vh]') as HTMLElement | null)?.offsetHeight || window.innerHeight);
+    const vhProbe = () => (vhPx = view.h);
     // "The" flush with the E of "Everyday": move it by the difference of the two side bearings
     const alignThe = () => {
       if (!el.the || !el.evword) return;
@@ -327,52 +391,65 @@ export const specs: SectionMotion = {
     const { W, H, m, k } = L;
     const vh = vhPx || H;
     const out = seg(u, END, END + 0.3); // leaving for S08
-    const inn = seg(u, -0.3, 0); // 70–100 % of the incoming connection (D-147)
+    const inn = seg(u, -0.62, -0.15); // D-192: fades in once the S06 hand and text have gone
 
     /* ----- States 1–2: the words ----- */
-    const split = seg(u, 0.22, 0.9);
-    const leave = seg(u, 1.05, 1.6); // out to the sides as the cards close
+    const split = seg(u, 0.1, 0.62); // D-172: the words are apart before the cards come in
+    // D-172 PM review: after State 2 the two parts fade out where they stand — whole, inside the
+    // screen — and are gone before the cards start to close (close below starts at 1.1)
+    const leave = seg(u, 1.0, 1.1);
     const [w0, w1] = wordW;
     const space = wordFs * 0.24;
+    // D-172 (Obsidian Assembly "Origin Objects"): the two parts move apart and shrink in proportion,
+    // so each stays whole beside (desktop) or above/below (phones) the row — never cut, never covered
+    const tsl = (x: number, y: number, sc: number) => `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale(${sc.toFixed(4)})`;
     if (m) {
       // phones: two lines in the middle → above / below the row → out to the sides
       const rowH = L.row(0).h;
-      const y0 = lerp(L.cy - wordH, L.cy - rowH / 2 - 12 - wordH, split);
-      const y1 = lerp(L.cy, L.cy + rowH / 2 + 4, split);
-      tf(words[0], inn * (1 - leave), tr(W / 2 - w0 / 2 - leave * (W / 2 + w0 / 2), y0 + (1 - inn) * 20));
-      tf(words[1], inn * (1 - leave), tr(W / 2 - w1 / 2 + leave * (W / 2 + w1 / 2), y1 + (1 - inn) * 20));
+      const fit = Math.min(1, (W - 32) / Math.max(w0, w1, 1), (L.cy - rowH / 2 - headerH - 16) / Math.max(wordH, 1));
+      const sc = lerp(1, Math.min(fit, 0.8), split);
+      const h = wordH * sc;
+      const y0 = lerp(L.cy - wordH, L.cy - rowH / 2 - 12 - h, split);
+      const y1 = lerp(L.cy, L.cy + rowH / 2 + 12, split);
+      tf(words[0], inn * (1 - leave), tsl(W / 2 - (w0 * sc) / 2, y0, sc));
+      tf(words[1], inn * (1 - leave), tsl(W / 2 - (w1 * sc) / 2, y1, sc));
     } else {
       // State 1: one line centred on the stack line; State 2: 'Through' at the left margin, 'the
-      // day.' at the right one, each cut 20 px short of the row (Figma "clip di tepi kartu")
+      // day.' at the right one, each scaled to fit the room between the margin and the row (20 px air)
       const margin = Math.min(40, W * 0.028);
+      const room = W / 2 - L.rowW / 2 - 20 * k - margin;
+      const sc = lerp(1, Math.min(1, room / Math.max(w0, w1, 1)), split);
       const s0 = W / 2 - (w0 + space + w1) / 2;
-      const x0 = lerp(s0, margin, split) - leave * (w0 + margin);
-      const x1 = lerp(s0 + w0 + space, W - margin - w1, split) + leave * (w1 + margin);
-      const y = L.cy - wordH / 2 + (1 - inn) * 20;
-      const edgeL = lerp(W, W / 2 - L.rowW / 2 - 20 * k, split);
-      const edgeR = lerp(0, W / 2 + L.rowW / 2 + 20 * k, split);
-      const cutR = Math.max(0, x0 + w0 - edgeL);
-      const cutL = Math.max(0, edgeR - x1);
-      tf(words[0], inn * (1 - leave), tr(x0, y), cutR > 0 ? `inset(-40% ${cutR.toFixed(1)}px -40% 0)` : '');
-      tf(words[1], inn * (1 - leave), tr(x1, y), cutL > 0 ? `inset(-40% 0 -40% ${cutL.toFixed(1)}px)` : '');
+      const x0 = lerp(s0, margin, split);
+      const x1 = lerp(s0 + w0 + space, W - margin - w1 * sc, split);
+      const y = L.cy - (wordH * sc) / 2;
+      tf(words[0], inn * (1 - leave), tsl(x0, y, sc));
+      tf(words[1], inn * (1 - leave), tsl(x1, y, sc));
     }
 
     /* ----- the cards ----- */
     const f = focusOf(u);
-    const close = seg(u, 1.05, 1.7);
+    const close = seg(u, 1.1, 1.75);
     const pe = seg(u, RISE, RISE + 0.98); // the end
     const G = endLayout(L);
-    const backsGo = 1 - seg(f, 2.1, 2.9); // Figma State 6: only Rinse is left
     cards.forEach((c, i) => {
-      const rise = seg(u, 0.22 + 0.08 * i, 0.75 + 0.08 * i);
+      // D-172: the intro cards scale up and fade in where they stand (no rise from below), left to right
+      const rise = seg(u, 0.45 + 0.07 * i, 0.85 + 0.07 * i);
       const rw = L.row(i);
-      rw.y += (1 - rise) * H * 0.85;
+      const grow = lerp(0.72, 1, smooth(rise));
+      rw.w *= grow;
+      rw.h *= grow;
+      rw.s *= grow;
+      rw.o *= rise;
       const [st, z] = stackSlot(i, f, L);
       let r = lerpSlot(rw, st, close);
-      if (i !== 3) r.o *= backsGo;
+      // (IV) Rinse stands alone before the end (Figma State 6): the rest of the deck goes first
+      if (i !== 3) r.o *= 1 - seg(u, 4.98, 5.1);
       if (i === 3) r = lerpSlot(r, G.E, pe);
       r.o *= 1 - out;
-      placeCard(c, r, k, close < 0.5 ? 40 : i === 3 && pe > 0 ? 60 : Math.round(z));
+      // D-172: while the row closes, the leftmost card (Night) is on top, then Desk, Move, Rinse —
+      // the same order the stack keeps, so the last card left in front is Rinse for "Everyday"
+      placeCard(c, r, L.bw, L.bh, close < 0.5 ? 40 - i : i === 3 && pe > 0 ? 60 : z);
     });
 
     /* ----- States 3–6: line, (n) name, lines, counter ----- */
@@ -382,8 +459,8 @@ export const specs: SectionMotion = {
     tf(el.count, furn);
     if (el.arc) el.arc.style.setProperty('--p', (((Math.max(0, f) + 1) / 4) * 100 * seg(u, 1.5, 2)).toFixed(2));
     texts.forEach((t, i) => {
-      const inP = i === 0 ? clamp01((u - 1.5) / 0.45) : clamp01((f - i + 0.5) / 0.4);
-      const outP = i === 3 ? clamp01((u - 5.05) / 0.4) : clamp01((f - i - 0.1) / 0.4);
+      const inP = i === 0 ? clamp01((u - 1.5) / 0.45) : swapOf(f, i - 1);
+      const outP = i === 3 ? clamp01((u - 5.05) / 0.4) : swapOf(f, i);
       const shown = inP > 0 && outP < 1;
       if (ctx.reduced) {
         // whole state: no masks moving, a short fade (global.css)
@@ -399,14 +476,16 @@ export const specs: SectionMotion = {
       if (!shown) return;
       letters(chars[i] ?? [], inP, outP);
       lines(leftLines[i] ?? [], inP, outP);
-      lines(rightLines[i] ?? [], inP, outP, 0.08);
+      lines(rightLines[i] ?? [], inP, outP);
       tf(nums[i], 1, ty((1 - smooth(inP)) * 110 - smooth(outP) * 110));
     });
     if (!ctx.reduced) nums.forEach((n, i) => {
-      const inP = i === 0 ? 1 : clamp01((f - i + 0.5) / 0.4);
-      const outP = i === 3 ? 0 : clamp01((f - i - 0.1) / 0.4);
+      const inP = i === 0 ? 1 : swapOf(f, i - 1);
+      const outP = i === 3 ? 0 : swapOf(f, i);
       if (inP <= 0 || outP >= 1) tf(n, 0);
     });
+
+    // D-185 / QA27 G-19: the everyday photo is fetched by story.ts (scripts/lazy.ts) ahead of S07
 
     /* ----- the end: the big photo comes up 1:1, its content slower ----- */
     const shut = 1 - seg(u, END, END + 0.45); // to S08: the frame opens to full bleed
@@ -442,9 +521,8 @@ export const specs: SectionMotion = {
       tf(el.etext, (u > RISE ? 1 : 0) * (1 - out), tr(left, ty0), clip);
       if (el.caption) {
         const cw = el.caption.offsetWidth;
-        // D-155: desktop just right of the card (clear of the Gold ring in the photo's lower right);
-        // phones: right edge on the ink of the last "y"
-        const x = m ? left + tw - ev.right - cw : G.E.x + G.E.w / 2 + 20 * k;
+        // D-175: centred under the card (State 15)
+        const x = W / 2 - cw / 2;
         const y = G.capTop;
         const cp = seg(u, RISE + 0.72, RISE + 1.0);
         tf(el.caption, cp > 0 ? 1 - out : 0, tr(x, y + rise));
@@ -454,6 +532,6 @@ export const specs: SectionMotion = {
   },
   // no 3D ring in S07 (it is only in the card photos)
   ring: () => pose({ x: 0.2, y: 0, w: 0.1, alpha: 0 }),
-  // 06 → 07 (D-147): the ring stays on the finger and leaves with the hand, 1:1
+  // 06 → 07 (D-192): the ring stays on the finger and leaves with the hand
   ringIn: (x, ctx) => detailsLeaveRing(x, ctx),
 };

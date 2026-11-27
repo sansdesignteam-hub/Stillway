@@ -17,7 +17,9 @@
  * Reduced motion: u is snapped to whole states; elements fade over 300 ms; the ring jumps to the
  * pose of the state; no breathing loop.
  */
+import { view } from './viewport';
 import { keepLit, LIGHT } from './glow';
+import { fetchPictures, decodePictures, isStill } from './lazy';
 import { sections, dayparts, type SectionDef } from '../content/sections';
 import { clamp01, seg, lerp, put, window4, type Ctx } from './anim';
 import { lerpPose, type Pose } from './ring/poses';
@@ -83,6 +85,15 @@ const partOf = (min: number) => {
   return label;
 };
 
+/** QA HE-01: the navbar link of each chapter (S01 has none) */
+const CHAPTER: Record<string, string> = {
+  why: '#sleep', sleep: '#sleep', activity: '#sleep', insight: '#sleep', // Rhythm, S02–S05
+  details: '#details', specs: '#details', features: '#details', // The ring, S06–S08
+  app: '#app',
+  finishes: '#finishes',
+  close: '#faq',
+};
+
 interface Item {
   def: SectionDef;
   m: SectionMotion;
@@ -91,6 +102,12 @@ interface Item {
   top: number; // px
   end: number; // states-1+hold
   visible: boolean;
+  /** D-191: laid out and initialised (see `raise`) */
+  up: boolean;
+  /** QA27 G-19: pictures fetched / decoded / ring stills fetched (scripts/lazy.ts) */
+  fetched: boolean;
+  decoded: boolean;
+  stills: boolean;
 }
 
 export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) => void }) {
@@ -115,12 +132,10 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
   const nav = document.querySelector<HTMLElement>('[data-nav]');
   const clockTime = document.querySelectorAll<HTMLElement>('[data-clock-time]');
   const clockPart = document.querySelectorAll<HTMLElement>('[data-clock-part]');
-  const vhProbe = document.querySelector<HTMLElement>('[data-vh]')!;
 
   const items: Item[] = sections.map((def) => {
     const m = motions[def.id] ?? placeholder;
     const scene = document.querySelector<HTMLElement>(`[data-scene="${def.id}"]`)!;
-    m.init?.(scene);
     return {
       def,
       m,
@@ -129,18 +144,55 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       top: 0,
       end: def.states - 1 + def.hold,
       visible: true,
+      up: false,
+      fetched: false,
+      decoded: false,
+      stills: false,
     };
   });
 
-  let vh = window.innerHeight;
+  /* D-191: the first layout of the page is the hero's alone. Until a section is "raised" its scene is
+     display: none (global.css, html.motion-ready .scene:not([data-up])), so the browser neither styles
+     nor lays out the ten sections nobody can see yet in the task that paints the first frame. Raising
+     = show it to layout and run its init, as before. The sections around the scroll position are
+     raised before the first frame; the others follow one per turn right after it, each laid out in
+     its own short task instead of all in one long one. The pictures on screen are the same: a waiting
+     scene had opacity 0 / visibility hidden anyway. */
+  const raise = (it: Item) => {
+    if (it.up) return;
+    it.up = true;
+    it.scene.setAttribute('data-up', '');
+    it.m.init?.(it.scene);
+  };
+  const raiseAll = () => {
+    if (items.every((it) => it.up)) return;
+    items.forEach(raise);
+    measure();
+  };
+
+  let vh = view.h;
   const measure = () => {
-    vh = vhProbe.offsetHeight || window.innerHeight;
+    vh = view.h;
     ctx.mobile = mq.matches;
     for (const it of items) it.top = it.track.getBoundingClientRect().top + window.scrollY;
   };
 
   let ring: RingStage | null = null;
+  /** D-191: the stage while it prepares its first frame, and the pose that frame will have */
+  let priming: RingStage | null = null;
+  let primed: { pose: Pose; breathe: number } | null = null;
   let lastPoseKey = '';
+  const progDots = [...document.querySelectorAll<HTMLElement>('[data-gprog] a')];
+  let progAt = -1;
+  // D-171: the progress shows while the page moves and hides after 2.5 s without scrolling
+  const prog = document.querySelector<HTMLElement>('[data-gprog]');
+  let progY = -1;
+  let progTimer = 0;
+  const wakeProg = () => {
+    prog?.classList.add('is-awake');
+    clearTimeout(progTimer);
+    progTimer = window.setTimeout(() => prog?.classList.remove('is-awake'), 2500);
+  };
   const poseOf = (it: Item, u: number): Pose => (it.m.ring ?? placeholder.ring!)(u, ctx);
 
   /** snap to whole states for reduced motion; connections switch at their middle */
@@ -150,6 +202,27 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     if (u < 0) return u < -it.def.tin / 2 ? -it.def.tin : 0;
     if (u > it.end) return u - it.end < 0.15 ? it.end : it.end + 1; // leaving: fully out
     return Math.min(it.def.states - 1, Math.round(u));
+  };
+
+  const navLinks = [...document.querySelectorAll<HTMLAnchorElement>('.site-nav a, .menu__list a')];
+  let chapter: string | null = null;
+  const setChapter = (href: string) => {
+    if (href === chapter) return;
+    chapter = href;
+    navLinks.forEach((a) => {
+      if (a.getAttribute('href') === href) a.setAttribute('aria-current', 'location');
+      else a.removeAttribute('aria-current');
+    });
+  };
+  // QA HE-06: the hash follows the section (replaceState: no history entries); S01 has none
+  let hash: string | null = null;
+  const setHash = (next: string) => {
+    if (next === hash) return;
+    const first = hash === null;
+    hash = next;
+    // the first frame must not wipe a deep link before motion.ts has followed it
+    if (first && location.hash) return;
+    if (location.hash !== next) history.replaceState(history.state, '', location.pathname + location.search + next);
   };
 
   let t0 = performance.now();
@@ -164,6 +237,24 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     const tinX = cur.def.tin ? clamp01((u + cur.def.tin) / cur.def.tin) : 1; // 0..1 inside the connection
     const inConn = u < 0;
     const prev = items[ci - 1];
+
+    /* QA27 G-19: pictures two sections ahead are fetched, one section ahead decoded (both ways) */
+    for (let i = Math.max(0, ci - 2); i <= Math.min(items.length - 1, ci + 2); i++) {
+      const it = items[i];
+      if (!it.fetched) {
+        it.fetched = true;
+        fetchPictures(it.scene, (e) => !isStill(e));
+      }
+      if (!it.decoded && Math.abs(i - ci) <= 1) {
+        it.decoded = true;
+        decodePictures(it.scene);
+      }
+      // the ring stills only where they can show: no 3D ring (yet), around the current section
+      if (!ring && !it.stills && Math.abs(i - ci) <= 1) {
+        it.stills = true;
+        fetchPictures(it.scene, isStill);
+      }
+    }
 
     /* still poster of the ring (3D fallback/): while WebGL loads, if it fails, and for reduced motion */
     if (!ring) {
@@ -184,6 +275,10 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       if (show !== it.visible) {
         it.visible = show;
         it.scene.style.visibility = show ? '' : 'hidden';
+      }
+      if (show && !it.up) {
+        raise(it); // a jump ahead of the queue below
+        measure();
       }
       if (show && it.m.update) it.m.update(snap(it, (y - it.top) / vh - it.def.tin), ctx, it.scene);
     });
@@ -208,33 +303,33 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     let wipeTone = 'warm';
     let mask = 'none';
     if (inConn && prev && prev.def.bg === 'dusk' && cur.def.bg !== 'dusk') {
-      // D-093: Dusk → Paper as light sweeping down (Stage .stage__wipe): Paper, Sand, a warm ochre
+      // D-093: Dusk → Paper as light sweeping down (Stage .stage__wipe): Paper, Sand, a warm
       // edge over the Dusk glow. A masked dissolve or a straight mix passes through a grey band.
       duskO = k < 0.999 ? 1 : 0;
-      wipeY = -250 + 250 * k;
+      wipeY = -300 + 300 * k;
       wipeTone = 'warm';
     } else if (nightRise) {
       // D-136: Paper → Night as a warm Cocoa gradient rising from below behind the S02 page that
       // scrolls away (reference video); only tokens, never a grey mix of Paper and Night
       if (k < 0.999) bgEl.style.backgroundColor = `rgb(${BG.paper.join(' ')})`;
-      wipeY = 100 - 250 * k;
+      wipeY = 100 - 300 * k;
       wipeTone = 'rise-cocoa';
     } else if (inConn && prev && cur.def.id === 'close' && !isDark(prev.def.bg)) {
       // D-098: Sand → Night for the closing canvas: night rises from below with a warm Ember edge
       if (k < 0.999) bgEl.style.backgroundColor = `rgb(${BG[prev.def.bg].join(' ')})`;
-      wipeY = 100 - 250 * k;
+      wipeY = 100 - 300 * k;
       wipeTone = 'rise';
     } else if (inConn && prev && prev.def.bg === 'night' && !isDark(cur.def.bg)) {
       // D-096: Night → Paper (08 → 09) the same way, light sweeping down, with a plain Sand edge
       if (k < 0.999) bgEl.style.backgroundColor = `rgb(${BG.night.join(' ')})`;
-      wipeY = -250 + 250 * k;
+      wipeY = -300 + 300 * k;
       wipeTone = 'plain';
     } else if (inConn && prev && cur.def.bg === 'dusk' && prev.def.bg !== 'dusk') {
       const p = -20 + 140 * k; // dusk edge moves up
       mask = `linear-gradient(to top, #000 ${(p - 20).toFixed(1)}%, transparent ${(p + 20).toFixed(1)}%)`;
     }
     duskEl.style.opacity = duskO.toFixed(3);
-    const wv = wipeY === null || (wipeTone.startsWith('rise') ? wipeY <= -149.99 : wipeY >= -0.01) ? 'hidden' : 'visible';
+    const wv = wipeY === null || (wipeTone.startsWith('rise') ? wipeY <= -199.99 : wipeY >= -0.01) ? 'hidden' : 'visible';
     if (wipeEl.style.visibility !== wv) wipeEl.style.visibility = wv;
     if (wipeY !== null && wipeEl.dataset.tone !== wipeTone) wipeEl.dataset.tone = wipeTone;
     if (wipeY !== null) wipeEl.style.transform = `translate3d(0, ${wipeY.toFixed(2)}lvh, 0)`;
@@ -242,14 +337,34 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       duskEl.style.maskImage = mask;
       duskEl.style.webkitMaskImage = mask;
     }
-    // D-136: the navbar turns dark only once the rising dark has reached the top of the screen
-    const darkW = nightRise ? (k > 0.84 ? 1 : 0) : (prev && inConn && isDark(prev.def.bg) ? 1 - k : 0) + (isDark(cur.def.bg) ? k : 0);
-    const theme = (!inConn && cur.m.theme?.(u)) || (darkW > 0.5 ? 'dark' : 'light');
+    // D-136: the navbar turns dark only once the dark of the ramp has reached the top of the screen
+    // (thresholds follow the geometry of Stage .stage__wipe: rising 100 → −200 lvh, light −300 → 0)
+    let dark = (prev && inConn && isDark(prev.def.bg) ? 1 - k : 0) + (isDark(cur.def.bg) ? k : 0) > 0.5;
+    if (wipeY !== null && wipeTone.startsWith('rise')) dark = k > 0.65;
+    else if (wipeY !== null) dark = k < 0.4;
+    const theme = (!inConn && cur.m.theme?.(u)) || (dark ? 'dark' : 'light');
     if (nav && nav.dataset.theme !== theme) nav.dataset.theme = theme;
-    document.documentElement.dataset.surface = theme;
+    if (document.documentElement.dataset.surface !== theme) document.documentElement.dataset.surface = theme;
 
     /* clock: changes in the last 30% of a connection (Storyboard §3) */
-    const clockFrom = inConn && tinX < 0.7 && prev ? prev : cur;
+    // QA G-15: in 02 → 03 the clock changes to 23:10 · Last night as the ground starts to go dark
+    const switched = nightRise ? k >= 0.35 : tinX >= 0.7;
+    const clockFrom = inConn && !switched && prev ? prev : cur;
+    // QA HE-02: the global progress follows the same section as the clock and the navbar chapter
+    const at0 = items.indexOf(clockFrom);
+    if (Math.abs(y - progY) > 0.5) {
+      if (progY >= 0) wakeProg();
+      progY = y;
+    }
+    if (at0 !== progAt) {
+      progAt = at0;
+      progDots.forEach((p, i) => {
+        p.classList.toggle('is-on', i === at0);
+        // D-176: the current section, for assistive tech too
+        if (i === at0) p.setAttribute('aria-current', 'location');
+        else p.removeAttribute('aria-current');
+      });
+    }
     const d = clockFrom.def;
     let min = toMin(d.time);
     if (d.timeEnd) {
@@ -277,8 +392,13 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
       if (rollClock) el.animate([{ transform: 'translateY(60%)', opacity: 0 }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
     });
 
+    /* navbar chapter + URL hash follow the same section as the clock */
+    const at = clockFrom.def.id;
+    setChapter(CHAPTER[at] ?? '');
+    setHash(at === 'hero' ? '' : at === 'close' && clockFrom === cur && u >= 1.5 ? '#faq' : `#${at}`);
+
     /* ring */
-    if (ring) {
+    if (ring || priming) {
       let pose: Pose;
       if (inConn && prev) {
         const from = poseOf(prev, prev.end);
@@ -294,7 +414,8 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
         breathe = 0.01 * (1 - Math.cos(t * 1.25)) * (1 - seg(u, 0, 0.8));
       }
       const key = JSON.stringify(pose) + breathe.toFixed(4) + vh;
-      if (key !== lastPoseKey) {
+      if (!ring) primed = { pose, breathe };
+      else if (key !== lastPoseKey) {
         lastPoseKey = key;
         ring.apply(pose, { breathe });
         ring.render();
@@ -302,26 +423,84 @@ export function initStory(opts: { reduced: boolean; subscribe: (fn: () => void) 
     }
   };
 
-  measure();
-  frame();
   const onResize = () => {
     measure();
     lastPoseKey = '';
     frame();
+    // the ring stage resizes (and clears) its canvas after this listener: draw once more
+    requestAnimationFrame(() => (lastPoseKey = ''));
   };
-  window.addEventListener('resize', onResize);
-  mq.addEventListener('change', onResize);
-  document.fonts?.ready.then(onResize);
+  /* A section's init may size its own track (S10 on phones) and registers its own resize / font
+     listeners, which have to run before this file measures. So: the sections around the scroll
+     position first, then measure, then the first frame; the rest one per turn, measuring after each;
+     and this file's listeners only once every section has registered its own. */
+  measure();
+  {
+    let ci = 0;
+    for (let i = 0; i < items.length; i++) if (window.scrollY >= items[i].top - 0.5) ci = i;
+    for (let i = Math.max(0, ci - 1); i <= Math.min(items.length - 1, ci + 1); i++) raise(items[i]);
+  }
+  measure();
+  frame();
+  {
+    const rest = items.filter((it) => !it.up);
+    const next = () => {
+      const it = rest.shift();
+      if (!it) {
+        window.addEventListener('resize', onResize);
+        mq.addEventListener('change', onResize);
+        document.fonts?.ready.then(onResize);
+        onResize(); // also covers a resize in the moments before the listeners were on
+        return;
+      }
+      if (!it.up) {
+        raise(it);
+        void it.scene.offsetHeight; // its layout now, in this turn, not pooled into the next frame
+        measure();
+      }
+      setTimeout(next, 0);
+    };
+    setTimeout(next, 0);
+  }
   opts.subscribe(frame);
 
   return {
     frame,
-    setRing(r: RingStage) {
+    async setRing(r: RingStage) {
+      // D-191: programs and textures of the first frame are prepared in short turns, then it is drawn
+      raiseAll(); // poses of every section are asked for from here on
+      priming = r;
+      frame();
+      if (primed) await r.prime(primed.pose, { breathe: primed.breathe }).catch(() => {});
+      priming = null;
       ring = r;
       lastPoseKey = '';
       frame(); // first frame with the real pose, finish and env; the canvas fades in over 0.9 s
       document.documentElement.classList.add('ring-ready');
       setTimeout(() => document.documentElement.classList.add('ring-live'), 1000);
+      // QA27 G-19: every pose the story can ask for (sections, connections, both S10 options that
+      // change the shader), so the ring stage compiles its shader variants in idle time, not on scroll.
+      // Sampled finely: a variant can exist for a few hundredths of a screen only (lights crossing over)
+      setTimeout(async () => {
+        const poses: Pose[] = [];
+        // D-191: one section per turn (≈ 3000 poses were built in a single 80 ms task on a phone)
+        for (let i = 0; i < items.length; i++) {
+          const it = items[i];
+          const prev = items[i - 1];
+          if (prev && it.def.tin) {
+            const from = poseOf(prev, prev.end);
+            const to = poseOf(it, 0);
+            for (let x = 0; x <= 1.0001; x += 0.01) poses.push(it.m.ringIn ? it.m.ringIn(Math.min(1, x), ctx, from, to) : lerpPose(from, to, seg(x, 0.3, 0.7)));
+          }
+          for (let u = 0; u <= it.end + 0.0001; u += 0.02) poses.push(poseOf(it, Math.min(it.end, u)));
+          if (it.def.id === 'finishes') {
+            const p = poseOf(it, 0);
+            for (const fin of [0, 1, 2]) for (const lamp of [0, 1]) poses.push({ ...p, custom: 1, finA: fin, finB: fin, finT: 0, lamp });
+          }
+          await new Promise((next) => setTimeout(next, 0));
+        }
+        r.prewarm(poses);
+      }, 1400);
     },
   };
 }

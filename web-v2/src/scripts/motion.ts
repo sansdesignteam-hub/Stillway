@@ -5,6 +5,7 @@
  * - The ring (three.js) loads lazily after first paint and joins the story when ready.
  * - Mobile menu panel.
  */
+import { view } from './viewport';
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { initStory } from './story';
@@ -22,7 +23,8 @@ export function initMotion() {
   window.__stillwayMotion = true;
   // D-135 inspect mode: ?inspect lets the DevTools picker reach the stage (text, images) instead
   // of the empty scroll tracks; see global.css "inspect mode". No effect without the parameter.
-  if (new URLSearchParams(location.search).has('inspect')) document.documentElement.classList.add('inspect');
+  // D-182: local dev server only; removed from production builds.
+  if (import.meta.env.DEV && new URLSearchParams(location.search).has('inspect')) document.documentElement.classList.add('inspect');
   // dev only: ?reduced-test on localhost simulates prefers-reduced-motion (review screenshots)
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('reduced');
 
@@ -39,6 +41,8 @@ export function initMotion() {
   if (canvas && !reduced) {
     const start = () =>
       loadRing()
+        // D-191: evaluating three.js and creating the WebGL context are two turns, not one long task
+        .then((m) => new Promise<typeof m>((ok) => setTimeout(() => ok(m), 0)))
         .then(({ createRingStage }) => createRingStage(canvas))
         .then((r) => r && story.setRing(r))
         .catch(() => {
@@ -50,6 +54,39 @@ export function initMotion() {
 
   initMenu();
   initAnchors();
+  initDeepLink(story.frame);
+}
+
+/** where an in-page target lands: state 1 of the section (after its incoming connection) */
+function landing(target: HTMLElement) {
+  const vh = view.h;
+  return target.getBoundingClientRect().top + window.scrollY + Number(target.dataset.tin ?? 0) * vh;
+}
+
+/** QA HE-06: a link that carries #section opens on that section. A reload or back / forward keeps the
+ * scroll position the browser restores. */
+function initDeepLink(frame: () => void) {
+  const id = location.hash.slice(1);
+  const target = id ? document.getElementById(id) : null;
+  if (!target || !target.matches('.track, .track > span')) return;
+  const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+  if (nav && nav.type !== 'navigate') return;
+  let moved = false; // the visitor has taken over: no more correcting
+  ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach((t) => window.addEventListener(t, () => (moved = true), { once: true, passive: true }));
+  const go = () => {
+    if (moved) return;
+    const y = landing(target);
+    lenis?.scrollTo(y, { immediate: true, force: true });
+    // the window too: Lenis skips a target it believes it is already at, while the native anchor
+    // jump may have moved the page since
+    window.scrollTo({ top: y, behavior: 'instant' });
+    frame();
+  };
+  go();
+  // again after the browser's own jump to the anchor, which can come after load
+  const again = () => [0, 300, 800].forEach((ms) => window.setTimeout(go, ms));
+  if (document.readyState === 'complete') again();
+  else window.addEventListener('load', again, { once: true });
 }
 
 /** In-page links scroll with Lenis; the hash targets are the tracks. */
@@ -63,8 +100,7 @@ function initAnchors() {
       e.preventDefault();
       closeMenu?.();
       // land on state 1 of the section (after its incoming connection)
-      const tin = target === 0 ? 0 : Number(target.dataset.tin ?? 0);
-      const y = target === 0 ? 0 : target.getBoundingClientRect().top + window.scrollY + tin * window.innerHeight;
+      const y = target === 0 ? 0 : landing(target);
       if (lenis) lenis.scrollTo(y, { duration: 1.6 });
       else window.scrollTo({ top: y });
     }),

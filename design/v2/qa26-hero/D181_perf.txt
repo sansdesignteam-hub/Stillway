@@ -1,0 +1,8 @@
+run 1
+{"label":"1440 desktop","rest":{"fps":59.6,"avgMs":16.77,"p95Ms":18.5},"tilt":{"fps":57.8,"avgMs":17.31,"p95Ms":18.5}}
+{"label":"1440 4x CPU throttle","rest":{"fps":55.2,"avgMs":18.11,"p95Ms":18.7},"tilt":{"fps":4.8,"avgMs":206.27,"p95Ms":1351.6}}
+{"label":"375 mobile-size (12 taps)","rest":{"fps":60.1,"avgMs":16.63,"p95Ms":18.5},"tilt":{"fps":60.1,"avgMs":16.63,"p95Ms":18.5}}
+run 2
+{"label":"1440 desktop","rest":{"fps":59.7,"avgMs":16.75,"p95Ms":18.5},"tilt":{"fps":58.2,"avgMs":17.18,"p95Ms":18.5}}
+{"label":"1440 4x CPU throttle","rest":{"fps":48.8,"avgMs":20.48,"p95Ms":18.5},"tilt":{"fps":59.2,"avgMs":16.9,"p95Ms":18.4}}
+{"label":"375 mobile-size (12 taps)","rest":{"fps":60.5,"avgMs":16.54,"p95Ms":18.5},"tilt":{"fps":59.7,"avgMs":16.75,"p95Ms":18.5}}

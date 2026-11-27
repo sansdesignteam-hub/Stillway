@@ -5,11 +5,14 @@
  * No colour is written outside this file: everything else uses these tokens or color-mix() of them.
  * Page proportion: Paper ±45% · Night ±30% (Cocoa included) · Sand ±15% · Ink ±8% · Ochre ≤ 2%.
  */
+/* QA27 M-11: viewport height units, locked in px on touch screens (scripts/viewport.ts) */
 :root {
-  /* 🌈 Primitive Color (Moodboard §2.6–§2.7) */
+  --svh: 1svh;
+  --lvh: 1lvh;
+  /* 🌈 Primitive Color (Figma ejtNpUf0FdEYMgAbcENMCH, synced 25 Nov, D-168). No ochre any more. */
   --neutral-0: #ffffff;
-  --neutral-50: #f9f5ef;
-  --neutral-100: #f0e8dd;
+  --neutral-50: #f7f5f0;
+  --neutral-100: #efe6db;
   --neutral-200: #dfd6ca;
   --neutral-300: #c9bfb5;
   --neutral-400: #a9a097;
@@ -18,59 +21,105 @@
   --neutral-700: #554e4a;
   --neutral-800: #3c3733;
   --neutral-900: #231f20;
-  --neutral-950: #17120f;
-  --ochre-50: #fef6e7;
-  --ochre-100: #fdeacc;
-  --ochre-200: #fbd6a1;
-  --ochre-300: #f3ba6d;
-  --ochre-400: #e89d3d;
-  --ochre-500: #d5851b;
-  --ochre-600: #b76f20;
-  --ochre-700: #97571c;
-  --ochre-800: #79451c;
-  --ochre-900: #62371c;
-  --ochre-950: #3a1e0e;
-  --cocoa-50: #fdf4ee;
-  --cocoa-100: #f7e6db;
-  --cocoa-200: #e9ccbb;
-  --cocoa-300: #d4aa94;
-  --cocoa-400: #ba886f;
-  --cocoa-500: #a16a50;
-  --cocoa-600: #83513a;
-  --cocoa-700: #653b29;
-  --cocoa-800: #49291b;
-  --cocoa-900: #341c12;
-  --cocoa-950: #1b0b06;
+  --neutral-950: #0c0906;
+  --cocoa-50: #ece3df;
+  --cocoa-100: #dac7be;
+  --cocoa-200: #c8a593;
+  --cocoa-300: #b7856c;
+  --cocoa-400: #a3694d;
+  --cocoa-500: #86553c;
+  --cocoa-600: #6b422e;
+  --cocoa-700: #503021;
+  --cocoa-800: #362116;
+  --cocoa-900: #20140e;
+  --cocoa-950: #0e0906;
+  --neutral-alpha-6: rgb(35 31 32 / 0.06);
+  --neutral-alpha-8: rgb(35 31 32 / 0.08);
   --neutral-alpha-12: rgb(35 31 32 / 0.12);
+  --neutral-alpha-14: rgb(35 31 32 / 0.14);
+  --neutral-alpha-15: rgb(35 31 32 / 0.15);
+  --neutral-alpha-28: rgb(35 31 32 / 0.28);
+  --neutral-alpha-60: rgb(35 31 32 / 0.60);
+  --neutral-alpha-70: rgb(35 31 32 / 0.70);
+  --neutral-alpha-78: rgb(35 31 32 / 0.78);
+  --white-alpha-7: rgb(255 255 255 / 0.07);
+  --white-alpha-10: rgb(255 255 255 / 0.10);
   --white-alpha-12: rgb(255 255 255 / 0.12);
+  --white-alpha-14: rgb(255 255 255 / 0.14);
+  --white-alpha-20: rgb(255 255 255 / 0.20);
+  --white-alpha-70: rgb(255 255 255 / 0.70);
+  --white-alpha-80: rgb(255 255 255 / 0.80);
+  --white-alpha-85: rgb(255 255 255 / 0.85);
+  --white-alpha-90: rgb(255 255 255 / 0.90);
+  --white-alpha-92: rgb(255 255 255 / 0.92);
+  --paper-alpha-12: rgb(247 245 240 / 0.12);
+  --paper-alpha-45: rgb(247 245 240 / 0.45);
+  --paper-alpha-60: rgb(247 245 240 / 0.60);
+  --paper-alpha-65: rgb(247 245 240 / 0.65);
+  --paper-alpha-80: rgb(247 245 240 / 0.80);
+  --cocoa-400-alpha-25: rgb(163 105 77 / 0.25);
+  --cocoa-300-alpha-50: rgb(183 133 108 / 0.50);
+  --cocoa-950-alpha-25: rgb(14 9 6 / 0.25);
+  --neutral-500-alpha-35: rgb(134 127 120 / 0.35);
+  --neutral-700-alpha-28: rgb(85 78 74 / 0.28);
+  --green-alpha-45: rgb(52 224 122 / 0.45);
 
-  /* 2.1 main colors (aliases of the scale) */
-  --paper: var(--neutral-50); /* bg-neutral-weak: light background */
-  --sand: var(--neutral-100); /* bg-neutral-soft: second light background, tiles, cards, chips */
-  --ink: var(--neutral-900); /* text-strong / btn-primary: text + primary button on light */
-  --night: var(--cocoa-950); /* bg-cocoa-strong: dark background */
-  --cocoa: var(--cocoa-900); /* bg-cocoa-surface: panels and cards that already exist on Night/Dusk (D-135) */
-  --ochre: var(--ochre-600); /* the only accent, for non-text only since D-156 (progress, dots, glow, focus ring, borders). Never text, never a full background, never the primary button */
-  --white: var(--neutral-0);
-
-  /* 2.2 derivatives */
-  --stone: var(--neutral-600); /* text-surface: secondary text, captions (solid) */
-  --line: var(--neutral-alpha-12); /* stroke-surface: dividers, card borders */
-  --stone-on-night: color-mix(in srgb, var(--paper) 65%, transparent); /* Paper 65% on Night: secondary text (7.71:1, D-135) */
-  --line-on-night: color-mix(in srgb, var(--paper) 12%, transparent);
-  --ochre-on-cocoa: var(--ochre-400); /* kept in the palette; no text uses it since D-156 (text is neutral) */
+  /* 🎨 Token Color (web = Light Mode); CSS name = variable name */
+  --bg-neutral-weak: var(--neutral-50); /* Paper */
+  --bg-neutral-soft: var(--neutral-100); /* Sand */
+  --bg-white: var(--neutral-0);
+  --bg-black: var(--neutral-900);
+  --bg-night-strong: var(--neutral-950); /* Night: the dark sections' ground */
+  --bg-night-surface: var(--neutral-900);
+  --bg-cocoa-surface: var(--cocoa-600); /* panels and cards on dark */
+  --bg-line: var(--neutral-alpha-12);
+  --stroke-surface: var(--neutral-alpha-12);
+  --stroke-strong: var(--neutral-900);
+  --stroke-white: var(--neutral-0);
+  --text-strong: var(--neutral-900);
+  --text-surface: var(--neutral-600);
+  --text-white: var(--neutral-0);
+  --text-disabled: var(--neutral-300);
+  --text-cocoa-surface: var(--cocoa-600);
+  --text-night-soft: var(--neutral-400); /* secondary text on Night, solid */
+  --btn-primary: var(--neutral-900);
   --btn-primary-hover: var(--neutral-800);
-  /* D-139: the lights of the dark sections (S03–S05, S08, S11) are one colour, --cocoa-300, painted
-     with dither by scripts/glow.ts (no CSS gradients: they band on Night). S05 "Dusk" = Night with
-     that light from the lower left (the old Ochre → Night gradient is gone). */
-  --glow-blur: 60px;
+  --btn-neutral: var(--neutral-50);
+  --btn-neutral-hover: var(--neutral-100);
+  --btn-white: var(--neutral-0);
+  --btn-disabled: var(--neutral-200);
+  --icon-strong: var(--neutral-900);
+  --icon-surface: var(--neutral-600);
+  --icon-disabled: var(--neutral-300);
+  --icon-white: var(--neutral-0);
+  --logo-primary: var(--neutral-900);
+  /* product LED colours (Accent) — ring render + small legend/chip dots only. Never text,
+     background, buttons or UI charts. */
+  --sensor-heart-rate: #34e07a; /* green · day */
+  --sensor-sleep: #3b8cff; /* blue · night */
+  --sensor-recovery: #a06bff; /* violet · morning · HRV */
+  --sensor-off: #ff3b30; /* red · ring off */
 
-  /* 2.3 product LED colours (Accent / sensor-*) — ring render + small legend/chip dots only.
-     Never text, background, buttons or UI charts. */
-  --led-heart-rate: #34e07a; /* green · day · heart rate */
-  --led-sleep: #3b8cff; /* blue · night · sleep */
-  --led-recovery: #a06bff; /* violet · morning · recovery / HRV */
-  --led-off: #ff3b30; /* red · ring off (one line of copy) */
+  /* short names the components use */
+  --paper: var(--bg-neutral-weak);
+  --sand: var(--bg-neutral-soft);
+  --ink: var(--text-strong);
+  --night: var(--bg-night-strong);
+  --cocoa: var(--bg-cocoa-surface);
+  --white: var(--neutral-0);
+  --stone: var(--text-surface);
+  --line: var(--stroke-surface);
+  --stone-on-night: var(--text-night-soft);
+  --line-on-night: var(--paper-alpha-12);
+  --led-heart-rate: var(--sensor-heart-rate);
+  --led-sleep: var(--sensor-sleep);
+  --led-recovery: var(--sensor-recovery);
+  --led-off: var(--sensor-off);
+  /* focus ring: text-strong on light, white on dark (the dark surfaces override it, global.css) */
+  --focus: var(--stroke-strong);
+  /* D-139: the lights of the dark sections (S03–S05, S08, S11) are one colour, --cocoa-300, painted
+     with dither by scripts/glow.ts (no CSS gradients: they band on Night). */
+  --glow-blur: 60px;
 
   /* non-UI colours kept as they were: photo tint, V1 resting dot (D-092), product finishes (D-100) */
   --photo-dim: #2a1f14; /* S01 photo dim layer */
@@ -89,8 +138,8 @@
   --shine-cream: #e9dcc8;
   --shine-amber: #f4c98e;
 
-  /* 3 typography: Geist only (D-156: Geist Mono is no longer used) */
-  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* 3 typography: Hanken Grotesk for every text style (QA G-09, D-169; replaces Geist) */
+  --font-sans: 'Hanken Grotesk Variable', 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   /* weights per text style group (D-134): Display/Heading Medium, Paragraph Regular, Label/Buttons
      Medium. No Light/thin weights. (The Mono group is gone, D-156.) */
   --w-display: 500;
@@ -161,14 +210,47 @@
   --t-btn-sm-size: 15px;
   --t-btn-sm-lh: 22px;
   --t-btn-sm-ls: -0.15px;
+  /* Mono group (QA G-09): same family as the rest (Hanken Grotesk), wide tracking, for the small
+     capitals labels that matched no style before */
+  --t-mono-lg-size: 16px;
+  --t-mono-lg-lh: 22px;
+  --t-mono-lg-ls: 1.28px;
+  --t-mono-md-size: 13px;
+  --t-mono-md-lh: 20px;
+  --t-mono-md-ls: 1.04px;
+  --t-mono-sm-size: 13px;
+  --t-mono-sm-lh: 20px;
+  --t-mono-sm-ls: 1.04px;
+  --t-mono-xs-size: 11px;
+  --t-mono-xs-lh: 16px;
+  --t-mono-xs-ls: 0.88px;
 
   /* legacy sizes, only for texts that match no text style (reported) or for layout maths */
   --fs-giant: clamp(7rem, 24vw, 23rem); /* S02 back word "rhythm" */
   --fs-number: clamp(3.5rem, 2.2rem + 5.4vw, 7rem); /* layout only: S03 number slot height */
 
-  /* layout (HANDOFF-v2 §1.3 [U]) */
+  /* layout grid (QA G-10, D-169): at 1440 × 900, 12 columns of 84 px, margin 40, gutter 32;
+     content top at y 144, bottom row on y 860. Spacing in multiples of 4/8 (--space-*).
+     Mobile and short viewports scale down (see the media query below). */
   --margin: clamp(16px, 2.8vw, 40px);
-  --gutter: clamp(12px, 1.4vw, 20px);
+  --gutter: clamp(16px, 2.2223vw, 32px);
+  --columns: 12;
+  --col: calc((100vw - 2 * var(--margin) - 11 * var(--gutter)) / 12);
+  --grid: repeat(12, minmax(0, 1fr));
+  /* 144 at 900 tall (76 navbar + 68); less on short screens so nothing is cut */
+  --content-top: calc(var(--header-h) + clamp(24px, calc(7.5556 * var(--svh)), 68px));
+  /* bottom row: 40 px from the bottom (y 860 of 900) */
+  --content-bottom: clamp(24px, calc(4.4445 * var(--svh)), 40px);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 40px;
+  --space-8: 48px;
+  --space-9: 64px;
+  --space-10: 96px;
   --header-h: 76px; /* V1 navbar (D-075): 52 px bar + 12 px inset */
   --radius-s: 8px;
   --radius-m: 16px;
@@ -182,5 +264,19 @@
 @media (max-width: 760px) {
   :root {
     --header-h: 60px;
+  }
+}
+@media (max-width: 719px) {
+  :root {
+    /* D-192: the room between the navbar and the content at the top of a section, on phones only */
+    --nav-clearance-mobile: var(--space-6);
+    --content-top: calc(var(--header-h) + var(--nav-clearance-mobile));
+    --content-bottom: var(--space-5);
+  }
+}
+/* short phones keep the earlier, tighter clearance: their copy has to clear the ring and the photos */
+@media (max-width: 719px) and (max-height: 660px) {
+  :root {
+    --nav-clearance-mobile: var(--space-4);
   }
 }

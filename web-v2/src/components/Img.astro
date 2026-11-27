@@ -1,5 +1,5 @@
 ---
-import { Picture } from 'astro:assets';
+import { Picture, getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 
 interface Props {
@@ -10,16 +10,34 @@ interface Props {
   eager?: boolean;
   /** eager load without high priority (stage images that must be ready when scrolled to) */
   ready?: boolean;
+  /** QA27 G-19: not fetched at page load. The stage is fixed, so loading="lazy" would fetch every
+   *  picture at once; story.ts (scripts/lazy.ts) turns data-srcset / data-src into the real attributes
+   *  two sections before the picture's own section, and decodes it one section before. */
+  defer?: boolean;
   fallbackFormat?: 'jpg' | 'png';
   class?: string;
   [key: string]: unknown;
 }
-const { src, alt, sizes, widths, eager = false, ready = false, fallbackFormat = 'jpg', class: className, ...rest } = Astro.props;
+const { src, alt, sizes, widths, eager = false, ready = false, defer = false, fallbackFormat = 'jpg', class: className, ...rest } = Astro.props;
 const w = (widths ?? [480, 768, 1080, 1440, 1920]).filter((n) => n <= src.width).concat(
   widths ? [] : [src.width],
 );
 const uniq = [...new Set(w)].sort((a, b) => a - b);
+// the same files and markup as <Picture>, with the URLs held back in data-*
+const set = (format: string) => getImage({ src, widths: uniq, format, quality: 78 });
+const held = defer ? { sources: await Promise.all(['avif', 'webp'].map(async (f) => ({ type: `image/${f}`, img: await set(f) }))), fallback: await set(fallbackFormat) } : null;
 ---
+
+{
+  held && (
+    <picture {...rest}>
+      {held.sources.map((s) => <source data-srcset={s.img.srcSet.attribute} type={s.type} sizes={sizes} />)}
+      <img data-src={held.fallback.src} data-srcset={held.fallback.srcSet.attribute} alt={alt} sizes={sizes} loading="eager" decoding="async" width={src.width} height={src.height} class={className} {...rest} />
+    </picture>
+  )
+}
+{
+  !held && (
 
 <Picture
   src={src}
@@ -35,3 +53,5 @@ const uniq = [...new Set(w)].sort((a, b) => a - b);
   class={className}
   {...rest}
 />
+  )
+}

@@ -5,7 +5,7 @@
  *  - State 1 "Inside the ring." — the ring floats in the middle, window A a faint green hint.
  *  - State 2 "One light, tuned to the task." — the camera close to the window (big ring right,
  *    three-quarter), green = Heart rate; a 3-colour legend (labels, not buttons).
- * D-156: all text neutral and in Geist (no ochre, no Geist Mono, no [ ] on the kicker).
+ * D-156: all text neutral and in Hanken Grotesk (no ochre, no Geist Mono, no [ ] on the kicker).
  *  - State 3 "Blue at night. Violet by morning." — same place, blue (±75 %) then violet (100 %);
  *    one small line "Red means it's off."
  *  - State 4 "Red means it's off." — the small red light in the lower window (off / battery empty);
@@ -32,7 +32,7 @@ const stills = [
   <div class="scene__back">
     <canvas class="ft__light" data-f-light data-a aria-hidden="true"></canvas>
   </div>
-  {stills.map((s) => <img class="ring-fallback ft__fb" src={s.src} alt="" width="1024" height="1024" data-ring-fallback data-fb-range={s.range} data-a loading="lazy" decoding="async" />)}
+  {stills.map((s) => <img class="ring-fallback ft__fb" data-src={s.src} alt="" width="1024" height="1024" data-ring-fallback data-fb-range={s.range} data-a loading="lazy" decoding="async" />)}
   <div class="scene__front">
     <p class="sr-only">{d.alt}</p>
     <div class="ft__col" data-f-col>
@@ -44,7 +44,7 @@ const stills = [
           {
             d.heads.map((h, i) => (
               <span class="ft__head" data-f-head={i} data-a>
-                {h}
+                {h}{' '}
               </span>
             ))
           }
@@ -97,7 +97,7 @@ const stills = [
     position: absolute;
     left: var(--margin);
     top: var(--header-h);
-    bottom: 40px;
+    bottom: var(--content-bottom);
     width: min(520px, calc(100vw - 2 * var(--margin)));
     display: flex;
     flex-direction: column;
@@ -218,22 +218,24 @@ const stills = [
   @media (max-width: 719px) {
     .ft__fb {
       left: 72%;
-      top: 52%;
-      width: 132vw;
+      top: 70%;
+      width: 116vw;
     }
     /* phones (Figma pattern): title on top, legend + note at the bottom, the ring between */
     .ft__col {
-      top: calc(var(--header-h) + 16px);
-      bottom: 24px;
+      top: var(--content-top);
+      bottom: auto;
       right: var(--margin);
       width: auto;
-      justify-content: space-between;
+      /* QA M-04: the legend sits above the ring, so all of it is always on screen */
+      justify-content: flex-start;
+      gap: 20px;
     }
     .ft__top {
-      gap: 10px;
+      gap: var(--space-2);
     }
     .ft__bottom {
-      gap: 14px;
+      gap: var(--space-4);
     }
     .ft__legend {
       gap: 8px;

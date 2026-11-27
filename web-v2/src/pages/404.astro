@@ -1,0 +1,40 @@
+---
+/**
+ * QA HE-07: the 404 page in the Stillway look — Night, the wordmark, one button back to the start.
+ * Static (dist/404.html); the host serves it for any unknown path.
+ */
+import Base from '../layouts/Base.astro';
+import Logo from '../components/Logo.astro';
+import Button from '../components/Button.astro';
+---
+
+<Base title="Page not found — Stillway">
+  <main id="main" class="nf">
+    <p class="nf__logo"><Logo /></p>
+    <h1 class="nf__title">This page is not here.</h1>
+    <Button href="/" label="Back to the start" variant="paper" />
+  </main>
+</Base>
+
+<style>
+  .nf {
+    min-height: 100svh;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 28px;
+    padding: var(--margin);
+    background: var(--night);
+    color: var(--paper);
+    text-align: center;
+  }
+  .nf__logo {
+    font-size: var(--t-heading-2-size);
+  }
+  .nf__title {
+    font-weight: var(--w-heading);
+    font-size: var(--t-heading-1-size);
+    line-height: var(--t-heading-1-lh);
+    letter-spacing: var(--t-heading-1-ls);
+  }
+</style>

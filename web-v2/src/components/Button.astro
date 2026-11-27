@@ -1,21 +1,32 @@
 ---
-/** One button style for the whole page (after ayocin.com): label + round arrow; on hover the circle fills the button. */
+/**
+ * One pill button for the whole page, hover after ayocin.com (QA27 HE-09b, D-190): at rest the pill
+ * has a contrasting circle on the right; on hover or focus that circle widens into a fill that stays
+ * 2 px inside the pill, so the resting colour remains as a rim. `.btn__fill` is that fill: a second
+ * copy of the label (other colour) and the one arrow, clipped to the circle, so every part of the
+ * label is always in the colour that reads on what is behind it (nav.css). `variant` names the pill
+ * at rest: 'ink' (dark, on light grounds) or 'paper' (light, on dark grounds); the navbar button
+ * follows the header theme. Without `href` it is a <button>. Change the text in `[data-btn-text]`.
+ */
 interface Props {
   [key: string]: unknown;
-  href: string;
+  href?: string;
   label: string;
   variant?: 'ink' | 'paper';
   class?: string;
   compact?: boolean;
 }
 const { href, label, variant = 'ink', class: className, compact = false, ...rest } = Astro.props;
-const arrow = 'M3 8h9M8.5 4.5 12 8l-3.5 3.5';
+const Tag = href ? 'a' : 'button';
 ---
 
-<a class:list={['btn', `btn--${variant}`, compact && 'btn--compact', className]} href={href} {...rest}>
-  <span class="btn__label">{label}</span>
-  <span class="btn__icon" aria-hidden="true">
-    <svg class="btn__arrow" viewBox="0 0 16 16" width="15" height="15"><path d={arrow} fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
-    <svg class="btn__arrow btn__arrow--next" viewBox="0 0 16 16" width="15" height="15"><path d={arrow} fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+<Tag class:list={['btn', `btn--${variant}`, compact && 'btn--compact', className]} href={href} type={href ? undefined : 'button'} {...rest}>
+  <span class="btn__label" data-btn-text>{label}</span>
+  <span class="btn__slot" aria-hidden="true"></span>
+  <span class="btn__fill" aria-hidden="true">
+    <span class="btn__label" data-btn-text>{label}</span>
+    <span class="btn__icon">
+      <svg viewBox="0 0 16 16" width="15" height="15"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+    </span>
   </span>
-</a>
+</Tag>

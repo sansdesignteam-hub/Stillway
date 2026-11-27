@@ -6,7 +6,7 @@
 .site-header {
   --header-ink: var(--ink);
   --bar-bg: color-mix(in srgb, var(--white) 55%, transparent);
-  --bar-rule: color-mix(in srgb, var(--ink) 12%, transparent);
+  --bar-active: color-mix(in srgb, var(--ink) 9%, transparent);
   position: fixed;
   inset: 12px 0 auto 0;
   z-index: 50;
@@ -17,13 +17,13 @@
 .site-header[data-theme='dark'] {
   --header-ink: var(--paper);
   --bar-bg: color-mix(in srgb, var(--white) 8%, transparent);
-  --bar-rule: color-mix(in srgb, var(--white) 14%, transparent);
+  --bar-active: color-mix(in srgb, var(--white) 14%, transparent);
 }
 .site-header[data-theme='photo'] {
   /* over the S01 photograph (V1 'photo' theme) */
   --header-ink: var(--white);
   --bar-bg: color-mix(in srgb, var(--white) 14%, transparent);
-  --bar-rule: color-mix(in srgb, var(--white) 25%, transparent);
+  --bar-active: color-mix(in srgb, var(--white) 22%, transparent);
 }
 .site-header__inner {
   padding-inline: var(--margin);
@@ -37,8 +37,14 @@
 }
 .wordmark {
   margin-right: clamp(8px, 2vw, 32px);
-  font-size: var(--t-label-lg-size); /* Label/Large size; the logo keeps its own tracking (D-083) */
   text-decoration: none;
+}
+/* D-183: lockup 03A, as tall as the text logo it replaces; follows --header-ink through currentColor */
+.wordmark__lockup,
+.wordmark__lockup svg {
+  display: block;
+  height: var(--t-label-lg-size);
+  width: auto;
 }
 .nav-home,
 .nav-bar,
@@ -94,15 +100,25 @@
   line-height: var(--t-label-sm-lh);
   letter-spacing: var(--t-label-sm-ls);
 }
-.site-nav li + li {
-  border-left: 1px solid var(--bar-rule);
+/* QA HR-01: no dividers, spacing only */
+.site-nav ul {
+  gap: 4px;
 }
 .site-nav a {
   display: block;
   padding: 10px 22px;
   text-decoration: none;
   border-radius: 999px;
-  transition: opacity 0.3s;
+  transition: opacity 0.3s, background-color 0.3s;
+}
+/* QA HE-01: the chapter on screen (aria-current set by story.ts) */
+.site-nav a[aria-current] {
+  background: var(--bar-active);
+}
+.menu__list a[aria-current] {
+  text-decoration: underline;
+  text-underline-offset: 8px;
+  text-decoration-thickness: 2px;
 }
 .site-nav a:hover {
   opacity: 0.6;
@@ -116,7 +132,7 @@
   display: flex;
   align-items: baseline;
   gap: 8px;
-  /* Label/Small in capitals (navbar clock; D-156: Geist, no mono) */
+  /* Label/Small in capitals (navbar clock; D-156: Hanken Grotesk, no mono) */
   font-weight: var(--w-label);
   font-size: var(--t-label-sm-size);
   line-height: var(--t-label-sm-lh);
@@ -141,116 +157,104 @@
 .site-header[data-theme='photo'] .clock__part {
   opacity: 0.85;
 }
+/* ---------- button (after ayocin.com) ----------
+   QA27 HE-09b (D-190): --btn-bg is the pill at rest, --btn-dot the contrasting colour. .btn__fill is
+   --btn-dot, 2 px inside the pill and clipped to a circle on the right; on hover or focus the clip
+   opens to the whole pill and --btn-bg stays as a 2 px rim. Light grounds: dark pill, light circle;
+   dark grounds: light pill, dark circle. The label is not cross-faded: the copy inside the fill is
+   in --btn-bg, so the two colours always meet exactly at the fill's edge. */
+.btn,
+.btn--ink,
+.site-header .nav-cta {
+  --btn-bg: var(--ink);
+  --btn-dot: var(--paper);
+}
+.btn--paper,
 .site-header[data-theme='dark'] .nav-cta,
 .site-header[data-theme='photo'] .nav-cta {
   --btn-bg: var(--paper);
-  --btn-ink: var(--ink);
   --btn-dot: var(--ink);
-  --btn-dot-ink: var(--paper);
 }
-
-/* ---------- button (after ayocin.com, V1) ---------- */
 .btn {
-  --btn-bg: var(--ink);
-  --btn-ink: var(--paper);
-  --btn-dot: var(--paper);
-  --btn-dot-ink: var(--ink);
+  --h: 52px;
+  --rim: 2px;
+  --dot: calc(var(--h) - 2 * var(--rim));
+  --pad: 24px;
+  --gap: 18px;
+  --fill: 0.9s cubic-bezier(0.77, 0, 0.18, 1);
+  /* theme change of the navbar button */
+  --tint: 0.5s var(--ease-out);
   position: relative;
   isolation: isolate;
-  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  min-height: 52px;
-  padding: 5px 5px 5px 24px;
+  gap: var(--gap);
+  height: var(--h);
+  padding: 0 var(--rim) 0 var(--pad);
+  border: 0;
   border-radius: 999px;
   background: var(--btn-bg);
-  color: var(--btn-ink);
+  color: var(--btn-dot);
   /* Buttons/Medium */
   font: var(--w-label) var(--t-btn-md-size) / var(--t-btn-md-lh) var(--font-sans);
   letter-spacing: var(--t-btn-md-ls);
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
   pointer-events: auto;
-  transition: transform 0.4s var(--ease-out), background-color 0.5s var(--ease-out), color 0.5s var(--ease-out);
+  transition: transform 0.4s var(--ease-out), background-color var(--tint), color var(--tint);
 }
-.btn::before {
-  content: '';
+.btn__slot,
+.btn__icon {
+  flex: none;
+  width: var(--dot);
+  height: var(--dot);
+}
+/* same box and same flex layout as the pill, so the copy of the label sits exactly on the label */
+.btn__fill {
   position: absolute;
-  z-index: -1;
-  right: 5px;
-  top: 50%;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  padding: 0 var(--rim) 0 var(--pad);
+  border-radius: inherit;
   background: var(--btn-dot);
-  transform: translateY(-50%) scale(1);
-  transition: transform 0.7s cubic-bezier(0.7, 0, 0.2, 1);
-}
-.btn__label {
-  transition: color 0.45s cubic-bezier(0.7, 0, 0.2, 1);
+  color: var(--btn-bg);
+  clip-path: inset(var(--rim) var(--rim) var(--rim) calc(100% - var(--rim) - var(--dot)) round 999px);
+  transition: clip-path var(--fill), background-color var(--tint), color var(--tint);
 }
 .btn__icon {
-  position: relative;
-  flex: none;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  color: var(--btn-dot-ink);
-  overflow: hidden;
+  display: grid;
+  place-items: center;
 }
-.btn__arrow {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  margin: -7.5px 0 0 -7.5px;
-  transition: transform 0.55s cubic-bezier(0.7, 0, 0.2, 1);
-}
-.btn__arrow--next {
-  transform: translateX(-30px);
-}
-.btn:hover::before,
-.btn:focus-visible::before {
-  transform: translateY(-50%) scale(9);
-}
-.btn:hover .btn__label,
-.btn:focus-visible .btn__label {
-  color: var(--btn-dot-ink);
-}
-.btn:hover .btn__arrow,
-.btn:focus-visible .btn__arrow {
-  transform: translateX(30px);
-}
-.btn:hover .btn__arrow--next,
-.btn:focus-visible .btn__arrow--next {
-  transform: translateX(0);
+.btn:hover .btn__fill,
+.btn:focus-visible .btn__fill {
+  clip-path: inset(var(--rim) var(--rim) var(--rim) var(--rim) round 999px);
 }
 .btn:active {
   transform: scale(0.97);
 }
-.btn--paper {
-  --btn-bg: var(--paper);
-  --btn-ink: var(--ink);
-  --btn-dot: var(--ink);
-  --btn-dot-ink: var(--paper);
-}
 .btn--compact {
-  min-height: 44px;
-  gap: 14px;
-  padding: 4px 4px 4px 18px;
+  --h: 44px;
+  --pad: 18px;
+  --gap: 14px;
   /* Buttons/Small */
   font-size: var(--t-btn-sm-size);
   line-height: var(--t-btn-sm-lh);
   letter-spacing: var(--t-btn-sm-ls);
 }
-.btn--compact::before,
-.btn--compact .btn__icon {
-  width: 36px;
-  height: 36px;
+html.reduced .btn,
+html.reduced .btn__fill {
+  transition: none;
 }
-.btn--compact::before {
-  right: 4px;
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .btn__fill {
+    transition: none;
+  }
 }
 
 /* ---------- tablet / phone ---------- */
@@ -267,8 +271,10 @@
   .nav-cta .btn__label {
     display: none;
   }
+  /* arrow only: the pill is the circle */
   .nav-cta {
-    padding: 4px;
+    --pad: 2px;
+    --gap: 0px;
   }
   .nav-home {
     display: none;

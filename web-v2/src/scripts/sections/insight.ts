@@ -11,6 +11,7 @@
  *  3 state 4  the glass card fully legible + the small paragraph under it; ring still
  *  > 3.6      to S06: the card fades (0–30%), the camera backs out, Dusk → Paper
  */
+import { view } from '../viewport';
 import { put, seg, lerp, type Ctx } from '../anim';
 import { along, pose, ANGLE, type Pose } from '../ring/poses';
 import { keepLit, LIGHT } from '../glow';
@@ -32,7 +33,7 @@ function step(it: HTMLElement | null | undefined, t: number, rise = 10) {
 }
 const END = 3.6;
 // D-090 r1: the ring must read neutral silver (not copper) — neutral paper-polished env, no Dusk
-// env, plus one weak ochre rim from the glow side (lower left)
+// env, plus one weak warm rim from the glow side (lower left)
 const DUSK = { dusk: 0, light: 0, rim: 0, warm: 1 };
 
 export const insightStart = (ctx: Ctx): Pose =>
@@ -52,7 +53,7 @@ export const insight: SectionMotion = {
     if (glow) keepLit(glow, () => ({ ellipses: [{ token: LIGHT, cx: 820, cy: 580, rx: 560, ry: 410, stops: [[0, 0.42]], power: 4 }], blur: 40 }));
   },
   update(u, ctx) {
-    const H = window.innerHeight;
+    const H = view.h;
     const out = 1 - seg(u, END, END + 0.3);
     // text (D-143): one fixed box, three lines, never reflowed. State 1 shows "Everything it /
     // noticed."; in State 2 the block moves down to the edge and dims (transform + opacity on the
@@ -60,8 +61,9 @@ export const insight: SectionMotion = {
     const t2 = seg(u, 0.25, 1);
     const textIn = seg(u, -0.2, 0.1);
     const down = ctx.mobile ? 0 : (200 / 900) * H; // State 1 sits 250 px up, State 2 50 px (at 900)
-    put(el.text, { o: textIn * (1 - seg(u, 1.3, 1.75)), y: -down * (1 - t2) }, ctx);
-    if (el.head) el.head.style.opacity = lerp(1, 0.5, t2).toFixed(3);
+    // QA I-02: never dimmed over the ring — full strength beside it in State 2, and fully gone before
+    // the camera goes into the opening
+    put(el.text, { o: textIn * (1 - seg(u, 1.05, 1.4)), y: -down * (1 - t2) }, ctx);
     words.forEach((w, i) => step(w, ctx.reduced ? (u >= 0.7 ? 1 : 0) : seg(u, 0.45 + i * 0.12, 0.8 + i * 0.12), 12));
 
     // the glass card (D-143), tied to the scroll, done at State 4 (u = 3): it rises, fades in and
@@ -73,14 +75,15 @@ export const insight: SectionMotion = {
     const cardIn = R ? (u >= 1.5 ? 1 : 0) : seg(u, 1.5, 2.4);
     put(el.group, { o: cardIn * out, y: 28 * (1 - seg(u, 1.5, 2.5)), s: 0.96 + 0.04 * seg(u, 1.5, 2.6) }, ctx);
     if (el.inner) {
-      const b = R ? 0 : 8 * (1 - seg(u, 1.6, 2.4));
+      const b = R || ctx.mobile ? 0 : 8 * (1 - seg(u, 1.6, 2.4));
       const f = b > 0.05 ? `blur(${b.toFixed(2)}px)` : '';
       if (el.inner.style.filter !== f) el.inner.style.filter = f;
     }
-    const at = (a: number, len = 0.3) => (R ? (u >= a ? 1 : 0) : seg(u, a, a + len));
+    // QA M-09: phones — the content comes with the card, never an empty card
+    const at = (a: number, len = 0.3) => (R ? (u >= (ctx.mobile ? 1.5 : a) ? 1 : 0) : ctx.mobile ? cardIn : seg(u, a, a + len));
     step(stages[0], at(1.85)); // chip + simulated
     step(stages[1], at(1.95)); // 7h 12m
-    const draw = at(2.05, 0.55);
+    const draw = ctx.mobile && !R ? seg(u, 1.7, 2.4) : at(2.05, 0.55);
     if (line) line.style.setProperty('--draw', (1 - draw).toFixed(4));
     if (el.area) {
       const a = at(2.15, 0.55);
@@ -109,7 +112,7 @@ export const insight: SectionMotion = {
     return along(u, [
       [0, start],
       // State 2 (Figma): the ring grows toward the centre (centre ≈ 900 / 450, 1042 wide at 1440)
-      [1, pose({ ...start, x: m ? 0.06 : 0.125, y: m ? 0.08 : 0, w: m ? 1.15 : 0.72, ...ANGLE.threeQuarter, ry: ANGLE.threeQuarter.ry + 0.3, uncap: 1, ...DUSK })],
+      [1, pose({ ...start, x: m ? 0.06 : 0.18, y: m ? 0.08 : 0, w: m ? 1.15 : 0.7, ...ANGLE.threeQuarter, ry: ANGLE.threeQuarter.ry + 0.3, uncap: 1, ...DUSK })],
       [2, inside],
       [3, inside],
     ]);

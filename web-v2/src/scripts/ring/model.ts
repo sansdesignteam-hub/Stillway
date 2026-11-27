@@ -12,6 +12,10 @@ export const RING_MODEL = {
   /** S06 light pine table (D-146; 3D Designer 5f00763, design/3d/v2/HANDOFF-s06-table.md): metres,
    *  origin = top surface, right edge, ring path; loaded lazily after the ring */
   tableUrl: '/models/s06-table.glb',
+  /** S01 desk (D-179; 3D Designer e7337a6, design/3d/v2/HANDOFF-s01-pedestal.md): the oak pedestal
+   *  and its pose JSON (ring rest pose, photo camera, key light, shadow catcher). Keep the names: a
+   *  revised GLB + JSON swap in without code changes */
+  desk: { url: '/models/s01-pedestal.glb', pose: '/models/s01-pedestal-pose.json' },
   dracoPath: '/draco/',
   /** material name patterns in the GLB */
   materials: {
@@ -31,6 +35,6 @@ export const RING_MODEL = {
     paper: '/env/v2-env-paper-polished.exr', // S02 (3D Designer 16cfbaf: made for the polished finish)
     night: '/env/v2-env-night-polished.exr', // S03
     dusk: '/env/v2-env-dusk.exr', // S05 (3D Designer: low ochre sun and glow, dark sky)
-    photo: '/env/hero-env.jpg', // S01 over the moss photograph (V1 approach, D-080)
+    photo: '/env/hero-env-warm.jpg', // S01: the warm desk photo as the env (V1 approach, D-080; D-177)
   },
 } as const;

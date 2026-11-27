@@ -1,0 +1,45 @@
+## 1440 × 900
+names Hero→#top | Why Stillway→#why | Sleep summary→#sleep | Activity & rest→#activity | Daily insight→#insight | Product details→#details | Specs & benefits→#specs | Features→#features | The app→#app | Finishes & pricing→#finishes | Closing, FAQ & footer→#close
+rects 0,318 36x24 ; 0,342 36x24 ; 0,366 36x24
+load idle {"op":"0","pe":"none","current":"Hero","hash":"","hitIsMarker":false}
+after click #9 {"op":"1","pe":"auto","current":"Finishes & pricing","hash":"#finishes","hitIsMarker":true}
+after click #5 {"op":"1","pe":"auto","current":"Product details","hash":"#details","hitIsMarker":true}
+after click #10 {"op":"1","pe":"auto","current":"Closing, FAQ & footer","hash":"#close","hitIsMarker":true}
+after click #0 {"op":"1","pe":"auto","current":"Hero","hash":"","hitIsMarker":true}
+idle 3s {"op":"1","pe":"auto","current":"Hero","hash":"","hitIsMarker":true}
+tab#0 focus Why Stillway
+focused after 3s {"op":"1","pe":"auto","current":"Hero","hash":"","hitIsMarker":true}
+enter {"op":"1","pe":"auto","current":"Why Stillway","hash":"#why","hitIsMarker":true}
+
+## 375 × 812 (touch)
+names Hero→#top | Why Stillway→#why | Sleep summary→#sleep | Activity & rest→#activity | Daily insight→#insight | Product details→#details | Specs & benefits→#specs | Features→#features | The app→#app | Finishes & pricing→#finishes | Closing, FAQ & footer→#close
+rects 0,274 24x24 ; 0,298 24x24 ; 0,322 24x24
+load idle {"op":"0","pe":"none","current":"Hero","hash":"","hitIsMarker":false}
+after click #9 {"op":"1","pe":"auto","current":"Finishes & pricing","hash":"#finishes","hitIsMarker":true}
+after click #5 {"op":"1","pe":"auto","current":"Product details","hash":"#details","hitIsMarker":true}
+after click #10 {"op":"1","pe":"auto","current":"Closing, FAQ & footer","hash":"#close","hitIsMarker":true}
+after click #0 {"op":"1","pe":"auto","current":"Hero","hash":"","hitIsMarker":true}
+S10 head top 72
+idle 3s {"op":"0","pe":"none","current":"Finishes & pricing","hash":"#finishes","hitIsMarker":false}
+tab#0 focus Closing, FAQ & footer
+focused after 3s {"op":"1","pe":"auto","current":"Finishes & pricing","hash":"#finishes","hitIsMarker":true}
+enter {"op":"1","pe":"auto","current":"Closing, FAQ & footer","hash":"#close","hitIsMarker":true}
+
+## reduced motion 1440
+names Hero→#top | Why Stillway→#why | Sleep summary→#sleep | Activity & rest→#activity | Daily insight→#insight | Product details→#details | Specs & benefits→#specs | Features→#features | The app→#app | Finishes & pricing→#finishes | Closing, FAQ & footer→#close
+rects 0,318 36x24 ; 0,342 36x24 ; 0,366 36x24
+load idle {"op":"0","pe":"none","current":"Hero","hash":"","hitIsMarker":false}
+after click #9 {"op":"1","pe":"auto","current":"Finishes & pricing","hash":"#finishes","hitIsMarker":true}
+after click #5 {"op":"1","pe":"auto","current":"Product details","hash":"#details","hitIsMarker":true}
+after click #10 {"op":"1","pe":"auto","current":"Closing, FAQ & footer","hash":"#close","hitIsMarker":true}
+after click #0 {"op":"1","pe":"auto","current":"Hero","hash":"","hitIsMarker":true}
+idle 3s {"op":"1","pe":"auto","current":"Hero","hash":"","hitIsMarker":true}
+tab#0 focus Why Stillway
+focused after 3s {"op":"1","pe":"auto","current":"Hero","hash":"","hitIsMarker":true}
+enter {"op":"1","pe":"auto","current":"Why Stillway","hash":"#why","hitIsMarker":true}
+
+## deep link / Home / Back to top / menu stacking
+deep #app The app #app y=42660
+home link Hero  y=0
+back to top #top Hero  y=0
+menu over indicator menu/other on top: menu__backdrop

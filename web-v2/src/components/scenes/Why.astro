@@ -26,8 +26,9 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
          behind the ring when the page scrolls up to S03 (it never meets the ring on desktop) -->
     <p class="why__small why__end" data-w-end data-a>{last.small}</p>
   </div>
-  <img class="ring-fallback why__fb" src="/ring-fallback/fb-s02-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
+  <img class="ring-fallback why__fb" data-src="/ring-fallback/fb-s02-polished.webp" alt="" width="1024" height="1024" data-ring-fallback data-a loading="lazy" decoding="async" />
   <div class="scene__front">
+    <!-- D-171: no visible label; the heading stays as the section's accessible name -->
     <h2 id="why-title" class="sr-only">{why.label}</h2>
     <p class="why__final" data-w-final data-a>{last.big}</p>
     <div class="why__left">
@@ -67,6 +68,13 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
     place-items: center;
     --giant-o: 0.1;
   }
+  .why__label {
+    position: absolute;
+    left: var(--margin);
+    top: var(--content-top); /* Figma y 144 */
+    margin: 0;
+    color: var(--stone);
+  }
   .why__wide {
     position: absolute;
     left: 0;
@@ -91,7 +99,11 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
   .why__final {
     position: absolute;
     left: var(--margin);
-    top: calc(50% - 12vw * 0.82);
+    bottom: calc(50% + 12vw * 0.58);
+    /* left of the ring (its edge ≈ 32 vw): the line breaks in two rather than run into it */
+    width: calc(30vw - var(--margin));
+    min-width: 15em;
+    text-wrap: balance;
     /* Heading/Heading 2 */
     font-weight: var(--w-heading);
     font-size: var(--t-heading-2-size);
@@ -130,7 +142,7 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
   .why__end {
     position: absolute;
     right: var(--margin);
-    bottom: clamp(32px, 9vh, 96px);
+    bottom: var(--content-bottom);
     width: calc((100vw - 2 * var(--margin)) * 3 / 12);
   }
   /* character reveal (oryzo): each character goes from dim to full with the scroll */
@@ -144,7 +156,7 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
     opacity: var(--o, 0.12);
   }
   .why__fb {
-    --rw: min(36vw, 82vh);
+    --rw: min(36vw, calc(82 * var(--lvh)));
     width: calc(var(--rw) * 1.6);
     max-width: none;
     translate: -50% 0;
@@ -166,8 +178,16 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
       width: 0;
       height: 60vw; /* ring at 52vw wide (≈ 56vw tall at this angle) + air */
     }
+    .why__label {
+      top: var(--content-top);
+    }
     .why__final {
       top: calc(var(--header-h) + 40px);
+      bottom: auto;
+      width: auto;
+      min-width: 0;
+      right: var(--margin);
+      text-wrap: balance;
     }
     .why__left {
       top: calc(var(--header-h) + 40px);
@@ -180,9 +200,16 @@ const split = Math.ceil(wide.length / 2) - 0; // first half moves in from the le
       top: auto;
       translate: none;
       right: var(--margin);
-      bottom: 28px;
+      bottom: var(--content-bottom);
       left: var(--margin);
       width: auto;
+    }
+  }
+  /* QA27 M-14: short phones — the top sentences start higher, clear of "keeps the" and the ring */
+  @media (max-width: 719px) and (max-height: 660px) {
+    .why__left,
+    .why__final {
+      top: calc(var(--header-h) + 16px);
     }
   }
 </style>

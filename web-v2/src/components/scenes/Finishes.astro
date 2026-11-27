@@ -10,6 +10,7 @@
  * Finish changes only by click (D-069). The button shows an inline note (role="status"), no cart
  * (D-074). CTA = btn-primary (Ink), hover btn-primary-hover (D-134). Motion and controls: scripts/sections/finishes.ts.
  */
+import Button from '../Button.astro';
 import { finishes as d } from '../../content/copy';
 ---
 
@@ -17,14 +18,17 @@ import { finishes as d } from '../../content/copy';
   <!-- Lamp light (D-100): Sand dims toward a warm evening tone, a low lamp glow on the lamp side -->
   <div class="scene__back"><div class="fn__dim" aria-hidden="true"></div></div>
   <!-- reduced motion / no WebGL: the polished still of the chosen finish -->
-  <img class="ring-fallback fn__fb" src={d.finishes[0].still} alt="" width="1024" height="1024" data-ring-fallback data-fn-still data-a loading="lazy" decoding="async" />
+  <img class="ring-fallback fn__fb" data-src={d.finishes[0].still} alt="" width="1024" height="1024" data-ring-fallback data-fn-still data-a loading="lazy" decoding="async" />
 
   <div class="scene__front">
+    <!-- QA27 G-19: on phones the column moves inside the front layer, so the navbar mask on the layer
+         stays still (a mask that counter-moved every frame was repainted every frame) -->
+    <div class="fn__col" data-fn-col>
     <h2 id="finishes-title" class="fn__heads">
       {
         d.heads.map((h, i) => (
           <span class="fn__head" data-fn-head={i} data-a>
-            {h}
+            {h}{' '}
           </span>
         ))
       }
@@ -83,21 +87,26 @@ import { finishes as d } from '../../content/copy';
           </div>
         </div>
         <p class="fn__muted fn__box">{d.trial} · {d.box}</p>
-        <button type="button" class="fn__cta" data-fn-cta>{d.button(d.finishes[0].name)}</button>
+        <Button class="fn__cta" label={d.button(d.finishes[0].name)} variant="ink" data-fn-cta />
         <p class="fn__note" data-fn-note role="status" aria-live="polite"></p>
       </div>
     </div>
     <p class="sr-only">{d.alt}</p>
+    </div>
   </div>
 </section>
 
 <style>
+  /* desktop: no box of its own, the layout is the front layer's as before */
+  .fn__col {
+    display: contents;
+  }
   .scene--finishes {
     color: var(--ink);
     --panel: color-mix(in srgb, var(--paper) 60%, transparent);
   }
   .scene--finishes[data-lamp='1'] {
-    --panel: color-mix(in srgb, var(--paper) 86%, var(--ochre) 14%);
+    --panel: color-mix(in srgb, var(--paper) 86%, var(--cocoa-300) 14%);
   }
   .fn__dim {
     position: absolute;
@@ -105,8 +114,8 @@ import { finishes as d } from '../../content/copy';
     opacity: 0;
     transition: opacity 0.6s ease;
     background:
-      radial-gradient(55% 70% at 4% 34%, color-mix(in srgb, var(--ochre) 20%, transparent), transparent 70%),
-      color-mix(in srgb, var(--night) 72%, var(--ochre) 28%);
+      radial-gradient(55% 70% at 4% 34%, color-mix(in srgb, var(--cocoa-300) 32%, transparent), transparent 70%),
+      color-mix(in srgb, var(--night) 72%, var(--cocoa-400) 28%);
   }
   .scene--finishes[data-lamp='1'] .fn__dim {
     opacity: 0.17;
@@ -120,12 +129,12 @@ import { finishes as d } from '../../content/copy';
   }
   .fn__fb {
     left: 32%;
-    width: min(40vw, 70vh);
+    width: min(40vw, calc(70 * var(--lvh)));
   }
   .fn__heads {
     position: absolute;
     left: var(--margin);
-    top: calc(var(--header-h) + 4vh);
+    top: var(--content-top);
     width: min(46rem, 58vw);
     /* Heading/Heading 1 */
     font-weight: var(--w-heading);
@@ -143,9 +152,9 @@ import { finishes as d } from '../../content/copy';
   .fn__drag {
     position: absolute;
     left: 0;
-    top: calc(var(--header-h) + 16vh);
+    top: calc(var(--header-h) + calc(16 * var(--lvh)));
     width: 62vw;
-    bottom: 12vh;
+    bottom: calc(12 * var(--lvh));
     pointer-events: auto;
     touch-action: pan-y;
     cursor: grab;
@@ -156,11 +165,11 @@ import { finishes as d } from '../../content/copy';
   .fn__turn {
     position: absolute;
     left: 32%;
-    bottom: 7vh;
+    bottom: var(--content-bottom);
     translate: -50% 0;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: var(--space-4);
     /* Paragraph/Small */
     font-size: var(--t-para-sm-size);
     line-height: var(--t-para-sm-lh);
@@ -189,10 +198,10 @@ import { finishes as d } from '../../content/copy';
   .fn__panel {
     position: absolute;
     right: var(--margin);
-    top: calc(var(--header-h) + 3vh);
+    top: var(--content-top);
     width: min(30rem, 36vw);
-    max-height: calc(100svh - var(--header-h) - 4vh);
-    padding: 26px 28px 24px;
+    max-height: calc(calc(100 * var(--svh)) - var(--content-top) - var(--content-bottom));
+    padding: var(--space-5) var(--space-6);
     border-radius: var(--radius-m);
     background: var(--panel);
     transition: background 0.6s ease;
@@ -230,7 +239,7 @@ import { finishes as d } from '../../content/copy';
   }
   .fn__group {
     display: grid;
-    gap: 10px;
+    gap: var(--space-2);
   }
   /* Paragraph/Medium; the finish name in it = Label/Medium (same size, Medium weight) */
   .fn__label {
@@ -243,12 +252,12 @@ import { finishes as d } from '../../content/copy';
   }
   .fn__swatches {
     display: flex;
-    gap: 18px;
+    gap: var(--space-4);
   }
   .fn__swatch {
     display: grid;
     justify-items: center;
-    gap: 6px;
+    gap: var(--space-2);
     padding: 0;
     border: 0;
     background: none;
@@ -288,14 +297,14 @@ import { finishes as d } from '../../content/copy';
   }
   .fn__seg {
     display: flex;
-    gap: 6px;
+    gap: var(--space-2);
     padding: 4px;
     border-radius: var(--radius-pill);
     background: color-mix(in srgb, var(--ink) 6%, transparent);
     justify-self: start;
   }
   .fn__seg button {
-    padding: 7px 14px;
+    padding: var(--space-2) var(--space-4);
     border-radius: var(--radius-pill);
     border: 0;
     background: transparent;
@@ -319,7 +328,7 @@ import { finishes as d } from '../../content/copy';
   .fn__sizes {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
-    gap: 6px;
+    gap: var(--space-2);
   }
   .fn__sizes button {
     height: 40px;
@@ -340,27 +349,9 @@ import { finishes as d } from '../../content/copy';
     border-color: var(--ink);
     background: var(--paper);
   }
-  .fn__cta {
+  /* the shared pill (nav.css), across the panel */
+  .fn__panel :global(.fn__cta) {
     width: 100%;
-    height: 52px;
-    border-radius: var(--radius-pill);
-    border: 0;
-    background: var(--ink); /* btn-primary */
-    color: var(--paper);
-    font: inherit;
-    /* Buttons/Medium */
-    font-weight: var(--w-label);
-    font-size: var(--t-btn-md-size);
-    line-height: var(--t-btn-md-lh);
-    letter-spacing: var(--t-btn-md-ls);
-    cursor: pointer;
-    transition: transform 0.15s ease, background 0.2s;
-  }
-  .fn__cta:hover {
-    background: var(--btn-primary-hover);
-  }
-  .fn__cta:active {
-    transform: scale(0.99);
   }
   .fn__note {
     min-height: 1.4em;
@@ -372,7 +363,7 @@ import { finishes as d } from '../../content/copy';
     color: var(--ink);
   }
   .scene--finishes button:focus-visible {
-    outline: 2px solid var(--ochre);
+    outline: 2px solid var(--focus);
     outline-offset: 3px;
   }
   .sr-only {
@@ -382,27 +373,118 @@ import { finishes as d } from '../../content/copy';
     overflow: hidden;
     clip-path: inset(50%);
   }
+  /* QA27 M-15: tablets — the panel and everything in it fit inside the screen, with the same margin
+     right as left; the heading takes the room left of it and the sizes wrap to two rows */
+  @media (min-width: 720px) and (max-width: 1023px) {
+    .fn__panel {
+      width: 42vw;
+      grid-template-columns: minmax(0, 1fr);
+      padding-inline: var(--space-5);
+    }
+    .fn__top {
+      flex-wrap: wrap;
+      column-gap: var(--space-3);
+    }
+    .fn__heads {
+      width: calc(58vw - 3 * var(--margin));
+      text-wrap: balance;
+    }
+    .fn__sizes {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  /* from 900 px the eight sizes fit one row again */
+  @media (min-width: 900px) and (max-width: 1023px) {
+    .fn__sizes {
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: var(--space-1);
+    }
+  }
+  /* short tablet screens: tighter, so the button and its note stay inside the panel */
+  @media (min-width: 720px) and (max-width: 1023px) and (max-height: 760px) {
+    .fn__panel {
+      padding-block: var(--space-4);
+      gap: 10px;
+    }
+    .fn__more {
+      gap: 10px;
+    }
+    .fn__sizes button {
+      height: 32px;
+    }
+    .fn__swatch i {
+      width: 32px;
+      height: 32px;
+    }
+    .fn__panel :global(.fn__cta) {
+      --h: 44px;
+    }
+    /* as on phones: the chosen finish is named above, the swatch names stay for screen readers */
+    .fn__swatch span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    .fn__muted {
+      font-size: var(--t-para-sm-size);
+      line-height: var(--t-para-sm-lh);
+    }
+    .fn__note:empty {
+      min-height: 0;
+    }
+  }
+  /* D-171: phones — one column in plain scroll flow (title, ring, arrows, panel), as tall as its
+     content; finishes.ts moves it 1:1 with the page and sizes the track to it. No pin, no fade. */
   @media (max-width: 719px) {
+    /* the front layer stays put (it carries the navbar mask, global.css) and covers the large viewport */
+    .scene--finishes .scene__front {
+      bottom: auto;
+      height: calc(100 * var(--lvh));
+      overflow: visible;
+    }
+    .fn__col {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      padding: var(--content-top) var(--space-3) var(--space-5);
+      will-change: transform;
+    }
     .fn__fb {
       left: 50%;
-      top: 34%;
+      top: 0;
+      translate: -50% 0;
       width: 60vw;
     }
     .fn__heads {
-      top: calc(var(--header-h) + 2vh);
+      position: static;
+      margin: 0;
       width: auto;
-      right: var(--margin);
+      padding-inline: calc(var(--margin) - var(--space-3));
+    }
+    .fn__head {
+      position: static;
+    }
+    .fn__head[data-fn-head='0'] {
+      display: none;
     }
     .fn__drag {
-      top: calc(var(--header-h) + 8vh);
-      width: 100vw;
-      bottom: auto;
-      height: 34vh;
+      position: relative;
+      inset: auto;
+      flex: none;
+      width: auto;
+      height: min(calc(42 * var(--lvh)), 320px);
     }
     .fn__turn {
-      left: 50%;
-      bottom: auto;
-      top: calc(var(--header-h) + 40vh);
+      position: static;
+      translate: none;
+      align-self: center;
+      margin-top: calc(-1 * var(--space-2));
     }
     .fn__hint-d {
       display: none;
@@ -415,23 +497,54 @@ import { finishes as d } from '../../content/copy';
       height: 36px;
     }
     .fn__panel {
-      left: 12px;
-      right: 12px;
-      top: auto;
-      bottom: 12px;
+      position: static;
       width: auto;
       max-height: none;
-      padding: 16px 16px 14px;
-      gap: 10px;
+      padding: var(--space-4) var(--space-4) var(--space-3);
+      gap: 8px;
     }
     .fn__more {
-      gap: 10px;
+      gap: 8px;
+    }
+    .fn__group {
+      gap: var(--space-2);
+    }
+    .fn__muted {
+      font-size: var(--t-para-sm-size);
+      line-height: var(--t-para-sm-lh);
+    }
+    .fn__swatches {
+      gap: 16px;
+    }
+    .fn__swatch i {
+      width: 30px;
+      height: 30px;
+    }
+    /* the chosen finish is named above; the swatch names stay for screen readers */
+    .fn__swatch span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    .fn__seg button {
+      padding: var(--space-1) var(--space-3);
+    }
+    .fn__note:empty {
+      min-height: 0;
     }
     .fn__sizes button {
       height: 36px;
     }
-    .fn__cta {
-      height: 46px;
+    .fn__panel :global(.fn__cta) {
+      --h: 46px;
+    }
+  }
+  /* QA27 M-15: large phones / small tablets (the one-column layout) keep a 24 px margin */
+  @media (min-width: 600px) and (max-width: 719px) {
+    .fn__col {
+      padding-inline: var(--space-5);
     }
   }
 </style>
