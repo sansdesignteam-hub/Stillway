@@ -218,8 +218,24 @@ def oak_material():
         L.new(n.outputs["Fac"], mr.inputs[0]); return mr.outputs[0]
     PS = float(os.environ.get("PORE_SCALE", "0.8"))
     dx = math_('MAXIMUM', dashes((520 * PS, 6500 * PS, 6500 * PS), 1.0), math_('MULTIPLY', dashes((300 * PS, 4200 * PS, 4200 * PS), 7.0), 0.7))
-    dy = dashes((6500 * PS, 520 * PS, 6500 * PS), 3.0)
+    # D-186b: the short ends showed an even field of round pores. Two dash sets of different length, thinned by a
+    # low-frequency mask and weaker than on the long faces, so they come in irregular clusters
+    def lowmask(scale, seed, lo, hi):
+        n = N.new("ShaderNodeTexNoise"); n.noise_dimensions = '4D'; n.inputs["W"].default_value = seed
+        n.inputs["Scale"].default_value = scale; n.inputs["Detail"].default_value = 2.0; n.inputs["Roughness"].default_value = 0.55
+        L.new(tc.outputs["Object"], n.inputs["Vector"])
+        mr = N.new("ShaderNodeMapRange"); mr.interpolation_type = 'SMOOTHSTEP'
+        mr.inputs["From Min"].default_value = lo; mr.inputs["From Max"].default_value = hi
+        L.new(n.outputs["Fac"], mr.inputs[0]); return mr.outputs[0]
+    END_PORE = float(os.environ.get("END_PORE", "0.55"))
+    dy = math_('MAXIMUM', dashes((6500 * PS, 520 * PS, 6500 * PS), 3.0), math_('MULTIPLY', dashes((3900 * PS, 260 * PS, 5200 * PS), 9.0), 0.6))
+    dy = math_('MULTIPLY', dy, math_('MULTIPLY', lowmask(float(os.environ.get("PORE_MASK_SCALE", "420")), 11.0, 0.44, 0.62), END_PORE))
+    dx = math_('MULTIPLY', dx, math_('ADD', 0.45, math_('MULTIPLY', lowmask(260.0, 23.0, 0.38, 0.60), 0.55)))
     pore = math_('ADD', math_('MULTIPLY', math_('ADD', ws[0], ws[1]), dx), math_('MULTIPLY', ws[2], dy))
+    # on the rounded plan corners the two side projections cross and the dashes shrink to round dots: fade them out there
+    crn = N.new("ShaderNodeClamp"); crn.inputs["Max"].default_value = 0.9
+    L.new(math_('MULTIPLY', math_('MULTIPLY', ws[1], ws[2]), 6.0), crn.inputs["Value"])
+    pore = math_('MULTIPLY', pore, math_('SUBTRACT', 1.0, crn.outputs[0]))
     pmix = N.new("ShaderNodeMix"); pmix.data_type = 'RGBA'; pmix.blend_type = 'MULTIPLY'
     L.new(math_('MULTIPLY', pore, float(os.environ.get("PORE_DARK", "0.8"))), pmix.inputs["Factor"])
     L.new(col, pmix.inputs["A"]); pmix.inputs["B"].default_value = (0.42, 0.30, 0.20, 1)
@@ -378,17 +394,38 @@ def show(objs, mode):
         o.visible_camera = mode == 'on'
 
 
-def render_pass(name, S, pd, ring, desk, proxy='off', exr=False, silver=False, samples=None, denoise=True, contact=False):
+REFL_ROUGH = float(os.environ.get("REFL_ROUGH", "0.26"))   # D-186b: gloss of the desk varnish for the pedestal's reflection
+REFL_K = float(os.environ.get("REFL_K", "0.25"))           # ... and how much of that mirror image the desk returns
+
+
+def render_pass(name, S, pd, ring, desk, proxy='off', exr=False, silver=False, samples=None, denoise=True, contact=False, reflect=False):
     sc = bpy.context.scene
+    if "refl_mat" not in S:
+        S["desk_mat"] = S["desk"][0].data.materials[0]
+        m = bpy.data.materials.new("Desk_Reflection"); m.use_nodes = True; m.node_tree.nodes.clear()
+        gl = m.node_tree.nodes.new("ShaderNodeBsdfGlossy"); gl.inputs["Roughness"].default_value = REFL_ROUGH
+        out = m.node_tree.nodes.new("ShaderNodeOutputMaterial"); m.node_tree.links.new(gl.outputs[0], out.inputs["Surface"])
+        S["refl_mat"] = m
+        # a rough mirror 0.02 mm above the desk that only the camera sees: the pedestal stays lit as in the plate
+        # (lights, env and the bounce off the diffuse desk underneath), and the mirror shows nothing but its image
+        bpy.ops.mesh.primitive_plane_add(size=1.2, location=(0, 0, 0.00002))
+        mp = bpy.context.active_object; mp.name = "Desk_Mirror"; mp.data.materials.append(m)
+        mp.visible_diffuse = mp.visible_glossy = mp.visible_transmission = mp.visible_shadow = False
+        S["mirror"] = mp
+        S["cool"] = next(n for n in sc.world.node_tree.nodes if n.type == 'BACKGROUND' and n != S["warm"])
+        S["cool_strength"] = S["cool"].inputs["Strength"].default_value
+    S["mirror"].hide_render = not reflect
+    for o in (S["key"], bpy.data.objects["Lamp_Spill"]): o.visible_glossy = not reflect
+    S["cool"].inputs["Strength"].default_value = 0.0 if reflect else S["cool_strength"]      # glossy rays see a black world
     if "contact_mat" not in S: S["contact_mat"] = contact_material()
     bpy.context.view_layer.material_override = S["contact_mat"] if contact else None
     show(S["ped"], pd); show(S["ring"], ring); show(S["desk"], desk); show(S["proxy"], proxy)
-    S["switch"].inputs[1].default_value = 1.0 if silver else 0.0
+    S["switch"].inputs[1].default_value = 1.0 if (silver or reflect) else 0.0
     # ring pass only (D-181d): the ring also blocks the lamp spill, so the wood right under it is in shade and the
     # ring's underside reflects dark, like Figma. The plate and shadow passes keep the ring out of the spill.
     # ... and the desk it mirrors is the dim, desaturated foreground of the photo, not the flat lit desk tone
     dcol = RING_DESK_RGB if silver else DESK_RGB
-    S["desk"][0].data.materials[0].node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (*ped.srgb(dcol), 1)
+    S["desk_mat"].node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (*ped.srgb(dcol), 1)
     for o in S["ped"]: o.visible_glossy = not silver      # the underside mirrors the dim desk, not the lit oak top
     for o in S["ring"]:
         if silver and o.name not in S["spill_blockers"].objects: S["spill_blockers"].objects.link(o)
@@ -424,7 +461,8 @@ def render():
             ("RG", dict(pd='cast', ring='on', desk='cast', silver=True)),
             ("MK", dict(pd='off', ring='off', desk='off', proxy='on', samples=32, denoise=False)),
             ("C1", dict(pd='on', ring='off', desk='cast', exr=True, samples=192, contact=True)),
-            ("C2", dict(pd='on', ring='cast', desk='cast', exr=True, samples=192, contact=True))]
+            ("C2", dict(pd='on', ring='cast', desk='cast', exr=True, samples=192, contact=True)),
+            ("R1", dict(pd='cast', ring='off', desk='cast', exr=True, samples=half, reflect=True))]
     sc = bpy.context.scene
     for sfx, border, lens, shift in (("", BORDER, CAM["lens"], CAM["shift"]), ("m", BORDER_M, MOB_LENS, MOB_SHIFT)):
         S["cam"].data.lens = lens; S["cam"].data.shift_x, S["cam"].data.shift_y = shift
@@ -435,6 +473,7 @@ def render():
     S["cam"].data.lens = CAM["lens"]; S["cam"].data.shift_x, S["cam"].data.shift_y = CAM["shift"]
     sc.render.border_min_x, sc.render.border_max_x, sc.render.border_min_y, sc.render.border_max_y = BORDER
     bpy.context.view_layer.material_override = None
+    if "mirror" in S: S["mirror"].hide_render = True
     for grp in ("ped", "ring", "desk"): show(S[grp], 'on')
     show(S["proxy"], 'off')
     bpy.ops.wm.save_as_mainfile(filepath=V2 + "/s01-plate.blend", compress=True)
@@ -597,6 +636,36 @@ def hstack(*imgs, gap=12):
 
 
 # ---------------------------------------------------------------- composite
+# D-186b. Defocus of the photo, measured on the desk grain (edge width of the grain lines per band, calibrated by blurring
+# the sharpest band, v 0.69-0.76): extra Gaussian sigma 1.5 px at v 0.80 and 2.4 px at v 0.88-0.90 (3840 frame). The
+# pedestal's back stands at the desk depth of v 0.80 and its front at v 0.895, so its layers are blurred by a sigma that
+# runs from DOF[0] at its top row to DOF[1] at its bottom row. The ring is not blurred (it is the live ring's poster).
+DOF = tuple(float(v) for v in os.environ.get("DOF", "1.5,2.4").split(","))
+DOF_V = (0.718, 0.900)
+PED_DESAT = float(os.environ.get("PED_DESAT", "0.25"))   # chroma taken out of the pedestal's darks (front face): photo oak in shade has G/R ~0.5, B/R ~0.2
+
+
+def defocus(arr, sig):
+    """row-variable Gaussian: blend of 4 blur levels, sig = per-row sigma in px"""
+    lo, hi = float(sig.min()), float(sig.max())
+    if hi < 0.05: return arr
+    lv = np.linspace(lo, hi, 4) if hi - lo > 1e-3 else np.array([hi])
+    st = [gauss(arr, max(float(v), 0.05)) for v in lv]
+    if len(st) == 1: return st[0]
+    t = (sig - lo) / (hi - lo) * (len(lv) - 1); i0 = np.clip(np.floor(t).astype(int), 0, len(lv) - 2); f = (t - i0)[:, None, None]
+    out = np.empty_like(arr)
+    for k in range(len(lv) - 1):
+        m = i0 == k
+        if m.any(): out[m] = st[k][m] * (1 - f[m]) + st[k + 1][m] * f[m]
+    return out
+
+
+def ped_grade(img):
+    rgb = img[..., :3]; y = (rgb * np.array([0.2126, 0.7152, 0.0722], np.float32)).sum(-1, keepdims=True)
+    t = np.clip((y - 0.25) / 0.30, 0, 1); w = 1 - t * t * (3 - 2 * t)
+    return np.concatenate([y + (rgb - y) * (1 - PED_DESAT * w), img[..., 3:4]], -1)
+
+
 CONTACT_GAMMA = float(os.environ.get("CONTACT_GAMMA", "2.8"))   # strength of the contact occlusion (display space)
 CONTACT_FLOOR = float(os.environ.get("CONTACT_FLOOR", "0.10"))  # darkest it gets right at the touch line
 def comp():
@@ -613,6 +682,12 @@ def comp():
     def build(sfx, border):
         D0, D1, D2 = (load(f"{PASS}/{n}{sfx}.exr", linear=True)[..., :3] for n in ("D0", "D1", "D2"))
         P1, P2, RG, MK = (load(f"{PASS}/{n}{sfx}.png") for n in ("P1", "P2", "RG", "MK"))
+        vd = yy if not sfx else MOB_O[1] + (yy - MOB_O[1] - MOB_DY) / MOB_K          # the row's v in the desktop frame
+        sig = np.interp(vd, DOF_V, DOF).astype(np.float32) * (Ww / FW) * (MOB_K if sfx else 1.0)
+        def dof(img):
+            pm = defocus(np.concatenate([img[..., :3] * img[..., 3:4], img[..., 3:4]], -1), sig)
+            return np.concatenate([pm[..., :3] / np.maximum(pm[..., 3:4], 1e-4), pm[..., 3:4]], -1)
+        P1, P2 = dof(ped_grade(P1)), dof(ped_grade(P2))
         # feather the desk ratios to exactly 1 at the render border (no seam); a border on the frame edge is not feathered
         fe = 0.035
         fx = ramp((xx - border[0]) / fe) * ramp((border[1] - xx) / fe)
@@ -621,14 +696,17 @@ def comp():
         ok = D0 > 1e-5
         r1 = np.where(ok, D1 / np.maximum(D0, 1e-5), 1.0); r1 = 1 + (np.clip(r1, 0, 1.35) - 1) * feather
         r2 = np.where(ok, D2 / np.maximum(D0, 1e-5), 1.0); r2 = 1 + (np.clip(r2, 0, 1.35) - 1) * feather
-        desk1 = oetf(lin * r1)                       # photo + pedestal contact shadow / AO / bounce
-        desk2 = oetf(lin * r2)                       # ... + ring shadow
+        r1, r2 = defocus(r1, sig), defocus(r2, sig)
+        # faint mirror image of the pedestal in the varnished desk (rough-mirror pass under a black world), added in linear light
+        refl = REFL_K * defocus(np.clip(load(f"{PASS}/R1{sfx}.exr", linear=True)[..., :3], 0, 4) * feather, sig)
+        desk1 = oetf(lin * r1 + refl)                # photo + pedestal contact shadow / AO / bounce + reflection
+        desk2 = oetf(lin * r2 + refl)                # ... + ring shadow
         a = P1[..., 3:4]
         plate = P1[..., :3] * a + desk1 * (1 - a)
         # contact occlusion of the ring on the pedestal (short-range AO with / without the ring), D-181c
         C1, C2 = (load(f"{PASS}/{n}{sfx}.exr", linear=True)[..., :1] for n in ("C1", "C2"))
         contact = np.where(C1 > 1e-3, np.clip(C2 / np.maximum(C1, 1e-3), 0, 1), 1.0) ** CONTACT_GAMMA
-        contact = CONTACT_FLOOR + (1 - CONTACT_FLOOR) * contact
+        contact = defocus(CONTACT_FLOOR + (1 - CONTACT_FLOOR) * contact, sig)
         still_exact = P2[..., :3] * contact * a + desk2 * (1 - a)
         # ring shadow as a straight-alpha layer in display space. Colour = the web desk catcher's warm dark
         # (#2A1608), so shadows stay warm instead of going grey: plate (1 - a) + c a has the luminance of the exact render

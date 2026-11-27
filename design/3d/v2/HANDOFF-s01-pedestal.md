@@ -7,14 +7,27 @@ Status: **draf, menunggu tinjauan pengguna.** Bagian D-181 sampai D-182d di bawa
 
 Sumber: `design/assets/v2/s01/Hero_BG_Stillway_New_3840x2400.avif` (16:10, native).
 
+### D-186b: polish 100% (nama file sama, menggantikan isi `2bcd5bb`)
+
+Semua file `plate/*-3840.*` diganti dengan nama yang sama. Kamera, pose, GLB, lampu, dan grade ring **tidak berubah**; pose JSON tidak perlu dibaca ulang.
+
+1. **Defocus:** lapisan alas (dan bayangan/kontaknya) diberi blur Gaussian yang mengikuti kedalaman foto. Diukur pada serat meja (lebar tepi garis serat per pita, dikalibrasi dengan mem-blur pita tertajam v 0,69–0,76): bidang fokus foto di v ≈ 0,72, tambahan σ 1,5 px pada kedalaman sisi belakang alas dan 2,4 px pada sisi depan (frame 3840; setengahnya pada 1920). Ring tidak di-blur.
+2. **Pori ujung kanan:** dua set guratan dengan panjang berbeda, ditipiskan oleh mask frekuensi rendah, dan dipudarkan di sudut denah yang membulat (di sana guratan menyusut jadi titik-titik rata).
+3. **Saturasi sisi depan:** kroma bagian gelap alas dikurangi 25%. Sisi depan 89/36/2 → 79/39/13 (G/R 0,49; B/R 0,16), setara meja foto di bayangan.
+4. **Pantulan di meja:** pass Cycles baru (cermin kasar, roughness 0,26, hanya terlihat kamera) ditambahkan dalam cahaya linear dengan faktor 0,25 dan ikut di-defocus. Efeknya sengaja samar: meja di depan alas naik ±3% (154/83/32 → 159/86/35), sedikit lebih kuat di samping ujung kanan yang terang. `layer-desk-multiply` tidak memuatnya (lapisan itu dipotong di 1).
+
+- Proxy tetap 0,5 px pada 1920 (bbox 0 px), desktop dan ponsel. Kotak di frame diam web dan luma ring sama dengan D-186.
+- Bukti sebelum/sesudah 100%: `renders/s01-plate/D186b-before-after-right-end-100pct.png`, `-front-reflection-100pct.png`, `-back-edge-100pct.png`, dan `D186b-before-after-still.png`.
+- Catatan jujur: ring poster tetap tajam di atas alas yang sedikit lunak (±1 px pada 1920). Arah bayangan belum diubah (keputusan 22° vs 45° terpisah). Daftar "tanda CG" di bawah berlaku untuk `2bcd5bb`; butir ketajaman, pori, saturasi, dan pantulan sudah ditangani di sini.
+
 ### File (`plate/`, semua 3840×2400; file `-3632` dihapus dari branch)
 
 | File | Ukuran |
 | --- | --- |
-| `plate-s01-3840.png` (desktop) / `plate-s01-mobile-3840.png` | 8,2 MB / 8,2 MB |
-| `still-s01-3840.png` / `still-s01-mobile-3840.png` | 8,2 MB / 8,3 MB |
-| `ring-overlay-s01-3840.webp` (`.png`) | 303 KB (917 KB) |
-| `ring-overlay-s01-mobile-3840.webp` (`.png`) | 157 KB (467 KB) |
+| `plate-s01-3840.png` (desktop) / `plate-s01-mobile-3840.png` | 8,1 MB / 8,2 MB |
+| `still-s01-3840.png` / `still-s01-mobile-3840.png` | 8,1 MB / 8,2 MB |
+| `ring-overlay-s01-3840.webp` (`.png`) | 230 KB (776 KB) |
+| `ring-overlay-s01-mobile-3840.webp` (`.png`) | 126 KB (408 KB) |
 | `layer-pedestal-rgba-3840.png`, `layer-desk-multiply-3840.png` (+ `-mobile-`) | 0,3–0,5 MB |
 
 `s01-pedestal.glb` **tidak berubah** (77 KB). `s01-pedestal-pose.json` diperbarui. Identitas `still = plate + ring-overlay` tetap.
