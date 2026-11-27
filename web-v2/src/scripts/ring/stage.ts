@@ -1533,9 +1533,11 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       if (!gl.fenceSync) return ok();
       const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
       gl.flush();
-      let n = 0;
+      // never longer than a second: a window that is covered or in the background draws no frames,
+      // and its GPU work may not move on until it is seen again
+      const t0 = performance.now();
       const poll = () => {
-        if (sync && gl.clientWaitSync(sync, 0, 0) === gl.TIMEOUT_EXPIRED && ++n < 250) return setTimeout(poll, 8);
+        if (sync && gl.clientWaitSync(sync, 0, 0) === gl.TIMEOUT_EXPIRED && performance.now() - t0 < 1000) return setTimeout(poll, 8);
         gl.deleteSync(sync);
         ok();
       };
@@ -1570,7 +1572,8 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
       await breath();
     }
     set();
-    await renderer.compileAsync(scene, camera);
+    // (with a time limit, for the same reason as in gpuDone: then the frame is drawn the old way)
+    await Promise.race([renderer.compileAsync(scene, camera), new Promise((ok) => setTimeout(ok, 2000))]);
     await gpuDone();
     // the first use of each program (its uniform and attribute look-ups, a few hundred questions to
     // the GPU each) one program per turn; the frame then finds them answered
