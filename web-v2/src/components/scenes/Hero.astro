@@ -20,7 +20,7 @@ const ph = (b: string) => `image-set(url(${b}.avif) type('image/avif'), url(${b}
   class="scene scene--hero"
   data-scene="hero"
   aria-labelledby="hero-title"
-  style={`--ph-d:${ph(D.placeholder)}; --ph-m:${ph(M.placeholder)}; --crop-m:${P.crop}; --v1-ratio:${heroBg.v1Ratio}; --d-ratio:${D.width / D.height}; --d-orig:${D.origW}; --m-ratio:${M.width / M.height}; --m-orig:${M.origW}; --anchor-x:${heroBg.anchor.x * 100}%; --anchor-y:${heroBg.anchor.y * 100}%; --subj-x:${heroBg.subjectOrigin.x * 100}%; --subj-y:${heroBg.subjectOrigin.y * 100}%; --subj-m:${M.subject}; --subj-dy:${M.subjectDy}`}
+  style={`--ph-d:${ph(D.placeholder)}; --ph-m:${ph(M.placeholder)}; --crop-m:${P.crop}; --v1-ratio:${heroBg.v1Ratio}; --d-ratio:${D.width / D.height}; --d-orig:${D.origW}; --m-ratio:${M.width / M.height}; --m-orig:${M.origW}; --anchor-x:${heroBg.anchor.x * 100}%; --anchor-y:${heroBg.anchor.y * 100}%; --subj-x:${heroBg.subjectOrigin.x * 100}%; --subj-y:${heroBg.subjectOrigin.y * 100}%; --subj-m:${M.subject}; --subj-dy:${M.subjectDy}; --ped-k:${heroBg.keepPedestal.ped}; --ped-room:${heroBg.keepPedestal.room}`}
 >
   <div class="scene__back">
     <div class="hero__photo" data-h-photo data-a>
@@ -83,7 +83,9 @@ const ph = (b: string) => `image-set(url(${b}.avif) type('image/avif'), url(${b}
     --cover: max(100vw, calc(100 * var(--lvh)) * var(--v1-ratio));
     position: absolute;
     left: 50%;
-    top: 50%;
+    /* D-186: above 16:9 move up so the pedestal stays on screen (heroBg.keepPedestal) */
+    --ped-lift: max(0px, var(--cover) / var(--v1-ratio) * var(--ped-k) - 100 * var(--lvh) * var(--ped-room));
+    top: calc(50% - var(--ped-lift));
     width: calc(var(--cover) / var(--d-orig));
     aspect-ratio: var(--d-ratio);
     translate: -50% -50%;
@@ -216,6 +218,7 @@ const ph = (b: string) => `image-set(url(${b}.avif) type('image/avif'), url(${b}
       top: calc(50% - var(--rw) * 1.6 * 0.4316);
     }
     .hero__photo {
+      top: 50%;
       width: calc(var(--cover) / var(--m-orig));
       aspect-ratio: var(--m-ratio);
       background-image: var(--ph-m);

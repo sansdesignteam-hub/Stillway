@@ -1,5 +1,5 @@
 {
-  "id": "D-181 S01 plate + invisible pedestal proxy (supersedes the shaded pedestal of D-179)",
+  "id": "D-186 S01 plate on the new 3840 x 2400 photo + invisible pedestal proxy (supersedes the D-181 3632 x 2072 plate)",
   "units": "metres, three.js Y-up (glTF). Pedestal origin = centre of its bottom face, on the desk plane y = 0.",
   "pedestal": {
     "glb": "s01-pedestal.glb",
@@ -32,31 +32,31 @@
     "proxy_fit": {
       "overlay": "renders/s01-plate/s01-plate-proxy-overlay.webp (close-up: s01-plate-proxy-overlay-closeup.png)",
       "frame": [
-        3632,
-        2072
+        3840,
+        2400
       ],
       "plate_pedestal_bbox_px": [
-        1260,
-        1488,
-        2358,
-        1864
+        1275,
+        1724,
+        2547,
+        2159
       ],
       "proxy_glb_bbox_px": [
-        1260,
-        1489,
-        2357,
-        1864
+        1275,
+        1724,
+        2547,
+        2159
       ],
-      "mismatch_pixels": 386,
+      "mismatch_pixels": 497,
       "mismatch_band_max_px_at_frame": 1,
-      "mismatch_band_max_px_at_1818": 0.5,
-      "bbox_delta_px_at_1818": [
+      "mismatch_band_max_px_at_1920": 0.5,
+      "bbox_delta_px_at_1920": [
         0.0,
-        -0.5,
-        0.5,
+        0.0,
+        0.0,
         0.0
       ],
-      "json_camera_vs_blender_max_px_at_1818": 0.001
+      "json_camera_vs_blender_max_px_at_1920": 0.002
     },
     "position_note": "D-181b: the block sits 2.7 mm further from the camera than the old origin so its silhouette lands on Figma's; the GLB pivot is still the bottom centre."
   },
@@ -92,29 +92,63 @@
       0.009,
       -0.0
     ],
-    "fov_vertical_deg_at_1818x1037": 16.689,
-    "lens_mm_36mm_sensor": 70.0,
+    "fov_vertical_deg_at_3840x2400": 16.691,
+    "lens_mm_36mm_sensor": 76.6892,
     "filmOffset_or_viewOffset": {
-      "shift_y_fraction_of_width": 0.135,
-      "note": "unchanged from D-179: Blender shift_y 0.135 of the frame width moves the subject down (heroBg.cam.shiftY)."
+      "shift_x_fraction_of_width": 3.5e-05,
+      "shift_y_fraction_of_width": 0.147901,
+      "note": "D-186: position and lookAt are unchanged from D-179/D-181. Only the intrinsics changed with the new 16:10 photo: heroBg.cam = {frameW 3840, frameH 2400, focalPx 8180.18 (= lens/36 x frameW), shiftY 0.147901}; shift_x (0.000035 of the width) is negligible, 0.14 px at 3840."
     },
     "plate": {
-      "file": "plate/plate-s01-3632.png",
+      "file": "plate/plate-s01-3840.png",
       "size_px": [
-        3632,
-        2072
+        3840,
+        2400
       ],
-      "focal_fraction_of_width": 1.944444,
+      "focal_fraction_of_width": 2.130255,
       "principal_point_fraction": [
-        0.5,
-        0.736673
+        0.499965,
+        0.736641
       ],
-      "pixel_aspect_x": 1.000136,
-      "note": "RECALIBRATED AGAINST THE UPSCALED PLATE (D-181): the 3632 x 2072 upscale is the 1818 x 1037 source stretched to the full frame (measured u = 1.99768 x - 0.09, v = 1.99800 y + 0.03, 0.3 px rms), so every frame FRACTION is unchanged and heroBg.cam {frameW 1818, frameH 1037, focalPx 70/36*1818, shiftY 0.135} stays valid: keep those numbers and lay the plate out with the photo's cover box. u = 0.5 + f*x_c/-z_c, v = pp_v - f*(1818/1037)*y_c/-z_c with f = focal_fraction_of_width. The plate's own pixel ratio (3632/2072) differs from 1818/1037 by 0.014 % = 0.25 px at 3632; ignore it."
+      "pixel_aspect_x": 1.0,
+      "note": "D-186, new native photo (3840 x 2400, square pixels). u = pp_u + f*x_c/-z_c, v = pp_v - f*(3840/2400)*y_c/-z_c with f = focal_fraction_of_width. Lens and shift were derived from the D-181 camera (70 mm, shiftY 0.135 on the 3632 x 2072 plate) so that the web rest frame (object-fit cover x zoomFrom 1.14 about heroBg.anchor (0.503, 0.8), 16:10 viewport) is the same pinhole image as before: pedestal and ring keep their Figma size and position on screen. heroBg.anchor, zoomFrom and subjectOrigin can stay; v1Ratio becomes 3840/2400."
     },
-    "frame": "photo/plate frame, shown object-fit: cover, centred (desktop 1440x900 crops the sides)",
+    "calibration": {
+      "method": "the new photo is a new image of the scene (no feature matches with the 3632 plate), so it was calibrated on its own geometry: desk-plane tilt from two pairs of orthogonal edges lying on the desk (weak perspective: sin^2(depression) = tan(a1) * tan(a2)).",
+      "measured_depression_deg": {
+        "laptop_edges_at_v_0.65": 17.5,
+        "book_edges_at_v_0.55": 17.0
+      },
+      "camera_depression_deg": {
+        "at_v_0.55": 15.9,
+        "at_v_0.65": 17.5,
+        "at_pedestal_v_0.80": 20.1
+      },
+      "horizon_v_fraction": -0.437,
+      "desk_grain_slope_in_image_deg": 2.0,
+      "lamp_blender_mm": {
+        "base_on_desk": [
+          69,
+          73,
+          0
+        ],
+        "shade_opening_centre": [
+          67,
+          73.5,
+          34
+        ],
+        "in_old_3632_plate_base": [
+          74,
+          76,
+          0
+        ],
+        "note": "rays of this camera through the lamp base and shade rim. The scene is at pedestal scale (the ring is deliberately larger than the photo's objects), so these are the lamp's coordinates in the pedestal's space, not real millimetres."
+      },
+      "limits": "edges read with a line-segment detector on an AI-made photo: +-2 deg. The keyboard rows do not converge measurably, the book edges converge toward a horizon near v = -0.2; the camera's horizon is at the value above. Good at the pedestal, not a full reconstruction of the photo's lens."
+    },
+    "frame": "photo/plate frame, shown object-fit: cover, centred (16:10; a 16:9 viewport crops top and bottom)",
     "check_points": {
-      "note": "world points (three.js Y-up, metres, pedestal space) and where they fall in the plate (u right, v down, fractions of the frame). Use them to assert the web camera.",
+      "note": "D-186 values. world points (three.js Y-up, metres, pedestal space) and where they fall in the plate (u right, v down, fractions of the frame). Use them to assert the web camera.",
       "three_m": {
         "origin_bottom_centre": [
           0.0,
@@ -164,40 +198,40 @@
       },
       "plate_fraction_uv": {
         "origin_bottom_centre": [
-          0.497689,
-          0.846281
+          0.497433,
+          0.846234
         ],
         "top_centre": [
-          0.497669,
-          0.762347
+          0.497411,
+          0.762311
         ],
         "top_left_mid": [
-          0.347021,
-          0.771581
+          0.332367,
+          0.771544
         ],
         "top_right_mid": [
-          0.646033,
-          0.753253
+          0.659953,
+          0.753218
         ],
         "top_front_mid": [
-          0.505917,
-          0.808615
+          0.506447,
+          0.808573
         ],
         "top_back_mid": [
-          0.490012,
-          0.719392
+          0.489022,
+          0.719362
         ],
         "bottom_front_mid": [
-          0.505865,
-          0.89535
+          0.50639,
+          0.895296
         ],
         "bottom_left_mid": [
-          0.348331,
-          0.856076
+          0.333803,
+          0.856028
         ],
         "bottom_right_mid": [
-          0.644801,
-          0.836632
+          0.658603,
+          0.836587
         ]
       }
     }
@@ -206,25 +240,25 @@
     "key": {
       "type": "DirectionalLight",
       "position": [
-        0.19,
+        0.185,
         0.25,
-        -0.12
+        -0.117
       ],
       "target": [
-        0,
+        0.0,
         0.004,
-        0
+        -0.0
       ],
       "direction_unit": [
-        -0.5702,
-        -0.7383,
-        0.3602
+        -0.5618,
+        -0.7471,
+        0.3553
       ],
-      "elevation_deg": 47.6,
+      "elevation_deg": 48.3,
       "color": "#FFB370",
       "intensity": 3.0,
       "castShadow": true,
-      "convention": "three.js Y-up metres in pedestal space (= Blender (x, y, z) -> (x, z, -y)). Verified against the Cycles light: Blender key at (0.190, 0.120, 0.250) m aimed at (0, 0, 0.004); a Cycles SUN with this exact direction gives the same front-left shadow as the area light (renders/s01-pedestal/s01-key-area-vs-sun.png). Light travels (-0.570, -0.738, +0.360): left, down, toward the camera (+Z), so the ring shadow on the top runs LEFT-FRONT and is ~0.9 x the casting height long (elevation 47.6 deg).",
+      "convention": "three.js Y-up metres in pedestal space (= Blender (x, y, z) -> (x, z, -y)). D-186: the key follows the lamp of the new photo (lamp base 5 mm left and 3 mm nearer than in the 3632 plate): Blender key at (0.185, 0.117, 0.250) m aimed at (0, 0, 0.004), was (0.190, 0.120, 0.250). Light travels (-0.562, -0.747, +0.355): left, down, toward the camera (+Z), so the ring shadow on the top runs LEFT-FRONT and is ~0.9 x the casting height long (elevation 48.3 deg). The direction moved 0.7 deg from D-180's (-0.5702, -0.7383, 0.3602).",
       "shadow": {
         "type": "VSMShadowMap",
         "mapSize": 2048,
@@ -233,9 +267,15 @@
         "blurSamples": 16,
         "bias": -0.0001,
         "normalBias": 0.0003,
-        "note": "Cycles area light D55 mm at 333 mm = 9.4 deg penumbra cone: contact-hard at the ring's touch point, ~3-4 mm soft at the shadow tip. With VSM (uniform blur) keep the blur small (~0.5 mm = 6 texels at 2048 over +-0.045 m) so the shadow stays clearly defined, as the user asked; do not raise radius to fake the tip softness."
+        "note": "Cycles area light D55 mm at 329 mm = 9.5 deg penumbra cone: contact-hard at the ring's touch point, ~3-4 mm soft at the shadow tip. With VSM (uniform blur) keep the blur small (~0.5 mm = 6 texels at 2048 over +-0.045 m) so the shadow stays clearly defined, as the user asked; do not raise radius to fake the tip softness."
       },
-      "plate_note": "the plate was lit with this same key (Cycles area disk D55 mm at Blender (0.190, 0.120, 0.250) m), so the live ring shadow continues the baked pedestal shadow: same direction, same 9.4 deg penumbra cone."
+      "plate_note": "the plate was lit with this same key (Cycles area disk D55 mm at Blender (0.185, 0.117, 0.250) m), so the live ring shadow continues the baked pedestal shadow: same direction, same 9.5 deg penumbra cone.",
+      "plate_color_linear_rgb": [
+        1.0,
+        0.6,
+        0.3
+      ],
+      "plate_color_note": "D-186, plate only: the Cycles key and spill are warmer than D-181 (key 1, 0.70, 0.44 -> 1, 0.60, 0.30) because the new desk is more orange; `color` above is the web's live value and is not changed here."
     },
     "fill": {
       "type": "HemisphereLight",
@@ -247,11 +287,11 @@
     "pedestal_envMapIntensity": 0.25,
     "environment": "env/v2-env-paper.exr tinted warm (#FFB87A multiply), intensity ~0.28 for ring reflections",
     "spill": {
-      "type": "plate-only lamp spill (Cycles area DISK). Baked into the plate; on the web model it analytically, do not light the ring with it.",
+      "type": "plate-only lamp spill (Cycles area DISK). Baked into the plate; on the web model it analytically, do not light the ring with it. D-186: moved with the lamp of the new photo, Blender (125, 50, 58) -> (120, 47, 58) mm.",
       "position": [
-        0.125,
+        0.12,
         0.058,
-        -0.05
+        -0.047
       ],
       "target": [
         0.0,
@@ -259,32 +299,32 @@
         -0.0
       ],
       "direction_unit": [
-        -0.8617,
-        -0.3723,
-        0.3447
+        -0.8588,
+        -0.3865,
+        0.3364
       ],
-      "elevation_deg": 21.9,
-      "azimuth_note": "light travels left (-X), down (-Y) and toward the camera (+Z): the pedestal's spill shadow falls LEFT-FRONT, 2.5 x the casting height long",
-      "distance_to_target_m": 0.14506,
+      "elevation_deg": 22.7,
+      "azimuth_note": "light travels left (-X), down (-Y) and toward the camera (+Z): the pedestal's spill shadow falls LEFT-FRONT, 2.4 x the casting height long",
+      "distance_to_target_m": 0.13973,
       "disk_diameter_m": 0.06,
-      "penumbra_cone_deg": 23.4,
+      "penumbra_cone_deg": 24.2,
       "color_linear_rgb": [
         1.0,
-        0.62,
-        0.34
+        0.52,
+        0.22
       ],
-      "color_hex_same_convention_as_key": "#FF9E57",
+      "color_hex_same_convention_as_key": "#FF8538",
       "color_note": "Blender linear RGB. The hex writes those linear values as bytes, exactly as lights.key.color (#FFB370) does for the key's Blender linear (1, 0.70, 0.44); if you need true linear in three.js use color.setRGB(r, g, b, THREE.LinearSRGBColorSpace) with color_linear_rgb.",
       "blender_power_W": 0.45,
       "key_blender_power_W_in_plate": 1.0,
       "intensity_relative_to_key": {
-        "facing_the_light_at_target": 2.374,
-        "on_horizontal_top_at_target": 1.197,
-        "as_three_intensity_if_key_is_3.0": 7.123,
-        "falloff": "inverse square from `position` (a near lamp, 145 mm away): irradiance at point p = facing value x (distance_to_target / |p - position|)^2 x cos(incidence). That falloff is what makes the right half of the top brighter than the left."
+        "facing_the_light_at_target": 2.499,
+        "on_horizontal_top_at_target": 1.293,
+        "as_three_intensity_if_key_is_3.0": 7.497,
+        "falloff": "inverse square from `position` (a near lamp, 140 mm away): irradiance at point p = facing value x (distance_to_target / |p - position|)^2 x cos(incidence). That falloff is what makes the right half of the top brighter than the left."
       },
       "linking": "illuminates pedestal + desk only; only the pedestal blocks it. The ring neither receives it nor casts a shadow from it.",
-      "convention": "three.js Y-up metres in desk space (the space of lights.key; pedestal.position is given in it too) = Blender (x, y, z) -> (x, z, -y). Blender lamp at (125.0, 50.0, 58.0) mm aimed at (0, 0, 4) mm."
+      "convention": "three.js Y-up metres in desk space (the space of lights.key; pedestal.position is given in it too) = Blender (x, y, z) -> (x, z, -y). Blender lamp at (120.0, 47.0, 58.0) mm aimed at (0, 0, 4) mm."
     }
   },
   "desk": {
@@ -294,18 +334,18 @@
     "size_m": 1.2,
     "note": "transparent shadow catcher over the plate; receives the RING shadow only (the pedestal's own contact shadow, AO and bounce are in the plate)."
   },
-  "proven": "Cycles: plate, stills, overlays and the proxy overlay in renders/s01-plate/ use exactly these values; the camera numbers above were re-projected with three.js-style maths and agree with Blender to 0.001 px at 1818.",
-  "proposed": "three.js material flags for the proxy and the catcher opacity are a starting point, untested in web-v2 (the 3D Designer does not touch it). Match the live ring shadow density to plate/still-s01-3632.png.",
+  "proven": "Cycles: plate, stills, overlays and the proxy overlay in renders/s01-plate/ use exactly these values; the camera numbers above were re-projected with three.js-style maths and agree with Blender to 0.002 px at 1920.",
+  "proposed": "three.js material flags for the proxy and the catcher opacity are a starting point, untested in web-v2 (the 3D Designer does not touch it). Match the live ring shadow density to plate/still-s01-3840.png.",
   "plate": {
     "desktop": {
-      "plate": "plate/plate-s01-3632.png",
-      "still": "plate/still-s01-3632.png",
-      "ring_overlay_rgba": "plate/ring-overlay-s01-3632.webp"
+      "plate": "plate/plate-s01-3840.png",
+      "still": "plate/still-s01-3840.png",
+      "ring_overlay_rgba": "plate/ring-overlay-s01-3840.webp"
     },
     "mobile": {
-      "plate": "plate/plate-s01-mobile-3632.png",
-      "still": "plate/still-s01-mobile-3632.png",
-      "ring_overlay_rgba": "plate/ring-overlay-s01-mobile-3632.webp",
+      "plate": "plate/plate-s01-mobile-3840.png",
+      "still": "plate/still-s01-mobile-3840.png",
+      "ring_overlay_rgba": "plate/ring-overlay-s01-mobile-3840.webp",
       "transform": {
         "scale": 0.62,
         "dy_fraction_of_height": -0.14,
@@ -316,23 +356,23 @@
         "formula": "p' = O + 0.62 (p - O) + (0, -0.14 H), O = (0.5 W, 0.86 H), over the untouched photo",
         "how": "rendered natively: a 2D similarity of a pinhole image is the same camera with lens x 0.62 and a new shift, so the phone passes are separate Cycles renders (pedestal RGBA, desk shadow/bounce ratio, ring RGBA), not resampled. Geometrically identical to the CSS scale + translate of the desktop layers; the ring shadow that leaves the bottom of the desktop frame is complete here.",
         "blender_camera": {
-          "lens_mm": 43.4,
-          "shift_x": 0.0,
-          "shift_y": 0.081875
+          "lens_mm": 47.5473,
+          "shift_x": 2.2e-05,
+          "shift_y": 0.089698
         },
-        "proxy_band_max_px_at_1818": 0.5
+        "proxy_band_max_px_at_1920": 0.5
       },
       "layers": {
-        "pedestal_rgba": "plate/layer-pedestal-rgba-mobile-3632.png",
-        "desk_multiply": "plate/layer-desk-multiply-mobile-3632.png"
+        "pedestal_rgba": "plate/layer-pedestal-rgba-mobile-3840.png",
+        "desk_multiply": "plate/layer-desk-multiply-mobile-3840.png"
       }
     },
     "layers": {
-      "pedestal_rgba": "plate/layer-pedestal-rgba-3632.png",
-      "desk_multiply": "plate/layer-desk-multiply-3632.png",
+      "pedestal_rgba": "plate/layer-pedestal-rgba-3840.png",
+      "desk_multiply": "plate/layer-desk-multiply-3840.png",
       "note": "desktop frame. plate = pedestal_rgba over (photo x desk_multiply). The multiply PNG is clamped at 1 (the few % of warm bounce next to the lit side exist only in the plates, which are composited in linear light)."
     },
-    "source_photo": "design/assets/v2/s01/hero-warm-desk-v2-upscaled-3636.jpg (3632 x 2072)",
+    "source_photo": "design/assets/v2/s01/Hero_BG_Stillway_New_3840x2400.avif (3840 x 2400, native; decoded to sRGB PNG with sips)",
     "identity": "still == plate with ring-overlay composited source-over in sRGB (pixel-exact up to 8-bit rounding), so poster = plate + overlay.",
     "ring_shadow_in_overlay": "colour #2A1608 (the web catcher colour), straight alpha chosen so plate*(1-a) + c*a has the luminance of the exact Cycles render with the ring shadow, on the desk AND on the pedestal top/lip/front.",
     "contact_occlusion": "D-181c: the still and both ring overlays carry a dark, tight contact occlusion under the touching band (Cycles AO pass, reach 12.0 mm, with / without the ring; gamma 2.8, floor 0.1). It is part of the overlay's shadow alpha, not of the plate."

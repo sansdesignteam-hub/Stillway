@@ -1,21 +1,21 @@
 /**
  * D-181 responsive S01 plate: AVIF + WebP sets from the 3D Designer's plates (desk photo + Cycles
- * pedestal, 3632 × 2072). Run from web-v2/:
+ * pedestal, 3840 × 2400). Run from web-v2/:
  *
  *   node scripts/hero-plate.mjs --desktop <plate.png> --mobile <plate-mobile.png> \
  *        [--ring <ring-overlay.png> --ring-mobile <ring-overlay-mobile.png>] [--out public/hero]
  *   (masters: design/3d/v2/plate/ on 3D-Designer; a new drop with the same names just re-runs this)
  *
- * Sets (file names carry the real pixel width; the 3632 one is the brief's "3640"):
- *   plate-s01-{960,1280,1920,2560,3632}       full frame, desktop plate
+ * Sets (file names carry the real pixel width; the 3840 one is the brief's "3640"):
+ *   plate-s01-{960,1280,1920,2560,3840}       full frame, desktop plate
  *   plate-s01-m-{960,1280,1920}               full frame, phone plate (≤ 760 px wide, not portrait)
  *   plate-s01-mp-{908,1280,1816}              phone plate, centre 50 % of the width (portrait phones
  *                                             only ever show ≤ 43 % of it), full height
- *   ring-s01-{1280,1920,3632}, ring-s01-m-{1280,1920}, ring-s01-mp-{908,1816}
+ *   ring-s01-{1280,1920,3840}, ring-s01-m-{1280,1920}, ring-s01-mp-{908,1816}
  *                                             the poster: ring + ring shadow, transparent, same frames
  *                                             (AVIF with alpha + WebP)
  * AVIF quality is searched downward per file until it meets its byte budget (brief: 2560 ≤ 250 KB,
- * 3632 ≤ 450 KB; the others are scaled by area), WebP is the fallback at a fixed quality.
+ * 3840 ≤ 450 KB; the others are scaled by area), WebP is the fallback at a fixed quality.
  * Prints a size table and writes it to <out>/plate-s01-sizes.json.
  */
 import sharp from 'sharp';
@@ -34,21 +34,21 @@ const ringMobile = arg('ring-mobile');
 if (!desktop) throw new Error('--desktop <plate> is required');
 
 const KB = 1024;
-/** AVIF byte budgets (brief for 2560 / 3632; the rest ∝ area, with a floor) */
-const budget = (w, crop = 1) => Math.round(Math.max(28, Math.min(450, 450 * (w / 3632) ** 2 * (w >= 3000 ? 1 : 1.12))) * KB * (crop < 1 ? 1.15 : 1));
-const BUDGET = { 2560: 250 * KB, 3632: 450 * KB };
+/** AVIF byte budgets (brief for 2560 / 3840; the rest ∝ area, with a floor) */
+const budget = (w, crop = 1) => Math.round(Math.max(28, Math.min(450, 450 * (w / 3840) ** 2 * (w >= 3000 ? 1 : 1.12))) * KB * (crop < 1 ? 1.15 : 1));
+const BUDGET = { 2560: 250 * KB, 3840: 450 * KB };
 const AVIF_Q = { max: 70, min: 38 };
 const WEBP_Q = 80;
 
 const sets = [
-  { src: desktop, name: 'plate-s01', widths: [960, 1280, 1920, 2560, 3632], crop: 1 },
+  { src: desktop, name: 'plate-s01', widths: [960, 1280, 1920, 2560, 3840], crop: 1 },
   ...(mobile
     ? [
         { src: mobile, name: 'plate-s01-m', widths: [960, 1280, 1920], crop: 1 },
         { src: mobile, name: 'plate-s01-mp', widths: [908, 1280, 1816], crop: 0.5 },
       ]
     : []),
-  ...(ring ? [{ src: ring, name: 'ring-s01', widths: [1280, 1920, 3632], crop: 1, alpha: true }] : []),
+  ...(ring ? [{ src: ring, name: 'ring-s01', widths: [1280, 1920, 3840], crop: 1, alpha: true }] : []),
   ...(ringMobile
     ? [
         { src: ringMobile, name: 'ring-s01-m', widths: [1280, 1920], crop: 1, alpha: true },

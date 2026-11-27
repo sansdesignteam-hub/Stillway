@@ -553,7 +553,9 @@ export async function createRingStage(canvas: HTMLCanvasElement): Promise<RingSt
     const dy = (window.innerWidth <= 760 ? heroBg.mobile.subjectDy : heroBg.desktop.subjectDy) * ch * zoom;
     const [qx, qy] = toScreen(heroBg.subjectOrigin.x, heroBg.subjectOrigin.y);
     const px = qx + (px0 - qx) * m;
-    const py = qy + (py0 - qy) * m + dy;
+    const k = heroBg.keepPedestal;
+    const lift = window.innerWidth <= 760 ? 0 : Math.max(0, k.ped * ch - k.room * LH);
+    const py = qy + (py0 - qy) * m + dy - lift;
     return { F: C.focalPx * (cw / C.frameW) * zoom * m, px, py };
   };
   /**

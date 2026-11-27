@@ -2,163 +2,163 @@
  {
   "file": "plate-s01-960",
   "width": 960,
-  "height": 548,
-  "avifKB": 28.5,
-  "avifQ": 70,
-  "budgetKB": 35,
-  "webpKB": 30.9
+  "height": 600,
+  "avifKB": 29.4,
+  "avifQ": 67,
+  "budgetKB": 32,
+  "webpKB": 37.8
  },
  {
   "file": "plate-s01-1280",
   "width": 1280,
-  "height": 730,
-  "avifKB": 46.7,
+  "height": 800,
+  "avifKB": 54.4,
   "avifQ": 70,
-  "budgetKB": 63,
-  "webpKB": 53.6
+  "budgetKB": 56,
+  "webpKB": 67.8
  },
  {
   "file": "plate-s01-1920",
   "width": 1920,
-  "height": 1095,
-  "avifKB": 89.1,
+  "height": 1200,
+  "avifKB": 107.8,
   "avifQ": 70,
-  "budgetKB": 141,
-  "webpKB": 106.3
+  "budgetKB": 126,
+  "webpKB": 137.5
  },
  {
   "file": "plate-s01-2560",
   "width": 2560,
-  "height": 1460,
-  "avifKB": 142,
+  "height": 1600,
+  "avifKB": 170.7,
   "avifQ": 70,
   "budgetKB": 250,
-  "webpKB": 166.5
+  "webpKB": 214.3
  },
  {
-  "file": "plate-s01-3632",
-  "width": 3632,
-  "height": 2072,
-  "avifKB": 269.6,
+  "file": "plate-s01-3840",
+  "width": 3840,
+  "height": 2400,
+  "avifKB": 337.5,
   "avifQ": 70,
   "budgetKB": 450,
-  "webpKB": 290.9
+  "webpKB": 373.7
  },
  {
   "file": "plate-s01-m-960",
   "width": 960,
-  "height": 548,
-  "avifKB": 28.6,
-  "avifQ": 70,
-  "budgetKB": 35,
-  "webpKB": 31.1
+  "height": 600,
+  "avifKB": 29.2,
+  "avifQ": 67,
+  "budgetKB": 32,
+  "webpKB": 37.6
  },
  {
   "file": "plate-s01-m-1280",
   "width": 1280,
-  "height": 730,
-  "avifKB": 47,
+  "height": 800,
+  "avifKB": 54.2,
   "avifQ": 70,
-  "budgetKB": 63,
-  "webpKB": 54.1
+  "budgetKB": 56,
+  "webpKB": 67.2
  },
  {
   "file": "plate-s01-m-1920",
   "width": 1920,
-  "height": 1095,
-  "avifKB": 89.7,
+  "height": 1200,
+  "avifKB": 106.5,
   "avifQ": 70,
-  "budgetKB": 141,
-  "webpKB": 107.4
+  "budgetKB": 126,
+  "webpKB": 135.5
  },
  {
   "file": "plate-s01-mp-908",
   "width": 908,
-  "height": 1036,
-  "avifKB": 24.2,
+  "height": 1135,
+  "avifKB": 28.2,
   "avifQ": 70,
-  "budgetKB": 36,
-  "webpKB": 25
+  "budgetKB": 32,
+  "webpKB": 28.1
  },
  {
   "file": "plate-s01-mp-1280",
   "width": 1280,
-  "height": 1460,
-  "avifKB": 40.5,
+  "height": 1600,
+  "avifKB": 51,
   "avifQ": 70,
-  "budgetKB": 72,
-  "webpKB": 40.9
+  "budgetKB": 64,
+  "webpKB": 48.4
  },
  {
   "file": "plate-s01-mp-1816",
   "width": 1816,
-  "height": 2072,
-  "avifKB": 74.7,
+  "height": 2270,
+  "avifKB": 99.7,
   "avifQ": 70,
-  "budgetKB": 145,
-  "webpKB": 73.4
+  "budgetKB": 130,
+  "webpKB": 84.6
  },
  {
   "file": "ring-s01-1280",
   "width": 1280,
-  "height": 730,
-  "avifKB": 16,
+  "height": 800,
+  "avifKB": 17.5,
   "avifQ": 70,
   "budgetKB": 200,
-  "webpKB": 47.6
+  "webpKB": 54.3
  },
  {
   "file": "ring-s01-1920",
   "width": 1920,
-  "height": 1095,
-  "avifKB": 26.1,
+  "height": 1200,
+  "avifKB": 29.4,
   "avifQ": 70,
   "budgetKB": 200,
-  "webpKB": 90.7
+  "webpKB": 105.9
  },
  {
-  "file": "ring-s01-3632",
-  "width": 3632,
-  "height": 2072,
-  "avifKB": 48.6,
+  "file": "ring-s01-3840",
+  "width": 3840,
+  "height": 2400,
+  "avifKB": 60.4,
   "avifQ": 70,
   "budgetKB": 200,
-  "webpKB": 229
+  "webpKB": 295
  },
  {
   "file": "ring-s01-m-1280",
   "width": 1280,
-  "height": 730,
-  "avifKB": 9.4,
+  "height": 800,
+  "avifKB": 10.2,
   "avifQ": 70,
   "budgetKB": 200,
-  "webpKB": 25.9
+  "webpKB": 29.4
  },
  {
   "file": "ring-s01-m-1920",
   "width": 1920,
-  "height": 1095,
-  "avifKB": 15.1,
+  "height": 1200,
+  "avifKB": 16.9,
   "avifQ": 70,
   "budgetKB": 200,
-  "webpKB": 48.1
+  "webpKB": 55.3
  },
  {
   "file": "ring-s01-mp-908",
   "width": 908,
-  "height": 1036,
-  "avifKB": 14.1,
+  "height": 1135,
+  "avifKB": 15.5,
   "avifQ": 70,
   "budgetKB": 200,
-  "webpKB": 42.2
+  "webpKB": 48.2
  },
  {
   "file": "ring-s01-mp-1816",
   "width": 1816,
-  "height": 2072,
-  "avifKB": 31,
+  "height": 2270,
+  "avifKB": 36.1,
   "avifQ": 70,
   "budgetKB": 200,
-  "webpKB": 112.1
+  "webpKB": 142.7
  }
 ]
