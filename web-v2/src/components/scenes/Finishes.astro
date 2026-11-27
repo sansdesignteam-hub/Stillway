@@ -382,6 +382,68 @@ import { finishes as d } from '../../content/copy';
     overflow: hidden;
     clip-path: inset(50%);
   }
+  /* QA27 M-15: tablets — the panel and everything in it fit inside the screen, with the same margin
+     right as left; the heading takes the room left of it and the sizes wrap to two rows */
+  @media (min-width: 720px) and (max-width: 1023px) {
+    .fn__panel {
+      width: 42vw;
+      grid-template-columns: minmax(0, 1fr);
+      padding-inline: var(--space-5);
+    }
+    .fn__top {
+      flex-wrap: wrap;
+      column-gap: var(--space-3);
+    }
+    .fn__heads {
+      width: calc(58vw - 3 * var(--margin));
+      text-wrap: balance;
+    }
+    .fn__sizes {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  /* from 900 px the eight sizes fit one row again */
+  @media (min-width: 900px) and (max-width: 1023px) {
+    .fn__sizes {
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: var(--space-1);
+    }
+  }
+  /* short tablet screens: tighter, so the button and its note stay inside the panel */
+  @media (min-width: 720px) and (max-width: 1023px) and (max-height: 760px) {
+    .fn__panel {
+      padding-block: var(--space-4);
+      gap: 10px;
+    }
+    .fn__more {
+      gap: 10px;
+    }
+    .fn__sizes button {
+      height: 32px;
+    }
+    .fn__swatch i {
+      width: 32px;
+      height: 32px;
+    }
+    .fn__cta {
+      height: 44px;
+    }
+    /* as on phones: the chosen finish is named above, the swatch names stay for screen readers */
+    .fn__swatch span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    .fn__muted {
+      font-size: var(--t-para-sm-size);
+      line-height: var(--t-para-sm-lh);
+    }
+    .fn__note:empty {
+      min-height: 0;
+    }
+  }
   /* D-171: phones — one column in plain scroll flow (title, ring, arrows, panel), as tall as its
      content; finishes.ts moves it 1:1 with the page and sizes the track to it. No pin, no fade. */
   @media (max-width: 719px) {
@@ -478,6 +540,12 @@ import { finishes as d } from '../../content/copy';
     }
     .fn__cta {
       height: 46px;
+    }
+  }
+  /* QA27 M-15: large phones / small tablets (the one-column layout) keep a 24 px margin */
+  @media (min-width: 600px) and (max-width: 719px) {
+    .scene--finishes .scene__front {
+      padding-inline: var(--space-5);
     }
   }
 </style>
